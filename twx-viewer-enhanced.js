@@ -10,6 +10,7 @@ class EnhancedTWXViewer {
         this.collapsedGroups = new Set();
         this.coachViewModal = null;
         this.cshsModal = null;
+        this.cshsInline = null;
         this.init();
     }
 
@@ -18,8 +19,11 @@ class EnhancedTWXViewer {
             // Initialize Coach View modal
             this.coachViewModal = new CoachViewDetails();
 
-            // Initialize CSHS modal
+            // Initialize CSHS modal (for backward compatibility)
             this.cshsModal = new CSHSDetails();
+
+            // Initialize CSHS inline component
+            this.cshsInline = new CSHSDetailsInline();
 
             await this.loadData();
             this.setupEventListeners();
@@ -347,25 +351,35 @@ class EnhancedTWXViewer {
         const isCoachView = typeName === 'Coach View';
         const isCSHS = this.isCSHS(obj, typeName);
 
-        let content = `<div class="artifact-name ${isCoachView ? 'clickable-coach-view' : ''} ${isCSHS ? 'clickable-cshs' : ''}"
-                            ${isCoachView ? `data-coach-view-id="${obj.id}"` : ''}
-                            ${isCSHS ? `data-cshs-id="${obj.id}"` : ''}
-                            ${isCoachView ? 'title="Click to view details"' : ''}
-                            ${isCSHS ? 'title="Click to view CSHS details"' : ''}>
-                            ${this.escapeHtml(name)}
-                            ${isCoachView ? ' <span class="view-details-icon">🔍</span>' : ''}
-                            ${isCSHS ? ' <span class="view-details-icon">⚙️</span>' : ''}
-                       </div>`;
+        let headerContent = `
+            <div class="artifact-name ${isCoachView ? 'clickable-coach-view' : ''} ${isCSHS ? 'clickable-cshs' : ''}"
+                 ${isCoachView ? `data-coach-view-id="${obj.id}"` : ''}
+                 ${isCSHS ? `data-cshs-id="${obj.id}"` : ''}
+                 ${isCoachView ? 'title="Click to view details"' : ''}
+                 ${isCSHS ? 'title="Click to view CSHS details"' : ''}>
+                ${this.escapeHtml(name)}
+                ${isCoachView ? ' <span class="view-details-icon">🔍</span>' : ''}
+                ${isCSHS ? ' <span class="view-details-icon">⚙️</span>' : ''}
+            </div>
+        `;
 
+        let additionalInfo = '';
         if (this.showIds && obj.id) {
-            content += `<div class="object-id">ID: ${this.escapeHtml(obj.id)}</div>`;
+            additionalInfo += `<div class="object-id">ID: ${this.escapeHtml(obj.id)}</div>`;
         }
 
         if (this.showDetails && obj.hasDetails) {
-            content += `<div class="object-details">Has additional details</div>`;
+            additionalInfo += `<div class="object-details">Has additional details</div>`;
         }
 
-        listItem.innerHTML = `<div>${content}</div>`;
+        listItem.innerHTML = `
+            <div class="artifact-item-header">
+                <div>
+                    ${headerContent}
+                    ${additionalInfo}
+                </div>
+            </div>
+        `;
 
         // Add click event for Coach Views
         if (isCoachView) {
@@ -378,8 +392,10 @@ class EnhancedTWXViewer {
         // Add click event for CSHS
         if (isCSHS) {
             const nameElement = listItem.querySelector('.clickable-cshs');
-            nameElement.addEventListener('click', () => {
-                this.showCSHSDetails(obj);
+            nameElement.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                this.toggleCSHSDetailsInline(obj, listItem);
             });
         }
 
@@ -414,12 +430,23 @@ class EnhancedTWXViewer {
     }
 
     /**
-     * Show CSHS details in modal
+     * Show CSHS details in modal (for backward compatibility)
      * @param {Object} cshs - CSHS object
      */
     async showCSHSDetails(cshs) {
         if (this.cshsModal) {
             await this.cshsModal.show(cshs);
+        }
+    }
+
+    /**
+     * Toggle CSHS details inline under the object name
+     * @param {Object} cshs - CSHS object
+     * @param {HTMLElement} listItem - The list item element
+     */
+    async toggleCSHSDetailsInline(cshs, listItem) {
+        if (this.cshsInline) {
+            await this.cshsInline.toggleCSHSDetails(cshs, listItem);
         }
     }
 
