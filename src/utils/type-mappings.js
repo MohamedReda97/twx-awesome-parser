@@ -81,21 +81,29 @@ function getAllTypes() {
 }
 
 /**
- * Group objects by their type
+ * Group objects by their type, with special handling for CSHS objects
  * @param {Array} objects - Array of objects with type property
  * @returns {Object} Objects grouped by type
  */
 function groupByType(objects) {
   const grouped = {}
-  
+
   objects.forEach(obj => {
-    const typeName = getTypeName(obj.type)
+    let typeName
+
+    // Special handling for CSHS objects (Process type with subType/processType = 10)
+    if (obj.type === 'process' && (obj.subType === '10' || (obj.details && obj.details.processType === '10'))) {
+      typeName = 'CSHS'
+    } else {
+      typeName = getTypeName(obj.type)
+    }
+
     if (!grouped[typeName]) {
       grouped[typeName] = []
     }
     grouped[typeName].push(obj)
   })
-  
+
   return grouped
 }
 

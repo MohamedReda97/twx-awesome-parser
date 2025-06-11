@@ -113,9 +113,16 @@ class JSONParser {
           id: obj.id,
           name: obj.name,
           versionId: obj.versionId,
+          type: obj.type,
+          subType: obj.subType,
           hasDetails: !!obj.details && Object.keys(obj.details).length > 0
         }))
-      })).sort((a, b) => b.count - a.count), // Sort by count descending
+      })).sort((a, b) => {
+        // Sort CSHS first, then by count descending
+        if (a.typeName === 'CSHS') return -1;
+        if (b.typeName === 'CSHS') return 1;
+        return b.count - a.count;
+      }),
       toolkits: extractedData.toolkits
     }
     
@@ -138,19 +145,50 @@ class JSONParser {
     for (const [typeName, typeObjects] of Object.entries(groupedObjects)) {
       const fileName = `objects-${typeName.toLowerCase().replace(/\s+/g, '-')}.json`
       const filePath = path.join(this.outputDir, fileName)
-      
+
       const typeData = {
         typeName,
         count: typeObjects.length,
         objects: typeObjects.sort((a, b) => a.name.localeCompare(b.name)) // Sort by name
       }
-      
+
       fs.writeFileSync(filePath, JSON.stringify(typeData, null, 2))
       filesGenerated.push(filePath)
-      
+
       console.log(`Generated ${typeName} objects file: ${filePath} (${typeObjects.length} objects)`)
     }
-    
+
+    // Generate individual object files
+    const individualFilesGenerated = await this.generateIndividualObjectFiles(objects)
+    filesGenerated.push(...individualFilesGenerated)
+
+    return filesGenerated
+  }
+
+  /**
+   * Generate individual object files
+   * @param {Array} objects - Array of objects
+   * @returns {Promise<Array>} Array of generated file paths
+   */
+  async generateIndividualObjectFiles(objects) {
+    const objectsDir = path.join(this.outputDir, 'objects')
+
+    // Create objects directory if it doesn't exist
+    if (!fs.existsSync(objectsDir)) {
+      fs.mkdirSync(objectsDir, { recursive: true })
+    }
+
+    const filesGenerated = []
+
+    for (const obj of objects) {
+      const fileName = `${obj.id}.json`
+      const filePath = path.join(objectsDir, fileName)
+
+      fs.writeFileSync(filePath, JSON.stringify(obj, null, 2))
+      filesGenerated.push(filePath)
+    }
+
+    console.log(`Generated ${objects.length} individual object files in: ${objectsDir}`)
     return filesGenerated
   }
 

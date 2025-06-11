@@ -9,6 +9,7 @@ class EnhancedTWXViewer {
         this.showIds = false;
         this.collapsedGroups = new Set();
         this.coachViewModal = null;
+        this.cshsModal = null;
         this.init();
     }
 
@@ -16,6 +17,9 @@ class EnhancedTWXViewer {
         try {
             // Initialize Coach View modal
             this.coachViewModal = new CoachViewDetails();
+
+            // Initialize CSHS modal
+            this.cshsModal = new CSHSDetails();
 
             await this.loadData();
             this.setupEventListeners();
@@ -56,6 +60,9 @@ class EnhancedTWXViewer {
                 throw new Error('Invalid data structure: missing objectsByType');
             }
 
+            // Separate CSHS objects from Process objects
+            await this.separateCSHSObjects();
+
             // Initialize all types as selected
             this.data.objectsByType.forEach(typeGroup => {
                 this.selectedTypes.add(typeGroup.typeName);
@@ -66,6 +73,17 @@ class EnhancedTWXViewer {
             console.error('Error loading data:', error);
             throw new Error(`Failed to load parsing results: ${error.message}`);
         }
+    }
+
+    /**
+     * Separate CSHS objects from Process objects and create a new CSHS group
+     * This is now handled at the parsing level, so this method is simplified
+     */
+    async separateCSHSObjects() {
+        // CSHS separation is now handled at the parsing level in the JSON generation
+        // This method is kept for backward compatibility but does nothing
+        // The groupByType function in type-mappings.js now handles CSHS separation
+        console.log('CSHS separation is handled at parsing level');
     }
 
     convertOldFormat(oldData) {
@@ -327,12 +345,16 @@ class EnhancedTWXViewer {
 
         const name = obj.name || 'Unnamed';
         const isCoachView = typeName === 'Coach View';
+        const isCSHS = this.isCSHS(obj, typeName);
 
-        let content = `<div class="artifact-name ${isCoachView ? 'clickable-coach-view' : ''}"
+        let content = `<div class="artifact-name ${isCoachView ? 'clickable-coach-view' : ''} ${isCSHS ? 'clickable-cshs' : ''}"
                             ${isCoachView ? `data-coach-view-id="${obj.id}"` : ''}
-                            ${isCoachView ? 'title="Click to view details"' : ''}>
+                            ${isCSHS ? `data-cshs-id="${obj.id}"` : ''}
+                            ${isCoachView ? 'title="Click to view details"' : ''}
+                            ${isCSHS ? 'title="Click to view CSHS details"' : ''}>
                             ${this.escapeHtml(name)}
                             ${isCoachView ? ' <span class="view-details-icon">🔍</span>' : ''}
+                            ${isCSHS ? ' <span class="view-details-icon">⚙️</span>' : ''}
                        </div>`;
 
         if (this.showIds && obj.id) {
@@ -353,6 +375,14 @@ class EnhancedTWXViewer {
             });
         }
 
+        // Add click event for CSHS
+        if (isCSHS) {
+            const nameElement = listItem.querySelector('.clickable-cshs');
+            nameElement.addEventListener('click', () => {
+                this.showCSHSDetails(obj);
+            });
+        }
+
         return listItem;
     }
 
@@ -363,12 +393,33 @@ class EnhancedTWXViewer {
     }
 
     /**
+     * Check if an object is a CSHS (Client-Side Human Service)
+     * @param {Object} obj - Object to check
+     * @param {string} typeName - Type name of the object
+     * @returns {boolean} True if object is CSHS
+     */
+    isCSHS(obj, typeName) {
+        // Check if it's a CSHS type (now properly separated at parsing level)
+        return typeName === 'CSHS';
+    }
+
+    /**
      * Show Coach View details in modal
      * @param {Object} coachView - Coach View object
      */
     async showCoachViewDetails(coachView) {
         if (this.coachViewModal) {
             await this.coachViewModal.show(coachView);
+        }
+    }
+
+    /**
+     * Show CSHS details in modal
+     * @param {Object} cshs - CSHS object
+     */
+    async showCSHSDetails(cshs) {
+        if (this.cshsModal) {
+            await this.cshsModal.show(cshs);
         }
     }
 

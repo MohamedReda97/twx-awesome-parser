@@ -153,9 +153,133 @@ const parseProcess = Performance.makeMeasurable(async (databaseName, jsonData) =
         }
       }
     }
+
+    // CSHS-specific parsing
+    if (subType === PROCESS_TYPES.ClientSideHumanService) {
+      result.details = await parseCSHSDetails(process)
+    }
   }
 
   return result
 }, 'parseProcess')
+
+/**
+ * Parse CSHS-specific details including variables and elements
+ * @param {Object} process - The process object from XML
+ * @returns {Object} CSHS details
+ */
+async function parseCSHSDetails(process) {
+  const details = {
+    variables: {
+      input: [],
+      output: [],
+      private: []
+    },
+    elements: {
+      formTasks: [],
+      callActivities: [],
+      exclusiveGateways: [],
+      scriptTasks: []
+    }
+  }
+
+  // Parse variables
+  if (process.processParameter) {
+    for (const param of process.processParameter) {
+      if (!ParseUtils.isNullXML(param)) {
+        const variable = {
+          name: param.$.name || 'Unnamed',
+          hasDefault: param.hasDefault ? param.hasDefault[0] === 'true' : false,
+          type: param.parameterType ? param.parameterType[0] : '0'
+        }
+
+        if (variable.type === '1') {
+          details.variables.input.push(variable)
+        } else if (variable.type === '2') {
+          details.variables.output.push(variable)
+        }
+      }
+    }
+  }
+
+  if (process.processVariable) {
+    for (const variable of process.processVariable) {
+      if (!ParseUtils.isNullXML(variable)) {
+        details.variables.private.push({
+          name: variable.$.name || 'Unnamed',
+          hasDefault: variable.hasDefault ? variable.hasDefault[0] === 'true' : false
+        })
+      }
+    }
+  }
+
+  // Parse process elements from jsonData
+  if (process.jsonData && !ParseUtils.isNullXML(process.jsonData[0])) {
+    try {
+      const jsonData = JSON.parse(process.jsonData[0])
+      if (jsonData.rootElement && jsonData.rootElement[0] &&
+          jsonData.rootElement[0].extensionElements &&
+          jsonData.rootElement[0].extensionElements.userTaskImplementation &&
+          jsonData.rootElement[0].extensionElements.userTaskImplementation[0] &&
+          jsonData.rootElement[0].extensionElements.userTaskImplementation[0].flowElement) {
+
+        const flowElements = jsonData.rootElement[0].extensionElements.userTaskImplementation[0].flowElement
+
+        for (const element of flowElements) {
+          const elementData = {
+            name: element.name || 'Unnamed',
+            id: element.id,
+            hasPreScript: false,
+            hasPostScript: false,
+            preScript: '',
+            postScript: '',
+            script: ''
+          }
+
+          // Check for pre/post assignment scripts
+          if (element.extensionElements) {
+            if (element.extensionElements.preAssignmentScript &&
+                element.extensionElements.preAssignmentScript.length > 0 &&
+                element.extensionElements.preAssignmentScript[0].trim()) {
+              elementData.hasPreScript = true
+              elementData.preScript = element.extensionElements.preAssignmentScript[0]
+            }
+
+            if (element.extensionElements.postAssignmentScript &&
+                element.extensionElements.postAssignmentScript.length > 0 &&
+                element.extensionElements.postAssignmentScript[0].trim()) {
+              elementData.hasPostScript = true
+              elementData.postScript = element.extensionElements.postAssignmentScript[0]
+            }
+          }
+
+          // Categorize by element type
+          switch (element.declaredType) {
+            case 'com.ibm.bpmsdk.model.bpmn20.ibmext.TFormTask':
+              details.elements.formTasks.push(elementData)
+              break
+            case 'callActivity':
+              details.elements.callActivities.push(elementData)
+              break
+            case 'exclusiveGateway':
+              details.elements.exclusiveGateways.push(elementData)
+              break
+            case 'scriptTask':
+              // Extract script content for script tasks
+              if (element.script && element.script.content && element.script.content.length > 0) {
+                elementData.script = element.script.content[0]
+              }
+              details.elements.scriptTasks.push(elementData)
+              break
+          }
+        }
+      }
+    } catch (error) {
+      console.warn('Error parsing CSHS jsonData:', error)
+    }
+  }
+
+  return details
+}
 
 module.exports = parseProcess
