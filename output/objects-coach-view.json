@@ -1,0 +1,732 @@
+{
+  "typeName": "Coach View",
+  "count": 34,
+  "objects": [
+    {
+      "id": "64.ab2ea11b-7c5e-4835-9ed4-18708eee21be",
+      "versionId": "9bbe4e1d-2915-4f99-9ebc-c9ed04293d85",
+      "name": "Advance Payments Used",
+      "type": "coachView",
+      "typeName": "Coach View",
+      "details": {
+        "bindingType": "usedAdvancePayment",
+        "configOptions": [
+          "tmpUsedAdvancePayment",
+          "TotalAllocatedAmountinRequestCurrency",
+          "requestCurrency",
+          "addBtn",
+          "isChecker",
+          "currencyVis",
+          "currncy",
+          "requestID",
+          "CIF",
+          "alertMessage",
+          "errorVis"
+        ],
+        "inlineScripts": [
+          {
+            "name": "Inline Javascript",
+            "scriptType": "JS",
+            "scriptBlock": "var isUpdate = false;\r\r\nvar item = {};\r\r\nthis.addAdvancePayment = function  () {\r\r\n\tthis.context.options.currencyVis.set(\"value\", \"READONLY\");\r\r\n\titem = this.context.options.tmpUsedAdvancePayment.get(\"value\");\t\r\r\n\tif (isUpdate && item.get(\"AllocatedAmountinRequestCurrency\")!=undefined && item.get(\"AllocatedAmountinRequestCurrency\")!=null && this.context.options.tmpUsedAdvancePayment.get(\"value\").get(\"AmountAllocated\") > 0 && this.context.options.tmpUsedAdvancePayment.get(\"value\").get(\"AmountAllocated\") < this.context.options.tmpUsedAdvancePayment.get(\"value\").get(\"outstandingAmount\") && this.context.options.tmpUsedAdvancePayment.get(\"value\").get(\"AllocatedAmountinRequestCurrency\") > 0 ){\r\r\n\t\tvar input = this.context.options.requestID.get(\"value\") +\"-\"+ this.context.options.tmpUsedAdvancePayment.get(\"value\").get(\"AllocatedAmountinRequestCurrency\") +\"-\"+ this.context.options.tmpUsedAdvancePayment.get(\"value\").get(\"AmountAllocated\") +\"-\"+ this.context.options.tmpUsedAdvancePayment.get(\"value\").get(\"DBID\");\r\r\n\t\t\t\r\r\n\t\tthis.ui.get(\"UpdateAdvancePaymentCall\").execute(input);\r\r\n\t\t\r\r\n\t}\r\r\n\telse{\r\r\n\t\tif ( (item.get(\"AmountAllocated\")!=undefined && item.get(\"AmountAllocated\")!=null && item.get(\"AmountAllocated\") > 0 && item.get(\"AmountAllocated\") <= item.get(\"outstandingAmount\") ) && (item.get(\"beneficiaryName\")!=null && item.get(\"beneficiaryName\")!= \"\" && item.get(\"beneficiaryName\")!= undefined) && this.context.options.tmpUsedAdvancePayment.get(\"value\").get(\"AllocatedAmountinRequestCurrency\") > 0) {\r\r\n//\t\t\tthis.ui.get(\"advancePaymentTable\").appendElement(item);\r\r\n\t\t\tvar input = this.context.options.requestID.get(\"value\") +\"-\"+ this.context.options.tmpUsedAdvancePayment.get(\"value\").get(\"AllocatedAmountinRequestCurrency\") +\"-\"+ this.context.options.tmpUsedAdvancePayment.get(\"value\").get(\"AmountAllocated\") +\"-\"+ this.context.options.tmpUsedAdvancePayment.get(\"value\").get(\"DBID\");\r\r\n\t\t\t\r\r\n\t\t\tthis.ui.get(\"AddAdvancePaymentCall\").execute(input);\r\r\n\t\t\t\r\r\n\r\r\n\t\t}else{\r\r\n\t\t\talert(\"can not add\");\r\r\n\t\t}\r\r\n\t}\r\r\n\r\r\n//\tthis.sumAllocated();\r\r\n}\r\r\nthis.addtoTable = function name () {\r\r\n\tthis.ui.get(\"updateButton\").setEnabled(true);\r\r\n\tthis.context.binding.get(\"value\").add(item);\r\r\n\tthis.context.options.tmpUsedAdvancePayment.set(\"value\", {});\r\r\n\tthis.context.options.tmpUsedAdvancePayment.get(\"value\").set(\"invoiceCurrency\", {});\r\r\n}\r\r\nthis.updateinTable = function () {\r\r\n\t\r\r\n\tvar selectedItem= this.ui.get(\"advancePaymentTable\").getSelectedIndex();\r\r\n//\t----------------------------------------------------------------------\r\r\n\tthis.ui.get(\"advancePaymentTable\").removeRecord(selectedItem);\r\r\n\tthis.ui.get(\"advancePaymentTable\").appendElement(item);\r\r\n//\t--------------------------------------------------------------------\t\t\t\r\r\n\tthis.context.options.tmpUsedAdvancePayment.set(\"value\", {});\r\r\n\tthis.context.options.tmpUsedAdvancePayment.get(\"value\").set(\"invoiceCurrency\", {});\r\r\n\tisUpdate = false;\r\r\n}\r\r\n\r\r\nthis.getAdvancePayment = function () {\r\r\n\tvar input  = this.ui.get(\"AdvancePaymentRequestNumber\").getData()+\"-\"+this.context.options.CIF.get(\"value\")+\"-\"+this.context.options.requestID.get(\"value\");\r\r\n\t\r\r\n\tthis.ui.get(\"retrieveAdvancePayment\").execute(input);\r\r\n}\r\r\n\r\r\nthis.updateBTNDisable = function  (rowSelected) {\r\r\n\t\r\r\n\tvar input = this.context.options.requestID.get(\"value\") +\"-\"+ rowSelected.DBID;\r\r\n\t\t\t\r\r\n\tthis.ui.get(\"DeleteAdvancePaymentCall\").execute(input);\r\r\n\t\r\r\n\tvar amount = this.context.options.TotalAllocatedAmountinRequestCurrency.get(\"value\") - rowSelected.AllocatedAmountinRequestCurrency\r\r\n\tif (this.context.binding.get(\"value\").length() == 1) {\r\r\n\t\tthis.ui.get(\"updateButton\").setEnabled(false);\r\r\n\t\t\r\r\n\t\tif (this.context.options.currncy.get(\"value\") == true) {\r\r\n\t\t\tthis.context.options.currencyVis.set(\"value\", \"DEFAULT\");\r\r\n\t\t}\r\r\n\t}\r\r\n\tthis.context.options.TotalAllocatedAmountinRequestCurrency.set(\"value\", amount);\r\r\n\r\r\n}\r\r\nthis.sumAllocated = function  () {\r\r\n\tvar sum = 0.0;\r\r\n\t\r\r\n//\talert(\"sum\");\r\r\n\tthis.context.options.TotalAllocatedAmountinRequestCurrency.set(\"value\", sum);\r\r\n\r\r\n\tfor (var i=0; i<this.context.binding.get(\"value\").length(); i++) {\r\r\n\t\tsum+=this.context.binding.get(\"value\").get(i).get(\"AllocatedAmountinRequestCurrency\");\r\r\n\t}\r\r\n//\tthis.context.options.addBtn.set(\"value\", false);\r\r\n//\tthis.context.options.vis.set(\"value\", \"EDITABLE\");\t\r\r\n//\tthis.context.options.vis.set(\"value\", \"READONLY\");\r\r\n\tthis.context.options.TotalAllocatedAmountinRequestCurrency.set(\"value\", sum);\r\r\n//\tthis.ui.get(\"addbutton\").setEnabled(true);\r\r\n//\tthis.ui.get(\"addbutton\").setEnabled(false);\r\r\n\tthis.ui.get(\"addbutton\").hide();\r\r\n\t\r\r\n}\r\r\nthis.resetAdvancePayment = function  () {\r\r\n\tisUpdate = false;\r\r\n\t\r\r\n\tthis.context.options.tmpUsedAdvancePayment.set(\"value\", {});\r\r\n\tthis.context.options.tmpUsedAdvancePayment.get(\"value\").set(\"invoiceCurrency\", {});\r\r\n//\tthis.context.options.vis.set(\"value\", \"EDITABLE\");\t\r\r\n//\tthis.context.options.vis.set(\"value\", \"READONLY\");\r\r\n//\tthis.ui.get(\"addbutton\").setEnabled(true);\r\r\n//\tthis.ui.get(\"addbutton\").setEnabled(false);\r\r\n\tthis.ui.get(\"addbutton\").hide();\r\r\n\t\r\r\n}\r\r\nthis.updateAdvancePayment = function  () {\r\r\n\tisUpdate = true;\r\r\n\tvar selectedItem= this.ui.get(\"advancePaymentTable\").getSelectedRecord();\r\r\n\tthis.context.options.tmpUsedAdvancePayment.set(\"value\", selectedItem);\r\r\n\r\r\n}\r\r\nthis.convert = function  () {\r\r\n\r\r\n\tif(this.context.options.requestCurrency.get(\"value\") !=\"\" && this.context.options.requestCurrency.get(\"value\") !=null && this.context.options.requestCurrency.get(\"value\") !=undefined){\r\r\n\t\t\tvar amount = this.context.options.tmpUsedAdvancePayment.get(\"value\").get(\"AmountAllocated\");\r\r\n\t\t\tvar fromCurrency = this.context.options.tmpUsedAdvancePayment.get(\"value\").get(\"invoiceCurrency\").get(\"code\");\r\r\n\t\t\tvar toCurrency = this.context.options.requestCurrency.get(\"value\");\r\r\n\t\t\tthis.ui.get(\"convertCurrency\").execute(amount+\"-\"+fromCurrency+\"-\"+toCurrency);\r\r\n//\t\t\tthis.context.options.vis.set(\"value\", \"EDITABLE\");\r\r\n//\t\t\tthis.ui.get(\"addbutton\").setEnabled(true);\r\r\n//\t\t\tthis.ui.get(\"addbutton\").show();\r\r\n\t\t\t\r\r\n\t}else{\r\r\n\t\talert(\"please select Request Currency\");\r\r\n\t}\r\r\n}\r\r\n\r\r\nthis.checkerVis = function  () {\r\r\n\tif (this.context.options.isChecker.get(\"value\") == true) {\r\r\n\t\tthis.ui.get(\"Horizontal_Layout3\").setVisible(false,true);\r\r\n\t\tthis.ui.get(\"Horizontal_Layout4\").setVisible(false,true);\r\r\n\t\tthis.ui.get(\"retrive_data\").setVisible(false,true);\r\r\n\t\tthis.ui.get(\"update_Layout\").setVisible(false,true);\r\r\n\t\tthis.ui.get(\"advancePaymentTable\").setEnabled(false);\r\r\n\t}\r\r\n}\r\r\n\r\r\n//----------------------------------------------------------------\r\r\n//function to view alert in case of get customer info error\r\r\nthis.AjaxErrorHandling = function(errorMSG)\r\r\n{\r\r\n\tthis.context.options.alertMessage.set(\"value\", errorMSG);\r\r\n\tthis.context.options.errorVis.set(\"value\", \"EDITABLE\")\r\r\n}"
+          }
+        ]
+      },
+      "hasDetails": true
+    },
+    {
+      "id": "64.dd4f7118-11c6-4a2d-af1d-7252d135594d",
+      "versionId": "751cea61-0365-436f-8b20-ba8bc06176ae",
+      "name": "Advice Lines",
+      "type": "coachView",
+      "typeName": "Coach View",
+      "details": {
+        "bindingType": "AdviceLines"
+      },
+      "hasDetails": true
+    },
+    {
+      "id": "64.1bff8164-e990-449a-85ee-473fa1c4f905",
+      "versionId": "65a693d1-072c-46c6-8473-11c68cbe68fc",
+      "name": "Alert Message",
+      "type": "coachView",
+      "typeName": "Coach View",
+      "details": {
+        "configOptions": [
+          "alertMessage"
+        ]
+      },
+      "hasDetails": true
+    },
+    {
+      "id": "64.f1067f18-e2fe-4f8d-8cdb-a948cb0eb0f7",
+      "versionId": "509ac3cb-bc5d-46f1-90b1-7c78b39d7a26",
+      "name": "Attachment",
+      "type": "coachView",
+      "typeName": "Coach View",
+      "details": {
+        "bindingType": "attach",
+        "configOptions": [
+          "canUpdate",
+          "canCreate",
+          "canDelete",
+          "ECMproperties",
+          "visiable"
+        ],
+        "inlineScripts": [
+          {
+            "name": "Inline Javascript",
+            "scriptType": "JS",
+            "scriptBlock": "//this.add = function() {\r\r\n//\talert(\"adding\");\r\r\n////\tthis.context.binding.get(\"value\").set(\"name\", \"Others\");\r\r\n////\tthis.ui.get(\"documentTypeDescription\").setEnabled(true);\r\r\n////\t\r\r\n//}\r\r\nvar flag = false\r\r\nthis.makeflagtrue = function () {\r\r\n\tflag = true;\r\r\n\talert(\"makeing\");\r\r\n}\r\r\nthis.addAttacmentValidation=function () {\r\r\n\talert(flag);\r\r\n\tvar len = this.context.binding.get(\"value\").length();\r\r\n\tthis.context.binding.get(\"value\").get(len-1).set(\"name\", \"others\")\r\r\n//\t\r\r\n//\tthis.context.binding.get(\"value\").get(len).set(\"name\", \"Others\");\r\r\n//\tthis.ui.get(\"documentTypeDescription\").setEnabled(true);\r\r\n\r\r\n\t\r\r\n}\r\r\nthis.visControl = function  () {\r\r\n\r\r\n\tif (this.context.options.visiable.get(\"value\")) {\r\r\n\t\tthis.ui.get(\"Table\").setEnabled(true);\r\r\n\t\tthis.ui.get(\"Button1\").setVisible(true,true);\r\r\n\t}else{\r\r\n\t\tthis.ui.get(\"Table\").setEnabled(false);\r\r\n\t\tthis.ui.get(\"Button1\").setVisible(false,false);\r\r\n\t}\r\r\n\t\r\r\n\t\r\r\n}\r\r\nthis.setCMISquery = function  () {\r\r\n\tvar parent=this.context.options.parentPath;\r\r\n\tvar query =\"SELECT * FROM cmis:Document WHERE IN_TREE('\"+parent+\"')\";\r\r\n\tthis.context.options.cmisQuery.set(\"value\", query);\r\r\n}"
+          }
+        ]
+      },
+      "hasDetails": true
+    },
+    {
+      "id": "64.bec7782b-c964-4a09-b74f-0ec737efa310",
+      "versionId": "2015adea-0de0-452d-b1ac-974b47bb9e44",
+      "name": "Basic Details",
+      "type": "coachView",
+      "typeName": "Coach View",
+      "details": {
+        "bindingType": "IDCrequest",
+        "configOptions": [
+          "addBill",
+          "deleteBill",
+          "addInvoice",
+          "deleteInvoice",
+          "hasWithdraw",
+          "havePaymentTerm",
+          "alertMessage",
+          "billExist",
+          "invoiceExist",
+          "errorVis"
+        ],
+        "inlineScripts": [
+          {
+            "name": "Inline Javascript",
+            "scriptType": "JS",
+            "scriptBlock": "// this.haveParentIDCRequestNumber = function  () {\r\r\n//\tif (this.context.binding.get(\"value\").get(\"IDCRequestNature\").get(\"englishdescription\") == \"Update Request\") {\r\r\n//\t\tthis.ui.get(\"parentIDCRequestNumber\").setVisible(true,true);\r\r\n//\t\t\r\r\n//\t}else{\r\r\n//\t\tthis.ui.get(\"parentIDCRequestNumber\").setVisible(false,true);\r\r\n//\t\t\r\r\n//\t}\r\r\n// }\r\r\nvar bill = {};\r\r\n this.checkBill = function (value) {\r\r\n \tbill =value;\r\r\n \tvar input = this.context.binding.get(\"value\").get(\"appInfo\").get(\"instanceID\")+\"-\"+value.getData();\r\r\n \tthis.ui.get(\"checkBillCall\").execute(input);\r\r\n }\r\r\n this.setBillValidation = function () {\r\r\n \tif (this.context.options.billExist.get(\"value\") == 1) {\r\r\n \t\tbill.setValid(false,\"WARNING : This Bill Is Used Before In Another Request\");\r\r\n \t}else{\r\r\n \t\tbill.setValid(true);\r\r\n \t}\r\r\n }\r\r\n \r\r\n var invoice = {};\r\r\n this.checkInvoice = function (value) {\r\r\n// \talert(\"checkInvoice\");\r\r\n \tinvoice =value;\r\r\n \tvar input = this.context.binding.get(\"value\").get(\"appInfo\").get(\"instanceID\")+\"-\"+invoice.getData();\r\r\n// \talert(input);\r\r\n \tthis.ui.get(\"checkInvoiceCall\").execute(input);\r\r\n }\r\r\n this.setInvoiceValidation = function () {\r\r\n// \talert(this.context.options.invoiceExist.get(\"value\"));\r\r\n \tif (this.context.options.invoiceExist.get(\"value\") == 1) {\r\r\n \t\tinvoice.setValid(false,\"WARNING : This Invoice Is Used Before In Another Request\");\r\r\n \t}else{\r\r\n \t\tinvoice.setValid(true);\r\r\n \t}\r\r\n }\r\r\n \r\r\n this.haveFlexCubeContractNumber = function  () {\r\r\n// \talert(\"test\");\r\r\n \tif (this.context.binding.get(\"value\").get(\"IDCRequestNature\").get(\"englishdescription\") == \"New Request\" && this.context.binding.get(\"value\").get(\"appInfo\").get(\"stepName\") == \"IDC Execution Hub - Initiation\") {\r\r\n \t\tthis.ui.get(\"FlexCubeContractNumber\").setEnabled(true);\r\r\n \t}\r\r\n \telse{\r\r\n \tthis.ui.get(\"FlexCubeContractNumber\").setEnabled(false);\r\r\n \t}\r\r\n \t\r\r\n }\r\r\n \r\r\n this.hasWithdrawRequest = function  () {\r\r\n \tif (this.context.binding.get(\"value\").get(\"IDCRequestType\").get(\"englishdescription\")==\"IDC Acknowledgement\") {\r\r\n \t\tif (this.context.options.hasWithdraw.get(\"value\")) {\r\r\n\t \t\tthis.ui.get(\"Output_Text2\").setEnabled(true);\r\r\n\t \t\tthis.ui.get(\"Switch1\").setEnabled(true);\r\r\n\t \t}\t\r\r\n \t}else{\r\r\n \t\tthis.ui.get(\"Output_Text2\").setVisible(false,true);\r\r\n\t \t\tthis.ui.get(\"Switch1\").setVisible(false,true);\r\r\n \t}\r\r\n\t \t\r\r\n }\r\r\n this.havePaymentTerm = function  () {\r\r\n \tif (this.context.binding.get(\"value\").get(\"paymentTerms\").get(\"englishdescription\") == \"Sight\") {\r\r\n \t\tthis.context.options.havePaymentTerm.set(\"value\",  \"NONE\") ;\r\r\n \t}else{\r\r\n \t\tthis.context.options.havePaymentTerm.set(\"value\",  \"DEFAULT\") ;\r\r\n \t}\r\r\n }\r\r\n //------------------------------------------------------------\r\r\n//function to view alert in case of get customer info error\r\r\nthis.AjaxErrorHandling = function(errorMSG)\r\r\n{\r\r\n\tthis.context.options.alertMessage.set(\"value\", errorMSG);\r\r\n\tthis.ui.get(\"Error_Message\").setVisible(true);\r\r\n\tthis.ui.get(\"Error_Message/Alert_Modal\").setVisible(true);\r\r\n}"
+          }
+        ]
+      },
+      "hasDetails": true
+    },
+    {
+      "id": "64.3d13e9b9-bcc9-4fe9-ac80-3c287115f705",
+      "versionId": "c0891929-974a-4a9d-a8c0-bcde1ce66e4e",
+      "name": "Basic Details 2",
+      "type": "coachView",
+      "typeName": "Coach View",
+      "details": {
+        "bindingType": "IDCrequest",
+        "configOptions": [
+          "addBill",
+          "deleteBill",
+          "addInvoice",
+          "deleteInvoice",
+          "hasWithdraw",
+          "havePaymentTerm",
+          "alertMessage",
+          "billExist",
+          "invoiceExist",
+          "errorVis",
+          "isHub",
+          "interestVis",
+          "idcContract",
+          "InterestAndChargesList",
+          "exRate",
+          "stage",
+          "adviceCodeList"
+        ],
+        "inlineScripts": [
+          {
+            "name": "Inline Javascript",
+            "scriptType": "JS",
+            "scriptBlock": "// this.haveParentIDCRequestNumber = function  () {\r\r\n//\tif (this.context.binding.get(\"value\").get(\"IDCRequestNature\").get(\"englishdescription\") == \"Update Request\") {\r\r\n//\t\tthis.ui.get(\"parentIDCRequestNumber\").setVisible(true,true);\r\r\n//\t\t\r\r\n//\t}else{\r\r\n//\t\tthis.ui.get(\"parentIDCRequestNumber\").setVisible(false,true);\r\r\n//\t\t\r\r\n//\t}\r\r\n// }\r\r\nvar bill = {};\r\r\n this.checkBill = function (value) {\r\r\n \tbill =value;\r\r\n \tvar input = this.context.binding.get(\"value\").get(\"appInfo\").get(\"instanceID\")+\"-\"+value.getData();\r\r\n \tthis.ui.get(\"checkBillCall\").execute(input);\r\r\n }\r\r\n this.setBillValidation = function () {\r\r\n \tif (this.context.options.billExist.get(\"value\") == 1) {\r\r\n \t\tbill.setValid(false,\"WARNING : This Bill Is Used Before In Another Request\");\r\r\n \t}else{\r\r\n \t\tbill.setValid(true);\r\r\n \t}\r\r\n }\r\r\n \r\r\n var invoice = {};\r\r\n this.checkInvoice = function (value) {\r\r\n// \talert(\"checkInvoice\");\r\r\n \tinvoice =value;\r\r\n \tvar input = this.context.binding.get(\"value\").get(\"appInfo\").get(\"instanceID\")+\"-\"+invoice.getData();\r\r\n// \talert(input);\r\r\n \tthis.ui.get(\"checkInvoiceCall\").execute(input);\r\r\n }\r\r\n this.setInvoiceValidation = function () {\r\r\n// \talert(this.context.options.invoiceExist.get(\"value\"));\r\r\n \tif (this.context.options.invoiceExist.get(\"value\") == 1) {\r\r\n \t\tinvoice.setValid(false,\"WARNING : This Invoice Is Used Before In Another Request\");\r\r\n \t}else{\r\r\n \t\tinvoice.setValid(true);\r\r\n \t}\r\r\n }\r\r\n \r\r\n this.haveFlexCubeContractNumber = function  () {\r\r\n// \talert(\"test\");\r\r\n \tif (this.context.binding.get(\"value\").get(\"IDCRequestNature\").get(\"englishdescription\") == \"New Request\" && this.context.binding.get(\"value\").get(\"appInfo\").get(\"stepName\") == \"IDC Execution Hub - Initiation\") {\r\r\n \t\tthis.ui.get(\"FlexCubeContractNumber\").setEnabled(true);\r\r\n \t}\r\r\n \telse{\r\r\n \tthis.ui.get(\"FlexCubeContractNumber\").setEnabled(false);\r\r\n \t}\r\r\n \t\r\r\n }\r\r\n \r\r\n this.hasWithdrawRequest = function  () {\r\r\n \tif (this.context.binding.get(\"value\").get(\"IDCRequestType\").get(\"englishdescription\")==\"IDC Acknowledgement\") {\r\r\n \t\tif (this.context.options.hasWithdraw.get(\"value\")) {\r\r\n\t \t\tthis.ui.get(\"Output_Text2\").setEnabled(true);\r\r\n\t \t\tthis.ui.get(\"Switch1\").setEnabled(true);\r\r\n\t \t}\t\r\r\n \t}else{\r\r\n \t\tthis.ui.get(\"Output_Text2\").setVisible(false,true);\r\r\n\t \t\tthis.ui.get(\"Switch1\").setVisible(false,true);\r\r\n \t}\r\r\n\t \t\r\r\n }\r\r\n this.havePaymentTerm = function  () {\r\r\n \tif (this.context.binding.get(\"value\").get(\"paymentTerms\").get(\"englishdescription\") == \"Sight\") {\r\r\n \t\tthis.context.options.havePaymentTerm.set(\"value\",  \"NONE\") ;\r\r\n \t}else{\r\r\n \t\tthis.context.options.havePaymentTerm.set(\"value\",  \"DEFAULT\") ;\r\r\n \t}\r\r\n }\r\r\n //------------------------------------------------------------\r\r\n//function to view alert in case of get customer info error\r\r\nthis.AjaxErrorHandling = function(errorMSG)\r\r\n{\r\r\n\tthis.context.options.alertMessage.set(\"value\", errorMSG);\r\r\n\tthis.context.options.errorVis.set(\"value\", \"EDITABLE\");\r\r\n}\r\r\n\r\r\n//-------------------------------------------------------------------Drop 2--------------------------------------------------------------------------------------\r\r\nthis.getInterestAndCharges = function (){\r\r\n//alert(this.context.options.idcContract.get(\"value\").get(\"IDCProduct\").get(\"englishdescription\"));\r\r\n\t// if(this.context.options.isHub.get(\"value\") == true){ //Option Here\r\r\n\t\tthis.context.options.interestVis.set(\"value\", \"NONE\");\r\r\n\t\tthis.context.options.idcContract.get(\"value\").set(\"interestRate\", 0);\r\r\n\t\tvar code = this.context.options.idcContract.get(\"value\").get(\"IDCProduct\").get(\"code\");\r\r\n\t\tvar event = this.context.binding.get(\"value\").get(\"IDCRequestStage\");\r\r\n\t\tvar concat = code + \",\" + event +\"\";\r\r\n\t\t// this.context.options.concatComm.set(\"value\", concat);\r\r\n\t\tthis.ui.get(\"GetChargeAndDetails1\").execute(concat);\r\r\n\t// }\r\r\n}\r\r\n\r\r\nvar chargesIndex = 0;\r\r\nvar finalMinAmount = 0;\r\r\nvar firstDefaultAm = 0;\r\r\nthis.setInterestsAndCharges = function (){\r\r\n\tvar j = 0;\r\r\n\tvar defaultAmount = 0;\r\r\n\t// this.context.binding.get(\"value\").set(\"haveInterest\" , false);\r\r\n\t\r\r\n\tthis.context.options.idcContract.get(\"value\").set(\"commissionsAndCharges\", []);\r\r\n\tfor (var i=0; i<this.context.options.InterestAndChargesList.get(\"value\").length() ; i++) {\r\r\n\tif (this.context.options.InterestAndChargesList.get(\"value\").get(i).get(\"ruleType\") != null &&\r\r\n\t\tthis.context.options.InterestAndChargesList.get(\"value\").get(i).get(\"ruleType\") != \"\"&&\r\r\n\t\tthis.context.options.InterestAndChargesList.get(\"value\").get(i).get(\"ruleType\") != undefined) {\r\r\n\t\tif (this.context.options.InterestAndChargesList.get(\"value\").get(i).get(\"ruleType\") == \"Interest\" \r\r\n\t\t\t&& this.context.binding.get(\"value\").get(\"IDCRequestType\").get(\"englishdescription\") != \"ICAP\" \r\r\n\t\t\t&& this.context.binding.get(\"value\").get(\"IDCRequestType\").get(\"englishdescription\")!=\"IDC Payment\") \r\r\n\t\t{\r\r\n\t\t\t// this.context.binding.get(\"value\").set(\"haveInterest\" , true);\r\r\n\t\t\t// this.ui.get(\"contract_Interest_Details\").setVisible(true,true);\r\r\n\t\t\talert(\"Interest Found : \"+ this.context.options.idcContract.get(\"value\").get(\"interestRate\"));\r\r\n\t\t\tthis.context.options.interestVis.set(\"value\", \"EDITABLE\");\r\r\n\t\t\tthis.context.options.idcContract.get(\"value\").set(\"interestRate\", this.context.options.InterestAndChargesList.get(\"value\").get(i).get(\"rate\"));\r\r\n\r\r\n\t\t}else if (this.context.options.InterestAndChargesList.get(\"value\").get(i).get(\"ruleType\") == \"Charge\"){\r\r\n\t\t\tthis.context.options.idcContract.get(\"value\").get(\"commissionsAndCharges\").add({});\r\r\n\t\t\tthis.context.options.idcContract.get(\"value\").get(\"commissionsAndCharges\").get(j).set(\"defaultCurrency\",{});\r\r\n\t\t\tthis.context.options.idcContract.get(\"value\").get(\"commissionsAndCharges\").get(j).get(\"defaultCurrency\").set(\"code\", this.context.options.InterestAndChargesList.get(\"value\").get(i).get(\"basisAmountCurrency\"));\r\r\n\t\t\tthis.context.options.idcContract.get(\"value\").get(\"commissionsAndCharges\").get(j).set(\"component\", this.context.options.InterestAndChargesList.get(\"value\").get(i).get(\"component\"));\r\r\n\t\t\tthis.context.options.idcContract.get(\"value\").get(\"commissionsAndCharges\").get(j).set(\"debitedAccount\", {});\r\r\n\t\t\tthis.context.options.idcContract.get(\"value\").get(\"commissionsAndCharges\").get(j).get(\"debitedAccount\").set(\"accountClass\", \"Customer Account\");\r\r\n\t\t\tthis.context.options.idcContract.get(\"value\").get(\"commissionsAndCharges\").get(j).get(\"debitedAccount\").set(\"isGLVerifiedC\", false);\r\r\n\t\t\tthis.context.options.idcContract.get(\"value\").get(\"commissionsAndCharges\").get(j).get(\"debitedAccount\").set(\"accountCurrency\", {});\r\r\n\t\t\tthis.context.options.idcContract.get(\"value\").get(\"commissionsAndCharges\").get(j).get(\"debitedAccount\").set(\"isGLFoundC\", true);\r\r\n\t\t\tthis.context.options.idcContract.get(\"value\").get(\"commissionsAndCharges\").get(j).set(\"waiver\", false);\r\r\n\t\t\tthis.context.options.idcContract.get(\"value\").get(\"commissionsAndCharges\").get(j).set(\"debitedAmount\", {});\r\r\n\t\t\talert(\"Charges Found: \" + this.context.options.idcContract.get(\"value\").get(\"commissionsAndCharges\").get(j).get(\"defaultCurrency\").get(\"code\"));\r\r\n\t\t\t\r\r\n\t\t\t//Caluc Default Amount\r\r\n\t\t\tif (this.context.options.InterestAndChargesList.get(\"value\").get(i).get(\"rateType\") == \"Flat Amount\") {\r\r\n\t\t\t\tdefaultAmount = this.context.options.InterestAndChargesList.get(\"value\").get(i).get(\"flatAmount\");\r\r\n\t\t\t}else if (this.context.options.InterestAndChargesList.get(\"value\").get(i).get(\"rateType\") == \"Fixed Rate\"){\r\r\n\t\t\t\tvar rate = this.context.options.InterestAndChargesList.get(\"value\").get(i).get(\"rate\");\r\r\n\t\t\t\tdefaultAmount = rate / 100 * (this.context.binding.get(\"value\").get(\"financialDetails\").get(\"amtPayableByNBE\"));\r\r\n\t\t\t}\r\r\n\t\t\t\r\r\n\t\t\t//Compare with Min Amount\r\r\n\t\t\tvar minAmount = this.context.options.InterestAndChargesList.get(\"value\").get(i).get(\"minAmount\");\r\r\n\t\t\tif (minAmount > 0) {\r\r\n\t\t\t\tif (this.context.options.InterestAndChargesList.get(\"value\").get(i).get(\"basisAmountCurrency\") == \r\r\n\t\t\t\t\tthis.context.binding.get(\"value\").get(\"financialDetails\").get(\"documentCurrency\").get(\"code\")) {\r\r\n\t\t\t\t\tthis.context.options.idcContract.get(\"value\").get(\"commissionsAndCharges\").get(j).set(\"defaultAmount\", minAmount);\r\r\n\t\t\t\t\tthis.context.options.idcContract.get(\"value\").get(\"commissionsAndCharges\").get(j).set(\"chargeAmount\", this.context.options.idcContract.get(\"value\").get(\"commissionsAndCharges\").get(j).get(\"defaultAmount\"));\r\r\n\t\t\t\t}else{\r\r\n\t\t\t\t\tfinalMinAmount = minAmount;\r\r\n\t\t\t\t\tfirstDefaultAm = defaultAmount;\r\r\n\t\t\t\t\tchargesIndex =  j;\r\r\n\t\t\t\t\tvar basisC = this.context.options.InterestAndChargesList.get(\"value\").get(i).get(\"basisAmountCurrency\");\r\r\n\t\t\t\t\tvar requestC = this.context.binding.get(\"value\").get(\"financialDetails\").get(\"documentCurrency\").get(\"code\");\r\r\n\t\t\t\t\tvar concated = {ccFrom : basisC , ccTo : requestC , type:\"TRANSFER\" , sType:\"S\"};\r\r\n\t\t\t\t\tvar concatExCurrency = JSON.stringify(concated);\r\r\n\t\t\t\t\tthis.ui.get(\"GetExchangeRate\").execute(concatExCurrency);\r\r\n\t\t\t\t}\r\r\n\t\t\t}else{\r\r\n\t\t\t\tthis.context.options.idcContract.get(\"value\").get(\"commissionsAndCharges\").get(j).set(\"defaultAmount\", defaultAmount);\r\r\n\t\t\t\tthis.context.options.idcContract.get(\"value\").get(\"commissionsAndCharges\").get(j).set(\"chargeAmount\", this.context.options.idcContract.get(\"value\").get(\"commissionsAndCharges\").get(j).get(\"defaultAmount\"));\r\r\n\t\t\t}\r\r\n\r\r\n\t\t\tj+=1;\r\r\n\t\t}\r\r\n\t}\r\r\n\t}\r\r\n}\r\r\n\r\r\nthis.exchangedDefaultAmount = function (){\r\r\n\tvar record = chargesIndex;\r\r\n\tvar rate = this.context.options.exRate.get(\"value\");\r\r\n\tvar minAm = finalMinAmount;\r\r\n\tvar exMinAmount = rate * minAm;\r\r\n\tif (exMinAmount > firstDefaultAm) {\r\r\n\t\tthis.context.options.idcContract.get(\"value\").get(\"commissionsAndCharges\").get(record).set(\"defaultAmount\", exMinAmount);\r\r\n\t}else{\r\r\n\t\tthis.context.options.idcContract.get(\"value\").get(\"commissionsAndCharges\").get(record).set(\"defaultAmount\", firstDefaultAm);\r\r\n\t}\r\r\n\tthis.context.options.idcContract.get(\"value\").get(\"commissionsAndCharges\").get(record).set(\"chargeAmount\", this.context.options.idcContract.get(\"value\").get(\"commissionsAndCharges\").get(record).get(\"defaultAmount\"));\r\r\n}\r\r\n\r\r\nthis.prepareAdvice = function  () {\r\r\n\t if(this.context.binding.get(\"value\").get(\"IDCRequestType\").get(\"englishdescription\") != \"ICAP\"){\r\r\n\t\tvar code = this.context.options.idcContract.get(\"value\").get(\"IDCProduct\").get(\"code\");\r\r\n\t\tvar event = this.context.binding.get(\"value\").get(\"IDCRequestStage\");\r\r\n\t\tvar concated = event + \"-\" + code +\"\";\r\r\n\t\tconsole.log(concated);\r\r\n\t\tthis.ui.get(\"GetAdviceCode\").execute(concated);\r\r\n\t }\r\r\n}\r\r\n\r\r\nthis.setAdviceData = function () {\r\r\n\tthis.context.options.idcContract.get(\"value\").set(\"advices\", []);\r\r\n\tfor (var i=0; i< this.context.options.adviceCodeList.get(\"value\").length(); i++) {\r\r\n\t\tthis.context.options.idcContract.get(\"value\").get(\"advices\").add({});\r\r\n\t\tthis.context.options.idcContract.get(\"value\").get(\"advices\").get(i).set(\"adviceCode\", this.context.options.adviceCodeList.get(\"value\").get(i));\r\r\n\t\tthis.context.options.idcContract.get(\"value\").get(\"advices\").get(i).set(\"advicelines\", {});\r\r\n\t}\r\r\n}"
+          }
+        ]
+      },
+      "hasDetails": true
+    },
+    {
+      "id": "64.e641d290-3254-4ce6-9377-d17c2feeeba0",
+      "versionId": "cc541601-bff4-461f-a756-cf5cda293c6a",
+      "name": "Booked View",
+      "type": "coachView",
+      "typeName": "Coach View",
+      "details": {
+        "bindingType": "bookedFacilities",
+        "configOptions": [
+          "BookedFacilityVis",
+          "noPendingCasesVis"
+        ]
+      },
+      "hasDetails": true
+    },
+    {
+      "id": "64.e45b18e8-a83a-4484-8089-b2ab3c33146a",
+      "versionId": "a0033234-5701-409e-ae02-871323b4035c",
+      "name": "Commissions And Charges",
+      "type": "coachView",
+      "typeName": "Coach View",
+      "details": {
+        "bindingType": "CommissionsAndChargesDetails",
+        "configOptions": [
+          "CommAccountList",
+          "customerCIF",
+          "accounteeCIF",
+          "caseCIF",
+          "draweeCIF",
+          "isChecker",
+          "exRate",
+          "accountIndexC",
+          "alertMessage",
+          "errorVis"
+        ],
+        "inlineScripts": [
+          {
+            "name": "Inline Javascript",
+            "scriptType": "JS",
+            "scriptBlock": "this.debitedAmountSum = function (value){\r\r\n\tvar index = value.ui.getIndex();\r\r\n\tvar changeAm = this.ui.get(\"ChangeAmount[\"+index+\"]\").getData();\r\r\n\tvar nRate = this.ui.get(\"NegotiatedExchangeRate[\"+index+\"]\").getData();\r\r\n\tvar sum = changeAm * nRate;\r\r\n\tthis.ui.get(\"DebitedAmountinAccountCurrency[\"+index+\"]\").setData(sum);\r\r\n}\r\r\n\r\r\nthis.executeService = function (value){\r\r\n\tvar index = value.ui.getIndex();\r\r\n\tif (value.getData() == \"Customer Account\"){\r\r\n       \tthis.ui.get(\"AccountBranchCode1[\"+index+\"]\").setEnabled(false);\r\r\n       \tthis.ui.get(\"AccountCurrency1[\"+index+\"]\").setEnabled(false);\r\r\n\t\tthis.ui.get(\"AccountNumberGL[\"+index+\"]\").setEnabled(false);\r\r\n        \tthis.ui.get(\"VerifyGLAccountBtn[\"+index+\"]\").setEnabled(false);\r\r\n       \tthis.ui.get(\"Owner1[\"+index+\"]\").setEnabled(true);\r\r\n    \t\tif (this.ui.get(\"Owner1[\"+index+\"]\").getData() != \"\") {\r\r\n   \t  \t\tthis.ui.get(\"AccountNumber[\"+index+\"]\").setEnabled(true);\r\r\n    \t  \t\tthis.ui.get(\"AccountNumberGL[\"+index+\"]\").setData(\"\");\r\r\n    \t\t}\r\r\n\t}else if (value.getData() == \"GL Account\"){\r\r\n\t\tthis.ui.get(\"AccountBranchCode1[\"+index+\"]\").setEnabled(true);\r\r\n       \tthis.ui.get(\"AccountCurrency1[\"+index+\"]\").setEnabled(true);\r\r\n\t\tthis.ui.get(\"AccountNumber[\"+index+\"]\").setEnabled(false);\r\r\n\t\tthis.ui.get(\"Owner1[\"+index+\"]\").setEnabled(false);\r\r\n   \t  \tthis.ui.get(\"VerifyGLAccountBtn[\"+index+\"]\").setEnabled(true);\r\r\n\t\tthis.ui.get(\"AccountNumberGL[\"+index+\"]\").setEnabled(true);\r\r\n\t\tthis.ui.get(\"AccountNumber[\"+index+\"]\").setData(\"\");\r\r\n\t\tthis.ui.get(\"Decimal1[\"+index+\"]\").setData(\"\");\r\r\n\t\tthis.ui.get(\"Output_Text1[\"+index+\"]\").setData(\"\");\r\r\n\t\tthis.ui.get(\"AccountBranchCode1[\"+index+\"]\").setData(\"\");\r\r\n\t\tthis.ui.get(\"AccountCurrency1[\"+index+\"]\").setData(\"\");\r\r\n    }\r\r\n}\r\r\n\r\r\nthis.executeGL = function (value){\r\r\n\tvar index = value.ui.getIndex();\r\r\n//\tvalue.setEnabled(false);\r\r\n\tthis.context.options.accountIndexC.set(\"value\", value.ui.getIndex());\r\r\n\tvar data = this.context.binding.get(\"value\").get(index).get(\"debitedAccount\").get(\"GLAccountNumber\");\r\r\n\tthis.ui.get(\"CheckexistingGLAccount1[\"+index+\"]\").execute(data);\r\r\n}\r\r\n\r\r\nthis.setAccountInfo = function (value){\r\r\n\tfor (var i=0; i<this.context.options.CommAccountList.get(\"value\").length(); i++) {\r\r\n\t\tif (this.context.options.CommAccountList.get(\"value\").get(i).get(\"accountNO\") == value.getData()) {\r\r\n\t\t\r\r\n\t\t\t// this.context.options.commClassCode.set(\"value\", this.context.options.CommAccountList.get(\"value\").get(i).get(\"accountClassCode\"));\r\r\n\t\t\t// var commClassCode =  this.context.options.commClassCode.get(\"value\");//SA04\r\r\n\t\t\tcommClassCode = this.context.options.CommAccountList.get(\"value\").get(i).get(\"accountClassCode\");\r\r\n\t\t\tvar code = commClassCode.substring(0,1);\r\r\n\t\t\t\r\r\n\t\t\tif (code == \"O\" || code == \"D\"){\t\t\r\r\n\t\t\t\tthis.context.binding.get(\"value\").get(value.ui.getIndex()).get(\"debitedAccount\").set(\"isOverDraft\", true);\r\r\n\t\t\t}else{\r\r\n\t\t\t\tthis.context.binding.get(\"value\").get(value.ui.getIndex()).get(\"debitedAccount\").set(\"isOverDraft\", false);\r\r\n\t\t\t}\r\r\n\t\t\t\r\r\n\t\t\tthis.context.binding.get(\"value\").get(value.ui.getIndex()).get(\"debitedAccount\").set(\"accountBranchCode\", this.context.options.CommAccountList.get(\"value\").get(i).get(\"branchCode\"));\r\r\n\t\t\tthis.context.binding.get(\"value\").get(value.ui.getIndex()).get(\"debitedAccount\").set(\"accountCurrency\",{});\r\r\n\t\t\tthis.context.binding.get(\"value\").get(value.ui.getIndex()).get(\"debitedAccount\").get(\"accountCurrency\").set(\"code\", this.context.options.CommAccountList.get(\"value\").get(i).get(\"currencyCode\"));\r\r\n\t\t\tthis.context.binding.get(\"value\").get(value.ui.getIndex()).get(\"debitedAccount\").set(\"accountBalance\", this.context.options.CommAccountList.get(\"value\").get(i).get(\"balance\"));\r\r\n\t\t\tthis.context.binding.get(\"value\").get(value.ui.getIndex()).get(\"debitedAccount\").set(\"balanceSign\", this.context.options.CommAccountList.get(\"value\").get(i).get(\"balanceType\"));\r\r\n\t\t}\r\r\n\t}\r\r\n}\r\r\n\r\r\nthis.validGlAccount = function (value){\r\r\n\trecord = value.ui.getIndex();\r\r\n\tif (!this.context.binding.get(\"value\").get(record).get(\"debitedAccount\").get(\"isGLFoundC\")) {\r\r\n\t\tthis.ui.get(\"AccountNumberGL[\"+record+\"]\").setValid(false, \"Account Not Found!\");\r\r\n\t}else{\r\r\n\t\tthis.ui.get(\"AccountNumberGL[\"+record+\"]\").setValid(true);\r\r\n\t}\r\r\n}\r\r\n\r\r\nthis.setPartyCIF = function (value){\r\r\n\tvar index = value.ui.getIndex();\r\r\n\tthis.ui.get(\"AccountNumber[\"+index+\"]\").setEnabled(true);\r\r\n\tif (value.getData() == \"Accountee\") {\r\r\n\t\tthis.context.binding.get(\"value\").get(index).get(\"debitedAccount\").set(\"commCIF\", this.context.options.accounteeCIF.get(\"value\"));\r\r\n\t}else if (value.getData() == \"Case In Need\") {\r\r\n\t\tthis.context.binding.get(\"value\").get(index).get(\"debitedAccount\").set(\"commCIF\", this.context.options.caseCIF.get(\"value\"));\r\r\n\t}else{\r\r\n\t\tthis.context.binding.get(\"value\").get(index).get(\"debitedAccount\").set(\"commCIF\", this.context.options.draweeCIF.get(\"value\"));\r\r\n\t}\r\r\n\tthis.ui.get(\"GetCustomerAccount1[\"+index+\"]\").execute(this.context.binding.get(\"value\").get(index).get(\"debitedAccount\").get(\"commCIF\"));\r\r\n}\r\r\n\r\r\nthis.setExchangeRate = function (value){\r\r\n\tvar index = value.ui.getIndex();\r\r\n\tif(value.getData() != \"\" && value.getData() != null && value.getData() != undefined){\r\r\n\t\tif (this.ui.get(\"defaultCurrency[\"+index+\"]\").getData() == value.getData()) {\r\r\n\t\t\tthis.ui.get(\"StandardExchangeRate[\"+index+\"]\").setData(1.0);\r\r\n\t\t\tthis.ui.get(\"NegotiatedExchangeRate[\"+index+\"]\").setData(this.ui.get(\"StandardExchangeRate[\"+index+\"]\").getData());\r\r\n\t\t}else{\r\r\n\t\t\tvar defaultCurrency = this.ui.get(\"defaultCurrency[\"+index+\"]\").getData();\r\r\n\t\t\tvar accountCurrency = value.getData();\r\r\n\t\t\tconcatedCurrency = {ccFrom : defaultCurrency , ccTo : accountCurrency , type:\"TRANSFER\" , sType:\"S\"};\r\r\n\t\t\tvar inputCurr = JSON.stringify(concatedCurrency);\r\r\n\t\t\tthis.ui.get(\"GetExchangeRate[\"+index+\"]\").execute(inputCurr);\r\r\n\t\t}\r\r\n\t}\r\r\n}\r\r\n\r\r\nthis.setExServiceResults = function (value){\r\r\n\tvar index = value.ui.getIndex();\r\r\n\tthis.ui.get(\"StandardExchangeRate[\"+index+\"]\").setData(this.context.options.exRate.get(\"value\"));\r\r\n\tthis.ui.get(\"NegotiatedExchangeRate[\"+index+\"]\").setData(this.ui.get(\"StandardExchangeRate[\"+index+\"]\").getData());\r\r\n\tthis.ui.get(\"NegotiatedExchangeRate[\"+index+\"]\").setEnabled(true);\r\r\n}\r\r\n\r\r\nthis.setCommAccounts = function (value){\r\r\n\tvar index = value.ui.getIndex();\r\r\n\tthis.context.binding.get(\"value\").get(index).set(\"commAccountList\" , []);\r\r\n\tfor (var i=0; i<this.context.options.CommAccountList.get(\"value\").length(); i++) {\r\r\n\t\tthis.context.binding.get(\"value\").get(index).get(\"commAccountList\").add({name:this.context.options.CommAccountList.get(\"value\").get(i).get(\"accountNO\") , value:this.context.options.CommAccountList.get(\"value\").get(i).get(\"accountNO\")});\r\r\n\t}\r\r\n}\r\r\n\r\r\nthis.resetGLButton = function (value){\r\r\n\tvar index = value.ui.getIndex();\r\r\n\tthis.ui.get(\"VerifyGLAccountBtn[\"+index+\"]\").setData(false);\r\r\n}\r\r\n\r\r\nthis.accountVis = function(value){\r\r\n\tvalue.setEnabled(false);\r\r\n\tvar index = value.ui.getIndex();\r\r\n\tif(this.context.options.isChecker.get(\"value\") == true || this.ui.get(\"Owner1[\"+index+\"]\").getData() == \"\"){\r\r\n\t\tvalue.setEnabled(false);\r\r\n\t}else\r\r\n\t\tvalue.setEnabled(true);\r\r\n}\r\r\n\r\r\nthis.validateDigits = function (value){\r\r\n\tvar index = value.ui.getIndex();\r\r\n\tif(isNaN(Number(value.getData()))){\r\r\n\t\tvalue.setData(\"\");\r\r\n\t\tvalue.setValid(false ,\"must be digits\");\r\r\n\t\treturn false;\r\r\n\t}else\r\r\n\t{\r\r\n\t\tvalue.setValid(true);\r\r\n\t\treturn true;\r\r\n\t}\r\r\n}\r\r\n\r\r\nthis.validateOverDraft = function (value) {\r\r\n\tvar index = value.ui.getIndex();\r\r\n\tif (this.context.binding.get(\"value\").get(index).get(\"debitedAccount\").get(\"isOverDraft\") == true) {\r\r\n\t\tthis.ui.get(\"DebitedAmountinAccountCurrency[\"+index+\"]\").setValid(false,\"WARNING: Must be < Account Balance\");\r\r\n\t}else{\r\r\n\t\tthis.ui.get(\"DebitedAmountinAccountCurrency[\"+index+\"]\").setValid(true);\r\r\n\t}\r\r\n}\r\r\n//--------------------------------------------------------------------------------Drop_2----------------------------------------------------------------------------------------\r\r\n//------------------------------------------------------------\r\r\n//function to view alert in case of get customer info error\r\r\nthis.AjaxErrorHandling = function(errorMSG)\r\r\n{\r\r\n\tthis.context.options.alertMessage.set(\"value\", errorMSG);\r\r\n\tthis.context.options.errorVis.set(\"value\", \"EDITABLE\")\r\r\n}"
+          }
+        ]
+      },
+      "hasDetails": true
+    },
+    {
+      "id": "64.0fa21995-2169-498c-ba2e-ea66c3dc5616",
+      "versionId": "b7059166-d296-437a-9e30-5607ea8f75c7",
+      "name": "Contract Creation",
+      "type": "coachView",
+      "typeName": "Coach View",
+      "details": {
+        "loadJsFunction": "if(this.context.binding.get(\"value\").get(\"haveInterest\") == false){\r\r\n\tthis.ui.get(\"contract_Interest_Details\").setVisible(false,true);\r\r\n}else if (this.context.binding.get(\"value\").get(\"haveInterest\") == true){\r\r\n\tthis.ui.get(\"contract_Interest_Details\").setVisible(true,true);\r\r\n}",
+        "bindingType": "IDCContract",
+        "configOptions": [
+          "contractcashCollateralsOption",
+          "advicesOption",
+          "contractLimitsTrackingOption",
+          "contractInterestDetailsOption",
+          "contractTransactionDetailsOption",
+          "concatString",
+          "accountList",
+          "requestCurrency",
+          "isGLFound",
+          "isSuccessful",
+          "customerCIF",
+          "adviceCodeList",
+          "selectedBIC",
+          "accounteeCIF",
+          "caseCIF",
+          "exRate",
+          "amtPayableByNBE",
+          "contractAmount",
+          "accountIndex",
+          "isChecker",
+          "stage",
+          "facilityCIF",
+          "errorMessage",
+          "selectedCIF",
+          "Suppressedvis",
+          "interestIsVisible",
+          "alertMessage",
+          "errorVis",
+          "interestVis"
+        ],
+        "inlineScripts": [
+          {
+            "name": "Inline Javascript",
+            "scriptType": "JS",
+            "scriptBlock": "this.visabilityController = function  (id) {\r\r\n\tvar temp;\r\r\n\tswitch (id) {\r\r\n//    \tcase \"contract_Interest_Details\": temp = this.context.options.contractInterestDetailsOption.get(\"value\")\r\r\n//      break;\r\r\n       \tcase \"contract_cash_Collaterals\": temp = this.context.options.contractcashCollateralsOption.get(\"value\")\r\r\n       \tbreak;\r\r\n       \tcase \"contract_Limits_Tracking\": temp = this.context.options.contractLimitsTrackingOption.get(\"value\")\r\r\n       \tbreak;\r\r\n       \tcase \"contract_Advices\": temp = this.context.options.advicesOption.get(\"value\")\r\r\n       \tbreak;\r\r\n       \tcase \"contract_Transaction_Details\": temp = this.context.options.contractTransactionDetailsOption.get(\"value\")\r\r\n       \tbreak;\r\r\n\t}\r\r\n\tif (temp) \r\r\n\t\tthis.ui.get(id).setVisible(true,true);\r\r\n\telse\r\r\n\t\tthis.ui.get(id).setVisible(false,true);\r\r\n}\r\r\n\r\r\nthis.maturityDateSum = function (value){\r\r\n\tvar maturityDate= new Date();\r\r\n\tvar baseDate = this.context.binding.get(\"value\").get(\"transactionBaseDate\").getDate();\r\r\n\tvar transDays = this.context.binding.get(\"value\").get(\"transactionTransitDays\");\r\r\n\tvar tenorDays = this.context.binding.get(\"value\").get(\"transactionTenorDays\");\r\r\n\tif (value.getData() <= 0) {\r\r\n\t\tvalue.setValid(false,\"Days Must be > 0\");\r\r\n//\t\tvalue.setData(0);\r\r\n\t}else{\r\r\n\t\tvalue.setValid(true);\r\r\n\t\tmaturityDate.setDate(baseDate + transDays + tenorDays);\r\r\n\t\tthis.context.binding.get(\"value\").set(\"transactionMaturityDate\", maturityDate);\r\r\n\t}\r\r\n}\r\r\n\r\r\nthis.swiftValid = function (value){\r\r\n\tregexString = /^(?![\\s])[a-zA-Z0-9.,()\\/='+:?!\\\"%&*<>;{@#_ \\r\\n-\\s]*$/;\r\r\n\tregex = new RegExp(regexString);\r\r\n\tif (!regex.test(value.getData())){\r\r\n\t\tvalue.setValid(false,\"Not Valid Format The Allowed characters is: Alphanumeric and . , – ( ) / = ‘ + : ? ! ” % & * < > ; { @ # _ CrLf Space\");\r\r\n\t}else{\r\r\n\t\tvalue.setValid(true);\r\r\n\t}\r\r\n}\r\r\n\r\r\nthis.setAccountList = function (){\r\r\n\tfor (var i=0; i<this.context.options.accountList.get(\"value\").length(); i++) {\r\r\n\t\tthis.context.binding.get(\"value\").get(\"accountNumberList\").add({name: this.context.options.accountList.get(\"value\").get(i).get(\"accountNO\"), value: this.context.options.accountList.get(\"value\").get(i).get(\"accountNO\")});\r\r\n\t}\r\r\n}\r\r\n\r\r\nthis.setAccountInfo = function (value){\r\r\n\tvar record = value.ui.getIndex();\r\r\n\tfor (var i=0; i<this.context.options.accountList.get(\"value\").length(); i++) {\r\r\n\t\tif (this.context.options.accountList.get(\"value\").get(i).get(\"accountNO\") == value.getData().name) {\r\r\n\t\t\tthis.context.binding.get(\"value\").get(\"cashCollateralAccounts\").get(record).set(\"accountBranchCode\", this.context.options.accountList.get(\"value\").get(i).get(\"branchCode\"));\r\r\n\t\t\tthis.context.binding.get(\"value\").get(\"cashCollateralAccounts\").get(record).set(\"accountCurrency\", this.context.options.accountList.get(\"value\").get(i).get(\"currencyCode\"));\r\r\n\t\t}\r\r\n\t}\r\r\n}\r\r\n\r\r\nthis.executeService = function (value){\r\r\n\tvar index = value.ui.getIndex();\r\r\n\tif (value.getData() == \"Customer Account\"){\r\r\n\t\tthis.ui.get(\"CustomerAccountTable/AccountNumber[\"+index+\"]\").setEnabled(true);\r\r\n\t\talert(\"CA\");\r\r\n\t\tthis.ui.get(\"CustomerAccountTable/AccountBranchCode[\"+index+\"]\").setEnabled(false);\r\r\n\t\tthis.ui.get(\"CustomerAccountTable/AccountCurrency[\"+index+\"]\").setEnabled(false);\r\r\n\t\tthis.ui.get(\"CustomerAccountTable/AccountNumberGL[\"+index+\"]\").setEnabled(false);\r\r\n\t\tthis.ui.get(\"CustomerAccountTable/AccountNumberGL[\"+index+\"]\").setData(\"\");\r\r\n\t\tthis.ui.get(\"CustomerAccountTable/VerifyGLAccountBtn[\"+index+\"]\").hide();\r\r\n\t}else if(value.getData() == \"GL Account\"){\r\r\n\t\tthis.ui.get(\"CustomerAccountTable/AccountNumberGL[\"+index+\"]\").setEnabled(true);\r\r\n\t\talert(\"GL\");\r\r\n\t\tthis.ui.get(\"CustomerAccountTable/AccountBranchCode[\"+index+\"]\").setEnabled(true);\r\r\n\t\tthis.ui.get(\"CustomerAccountTable/AccountCurrency[\"+index+\"]\").setEnabled(true);\r\r\n\t\tthis.ui.get(\"CustomerAccountTable/AccountNumber[\"+index+\"]\").setEnabled(false);\r\r\n\t\tthis.ui.get(\"CustomerAccountTable/AccountNumber[\"+index+\"]\").setData(\"\");\r\r\n\t\tthis.ui.get(\"CustomerAccountTable/VerifyGLAccountBtn[\"+index+\"]\").setVisible(true,true);\r\r\n\t}\r\r\n}\r\r\n\r\r\nthis.buttonBL = function (value){\r\r\n\tvar record = value.ui.getIndex();\r\r\n\tvalue.setValid(true);\r\r\n\tthis.ui.get(\"CustomerAccountTable/VerifyGLAccountBtn[\"+record+\"]\").setEnabled(true);\r\r\n\tthis.ui.get(\"CustomerAccountTable/VerifyGLAccountBtn[\"+record+\"]\").setData(false);\r\r\n}\r\r\n\r\r\nthis.executeGL = function (value){\r\r\n\tvar record = value.ui.getIndex();\r\r\n//\tthis.ui.get(\"CustomerAccountTable/ VerifyGLAccountBtn[\"+record+\"]\").setEnabled(false);\r\r\n\tvar data = this.context.binding.get(\"value\").get(\"cashCollateralAccounts\").get(record).get(\"GLAccountNumber\");\r\r\n\tthis.context.options.accountIndex.set(\"value\", value.ui.getIndex());\r\r\n\tthis.ui.get(\"CheckexistingGLAccount1\").execute(data);\r\r\n}\r\r\n\r\r\nthis.validGlAccount = function (){\r\r\n\trecord = this.context.options.accountIndex.get(\"value\");\r\r\n\tthis.context.binding.get(\"value\").get(\"cashCollateralAccounts\").get(record).set(\"isGLFound\", this.context.options.isGLFound.get(\"value\"));\r\r\n\tif (this.context.binding.get(\"value\").get(\"cashCollateralAccounts\").get(record).get(\"isGLFound\") == false) {\r\r\n\t\tthis.ui.get(\"CustomerAccountTable/AccountNumberGL[\"+record+\"]\").setValid(false, \"Account Not Found!\");\r\r\n\t}else{\r\r\n\t\tthis.ui.get(\"CustomerAccountTable/AccountNumberGL[\"+record+\"]\").setValid(true);\r\r\n\t}\r\r\n}\r\r\n\r\r\n\r\r\nthis.setFromCurrency = function (value){\r\r\n\tvar fromCur = value.getData().code;\r\r\n\tvar toCur = this.context.options.requestCurrency.get(\"value\");\r\r\n\tif (fromCur != toCur) {\r\r\n//\t\tvar concatCur = fromCur + \",\" + toCur +\"\";\r\r\n\t\tvar concatCur2 = {ccFrom : fromCur , ccTo : toCur , type: \"TRANSFER\" , sType:\"S\"}\r\r\n\t\tvar concatCur2JSON = JSON.stringify(concatCur2);\r\r\n\t\tthis.ui.get(\"GetExchangeRate1\").execute(concatCur2JSON);\r\r\n\t}\r\r\n}\r\r\n\r\r\nthis.validateSwift = function (view) {\r\r\n\tregexString = /^(?![\\s])[a-zA-Z0-9.,()\\/='+:?!\\\"%&*<>;{@#_-]{0,34}[a-zA-Z0-9.,()\\/='+:?!\\\"%&*<>;{@#_-](?<![\\s-])$/;\r\r\n\tregex = new RegExp(regexString);\r\r\n\tif (view.getData() != \"\") {\r\r\n\t\tif (!regex.test(view.getData())){\r\r\n\t\t\t view.setValid(false,\"Only Allowed characters is: Alphanumeric and . , – ( ) / = ‘ + : ? ! ” % & * < > ; { @ # _ CrLf Space\");\r\r\n\t\t}\r\r\n\t\telse{\r\r\n\t\t\tview.setValid(true);\r\r\n\t\t}\r\r\n\t}\r\r\n}\r\r\n\r\r\nthis.calucInterestAmount = function (){\r\r\n\tvar interestRate = this.context.binding.get(\"value\").get(\"interestRate\")+\"\";\r\r\n\tvar contractAmount = this.context.options.contractAmount.get(\"value\")+\"\";\r\r\n\tvar interestToDate = this.context.binding.get(\"value\").get(\"interestToDate\");\r\r\n\tvar interestfromDate = this.context.binding.get(\"value\").get(\"interestFromDate\");\r\r\n\tvar diff = (interestToDate.getTime() - interestfromDate.getTime());\r\r\n\tif (diff <= 0) {\r\r\n\t\tthis.ui.get(\"ToDate\").setValid(false,\"Interest To Date must be > From Date\")\r\r\n\t}else{\r\r\n\t\tvar diffDays = diff / (1000 * 3600 * 24);\r\r\n\t\tvar concatInterest = interestRate + \",\" + contractAmount + \",\" + Math.ceil(diffDays) +\"\";\r\r\n\t\t// this.context.options.concatInterest.set(\"value\", concatInterest);\r\r\n\t\tthis.ui.get(\"GetInterestAmount1\").execute(concatInterest);\r\r\n\t}\r\r\n}\r\r\n\r\r\nthis.validateDigits = function (value){\r\r\n\tvar index = value.ui.getIndex();\r\r\n\tif(isNaN(Number(value.getData()))){\r\r\n\t\tvalue.setData(\"\");\r\r\n\t\tvalue.setValid(false ,\"must be digits\");\r\r\n\t\treturn false;\r\r\n\t}else\r\r\n\t{\r\r\n\t\tvalue.setValid(true);\r\r\n\t\treturn true;\r\r\n\t}\r\r\n}\r\r\n\r\r\nthis.showAccountTable = function (value){\r\r\n\tif (this.context.binding.get(\"value\").get(\"collateralAmount\") <= 0) {\r\r\n\t\tthis.ui.get(\"CustomerAccountTable\").setVisible(false,true);\r\r\n\t}else{\r\r\n\t\tthis.ui.get(\"CustomerAccountTable\").setVisible(true,true);\r\r\n\t}\r\r\n\t\t\r\r\n}\r\r\n//----------------------------------------------------------------------------Drop_2--------------------------------\r\r\n//------------------------------------------------------------\r\r\n//function to view alert in case of get customer info error\r\r\nthis.AjaxErrorHandling = function(errorMSG)\r\r\n{\r\r\n\tthis.context.options.alertMessage.set(\"value\", errorMSG);\r\r\n\tthis.context.options.errorVis.set(\"value\", \"EDITABLE\")\r\r\n}\r\r\n\r\r\nthis.test = function (value){\r\r\n\tvar i = value.ui.getIndex();\r\r\n\tthis.ui.get(\"CustomerAccountTable/AccountNumberGL[\"+i+\"]\").setValid(false,\"WOOOOW\");\r\r\n}"
+          }
+        ]
+      },
+      "hasDetails": true
+    },
+    {
+      "id": "64.9940a6bf-7b99-412b-a9c2-2484d4c53ed5",
+      "versionId": "2fee23dd-76fc-485e-8d35-7a43b7a22e07",
+      "name": "Contract Liquidation",
+      "type": "coachView",
+      "typeName": "Coach View",
+      "details": {
+        "loadJsFunction": "if (this.context.options.isChecker.get(\"value\") == true) {\r\r\n\tthis.ui.get(\"Vertical_Settlement\").setEnabled(false);\r\r\n//\tthis.ui.get(\"DebitedAccountDetails1\").setEnabled(false);\r\r\n//\tthis.ui.get(\"DebitedAmount1\").setEnabled(false);\r\r\n}else{\r\r\n\tthis.ui.get(\"Vertical_Settlement\").setEnabled(true);\r\r\n//\tthis.ui.get(\"DebitedAccountDetails1\").setEnabled(true);\r\r\n//\tthis.ui.get(\"DebitedAmount1\").setEnabled(true);\r\r\n}\r\r\n\r\r\n\r\r\n//if (this.context.options.liquidationVis.get(\"value\")){\r\r\n//\tthis.ui.get(\"ContractLiquidation\").setVisible(true,true);\r\r\n//}else{\r\r\n//\tthis.ui.get(\"ContractLiquidation\").setVisible(false,true);\r\r\n//}",
+        "bindingType": "IDCContract",
+        "configOptions": [
+          "sAccountList",
+          "customerCIF",
+          "isGLFound",
+          "exchangeCurrency",
+          "liquidationVis",
+          "liqDone",
+          "selectedAction",
+          "accountIndex",
+          "isChecker",
+          "tempSettlement",
+          "exRate",
+          "concatExCurrency",
+          "accounteeCIF",
+          "caseCIF",
+          "draweeCIF",
+          "alertMessage",
+          "accountClassCode",
+          "errorVis"
+        ],
+        "inlineScripts": [
+          {
+            "name": "Inline Javascript",
+            "scriptType": "JS",
+            "scriptBlock": "this.executeService = function (value){\r\r\n    var index = value.ui.getIndex();\r\r\n    if (value.getData() == \"Customer Account\"){\r\r\n    \t\tthis.ui.get(\"AccountBranchCode[\"+index+\"]\").setEnabled(false);\r\r\n       \tthis.ui.get(\"AccountCurrency[\"+index+\"]\").setEnabled(false);\r\r\n\t\tthis.ui.get(\"AccountNumberGL[\"+index+\"]\").setEnabled(false);\r\r\n        \tthis.ui.get(\"VerifyGLAccountBtn[\"+index+\"]\").setEnabled(false);\r\r\n       \t this.ui.get(\"Owner1[\"+index+\"]\").setEnabled(true);\r\r\n    \t\tif (this.ui.get(\"Owner1[\"+index+\"]\").getData() != \"\") {\r\r\n   \t  \t\tthis.ui.get(\"AccountNumber[\"+index+\"]\").setEnabled(true);\r\r\n    \t  \t\tthis.ui.get(\"AccountNumberGL[\"+index+\"]\").setData(\"\");\r\r\n    \t\t}\r\r\n\t}else if (value.getData() == \"GL Account\"){\r\r\n\t\tthis.ui.get(\"AccountBranchCode[\"+index+\"]\").setEnabled(true);\r\r\n       \tthis.ui.get(\"AccountCurrency[\"+index+\"]\").setEnabled(true);\r\r\n//\t\tthis.ui.get(\"Owner1[\"+index+\"]\").setData(\"\");\r\r\n\t\tthis.ui.get(\"AccountNumber[\"+index+\"]\").setEnabled(false);\r\r\n\t\tthis.ui.get(\"Owner1[\"+index+\"]\").setEnabled(false);\r\r\n   \t  \tthis.ui.get(\"VerifyGLAccountBtn[\"+index+\"]\").setEnabled(true);\r\r\n\t\tthis.ui.get(\"AccountNumberGL[\"+index+\"]\").setEnabled(true);\r\r\n\t\tthis.ui.get(\"AccountNumber[\"+index+\"]\").setData(\"\");\r\r\n\t\tthis.ui.get(\"Decimal1[\"+index+\"]\").setData(\"\");\r\r\n\t\tthis.ui.get(\"Output_Text1[\"+index+\"]\").setData(\"\");\r\r\n\t\tthis.ui.get(\"Text2[\"+index+\"]\").setData(\"\");\r\r\n\t\tthis.ui.get(\"AccountCurrency1[\"+index+\"]\").setData(\"\");\r\r\n    }\r\r\n}\r\r\n\r\r\nthis.debitPercentageRule = function (value){\r\r\n\tif(value.getData() == \"Percentage\"){\r\r\n\t\tthis.ui.get(\"DebitPercentage\").setEnabled(true);\r\r\n\t\tthis.ui.get(\"DebitedAmountinLiquidationCurrency\").setEnabled(false);\r\r\n\t\t\r\r\n\t}else{\r\r\n        this.ui.get(\"DebitPercentage\").setEnabled(false);\r\r\n        this.ui.get(\"DebitedAmountinLiquidationCurrency\").setEnabled(true);\r\r\n   \t}\r\r\n\r\r\n} \r\r\n\r\r\nthis.dAmntAccountSum = function (value){\r\r\n\tvar record = value.ui.getIndex();\r\r\n\tvar a = this.ui.get(\"DebitedAmountinLiquidationCurrency[\"+record+\"]\").getData();\r\r\n\tvar b = this.ui.get(\"NegotiatedExchangeRate[\"+record+\"]\").getData();\r\r\n\tif ( (a != null && a != undefined) && (b != null && b != undefined)) {\r\r\n\t\tthis.ui.get(\"DebitedAmountinAccountCurrency[\"+record+\"]\").setData(this.ui.get(\"DebitedAmountinLiquidationCurrency[\"+record+\"]\").getData() * this.ui.get(\"NegotiatedExchangeRate[\"+record+\"]\").getData());\r\r\n\t}\t\t\r\r\n}\r\r\n\r\r\nthis.setAccountInfo = function (value){\r\r\n\tfor (var i=0; i<this.context.options.sAccountList.get(\"value\").length(); i++) {\r\r\n\t\tif (this.context.options.sAccountList.get(\"value\").get(i).get(\"accountNO\") == value.getData()) {\r\r\n\t\t\tthis.context.binding.get(\"value\").get(\"settlementAccounts\").get(value.ui.getIndex()).get(\"debitedAccount\").set(\"accountBalance\", this.context.options.sAccountList.get(\"value\").get(i).get(\"balance\"));\r\r\n\t\t\tthis.context.options.accountClassCode.set(\"value\", this.context.options.sAccountList.get(\"value\").get(i).get(\"accountClassCode\"));\r\r\n\t\t\tvar accountClassCode =  this.context.options.accountClassCode.get(\"value\");//SA04\r\r\n\t\t\tvar code = accountClassCode.substring(0,1);\r\r\n\t\t\t\r\r\n\t\t\tif (code == \"O\" || code == \"D\"){\t\t\r\r\n\t\t\t\tthis.context.binding.get(\"value\").get(\"settlementAccounts\").get(value.ui.getIndex()).get(\"debitedAccount\").set(\"isOverDraft\", true);\r\r\n\t\t\t}else{\r\r\n\t\t\t\tthis.context.binding.get(\"value\").get(\"settlementAccounts\").get(value.ui.getIndex()).get(\"debitedAccount\").set(\"isOverDraft\", false);\r\r\n\t\t\t}\r\r\n\t\t\talert(this.context.binding.get(\"value\").get(\"settlementAccounts\").get(value.ui.getIndex()).get(\"debitedAccount\").get(\"isOverDraft\"));\r\r\n\t\t\tif (this.context.binding.get(\"value\").get(\"settlementAccounts\").get(value.ui.getIndex()).get(\"debitedAccount\").get(\"accountClass\") == \"Customer Account\") {\r\r\n\t\t\t\tthis.context.binding.get(\"value\").get(\"settlementAccounts\").get(value.ui.getIndex()).get(\"debitedAccount\").set(\"accountCurrency\", {});\r\r\n\t\t\t\tthis.context.binding.get(\"value\").get(\"settlementAccounts\").get(value.ui.getIndex()).get(\"debitedAccount\").get(\"accountCurrency\").set(\"code\", this.context.options.sAccountList.get(\"value\").get(i).get(\"currencyCode\"));\r\r\n\t\t\t\tthis.context.binding.get(\"value\").get(\"settlementAccounts\").get(value.ui.getIndex()).get(\"debitedAccount\").set(\"accountBranchCode\", this.context.options.sAccountList.get(\"value\").get(i).get(\"branchCode\"));\r\r\n\t\t\t\tthis.context.binding.get(\"value\").get(\"settlementAccounts\").get(value.ui.getIndex()).get(\"debitedAccount\").set(\"balanceSign\", this.context.options.sAccountList.get(\"value\").get(i).get(\"balanceType\"));\r\r\n\t\t\t}\r\r\n\t\t}\r\r\n\t}\r\r\n}\r\r\n\r\r\nthis.validGlAccount = function (value){\r\r\n\tvar record = value.ui.getIndex();\r\r\n\tif (this.context.binding.get(\"value\").get(\"settlementAccounts\").get(record).get(\"debitedAccount\").get(\"isGLFoundC\") == false) {\r\r\n\t\tthis.ui.get(\"AccountNumberGL[\"+record+\"]\").setValid(false, \"Account Not Found!\");\r\r\n\t}else{\r\r\n\t\tthis.ui.get(\"AccountNumberGL[\"+record+\"]\").setValid(true);\r\r\n\t}\r\r\n}\r\r\n\r\r\nthis.setExchangeOnResult = function (){\r\r\n\tthis.ui.get(\"NegotiatedExchangeRate\").setData(this.ui.get(\"NegotiatedExchangeRate\").getData());\r\r\n}\r\r\n\r\r\nthis.executeServ = function (value){\r\r\n\tvar record = value.ui.getIndex();\r\r\n\tvar data = this.context.binding.get(\"value\").get(\"settlementAccounts\").get(record).get(\"debitedAccount\").get(\"GLAccountNumber\");\r\r\n\tthis.ui.get(\"CheckexistingGLAccount1[\"+record+\"]\").execute(data);\r\r\n}\r\r\n\r\r\nthis.addAccount = function (){\r\r\n\tthis.context.binding.get(\"value\").get(\"settlementAccounts\").add({});\r\r\n\tthis.context.binding.get(\"value\").get(\"settlementAccounts\").get(this.context.binding.get(\"value\").get(\"settlementAccounts\").length()-1).set(\"debitedAccount\",{});\r\r\n\tthis.context.binding.get(\"value\").get(\"settlementAccounts\").get(this.context.binding.get(\"value\").get(\"settlementAccounts\").length()-1).get(\"debitedAccount\").set(\"accountClass\",\"Customer Account\");\r\r\n\tthis.context.binding.get(\"value\").get(\"settlementAccounts\").get(this.context.binding.get(\"value\").get(\"settlementAccounts\").length()-1).get(\"debitedAccount\").set(\"accountCurrency\",{});\r\r\n\tthis.context.binding.get(\"value\").get(\"settlementAccounts\").get(this.context.binding.get(\"value\").get(\"settlementAccounts\").length()-1).set(\"debitedAmount\",{});\r\r\n}\r\r\n\r\r\nthis.removeAccount = function (value){\r\r\n\tindex = value.ui.getIndex();\r\r\n\tthis.context.options.tempSettlement.set(\"value\", []);\r\r\n\tfor (var i=0; i<this.context.binding.get(\"value\").get(\"settlementAccounts\").length(); i++) {\r\r\n\t\tif (i != index) {\r\r\n\t\t\tthis.context.options.tempSettlement.get(\"value\").add(this.context.binding.get(\"value\").get(\"settlementAccounts\").get(i));\r\r\n\t\t}\r\r\n\t}\r\r\n\tthis.context.binding.get(\"value\").get(\"settlementAccounts\").remove(index);\r\r\n\tfor (var i=0; i<this.context.options.tempSettlement.get(\"value\").length(); i++) {\r\r\n\t\tthis.context.binding.get(\"value\").get(\"settlementAccounts\").get(i).set(\"debitedAccount\", this.context.options.tempSettlement.get(\"value\").get(i).get(\"debitedAccount\"));\r\r\n\t\tthis.context.binding.get(\"value\").get(\"settlementAccounts\").get(i).set(\"debitedAmount\", this.context.options.tempSettlement.get(\"value\").get(i).get(\"debitedAmount\"));\r\r\n\t}\r\r\n\tconsole.dir(this.context.binding.get(\"value\").get(\"settlementAccounts\"));\r\r\n}\r\r\n\r\r\nthis.settlementVis = function (){\r\r\n\tif (this.context.options.isChecker.get(\"value\") == true) {\r\r\n\t\tthis.ui.get(\"DebitedAccountDetails1\").setEnabled(false);\r\r\n\t\tthis.ui.get(\"DebitedAmount1\").setEnabled(false);\r\r\n\t}else{\r\r\n\t\tthis.ui.get(\"DebitedAccountDetails1\").setEnabled(true);\r\r\n\t\tthis.ui.get(\"DebitedAmount1\").setEnabled(true);\r\r\n\t}\r\r\n}\r\r\n\r\r\nthis.setExchangeRate = function (value){\r\r\n\tvar index = value.ui.getIndex();\r\r\n\tif (this.ui.get(\"LiquidateionCurrency\").getData() == value.getData()) {\r\r\n\t\tthis.ui.get(\"StandardExchangeRate[\"+index+\"]\").setData(1.0);\r\r\n\t\tthis.ui.get(\"NegotiatedExchangeRate[\"+index+\"]\").setData(1.0);\r\r\n\t}else{\r\r\n\t\tvar defaultCurrency = this.ui.get(\"LiquidateionCurrency\").getData();\r\r\n\t\tvar accountCurrency = value.getData();\r\r\n\t\tconcatedCurrency = {ccFrom : defaultCurrency , ccTo : accountCurrency , type:\"TRANSFER\" , sType:\"S\"};\r\r\n\t\tinputCurr = JSON.stringify(concatedCurrency);\r\r\n\t\tthis.ui.get(\"GetExchangeRate[\"+index+\"]\").execute(inputCurr);\r\r\n\t}\t\r\r\n}\r\r\n\r\r\nthis.setExServiceResults = function (value){\r\r\n\tvar index = value.ui.getIndex();\r\r\n\tthis.ui.get(\"StandardExchangeRate[\"+index+\"]\").setData(this.context.options.exRate.get(\"value\"));\r\r\n\tthis.ui.get(\"NegotiatedExchangeRate[\"+index+\"]\").setData(this.ui.get(\"StandardExchangeRate[\"+index+\"]\").getData());\r\r\n\tthis.ui.get(\"NegotiatedExchangeRate[\"+index+\"]\").setEnabled(true);\r\r\n}\r\r\n\r\r\nthis.setOwnerCIF = function (value){\r\r\n\tvar record = value.ui.getIndex();\r\r\n\tif (this.context.options.isChecker.get(\"value\") == false) {\r\r\n\t\tthis.ui.get(\"AccountNumber[\"+record+\"]\").setEnabled(true);\r\r\n\t}\r\r\n\tif (value.getData() == \"Accountee\") {\r\r\n\t\tthis.context.binding.get(\"value\").get(\"settlementAccounts\").get(record).set(\"settCIF\", this.context.options.accounteeCIF.get(\"value\"));\r\r\n\t}else if (value.getData() == \"Case In Need\") {\r\r\n\t\tthis.context.binding.get(\"value\").get(\"settlementAccounts\").get(record).set(\"settCIF\", this.context.options.caseCIF.get(\"value\"));\r\r\n\t}else{\r\r\n\t\tthis.context.binding.get(\"value\").get(\"settlementAccounts\").get(record).set(\"settCIF\", this.context.options.draweeCIF.get(\"value\"));\r\r\n\t}\r\r\n\tthis.ui.get(\"GetCustomerAccount1[\"+record+\"]\").execute(this.context.binding.get(\"value\").get(\"settlementAccounts\").get(record).get(\"settCIF\"));\r\r\n}\r\r\n\r\r\nthis.setSettAccounts = function (value){\r\r\n\tvar index = value.ui.getIndex();\r\r\n\tthis.context.binding.get(\"value\").get(\"settlementAccounts\").get(index).set(\"accountNumberList\" , []);\r\r\n\tfor (var i=0; i<this.context.options.sAccountList.get(\"value\").length(); i++) {\r\r\n\t\tthis.context.binding.get(\"value\").get(\"settlementAccounts\").get(index).get(\"accountNumberList\").add({name:this.context.options.sAccountList.get(\"value\").get(i).get(\"accountNO\") , value:this.context.options.sAccountList.get(\"value\").get(i).get(\"accountNO\")});\r\r\n\t}\r\r\n}\r\r\n\r\r\nthis.resetGLButton = function (value){\r\r\n\tvar index = value.ui.getIndex();\r\r\n\tthis.ui.get(\"VerifyGLAccountBtn[\"+index+\"]\").setData(false);\r\r\n}\r\r\n\r\r\nthis.accountVis = function(value){\r\r\n\tvalue.setEnabled(false);\r\r\n\tvar index = value.ui.getIndex();\r\r\n\tif(this.context.options.isChecker.get(\"value\") == true || this.ui.get(\"Owner1[\"+index+\"]\").getData() == null || this.ui.get(\"Owner1[\"+index+\"]\").getData() == undefined || this.ui.get(\"Owner1[\"+index+\"]\").getData() == \"\"){\r\r\n\t\tvalue.setEnabled(false);\r\r\n\t}else{\r\r\n\t\tvalue.setEnabled(true);\r\r\n\t}\r\r\n}\r\r\n\r\r\nthis.validateDigits = function (value){\r\r\n\tvar index = value.ui.getIndex();\r\r\n\tif(isNaN(Number(value.getData()))){\r\r\n\t\tvalue.setData(\"\");\r\r\n\t\tvalue.setValid(false ,\"must be digits\");\r\r\n\t\treturn false;\r\r\n\t}else\r\r\n\t{\r\r\n\t\tvalue.setValid(true);\r\r\n\t\treturn true;\r\r\n\t}\r\r\n}\r\r\n\r\r\nthis.setDebitPercAmount = function (value){\r\r\n\tfor (var i=0; i<this.context.binding.get(\"value\").get(\"settlementAccounts\").length(); i++) {\t\t\r\r\n\t\tif (value.getData() == \"Percentage\") {\r\r\n\t\t\tthis.ui.get(\"DebitPercentage[\"+i+\"]\").setEnabled(true);\r\r\n\t\t\tthis.ui.get(\"DebitedAmountinLiquidationCurrency[\"+i+\"]\").setEnabled(false);\r\r\n\t\t\t\r\r\n\t\t}else{\r\r\n\t\t\tthis.ui.get(\"DebitPercentage[\"+i+\"]\").setEnabled(false);\r\r\n\t\t\tthis.ui.get(\"DebitedAmountinLiquidationCurrency[\"+i+\"]\").setEnabled(true);\r\r\n\t\t}\r\r\n\t}\r\r\n}\r\r\n\r\r\nthis.dAmtLiqCurSum = function (){\r\r\n\tif (this.context.binding.get(\"value\").get(\"liquidationSummary\").get(\"debitBasisby\") == \"Percentage\") {\r\r\n\t\tfor (var i=0; i<this.context.binding.get(\"value\").get(\"settlementAccounts\").length(); i++) {\r\r\n\t\t\tvar liqAmnt = this.context.binding.get(\"value\").get(\"liquidationSummary\").get(\"liquidationAmt\");\r\r\n\t\t\tvar perc = this.context.binding.get(\"value\").get(\"settlementAccounts\").get(i).get(\"debitedAmount\").get(\"debitPercentage\");\r\r\n\t\t\tvar result = liqAmnt * perc;\r\r\n\t\t\tthis.context.binding.get(\"value\").get(\"settlementAccounts\").get(i).get(\"debitedAmount\").set(\"debitedAmtinLiquidationCurrency\", result);\r\r\n\t\t}\r\r\n\t}\r\r\n}\r\r\n\r\r\nthis.validateOverDraft = function (value) {\r\r\n\tvar index = value.ui.getIndex();\r\r\n\tif (this.context.binding.get(\"value\").get(\"settlementAccounts\").get(index).get(\"debitedAccount\").get(\"isOverDraft\") == true) {\r\r\n\t\tthis.ui.get(\"DebitedAmountinAccountCurrency[\"+index+\"]\").setValid(false,\"WARNING: Must be < Account Balance\");\r\r\n\t}else{\r\r\n\t\tthis.ui.get(\"DebitedAmountinAccountCurrency[\"+index+\"]\").setValid(true);\r\r\n\t}\r\r\n}\r\r\n//----------------------------------------------------------------Drop_2----------------------------------------------------------------------\r\r\n//------------------------------------------------------------\r\r\n//function to view alert in case of get customer info error\r\r\nthis.AjaxErrorHandling = function(errorMSG)\r\r\n{\r\r\n\tthis.context.options.alertMessage.set(\"value\", errorMSG);\r\r\n\tthis.context.options.errorVis.set(\"value\", \"EDITABLE\")\r\r\n}"
+          }
+        ]
+      },
+      "hasDetails": true
+    },
+    {
+      "id": "64.656cc232-8247-43c3-9481-3cc7a9aec2e6",
+      "versionId": "d6db6ece-5692-4e79-b517-1fb798ac4e53",
+      "name": "Customer Information",
+      "type": "coachView",
+      "typeName": "Coach View",
+      "details": {
+        "bindingType": "customer",
+        "configOptions": [
+          "instanceview"
+        ],
+        "inlineScripts": [
+          {
+            "name": "Inline Javascript",
+            "scriptType": "JS",
+            "scriptBlock": "this.visControler = function  () {\r\r\n\tif (this.context.options.instanceview.get(\"value\") == true) {\r\r\n \t\tthis.ui.get(\"FacilityType1\").setEnabled(false);\r\r\n \t\tthis.ui.get(\"ImportCardNumber1\").setEnabled(false);\r\r\n \t}\r\r\n}\r\r\n\r\r\n//------------------------------------------------------------\r\r\n//function to view alert in case of get customer info error\r\r\nthis.AjaxErrorHandling = function(errorMSG)\r\r\n{\r\r\n\tthis.context.options.alertMessage.set(\"value\", errorMSG);\r\r\n\tthis.ui.get(\"Error_Message\").setVisible(true);\r\r\n\tthis.ui.get(\"Error_Message/Alert_Modal\").setVisible(true);\r\r\n}"
+          }
+        ]
+      },
+      "hasDetails": true
+    },
+    {
+      "id": "64.b8ed6603-6938-4eb1-be9a-cf77018c844f",
+      "versionId": "d1507c06-d2b2-4563-8b42-f1d021ab386d",
+      "name": "Customs Release Main",
+      "type": "coachView",
+      "typeName": "Coach View",
+      "details": {},
+      "hasDetails": false
+    },
+    {
+      "id": "64.6ac8a533-b05a-45a1-9e46-1c4542e6b8be",
+      "versionId": "ce1826d0-8f84-40a3-9e7b-1b4ecc0d75df",
+      "name": "DC History",
+      "type": "coachView",
+      "typeName": "Coach View",
+      "details": {
+        "bindingType": "appLog"
+      },
+      "hasDetails": true
+    },
+    {
+      "id": "64.f9e6899d-e7d7-4296-ba71-268fcd57e296",
+      "versionId": "a1e6cd50-2ba5-41c9-988d-5798953e1273",
+      "name": "DC Templete",
+      "type": "coachView",
+      "typeName": "Coach View",
+      "details": {
+        "loadJsFunction": "//if(this.context.options.isCAD.get(\"value\") == false){\r\r\n//\tthis.ui.get(\"checkPendingCasesBtn\").setVisible(false,true);\r\r\n//}else{\r\r\n//\tthis.ui.get(\"checkPendingCasesBtn\").setVisible(true,true);\r\r\n//}\r\r\n\r\r\n//alert(this.context.viewid);",
+        "bindingType": "appinfo",
+        "configOptions": [
+          "buttonName",
+          "hasApprovals",
+          "hasReturnReason",
+          "approvals",
+          "stepLog",
+          "action",
+          "selectedAction",
+          "approvalsReadOnly",
+          "invalidTabs",
+          "validationMessage",
+          "isCAD",
+          "successMessage"
+        ],
+        "inlineScripts": [
+          {
+            "name": "Inline Javascript",
+            "scriptType": "JS",
+            "scriptBlock": "this.showApprovals = function  () {\r\r\n\tif (this.context.options.hasApprovals.get(\"value\")) {\r\r\n\t\tthis.ui.get(\"approvalsLayout\").setVisible(true,true);\r\r\n\t\tif (this.context.options.approvalsReadOnly.get(\"value\")) {\r\r\n\t\t\tthis.ui.get(\"approvalsLayout\").setEnabled(false);\r\r\n\t\t}else{\r\r\n\t\t\tthis.ui.get(\"approvalsLayout\").setEnabled(true);\r\r\n\t\t}\r\r\n\r\r\n\t}else{\r\r\n\r\r\n\t\tthis.ui.get(\"approvalsLayout\").setVisible(false,true);\r\r\n\t}\r\r\n\t\r\r\n}\r\r\n\r\r\nthis.showReturnReason = function  () {\r\r\n\tif (this.context.options.hasReturnReason.get(\"value\") && ((this.context.options.selectedAction.get(\"value\") == \"Return To Trade FO\") || (this.context.options.selectedAction.get(\"value\") == \"Return to Initiator\") || (this.context.options.selectedAction.get(\"value\") == \"Return To Maker\"))) {\r\r\n\t\tthis.ui.get(\"ReturnReason\").setVisible(true,true);\r\r\n\t}else{\r\r\n\t\tthis.ui.get(\"ReturnReason\").setVisible(false,true);\r\r\n\t}\r\r\n}\r\r\n\r\r\nthis.showAction = function  () {\r\r\n\tif (this.context.binding.get(\"value\").get(\"subStatus\") == \"\") {\r\r\n\t\tthis.ui.get(\"Single_Select1\").setVisible(false,true);\r\r\n\t\tthis.ui.get(\"Text1\").setVisible(false,true);\r\r\n\t}\r\r\n}\r\r\n\r\r\nthis.showBookedFacility = function(tabId){\r\r\n\t  // Remove the \"active\" class from all tabs\r\r\n//  var tabs = document.getElementsByClassName(\"tab\");\r\r\n//  for (var i = 0; i < tabs.length; i++) {\r\r\n//    tabs[i].classList.remove(\"active\");\r\r\n//  }\r\r\n  \r\r\n  // Add the \"active\" class to the selected tab\r\r\n  var selectedTab = document.getElementById(tabId);\r\r\n  selectedTab.classList.add(\"active\");\r\r\n}"
+          }
+        ]
+      },
+      "hasDetails": true
+    },
+    {
+      "id": "64.46690ca1-5521-4e5c-bc9e-ecb22d75ca97",
+      "versionId": "436ce08d-104e-4e18-bb0a-7ddeeab82936",
+      "name": "Error Message",
+      "type": "coachView",
+      "typeName": "Coach View",
+      "details": {
+        "configOptions": [
+          "alertMessage",
+          "errorVis"
+        ]
+      },
+      "hasDetails": true
+    },
+    {
+      "id": "64.74d3cb97-ad59-4249-847b-a21122e44b22",
+      "versionId": "a9997453-f712-494b-9341-469590d7acc2",
+      "name": "Financial Details  Branch",
+      "type": "coachView",
+      "typeName": "Coach View",
+      "details": {
+        "bindingType": "financialDetails",
+        "configOptions": [
+          "requestType",
+          "docAmount",
+          "currncy",
+          "CIF",
+          "accountsList",
+          "tmpUsedAdvancePayment",
+          "haveAmountAdvanced",
+          "isChecker",
+          "currencyVis",
+          "requestID",
+          "alertMessage",
+          "errorVis"
+        ],
+        "inlineScripts": [
+          {
+            "name": "Inline Javascript",
+            "scriptType": "JS",
+            "scriptBlock": "this.visabilityController = function  () {\r\r\n\tvar type = this.context.options.requestType.get(\"value\");\r\r\n\r\r\n\tif (type == \"ICAP\" || type == \"IDC Execution\" || type == \"IDC Completion\" || type == \"IDC Amendment\") {\r\r\n\r\r\n\t\tthis.ui.get(\"SelectExistingAdvancePayments\").setVisible(true,true);\r\r\n\t}else{\r\r\n\r\r\n\t\tthis.ui.get(\"SelectExistingAdvancePayments\").setVisible(false,true);\r\r\n\t}\r\r\n\r\r\n\tif(this.context.options.docAmount.get(\"value\") == false){\r\r\n\t\t\r\r\n\t\tthis.ui.get(\"DocumentAmount\").setEnabled(false);\r\r\n\t}else{\r\r\n\t\tthis.ui.get(\"DocumentAmount\").setEnabled(true);\r\r\n\t}\r\r\n\tif(this.context.options.currncy.get(\"value\") == false){\r\r\n\t\tthis.ui.get(\"Currency\").setEnabled(false);\r\r\n\t\tthis.context.options.currencyVis.set(\"value\", \"READONLY\");\r\r\n\t}else{\r\r\n\t\tthis.ui.get(\"Currency\").setEnabled(true);\r\r\n\t\tthis.context.options.currencyVis.set(\"value\", \"DEFAULT\");\r\r\n\t}\r\r\n}\r\r\nthis.calculateAmountPayablebyNBE = function  () {\r\r\n\tvar payable = this.context.binding.get(\"value\").get(\"documentAmount\") - this.context.binding.get(\"value\").get(\"amtPaidbyOtherBanks\") -  this.context.binding.get(\"value\").get(\"discountAmt\") - this.context.binding.get(\"value\").get(\"amountAdvanced\");\r\r\n\tthis.context.binding.get(\"value\").set(\"amtPayableByNBE\", payable);\r\r\n\tif (this.context.options.requestType == \"ICAP\") {\r\r\n\t\tif(payable > 0){\r\r\n\t\t\tdocument.getElementById(\"text-input-Financial_Details_Trade_FO1:AmountPayablebyNBE\").style.backgroundColor = \"#eb8724\";\r\r\n\t\t\tthis.ui.get(\"AmountPayablebyNBE\").setValid(false,\"the amount is more than 0 and request type is ICAP\");\r\r\n\t\t}else{\r\r\n\t\t\tdocument.getElementById(\"text-input-Financial_Details_Trade_FO1:AmountPayablebyNBE\").style.backgroundColor = \"#ffffff\";\r\r\n\t\t\tthis.ui.get(\"AmountPayablebyNBE\").setValid(true);\r\r\n\t\t}\r\r\n\t}else if(payable < 0){\r\r\n\t\tthis.ui.get(\"AmountPayablebyNBE\").setValid(false,\"this field is madatory\");\r\r\n\t}\r\r\n\t\r\r\n}\r\r\n\r\r\nthis.resetAdvancePayment = function  () {\r\r\n\tthis.context.options.tmpUsedAdvancePayment.set(\"value\", {});\r\r\n\tthis.context.options.tmpUsedAdvancePayment.get(\"value\").set(\"invoiceCurrency\", {});\r\r\n\tthis.context.binding.get(\"value\").set(\"usedAdvancePayment\", []);\r\r\n//\tthis.context.binding.get(\"value\").get(\"usedAdvancePayment\").set(\"invoiceCurrency\", {});\r\r\n}\r\r\nthis.haveAmountAdvanced = function  () {\r\r\n\tif (this.context.binding.get(\"value\").get(\"isAdvancePaymentsUsed\") == true) {\r\r\n\t\tthis.context.options.haveAmountAdvanced.set(\"value\", \"READONLY\");\r\r\n\t}else{\r\r\n\t\tthis.context.options.haveAmountAdvanced.set(\"value\", \"DEFAULT\");\r\r\n\t}\r\r\n}\r\r\n\r\r\n//------------------------------------------------------------\r\r\n//function to view alert in case of get customer info error\r\r\nthis.AjaxErrorHandling = function(errorMSG)\r\r\n{\r\r\n\tthis.context.options.alertMessage.set(\"value\", errorMSG);\r\r\n\tthis.context.options.errorVis.set(\"value\", \"EDITABLE\")\r\r\n}"
+          }
+        ]
+      },
+      "hasDetails": true
+    },
+    {
+      "id": "64.7020f6c3-7f8d-4052-81e6-d5b6b89f97e9",
+      "versionId": "28375554-07f2-465b-8af1-b91ac2ac9540",
+      "name": "Financial Details  Branch Compliance Review",
+      "type": "coachView",
+      "typeName": "Coach View",
+      "details": {
+        "bindingType": "financialDetails"
+      },
+      "hasDetails": true
+    },
+    {
+      "id": "64.848ab487-8214-4d8b-88fd-a9cac5257791",
+      "versionId": "5059dce7-b1d2-4b7f-b88b-c9a36bf1972e",
+      "name": "Financial Details Trade FO",
+      "type": "coachView",
+      "typeName": "Coach View",
+      "details": {
+        "bindingType": "financialDetails",
+        "configOptions": [
+          "havePaymentTerms",
+          "requestType",
+          "haveTradeFOReferenceNumber",
+          "beneficiaryDetails",
+          "haveAmountAdvanced",
+          "ischecker",
+          "LimitsVis"
+        ],
+        "inlineScripts": [
+          {
+            "name": "Inline Javascript",
+            "scriptType": "JS",
+            "scriptBlock": "this.LimitsVisible = function  () {\r\r\n\tif ((this.context.options.requestType.get(\"value\") == \"IDC Execution\" || this.context.options.requestType.get(\"value\") == \"IDC Completion\" || this.context.options.requestType.get(\"value\") == \"IDC Amendment\") && this.context.binding.get(\"value\").get(\"amtDeferredAvalized\") > 0) {\r\r\n\t\tthis.context.options.LimitsVis.set(\"value\", \"DEFAULT\");\r\r\n\t}\r\r\n\telse{\r\r\n\t\tthis.context.options.LimitsVis.set(\"value\", \"READONLY\");\r\r\n\t}\r\r\n}\r\r\n\r\r\nthis.isEqualPAybaleByNBE = function  () {\r\r\n\tvar payable = this.context.binding.get(\"value\").get(\"amtPayableByNBE\");\r\r\n\tvar sum =  this.context.binding.get(\"value\").get(\"facilityAmtWithNoCurrency\")+this.context.binding.get(\"value\").get(\"cashAmtInDocCurrency\")+this.context.binding.get(\"value\").get(\"CashAmtWithNoCurrency\")+this.context.binding.get(\"value\").get(\"facilityAmtInDocCurrency\");\r\r\n\r\r\n\r\r\n\r\r\n\tif (sum!=payable) {\r\r\n\t\tthis.ui.get(\"FacilityAmountNoCurrency\").setValid(false,\"please ensure that the follwing fields is equal to Amount Payable by NBE:Facility Amount No Currency,Cash Amount Document Currency,Cash Amount No Currency,Facility Amount Document Currency\");\r\r\n\t\tthis.ui.get(\"CashAmountDocumentCurrency\").setValid(false,\"please ensure that the follwing fields is equal to Amount Payable by NBE:Facility Amount No Currency,Cash Amount Document Currency,Cash Amount No Currency,Facility Amount Document Currency\");\r\r\n\t\tthis.ui.get(\"CashAmountNoCurrency\").setValid(false,\"please ensure that the follwing fields is equal to Amount Payable by NBE:Facility Amount No Currency,Cash Amount Document Currency,Cash Amount No Currency,Facility Amount Document Currency\");\r\r\n\t\tthis.ui.get(\"FacilityAmountDocumentCurrency\").setValid(false,\"please ensure that the follwing fields is equal to Amount Payable by NBE:Facility Amount No Currency,Cash Amount Document Currency,Cash Amount No Currency,Facility Amount Document Currency\");\r\r\n\t}else{\r\r\n\t\t\r\r\n\t\tthis.ui.get(\"FacilityAmountNoCurrency\").setValid(true);\r\r\n\t\tthis.ui.get(\"CashAmountDocumentCurrency\").setValid(true);\r\r\n\t\tthis.ui.get(\"CashAmountNoCurrency\").setValid(true);\r\r\n\t\tthis.ui.get(\"FacilityAmountDocumentCurrency\").setValid(true);\r\r\n\r\r\n\t}\r\r\n}\r\r\nvar avalizationFlag = true;\r\r\nthis.avalization = function  () {\r\r\n\tthis.context.binding.get(\"value\").get(\"amtDeferredNoAvalized\")\r\r\n\tvar payable = this.context.binding.get(\"value\").get(\"amtPayableByNBE\");\r\r\n\tvar sum =  this.context.binding.get(\"value\").get(\"amtSight\")+this.context.binding.get(\"value\").get(\"amtDeferredNoAvalized\")+this.context.binding.get(\"value\").get(\"amtDeferredAvalized\");\r\r\n\tif (sum!=payable) {\r\r\n\t\tavalizationFlag = false;\r\r\n\t\tthis.ui.get(\"AmountSight\").setValid(false,\"please ensure that the follwing fields is equal to Amount Payable by NBE:Amount Sight,Amount Deferred - No Avalization,Amount Deferred - Avalization\");\r\r\n\t\tthis.ui.get(\"AmountDeferredNoAvalization\").setValid(false,\"please ensure that the follwing fields is equal to Amount Payable by NBE:Amount Sight,Amount Deferred - No Avalization,Amount Deferred - Avalization\");\r\r\n\t\tthis.ui.get(\"AmountDeferredAvalization\").setValid(false,\"please ensure that the follwing fields is equal to Amount Payable by NBE:Amount Sight,Amount Deferred - No Avalization,Amount Deferred - Avalization\");\r\r\n\t\t\r\r\n\t}else{\r\r\n\t\t\r\r\n\t\tthis.ui.get(\"AmountSight\").setValid(true);\r\r\n\t\tthis.ui.get(\"AmountDeferredNoAvalization\").setValid(true);\r\r\n\t\tthis.ui.get(\"AmountDeferredAvalization\").setValid(true);\r\r\n\t}\r\r\n}\r\r\n\r\r\nthis.checkPartiAlavalization = function  () {\r\r\n\tvar noAvalization = this.ui.get(\"AmountDeferredNoAvalization\").getData();\r\r\n\tvar avalization = this.ui.get(\"AmountDeferredAvalization\").getData();\r\r\n\tif (avalization > 0 && noAvalization > 0) {\r\r\n\t\tthis.ui.get(\"AmountDeferredNoAvalization\").setValid(false,\"partial avalization not allowed\");\r\r\n\t\tthis.ui.get(\"AmountDeferredAvalization\").setValid(false,\"partial avalization not allowed\");\r\r\n\t}else{\r\r\n\t\tif(avalizationFlag){\r\r\n\t\tthis.ui.get(\"AmountDeferredNoAvalization\").setValid(true);\r\r\n\t\tthis.ui.get(\"AmountDeferredAvalization\").setValid(true);\r\r\n\t\t}\r\r\n\t}\r\r\n}\r\r\n\r\r\nthis.calculateAmountPayablebyNBE = function  () {\r\r\n\tvar payable = this.context.binding.get(\"value\").get(\"documentAmount\") - this.context.binding.get(\"value\").get(\"amtPaidbyOtherBanks\") -  this.context.binding.get(\"value\").get(\"discountAmt\") - this.context.binding.get(\"value\").get(\"amountAdvanced\");\r\r\n\tthis.context.binding.get(\"value\").set(\"amtPayableByNBE\", payable);\r\r\n\tif (this.context.options.requestType == \"ICAP\") {\r\r\n\t\tif(payable > 0){\r\r\n\t\t\tdocument.getElementById(\"text-input-Financial_Details_Trade_FO1:AmountPayablebyNBE\").style.backgroundColor = \"#eb8724\";\r\r\n\t\t\tthis.ui.get(\"AmountPayablebyNBE\").setValid(false,\"the amount is more than 0 and request type is ICAP\");\r\r\n\t\t}else{\r\r\n\t\t\tdocument.getElementById(\"text-input-Financial_Details_Trade_FO1:AmountPayablebyNBE\").style.backgroundColor = \"#ffffff\";\r\r\n\t\t\tthis.ui.get(\"AmountPayablebyNBE\").setValid(true);\r\r\n\t\t}\r\r\n\t}else if(payable < 0){\r\r\n\t\tthis.ui.get(\"AmountPayablebyNBE\").setValid(false,\"this field must be more than 0\");\r\r\n\t}\r\r\n\t\r\r\n}\r\r\n\r\r\nthis.haveTradeFOReferenceNumber = function  () {\r\r\n\r\r\n\tif (this.context.options.haveTradeFOReferenceNumber.get(\"value\")==false) {\r\r\n\r\r\n\t\tthis.ui.get(\"TradeFOReferenceNumber\").setEnabled(false);\r\r\n\t\tthis.ui.get(\"ExecutionHubCode\").setEnabled(false);\r\r\n\t}else{\r\r\n\r\r\n\t\tthis.ui.get(\"TradeFOReferenceNumber\").setEnabled(true);\r\r\n\t\tthis.ui.get(\"ExecutionHubCode\").setEnabled(true);\r\r\n\t}\r\r\n}\r\r\n\r\r\nthis.setbeneficiaryDetails = function  () {\r\r\n\tthis.context.options.beneficiaryDetails.set(\"value\", this.context.binding.get(\"value\").get(\"beneficiaryDetails\"));\r\r\n\t\r\r\n}\r\r\nthis.checkIsChecker = function  () {\r\r\n\tif (this.context.options.ischecker == true) {\r\r\n\t\tthis.ui.get(\"CorrespondentRefNum\").setEnabled(false);\r\r\n\t\tthis.ui.get(\"AmountAdvanced\").setEnabled(false);\r\r\n\t\t\r\r\n\t}\r\r\n\telse{\r\r\n\t\tthis.ui.get(\"CorrespondentRefNum\").setEnabled(true);\r\r\n\t\tthis.ui.get(\"AmountAdvanced\").setEnabled(true);\r\r\n\t}\r\r\n}\r\r\n\r\r\n//------------------------------------------------------------\r\r\n//function to view alert in case of get customer info error\r\r\nthis.AjaxErrorHandling = function(errorMSG)\r\r\n{\r\r\n\tthis.context.options.alertMessage.set(\"value\", errorMSG);\r\r\n\tthis.context.options.errorVis.set(\"value\", \"EDITABLE\")\r\r\n}"
+          }
+        ]
+      },
+      "hasDetails": true
+    },
+    {
+      "id": "64.d221b564-11f7-4ff9-84d6-ace71c94126c",
+      "versionId": "fd93e00c-668f-4e2e-93d5-445e6ad8c5d1",
+      "name": "IDC Booked Facility",
+      "type": "coachView",
+      "typeName": "Coach View",
+      "details": {
+        "bindingType": "bookedfacility",
+        "configOptions": [
+          "BookedFacilityVis",
+          "noPendingCasesVis",
+          "noPendingCasesMsg"
+        ]
+      },
+      "hasDetails": true
+    },
+    {
+      "id": "64.9e7e0016-3899-48ff-9db4-bea34bea40f0",
+      "versionId": "c173f944-afe2-4038-be7e-d5a90cd32beb",
+      "name": "Limits Tracking",
+      "type": "coachView",
+      "typeName": "Coach View",
+      "details": {
+        "bindingType": "idcContract",
+        "configOptions": [
+          "SectionVis",
+          "facilityPercentageToBookVis",
+          "facilitiesCodesList",
+          "facility",
+          "LimitsVis",
+          "limitMessage"
+        ],
+        "inlineScripts": [
+          {
+            "name": "Inline Javascript",
+            "scriptType": "JS",
+            "scriptBlock": "this.vis = function  () {\r\r\n\tif (this.ui.get(\"LimitsTrackingRequired\").getData() == true) {\r\r\n\t\tthis.ui.get(\"GetFacility\").click();\r\r\n\t}\r\r\n\telse{\r\r\n\t\tthis.context.options.SectionVis.set(\"value\", \"NONE\");\r\r\n\t\tthis.context.binding.get(\"value\").set(\"facilities\", []);\r\r\n\t\tthis.context.options.facility.get(\"value\").set(\"facilityCode\", {});\r\r\n\r\r\n\t}\r\r\n}\r\r\nthis.haveFicility = function name (parameter) {\r\r\n\tif (this.ui.get(\"LimitsTrackingRequired\").getData() == true) {\r\r\n\t\tthis.context.options.SectionVis.set(\"value\", \"DEFAULT\");\r\r\n\t}\r\r\n\telse{\r\r\n\t\tthis.context.options.SectionVis.set(\"value\", \"NONE\");\r\r\n\r\r\n\t}\r\r\n}"
+          }
+        ]
+      },
+      "hasDetails": true
+    },
+    {
+      "id": "64.23b35509-ef0d-4932-a3c5-3f3700e945b1",
+      "versionId": "e35f281c-415b-4672-9861-fb9c8cadac1d",
+      "name": "local facility",
+      "type": "coachView",
+      "typeName": "Coach View",
+      "details": {
+        "bindingType": "creditFacilityInfo",
+        "configOptions": [
+          "creditFacilityInfoVis",
+          "facilitiesCodesList",
+          "CashCoverPercentageAndAmountVis",
+          "facilityPercentageToBookVis",
+          "facilityCodeVis",
+          "deleteFacility",
+          "SectionVis",
+          "facility",
+          "liabAndCashCoverVis"
+        ]
+      },
+      "hasDetails": true
+    },
+    {
+      "id": "64.7a7ff012-3e34-4c17-949a-ed83917c49bf",
+      "versionId": "5c3c22fd-c39b-407c-b2ac-a7ba610ef812",
+      "name": "new view",
+      "type": "coachView",
+      "typeName": "Coach View",
+      "details": {
+        "bindingType": "IDCContract",
+        "inlineScripts": [
+          {
+            "name": "Inline Javascript",
+            "scriptType": "JS",
+            "scriptBlock": "var value1 = 0;\r\r\nvar value2 = 0;\r\r\nthis.test1 = function (){\r\r\n\tvalue1 = 1010\r\r\n\talert(value1);\r\r\n}\r\r\n\r\r\nthis.test2 = function(){\r\r\n//\tvalue1 = 11;\r\r\n\talert(value1);\r\r\n}"
+          }
+        ]
+      },
+      "hasDetails": true
+    },
+    {
+      "id": "64.42200ef0-f4f7-4d44-aa41-e48db0e2da1f",
+      "versionId": "a3d608d5-1e66-480d-a9fe-673d01395e39",
+      "name": "Party",
+      "type": "coachView",
+      "typeName": "Coach View",
+      "details": {
+        "bindingType": "Party",
+        "configOptions": [
+          "partyTypeList",
+          "concatString",
+          "BeneficiaryDetails",
+          "partyIndex",
+          "customerFullDetails",
+          "selectedBIC",
+          "customerCIF",
+          "accounteeCIF",
+          "caseCIF",
+          "addressBICList",
+          "selectedCIF",
+          "alertMessage",
+          "errorVis"
+        ],
+        "inlineScripts": [
+          {
+            "name": "Inline Javascript",
+            "scriptType": "JS",
+            "scriptBlock": "this.validateParty = function (value){\r\r\n\tvar record = value.ui.getIndex();\r\r\n\tthis.ui.get(\"PartyTable/address[\"+record+\"]\").setEnabled(false);\r\r\n\tthis.ui.get(\"PartyTable/media[\"+record+\"]\").setEnabled(false);\r\r\n\tvar newString = \"\";\r\r\n\t//Concat string\r\r\n\tfor (var i=0; i<this.context.binding.get(\"value\").length(); i++) {\r\r\n\t\tnewString +=this.context.binding.get(\"value\").get(i).get(\"partyType\").name +\",\";\r\r\n\t}\r\r\n\tthis.context.options.concatString.set(\"value\", newString);\r\r\n    //Default values\r\r\n\tif (value.getData().name == \"Accountee\"|| value.getData().name == \"Case in Need\") {\r\r\n\t\tthis.context.binding.get(\"value\").get(record).set(\"country\", \"EG\");\r\r\n\t}\r\r\n\r\r\n\tif (value.getData().name == \"Remitting Bank\"){\r\r\n\t\tthis.context.binding.get(\"value\").get(record).set(\"media\", \"SWIFT\");\r\r\n\t\tthis.context.binding.get(\"value\").get(record).set(\"reference\", this.context.options.BeneficiaryDetails.get(\"value\").get(\"correspondentRefNum\"));\r\r\n\t\tthis.ui.get(\"PartyTable/address[\"+record+\"]\").setEnabled(true);\r\r\n\t\tthis.ui.get(\"PartyTable/media[\"+record+\"]\").setEnabled(true);\r\r\n\t\t\r\r\n\t}else{\r\r\n\t\tthis.context.binding.get(\"value\").get(record).set(\"media\", \"\");\r\r\n\t\tthis.ui.get(\"PartyTable/address[\"+record+\"]\").setData(\"\");\r\r\n\t\tthis.context.binding.get(\"value\").get(record).set(\"language\", \"ENG\");\r\r\n\t\tthis.context.binding.get(\"value\").get(record).set(\"reference\", \"NO REF\")\r\r\n\t}\r\r\n}\r\r\n\r\r\nthis.setPartyId = function (value){\r\r\n\tvar record = value.ui.getIndex();\r\r\n\tthis.context.options.partyIndex.set(\"value\", record);\r\r\n\tthis.context.binding.get(\"value\").get(record).set(\"isRetrived\", false);\r\r\n\t\r\r\n\tif (this.context.binding.get(\"value\").get(record).get(\"partyType\").name == \"Accountee\") {\r\r\n        \tthis.context.options.accounteeCIF.set(\"value\", value.getData());\r\r\n\t}else if (this.context.binding.get(\"value\").get(record).get(\"partyType\").name == \"Case in Need\") {\r\r\n        \tthis.context.options.caseCIF.set(\"value\", value.getData());\r\r\n\t}\r\r\n\t\r\r\n\tif(isNaN(Number(value.getData())) || value.getData().length < 8){\r\r\n        value.setValid(false , \"must be 8 digits\");\r\r\n\t\treturn false;\r\r\n\t}else{\r\r\n        value.setValid(true);\r\r\n\t\treturn true;\t\r\r\n\t}\r\r\n}\r\r\n\r\r\nthis.concatOnDelete = function (value){\r\r\n\tvar newString = \"\";\r\r\n\tfor (var i=0; i<this.context.binding.get(\"value\").length(); i++) {\r\r\n\t\tif (i == value && i > 1) {\r\r\n\t\t\tcontinue;\r\r\n\t\t}\r\r\n\t\tnewString +=this.context.binding.get(\"value\").get(i).get(\"partyType\").name +\",\";\r\r\n\t}\r\r\n\tthis.context.options.concatString.set(\"value\", newString);\r\r\n}\r\r\n\r\r\nthis.drawerNotNBE = function (){\r\r\n    if (this.context.binding.get(\"value\").get(1).get(\"isNbeCustomer\") == false){\r\r\n        this.context.binding.get(\"value\").get(1).set(\"country\", this.context.options.BeneficiaryDetails.get(\"value\").get(\"country\").get(\"englishdescription\"));\r\r\n\t\tthis.context.binding.get(\"value\").get(1).set(\"name\", this.context.options.BeneficiaryDetails.get(\"value\").get(\"name\"));\r\r\n\t}\r\r\n}\r\r\n\r\r\nthis.mapPartyData = function (){\r\r\n    record = this.context.options.partyIndex.get(\"value\");\r\r\n\tthis.context.binding.get(\"value\").get(record).set(\"address1\", this.context.options.customerFullDetails.get(\"value\").get(\"customerAddress\").get(\"addressLine1\"));\r\r\n\tthis.context.binding.get(\"value\").get(record).set(\"address2\", this.context.options.customerFullDetails.get(\"value\").get(\"customerAddress\").get(\"addressLine2\"));\r\r\n\tthis.context.binding.get(\"value\").get(record).set(\"address3\", this.context.options.customerFullDetails.get(\"value\").get(\"customerAddress\").get(\"addressLine3\"));\r\r\n\tthis.context.binding.get(\"value\").get(record).set(\"name\", this.context.options.customerFullDetails.get(\"value\").get(\"EnglishName\"));\r\r\n\tthis.context.binding.get(\"value\").get(record).set(\"country\",\"EG\");\r\r\n\tthis.context.binding.get(\"value\").get(record).set(\"language\", \"ENG\");\r\r\n}\r\r\n\r\r\nthis.clickEx = function (value){\r\r\n\trecord = value.ui.getIndex();\r\r\n\tvalue.setData(true);\r\r\n\tif (this.context.binding.get(\"value\").get(record).get(\"partyCIF\") != \"\" && this.context.binding.get(\"value\").get(record).get(\"partyCIF\") != null && this.context.binding.get(\"value\").get(record).get(\"partyCIF\") != undefined) {\r\r\n\t\tif (this.context.binding.get(\"value\").get(record).get(\"partyType\").name != \"Remitting Bank\"){\r\r\n\t    \t\tthis.context.binding.get(\"value\").get(record).set(\"partyId\",  this.context.binding.get(\"value\").get(record).get(\"partyCIF\"));\r\r\n\t\t}else{\r\r\n\t        \tthis.context.binding.get(\"value\").get(record).set(\"partyId\", this.context.binding.get(\"value\").get(1).get(\"partyCIF\"));\r\r\n\t        \tthis.ui.get(\"GetAddressBIC\").execute(this.context.binding.get(\"value\").get(record).get(\"partyCIF\"));\r\r\n\t\t}\r\r\n\t    \tthis.ui.get(\"GetPartyDetails1\").execute(this.context.binding.get(\"value\").get(record).get(\"partyCIF\"));\r\r\n\t}\t\r\r\n}\r\r\n\r\r\nthis.setBIC = function (value){\r\r\n    this.context.options.selectedBIC.set(\"value\", value.getData());\r\r\n}\r\r\n//---------------------------------------------------------------------------Drop_2--------------------------------------------------\r\r\n//------------------------------------------------------------\r\r\n//function to view alert in case of get customer info error\r\r\nthis.AjaxErrorHandling = function(errorMSG)\r\r\n{\r\r\n\tthis.context.options.alertMessage.set(\"value\", errorMSG);\r\r\n\tthis.context.options.errorVis.set(\"value\", \"EDITABLE\")\r\r\n}\r\r\n\r\r\nthis.disableRetrieveBtn = function (value){\r\r\n\tvar record = value.ui.getIndex();\r\r\n\tif (record != 1){\r\r\n//\t\tvalue.setEnabled(false);\r\r\n\t\tvalue.hide();\r\r\n\t}else{\r\r\n\t\tvalue.setEnabled(true);\r\r\n\t}\r\r\n\tif(record == 1 && this.context.binding.get(\"value\").get(record).get(\"isNbeCustomer\") == true){\r\r\n\t\tthis.ui.get(\"PartyTable/RetrieveBtn[\"+record+\"]\").setEnabled(true);\r\r\n\t}else if (record != 1){\r\r\n\t\tthis.ui.get(\"PartyTable/RetrieveBtn[\"+record+\"]\").setEnabled(true);\r\r\n\t}else {\r\r\n\t\tthis.ui.get(\"PartyTable/RetrieveBtn[\"+record+\"]\").setEnabled(false);\r\r\n\t}\r\r\n}"
+          }
+        ]
+      },
+      "hasDetails": true
+    },
+    {
+      "id": "64.38c25c09-3e0f-4fe1-9480-9d69b975cd28",
+      "versionId": "220c10f0-a0a6-4465-862a-6c565bb42cdc",
+      "name": "Payment Terms",
+      "type": "coachView",
+      "typeName": "Coach View",
+      "details": {
+        "bindingType": "paymentTerm"
+      },
+      "hasDetails": true
+    },
+    {
+      "id": "64.bd0ada34-acf3-449a-91df-9aa363c2b280",
+      "versionId": "c9d6f1fe-8209-4c83-94b9-0e48eb4187b4",
+      "name": "Products Details",
+      "type": "coachView",
+      "typeName": "Coach View",
+      "details": {
+        "bindingType": "ProductsDetails",
+        "configOptions": [
+          "testList"
+        ],
+        "inlineScripts": [
+          {
+            "name": "Inline Javascript",
+            "scriptType": "JS",
+            "scriptBlock": "//------------------------------------------------------------\r\r\n//function to view alert in case of get customer info error\r\r\nthis.AjaxErrorHandling = function(errorMSG)\r\r\n{\r\r\n\tthis.context.options.alertMessage.set(\"value\", errorMSG);\r\r\n\tthis.context.options.errorVis.set(\"value\", \"EDITABLE\")\r\r\n}"
+          }
+        ]
+      },
+      "hasDetails": true
+    },
+    {
+      "id": "64.cfe950a2-9b16-4c82-9ca9-b8a5b2ffaa58",
+      "versionId": "b6f54eb0-4763-4805-ba70-d6e12612f41f",
+      "name": "Reversal Request Main",
+      "type": "coachView",
+      "typeName": "Coach View",
+      "details": {},
+      "hasDetails": false
+    },
+    {
+      "id": "64.f547d7e6-17be-4187-b0e1-14f05f5fdfd4",
+      "versionId": "e86d619b-ccd6-4aee-ba0a-271a3fca7bfb",
+      "name": "Start New Request",
+      "type": "coachView",
+      "typeName": "Coach View",
+      "details": {
+        "bindingType": "IDCRequest",
+        "configOptions": [
+          "parentIDCRequest",
+          "retrieveRequest",
+          "retrieveCustomer",
+          "alertMessage",
+          "errorVis"
+        ],
+        "inlineScripts": [
+          {
+            "name": "Inline Javascript",
+            "scriptType": "JS",
+            "scriptBlock": "this.getCustomer = function () {\r\r\n\tthis.ui.get(\"retrieveCustomerServiceCall\").execute(this.ui.get(\"cif\").getData());\r\r\n\t}\r\r\n\r\r\nthis.getRequest = function (callback) {\r\r\n\tthis.ui.get(\"retrieveRequestServiceCall\").execute(this.ui.get(\"parentIDCRequestNumber\").getData());\r\r\n\t}\r\r\n\r\r\nthis.showParentIDC = function  () {\r\r\n\tif (this.context.binding.get(\"value\").get(\"IDCRequestNature\").get(\"englishdescription\") == \"Update Request\") {\r\r\n\t\tthis.ui.get(\"parentIDCRequestNumber\").setVisible(true,true);\r\r\n\t\tthis.ui.get(\"requestDate\").setVisible(true,true);\r\r\n\t\tthis.ui.get(\"retrieveRequest\").setVisible(true,true);\r\r\n\t\tthis.ui.get(\"beneficiaryName\").setVisible(true,true);\r\r\n\t}else{\r\r\n\t\tthis.ui.get(\"parentIDCRequestNumber\").setVisible(false,true);\r\r\n\t\tthis.ui.get(\"requestDate\").setVisible(false,true);\r\r\n\t\tthis.ui.get(\"retrieveRequest\").setVisible(false,true);\r\r\n\t\tthis.ui.get(\"beneficiaryName\").setVisible(false,true);\r\r\n\t\tthis.resetParentIDC();\r\r\n\t}\r\r\n}\r\r\nthis.resetParentIDC = function  () {\r\r\n\tthis.ui.get(\"parentIDCRequestNumber\").setData(\"\");\r\r\n\tthis.ui.get(\"requestDate\").setData(\"\");\r\r\n\tthis.ui.get(\"retrieveRequest\").setData(false);\r\r\n\tthis.ui.get(\"beneficiaryName\").setData(\"\");\r\r\n}\r\r\nthis.resetParentIDC2 = function  () {\r\r\n\t\r\r\n\tthis.ui.get(\"requestDate\").setData(\"\");\r\r\n\tthis.ui.get(\"retrieveRequest\").setData(false);\r\r\n\tthis.ui.get(\"beneficiaryName\").setData(\"\");\r\r\n}\r\r\n\r\r\n//------------------------------------------------------------\r\r\n//function to view alert in case of get customer info error\r\r\nthis.AjaxErrorHandling = function(errorMSG)\r\r\n{\r\r\n\tthis.context.options.alertMessage.set(\"value\", errorMSG);\r\r\n\tthis.context.options.errorVis.set(\"value\", \"EDITABLE\")\r\r\n}"
+          }
+        ]
+      },
+      "hasDetails": true
+    },
+    {
+      "id": "64.122789dd-9d59-4a0d-b507-23e1fe2141c4",
+      "versionId": "9114d9e6-c538-4644-ba42-c22956c12cda",
+      "name": "Swift Message Data",
+      "type": "coachView",
+      "typeName": "Coach View",
+      "details": {
+        "bindingType": "SwiftMessageData",
+        "configOptions": [
+          "selctedBic"
+        ],
+        "inlineScripts": [
+          {
+            "name": "Inline Javascript",
+            "scriptType": "JS",
+            "scriptBlock": "this.validateSwift = function (view) {\r\r\n\r\r\n//\tregexString = /^(?![\\s])[a-zA-Z0-9.,-()\\/='+:?!\\\"%&*<>;{@#_-]{0,34}[a-zA-Z0-9.,-()\\/='+:?!\\\"%&*<>;{@#_-](?<![\\s-])$/;\r\r\n\tregexString = /^(?![\\s])[a-zA-Z0-9.,()\\/='+:?!\\\"%&*<>;{@#_ \\r\\n-\\s]*$/;\r\r\n\r\r\n\tregex = new RegExp(regexString);\r\r\n\t\r\r\n\tif (view.getData() != \"\") {\r\r\n\t\tif (!regex.test(view.getData())){\r\r\n\r\r\n\t\t\t view.setValid(false,\"Only Allowed characters is: Alphanumeric and . , – ( ) / = ‘ + : ? ! ” % & * < > ; { @ # _ CrLf Space\");\r\r\n\t\t\t\r\r\n\t\t}\r\r\n\t\telse{\r\r\n\t\t\tview.setValid(true);\r\r\n\t\t}\r\r\n\t}\r\r\n}\r\r\n\r\r\nthis.visControler = function  () {\r\r\n//\tthis.context.binding.set(\"value\", {});\r\r\n\tthis.context.binding.get(\"value\").set(\"intermediary\", {});\r\r\n\tthis.context.binding.get(\"value\").set(\"accountWithInstitution\",{});\r\r\n\tthis.context.binding.get(\"value\").set(\"intermediaryReimbursementInstitution\",{});\r\r\n\tthis.context.binding.get(\"value\").set(\"receiverCorrespondent\",{});\r\r\n\tthis.context.binding.get(\"value\").set(\"detailsOfPayment\",{});\r\r\n\tthis.context.binding.get(\"value\").set(\"orderingInstitution\",{});\r\r\n\tthis.context.binding.get(\"value\").set(\"beneficiaryInstitution\",{});\r\r\n\tthis.context.binding.get(\"value\").set(\"ultimateBeneficiary\",{});\r\r\n\tthis.context.binding.get(\"value\").set(\"orderingCustomer\",{});\r\r\n\tthis.context.binding.get(\"value\").set(\"senderToReciever\",{});\r\r\n\tthis.ui.get(\"TransferType\").setData(\"\");\r\r\n\tthis.ui.get(\"CoverRequired\").setData(\"\");\r\r\n\tthis.ui.get(\"ReceiverofCover\").setData(\"\");\r\r\n\tthis.ui.get(\"receiver\").setData(\"\");\r\r\n\t\r\r\n\tthis.ui.get(\"ReceiverofCover\").setEnabled(true);\r\r\n\tthis.ui.get(\"receiver\").setEnabled(true);\r\r\n\t\t\r\r\n\tthis.ui.get(\"detailsofPaymentPanel\").setVisible(true,true);\r\r\n\tthis.ui.get(\"CoverRequired\").setVisible(true,true);\r\r\n\tthis.ui.get(\"DetailsofCharge\").setVisible(true,true);\r\r\n\tthis.ui.get(\"orderingCustomerPanel\").setVisible(true,true);\r\r\n\tthis.ui.get(\"ultimateBeneficiaryPanel\").setVisible(true,true);\r\r\n\tthis.ui.get(\"Vertical_Layout1\").setVisible(true,true);\r\r\n\tthis.ui.get(\"RTGSNetworkType\").setVisible(false,true);\r\r\n//---------------------------------------------------------------------------1--------------------------------------------------\r\r\n\tif (this.context.binding.get(\"value\").get(\"swiftMessageOption\") == \"Option 1: Serial Payment – Send MT 103\") {\r\r\n\t\tthis.ui.get(\"TransferType\").setData(\"Customer Transfer\");\r\r\n\t\tthis.ui.get(\"TransferType\").setEnabled(false);\r\r\n\t\tthis.ui.get(\"CoverRequired\").setData(\"No\");\r\r\n\t\tthis.ui.get(\"CoverRequired\").setEnabled(false);\r\r\n\t\tthis.ui.get(\"RTGS\").setData(\"No\");\r\r\n\t\tthis.ui.get(\"ReceiverofCover\").setEnabled(false);\r\r\n\t\tthis.ui.get(\"ReceiverofCover\").setData(\"\");\r\r\n\t\tthis.ui.get(\"receiver\").setEnabled(false);\r\r\n\t\tthis.ui.get(\"receiver\").setData(\"\");\r\r\n\t\t\r\r\n\t\t\r\r\n\t}\r\r\n//-------------------------------------------------------------------------2----------------------------------------------------\t\r\r\n\telse if (this.context.binding.get(\"value\").get(\"swiftMessageOption\") == \"Option 2: Cover Payment – Send MT 103 and MT 202 COV\") {\r\r\n\t\tthis.ui.get(\"TransferType\").setData(\"Customer Transfer\");\r\r\n\t\tthis.ui.get(\"TransferType\").setEnabled(false);\r\r\n\t\tthis.ui.get(\"CoverRequired\").setData(\"Yes\");\r\r\n\t\tthis.ui.get(\"CoverRequired\").setEnabled(false);\r\r\n\t\tthis.ui.get(\"RTGS\").setData(\"No\");\r\r\n\t\tthis.ui.get(\"RTGS\").setEnabled(false);\r\r\n\t\t\r\r\n\t}\r\r\n//--------------------------------------------------------------------------3---------------------------------------------------\t\r\r\n\telse if (this.context.binding.get(\"value\").get(\"swiftMessageOption\") == \"Option 3: Bank to Bank Payment (1) – Send MT 202 and MT 400\") {\r\r\n\t\tthis.ui.get(\"detailsofPaymentPanel\").setVisible(false,true);\r\r\n\t\tthis.ui.get(\"CoverRequired\").setVisible(false,true);\r\r\n\t\tthis.ui.get(\"DetailsofCharge\").setVisible(false,true);\r\r\n\t\tthis.ui.get(\"orderingCustomerPanel\").setVisible(false,true);\r\r\n\t\tthis.ui.get(\"ultimateBeneficiaryPanel\").setVisible(false,true);\r\r\n\t\t\r\r\n\t\tthis.ui.get(\"TransferType\").setData(\"Bank Transfer\");\r\r\n\t\tthis.ui.get(\"TransferType\").setEnabled(false);\r\r\n\t\t\r\r\n\t\tthis.ui.get(\"ReceiverofCover\").setEnabled(false);\r\r\n\t\tthis.ui.get(\"ReceiverofCover\").setData(\"\");\r\r\n\t\tthis.ui.get(\"receiver\").setEnabled(false);\r\r\n\t\tthis.ui.get(\"receiver\").setData(\"\");\r\r\n\t\t\r\r\n\t\tthis.ui.get(\"RTGS\").setData(\"No\");\r\r\n\t\tthis.ui.get(\"RTGS\").setEnabled(false);\r\r\n\t}\r\r\n//-------------------------------------------------------------------------4---------------------------------------------------\t\r\r\n\telse if(this.context.binding.get(\"value\").get(\"swiftMessageOption\") == \"Option 4: Bank to Bank Payment (2) – Send MT 400\"){\r\r\n\t\tthis.ui.get(\"Vertical_Layout1\").setVisible(false,true);\r\r\n\t\r\r\n\t}\r\r\n//-------------------------------------------------------------------------5---------------------------------------------------\t\r\r\n\telse if (this.context.binding.get(\"value\").get(\"swiftMessageOption\") == \"Option 5: Bank to Bank (Local) – Send MT 202\") {\r\r\n\t\tthis.ui.get(\"detailsofPaymentPanel\").setVisible(false,true);\r\r\n\t\tthis.ui.get(\"DetailsofCharge\").setVisible(false,true);\r\r\n\t\tthis.ui.get(\"orderingCustomerPanel\").setVisible(false,true);\r\r\n\t\tthis.ui.get(\"ultimateBeneficiaryPanel\").setVisible(false,true);\r\r\n\t\tthis.ui.get(\"RTGSNetworkType\").setVisible(true,true);\r\r\n\t\t\r\r\n\t\tthis.ui.get(\"TransferType\").setEnabled(false);\r\r\n\t\tthis.ui.get(\"CoverRequired\").setEnabled(false);\r\r\n\t\t\r\r\n\t\tthis.ui.get(\"TransferType\").setData(\"Bank Transfer\");\r\r\n\t\tthis.ui.get(\"CoverRequired\").setData(\"No\");\r\r\n\t\tthis.ui.get(\"ReceiverofCover\").setEnabled(false);\r\r\n\t\tthis.ui.get(\"ReceiverofCover\").setData(\"\");\r\r\n\t\tthis.ui.get(\"receiver\").setEnabled(false);\r\r\n\t\tthis.ui.get(\"receiver\").setData(\"\");\r\r\n\t\t\r\r\n\t\tthis.ui.get(\"RTGS\").setData(\"Yes\");\r\r\n\t\tthis.ui.get(\"RTGS\").setEnabled(false);\r\r\n\t\tthis.ui.get(\"RTGSNetworkType\").setData(\"PEG\");\r\r\n\t\tthis.ui.get(\"RTGSNetworkType\").setEnabled(false);\r\r\n\t}\r\r\n}\r\r\n//------------------------------------------------------------\r\r\n//function to view alert in case of get customer info error\r\r\nthis.AjaxErrorHandling = function(errorMSG)\r\r\n{\r\r\n\tthis.context.options.alertMessage.set(\"value\", errorMSG);\r\r\n\tthis.context.options.errorVis.set(\"value\", \"EDITABLE\")\r\r\n}"
+          }
+        ]
+      },
+      "hasDetails": true
+    },
+    {
+      "id": "64.66b344b9-e786-4183-bb38-58b60b772b7f",
+      "versionId": "b2f379a3-f9b6-4dc7-be0f-7e0ffabc035f",
+      "name": "test",
+      "type": "coachView",
+      "typeName": "Coach View",
+      "details": {
+        "bindingType": "idc",
+        "inlineScripts": [
+          {
+            "name": "Inline Javascript",
+            "scriptType": "JS",
+            "scriptBlock": "this.runJson = function  () {\r\r\nconsole.log(this.context.binding.get(\"value\"));\r\r\n//console.log(JSON.stringify(this.context.binding.get(\"value\")));\r\r\n//\tthis.ui.get(\"Service_Call1\").execute(JSON.stringify(this.context.binding.get(\"value\")));\r\r\n}"
+          }
+        ]
+      },
+      "hasDetails": true
+    },
+    {
+      "id": "64.b2d6d2ef-7c03-4419-bc73-52cbde1405b8",
+      "versionId": "bf849d2a-62f5-4f22-a118-410ad559c482",
+      "name": "test View",
+      "type": "coachView",
+      "typeName": "Coach View",
+      "details": {
+        "bindingType": "IDCContract"
+      },
+      "hasDetails": true
+    },
+    {
+      "id": "64.ed284446-1ac5-42cf-9523-6dd8086928a0",
+      "versionId": "8042f717-d79f-43f0-a7a6-247937b596c9",
+      "name": "Validation Helper",
+      "type": "coachView",
+      "typeName": "Coach View",
+      "details": {
+        "configOptions": [
+          "runTimeValid",
+          "stop",
+          "disableSubmit"
+        ],
+        "inlineScripts": [
+          {
+            "name": "Inline Javascript",
+            "scriptType": "JS",
+            "scriptBlock": "_this = this;\r\r\n\r\r\nvar displayText = \"Display_Text1\";\r\r\nconst generalTab = \"GENERAL\";\r\r\nvar tabSectionId = \"\";\r\r\nvar tabSection = \"\";\r\r\nvar counter = 0;\r\r\nvar errorSectionId = \"ErrorSection_Panel1\";\r\r\nvar stopLib = _this.context.options.stop.get(\"value\") || false;\r\r\nvar runTime = _this.context.options.runTimeValid.get(\"value\") || false;\r\r\n//var disableSubmit = _this.context.options.disableSubmit.get(\"value\") || false;\r\r\n\r\r\n_this.startLib2 = function () {\r\r\n\ttabSection = document.querySelector('[role=\"tablist\"]');\r\r\n\ttabSectionId = _this.getTabSectionId(tabSection);\r\r\n\r\r\n\tvar viewErrorList = bpmext.ui.getInvalidViews();\r\r\n\r\r\n\t//Disable submit until all valid\r\r\n\t// if (viewErrorList.length > 0) {\r\r\n\t// \tif (disableSubmit) {\r\r\n\t// \t\tbpmext.ui.getView(\"DC_Templete1\").enableSubmit(false);\r\r\n\t// \t}\r\r\n\t// } else {\r\r\n\t// \t_this.resetRedCircle();\r\r\n\t// \tbpmext.ui.getView(\"DC_Templete1\").enableSubmit(true);\r\r\n\t// }\r\r\n\r\r\n\tif (!viewErrorList || viewErrorList.length === 0) {\r\r\n\t\t_this.ui.get(errorSectionId).setVisible(false, true);\r\r\n\t\treturn;\r\r\n\t}\r\r\n\r\r\n\tconst errMapList = viewErrorList\r\r\n\t\t.map((view) => _this.constructErrorMap(view))\r\r\n\t\t.filter(function (obj) {\r\r\n\t\t\treturn obj != null;\r\r\n\t\t});\r\r\n\r\r\n\tvar viewMapList = [];\r\r\n\t_this.resetRedCircle();\r\r\n\tviewMapList = _this.organizeErrorsByTab(errMapList);\r\r\n\r\r\n\t// Add counter red circle\r\r\n\t_this.resetRedCircle();\r\r\n\tviewMapList.forEach((viewMap) => _this.addRedCircleToTab(viewMap));\r\r\n\r\r\n\t//Add panel with tabs and messages\r\r\n\t_this.ui.get(errorSectionId).setVisible(true, true);\r\r\n\tsetTimeout(() => {\r\r\n\t\t_this.constructValidPanel(viewMapList);\r\r\n\t}, 200);\r\r\n};\r\r\n\r\r\n_this.getTabInfoFirst = function (tabSection) {\r\r\n\tconst tabElementList = tabSection?.children;\r\r\n\tvar tabsInfo = {};\r\r\n\tfor (var i = 0; i < tabElementList.length; i++) {\r\r\n\t\tvar tabElement = tabElementList[i];\r\r\n\r\r\n\t\tvar tabInnerText = tabElement.innerText.split(\"\\n\")[0].replaceAll(\" \", \"\");\r\r\n\t\tif (!tabInnerText || tabElement.getAttribute(\"role\") !== \"tab\") continue;\r\r\n\r\r\n\t\ttabsInfo[tabInnerText] = {\r\r\n\t\t\ttabDomID: tabElement.id,\r\r\n\t\t\ttabPathId: i,\r\r\n\t\t};\r\r\n\t}\r\r\n\r\r\n\treturn tabsInfo;\r\r\n};\r\r\n\r\r\n_this.resetRedCircle = function () {\r\r\n\tconst redCircles = document.querySelectorAll(\".red-circle\");\r\r\n\tif (!redCircles) return null;\r\r\n\tredCircles.forEach((circle) => circle.remove());\r\r\n};\r\r\n\r\r\n_this.getTabSectionId = function (tabSection) {\r\r\n\tif (!tabSection) return;\r\r\n\tvar currentElement = tabSection;\r\r\n\r\r\n\twhile (currentElement && currentElement !== document.body) {\r\r\n\t\tif (currentElement.classList.contains(\"Tab_Section\")) {\r\r\n\t\t\ttabSectionId = currentElement.getAttribute(\"control-name\");\r\r\n\t\t\tbreak;\r\r\n\t\t}\r\r\n\r\r\n\t\tcurrentElement = currentElement.parentElement;\r\r\n\t}\r\r\n\r\r\n\treturn tabSectionId;\r\r\n};\r\r\n\r\r\n_this.constructValidPanel = function (viewMapList) {\r\r\n\tif (!viewMapList || viewMapList.length == 0) return;\r\r\n\tvar tabNameListHTML = \"\";\r\r\n\r\r\n\tfor (let i = 0; i < viewMapList.length; i++) {\r\r\n\t\tvar tabData = viewMapList[i].tab;\r\r\n\t\tvar messageList = viewMapList[i].messages;\r\r\n\r\r\n\t\tif (!tabData) continue;\r\r\n\r\r\n\t\tvar tabDomId = tabData.domId;\r\r\n\t\tvar tabName = tabData.name || generalTab;\r\r\n\t\tvar errorListId = `error-list-${tabDomId}`;\r\r\n\t\tvar tabIndex = tabData.pathId;\r\r\n\t\tvar errorListHTML = generateErrorListHTML(messageList, tabName, tabIndex);\r\r\n\r\r\n\t\ttabNameListHTML += generateTabItemHTML(\r\r\n\t\t\ttabName,\r\r\n\t\t\ttabDomId,\r\r\n\t\t\terrorListId,\r\r\n\t\t\ttabIndex,\r\r\n\t\t\terrorListHTML\r\r\n\t\t);\r\r\n\t}\r\r\n\r\r\n\ttabNameListHTML = `<ul class=\"tab-list\">${tabNameListHTML}</ul>`;\r\r\n\t_this.ui.get(displayText).setText(tabNameListHTML);\r\r\n\r\r\n\tfunction generateErrorListHTML(listOfErrors, tabName, tabIndex) {\r\r\n\t\treturn listOfErrors\r\r\n\t\t\t.map(function (error, i) {\r\r\n\t\t\t\tvar fieldDomId = error.field.domId;\r\r\n\t\t\t\tvar fieldPathId = error.field.pathId;\r\r\n\t\t\t\tvar targetMessage = error.message;\r\r\n\t\t\t\tvar panelString = \"\";\r\r\n\t\t\t\terror.field.panels.forEach((element) => {\r\r\n\t\t\t\t\tpanelString += element + \"@@\";\r\r\n\t\t\t\t});\r\r\n\r\r\n\t\t\t\treturn `<li><a href=\"#${fieldDomId}\" class=\"message-link\" message-id=\"${fieldDomId}\" onclick=\"_this.activateField('${tabName}','${panelString}','${tabIndex}','${fieldPathId}');\">${targetMessage}</a></li>`;\r\r\n\t\t\t})\r\r\n\t\t\t.join(\"\");\r\r\n\t}\r\r\n\r\r\n\tfunction generateTabItemHTML(tabName, tabDomId, errorListId, tabIndex, errorListHTML) {\r\r\n\t\treturn `<li class=\"tab-item\">\r\r\n\t\t\t<div class=\"tab-container\">\r\r\n\t\t\t\t<div class=\"tab-header\">\r\r\n\t\t\t\t<a href=\"#${tabDomId}\" class=\"tab-name\"\r\r\n\t\t\t\t\tonclick=\"_this.activateTab('${tabDomId}','${tabName}','${tabIndex}');window.scrollTo(0,document.getElementById('${tabDomId}').offsetTop+150);\">${tabName}:</a>\r\r\n\t\t\t\t<button id=\"toggleBtn_${errorListId}\" class=\"toggle-btn\" onclick=\"_this.toggleErrorList('${errorListId}');\">&#11165;</button>\r\r\n\t\t\t\t</div>\r\r\n\t\t\t\t<ul id=\"${errorListId}\" class=\"error-list\" style=\"display:none;\">${errorListHTML}</ul>\r\r\n\t\t\t</div>\r\r\n\t\t</li>`;\r\r\n\t}\r\r\n};\r\r\n\r\r\n_this.activateTab = function (tabDomId, tabName, tabIndex) {\r\r\n\tif (!tabName || !tabIndex) return;\r\r\n\r\r\n\tif (tabName !== generalTab) {\r\r\n\t\tpage.ui.get(tabSectionId).setCurrentPane(tabIndex);\r\r\n\t\tif (tabDomId) {\r\r\n\t\t\tvar tabElement = document.getElementById(tabDomId);\r\r\n\t\t\t_this.highLighElement(tabElement);\r\r\n\t\t}\r\r\n\t}\r\r\n};\r\r\n\r\r\n_this.toggleErrorList = function (errorListId) {\r\r\n\tif (!errorListId) return;\r\r\n\r\r\n\tvar errorList = document.getElementById(errorListId);\r\r\n\tvar toggleBtn = document.getElementById(`toggleBtn_${errorListId}`);\r\r\n\r\r\n\tif (errorList.style.display === \"none\" || errorList.style.display === \"\") {\r\r\n\t\terrorList.style.display = \"block\";\r\r\n\t\ttoggleBtn.innerHTML = \"&#11167;\"; // Change to expanded icon\r\r\n\t} else {\r\r\n\t\terrorList.style.display = \"none\";\r\r\n\t\ttoggleBtn.innerHTML = \"&#11165;\"; // Change to collapsed icon\r\r\n\t}\r\r\n\r\r\n\ttoggleBtn.classList.toggle(\"collapsed\");\r\r\n};\r\r\n\r\r\n_this.activateField = function (tabName, panelString, tabIndex, fieldPathId) {\r\r\n\tif (!fieldPathId) return;\r\r\n\tvar panelList = panelString.split(\"@@\").filter((e) => e !== \"\");\r\r\n\t// console.dir(panelList);\r\r\n\tif (tabIndex && tabSectionId && tabName !== generalTab) {\r\r\n\t\tpage.ui.get(tabSectionId).setCurrentPane(tabIndex);\r\r\n\t}\r\r\n\tif (panelList && panelList.length > 0) {\r\r\n\t\tfor (let i = 0; i < panelList.length; i++) {\r\r\n\t\t\tpage.ui.get(panelList[i]).expand();\r\r\n\t\t}\r\r\n\t\tsetTimeout(function () {\r\r\n\t\t\t_this.focusOnElement(fieldPathId);\r\r\n\t\t}, 300);\r\r\n\t}\r\r\n\t_this.focusOnElement(fieldPathId);\r\r\n};\r\r\n\r\r\n_this.focusOnElement = function (fieldPathId) {\r\r\n\tvar fieldElement = page.ui.get(fieldPathId).context.element;\r\r\n\t_this.highLighElement(fieldElement);\r\r\n\r\r\n\tpage.ui.get(fieldPathId).focus();\r\r\n};\r\r\n\r\r\n_this.highLighElement = function (fieldElement) {\r\r\n\tif (!fieldElement) return;\r\r\n\r\r\n\tfieldElement.classList.add(\"highlighted-field\");\r\r\n\tsetTimeout(function () {\r\r\n\t\tfieldElement.classList.remove(\"highlighted-field\");\r\r\n\t}, 1500);\r\r\n};\r\r\n\r\r\n_this.addRedCircleToTab = function (viewMap) {\r\r\n\tif (!viewMap.tab.domId) return;\r\r\n\r\r\n\tconst messagesCount = viewMap.messages.length;\r\r\n\tconst tabDomId = viewMap.tab.domId;\r\r\n\tconst tabElement = document.getElementById(tabDomId);\r\r\n\tif (!tabElement) return;\r\r\n\r\r\n\tconst existingCircle = tabElement.querySelector(\".red-circle\");\r\r\n\r\r\n\tif (!existingCircle) {\r\r\n\t\tconst redCircle = document.createElement(\"div\");\r\r\n\t\tredCircle.classList.add(\"red-circle\");\r\r\n\t\tredCircle.innerText = messagesCount;\r\r\n\t\ttabElement.appendChild(redCircle);\r\r\n\t} else {\r\r\n\t\texistingCircle.innerText = messagesCount;\r\r\n\t}\r\r\n};\r\r\n\r\r\n_this.constructErrorMap = function (fieldElement) {\r\r\n\tif (!fieldElement || !fieldElement.context.element || !fieldElement._bpmextViewNode)\r\r\n\t\treturn null;\r\r\n\r\r\n\tvar fieldDomId = fieldElement.context.element.id;\r\r\n\tvar fieldParents = _this.getFieldParents(fieldDomId);\r\r\n\tvar isField = Object.keys(fieldElement._bpmextViewNode._data.context.subview).length === 0;\r\r\n\tif (isField) {\r\r\n\t\terrorMap = {\r\r\n\t\t\tfield: {\r\r\n\t\t\t\tmessage: fieldElement._bpmextVE?.errors?.[0]?.message || \"\",\r\r\n\t\t\t\tdomId: fieldDomId,\r\r\n\t\t\t\tpathId: fieldElement.context.element.getAttribute(\"control-name\"),\r\r\n\t\t\t\tviewId: fieldElement.context.element.getAttribute(\"data-viewid\"),\r\r\n\t\t\t},\r\r\n\r\r\n\t\t\tpanels: fieldParents.cPanelList /*[list of \"SPARKCPanel\"]*/,\r\r\n\r\r\n\t\t\tview: fieldParents.viewObj,\r\r\n\t\t};\r\r\n\t\treturn errorMap;\r\r\n\t}\r\r\n};\r\r\n\r\r\n_this.getFieldParents = function (elementId) {\r\r\n\tvar fieldParents = {\r\r\n\t\tviewObj: {\r\r\n\t\t\tname: \"\",\r\r\n\t\t\tdomId: \"\",\r\r\n\t\t\tpathId: \"\",\r\r\n\t\t},\r\r\n\t\tcPanelList: [],\r\r\n\t};\r\r\n\tconst cPanelClass = \"Collapsible_Panel\";\r\r\n\tconst tabClass = \"tab-pane\";\r\r\n\r\r\n\tlet currentElement = document.getElementById(elementId);\r\r\n\r\r\n\twhile (currentElement && currentElement !== document.body) {\r\r\n\t\tif (currentElement.classList.contains(tabClass)) {\r\r\n\t\t\tfieldParents.viewObj.name = currentElement.getAttribute(\"aria-label\");\r\r\n\t\t\tfieldParents.viewObj.domId = currentElement.id;\r\r\n\t\t\tfieldParents.viewObj.pathId = currentElement.getAttribute(\"control-name\");\r\r\n\t\t} else if (currentElement.classList.contains(cPanelClass)) {\r\r\n\t\t\tfieldParents.cPanelList.unshift(currentElement.getAttribute(\"control-name\"));\r\r\n\t\t}\r\r\n\r\r\n\t\tcurrentElement = currentElement.parentNode;\r\r\n\t}\r\r\n\treturn fieldParents;\r\r\n};\r\r\n\r\r\n_this.organizeErrorsByTab = function (errorList) {\r\r\n\tconst viewMap = new Map();\r\r\n\tvar tabsInfo = {};\r\r\n\tif (tabSection) {\r\r\n\t\ttabsInfo = _this.getTabInfoFirst(tabSection);\r\r\n\t}\r\r\n\r\r\n\terrorList.forEach((error) => {\r\r\n\t\tif (error) {\r\r\n\t\t\tvar viewName = error.view.name;\r\r\n\t\t\tif (viewName) {\r\r\n\t\t\t\tvar tabName = viewName?.replaceAll(\" \", \"\") + \"\";\r\r\n\t\t\t}\r\r\n\r\r\n\t\t\tif (!viewMap.has(viewName)) {\r\r\n\t\t\t\tviewMap.set(viewName, {\r\r\n\t\t\t\t\tview: {\r\r\n\t\t\t\t\t\tname: viewName,\r\r\n\t\t\t\t\t\tdomId: error.view.domId,\r\r\n\t\t\t\t\t\tpathId: error.view.pathId,\r\r\n\t\t\t\t\t},\r\r\n\t\t\t\t\tmessages: [],\r\r\n\t\t\t\t\ttab: {\r\r\n\t\t\t\t\t\tname: viewName,\r\r\n\t\t\t\t\t\tdomId: tabsInfo[tabName]?.tabDomID,\r\r\n\t\t\t\t\t\tpathId: tabsInfo[tabName]?.tabPathId,\r\r\n\t\t\t\t\t},\r\r\n\t\t\t\t});\r\r\n\t\t\t}\r\r\n\r\r\n\t\t\t// Add the error message to the corresponding tab entry\r\r\n\t\t\tviewMap.get(viewName).messages.push({\r\r\n\t\t\t\tmessage: error.field.message,\r\r\n\t\t\t\tfield: {\r\r\n\t\t\t\t\tdomId: error.field.domId,\r\r\n\t\t\t\t\tpathId: error.field.pathId,\r\r\n\t\t\t\t\tviewId: error.field.viewId,\r\r\n\t\t\t\t\tpanels: [...error.panels],\r\r\n\t\t\t\t},\r\r\n\t\t\t});\r\r\n\t\t}\r\r\n\t});\r\r\n\r\r\n\t// Convert the map values to an array of tab objects\r\r\n\tconst organizedTabs = [...viewMap.values()];\r\r\n\tconsole.dir(organizedTabs);\r\r\n\treturn organizedTabs;\r\r\n};\r\r\n\r\r\n_this.getTabInfo = function (viewName) {\r\r\n\tif (!viewName || viewName == \"\") return;\r\r\n\r\r\n\tconst tabElementList = tabSection?.children;\r\r\n\r\r\n\tfor (var i = 0; i < tabElementList.length; i++) {\r\r\n\t\tvar tabElement = tabElementList[i];\r\r\n\r\r\n\t\tvar tabInnerText = tabElement.innerText.split(\"\\n\")[0].trim();\r\r\n\t\tif (!tabInnerText || tabElement.role != \"tab\") return;\r\r\n\t\tconsole.log(tabInnerText.replaceAll(\" \", \"\"));\r\r\n\r\r\n\t\tif (tabInnerText.replaceAll(\" \", \"\") == viewName.replaceAll(\" \", \"\")) {\r\r\n\t\t\treturn `${viewName.trim()}&${tabElement.id}&${i}`;\r\r\n\t\t}\r\r\n\t}\r\r\n};\r\r\n\r\r\n//=======================================REQUIRED===============================================//\r\r\nrequire([\"com.ibm.bpm.coach/engine\"], function (engine) {\r\r\n\tvar dve = engine._deliverValidationEvents;\r\r\n\tengine._deliverValidationEvents = function (event, viewMap, isClear) {\r\r\n\t\tdve(event, viewMap, isClear); // original processing first\r\r\n\t\t// console.log(\"_deliverValidationEvents\", event, viewMap, isClear);\r\r\n\t}.bind(engine);\r\r\n\tvar hve = engine.handleValidationEvent;\r\r\n\tengine.handleValidationEvent = function (event) {\r\r\n\t\thve(event);\r\r\n\t\t// console.log(\"handleValidationEvent\", event);\r\r\n\t\tif (!stopLib) {\r\r\n\t\t\t_this.startLib2();\r\r\n\t\t}\r\r\n\t}.bind(engine);\r\r\n});\r\r\n\r\r\nvar uvvs = bpmext && bpmext.ui && bpmext.ui.updateViewValidationState;\r\r\nif (uvvs) {\r\r\n\tbpmext.ui.updateViewValidationState = function (view, event) {\r\r\n\t\tuvvs(view, event); //call original handler\r\r\n\t\t// console.log(\"updateViewValidationState\", view, event);\r\r\n\t\tif (!stopLib && runTime) {\r\r\n\t\t\t_this.startLib2();\r\r\n\t\t}\r\r\n\t};\r\r\n}"
+          },
+          {
+            "name": "Inline CSS",
+            "scriptType": "CSS",
+            "scriptBlock": "/* Style for the red circle counter */\r\r\n.red-circle {\r\r\n\tposition: absolute;\r\r\n\ttop: 0;\r\r\n\tright: 0;\r\r\n\twidth: 17px;\r\r\n\theight: 17px;\r\r\n\tbackground-color: red;\r\r\n\tborder-radius: 50%;\r\r\n\tdisplay: flex;\r\r\n\tjustify-content: center;\r\r\n\talign-items: center;\r\r\n\tcolor: white;\r\r\n\tfont-weight: bold;\r\r\n}\r\r\n\r\r\n.tab-link {\r\r\n\tfont-size: medium;\r\r\n}\r\r\n\r\r\n/* Style for the tab list */\r\r\n.tab-list {\r\r\n\tlist-style-type: none;\r\r\n\tpadding: 0;\r\r\n}\r\r\n\r\r\n/* Style for each tab item */\r\r\n.tab-item {\r\r\n\tmargin-bottom: 10px;\r\r\n\tborder: none;\r\r\n\tpadding: 5px;\r\r\n\tdisplay: flex;\r\r\n\talign-items: center;\r\r\n\tlist-style: none;\r\r\n}\r\r\n\r\r\n/* Style for the tab name */\r\r\n.tab-name {\r\r\n\tfont-size: 16px;\r\r\n\tmargin-right: 10px;\r\r\n}\r\r\n\r\r\n.tab-container {\r\r\n\tdisplay: flex;\r\r\n\tflex-direction: column;\r\r\n}\r\r\n\r\r\n.tab-header {\r\r\n\tdisplay: flex;\r\r\n\talign-items: center;\r\r\n}\r\r\n\r\r\n/* Style for the toggle button */\r\r\n.toggle-btn {\r\r\n\tfont-size: 18px;\r\r\n\tcursor: pointer;\r\r\n\tbackground: none; /* Remove background color */\r\r\n\tborder: none; /* Remove border */\r\r\n\tpadding: 5px 10px; /* Add padding */\r\r\n\tmargin-left: -10px;\r\r\n\ttransition: transform 0.1s ease; /*\r\r\n}\r\r\n\r\r\n.toggle-btn.collapsed {\r\r\n\ttransform: rotate(-90deg);\r\r\n\t/* Rotate the button for the collapsed state */\r\r\n}\r\r\n\r\r\n.toggle-btn:active {\r\r\n\ttransform: scale(0.95); /* Add a simple click animation */\r\r\n}\r\r\n\r\r\n.toggle-btn:hover {\r\r\n\tbackground-color: #ddd;\r\r\n\t/* Change background color on hover */\r\r\n}\r\r\n\r\r\n.tab {\r\r\n\tposition: relative;\r\r\n}\r\r\n\r\r\n.tab::after {\r\r\n\tcontent: attr(error-count);\r\r\n\tcolor: red;\r\r\n\tfont-size: 10px;\r\r\n\tposition: absolute;\r\r\n\tright: 5px;\r\r\n\ttop: 5px;\r\r\n}\r\r\n\r\r\n/* Add animation for the highlighted field */\r\r\n.highlighted-field {\r\r\n\tanimation-name: highlight;\r\r\n\tanimation-duration: 1.5s;\r\r\n}\r\r\n\r\r\n@keyframes highlight {\r\r\n\tfrom {\r\r\n\t\tbackground-color: yellow; /* Change this to the starting highlight color */\r\r\n\t}\r\r\n\tto {\r\r\n\t\tbackground-color: initial; /* Change this to the ending background color */\r\r\n\t}\r\r\n}\r\r\n\r\r\n.error-list {\r\r\n\tdisplay: none;\r\r\n\t/* Make the error list a block element */\r\r\n\tmargin-left: 50px;\r\r\n\t/* Remove default margin */\r\r\n\tpadding: 0;\r\r\n\t/* Remove default padding */\r\r\n}\r\r\n\r\r\n.message-link {\r\r\n\tcursor: pointer;\r\r\n}"
+          }
+        ]
+      },
+      "hasDetails": true
+    },
+    {
+      "id": "64.ad8f3ff9-299c-4bd2-afe1-50281ea8b72a",
+      "versionId": "c3118473-49f4-4234-9b37-d25eb1c3120f",
+      "name": "Validation message",
+      "type": "coachView",
+      "typeName": "Coach View",
+      "details": {
+        "bindingType": "validationMessage"
+      },
+      "hasDetails": true
+    },
+    {
+      "id": "64.349d9cfc-f3ed-4901-b89a-59594bac5b4f",
+      "versionId": "0a542800-ca84-4e8f-adaa-96391fe90321",
+      "name": "Withdrawal Request Main",
+      "type": "coachView",
+      "typeName": "Coach View",
+      "details": {},
+      "hasDetails": false
+    },
+    {
+      "id": "64.0d7634e8-859f-4f60-b8ce-a0b32d5a1374",
+      "versionId": "d40f4439-fb45-474b-acf2-8ed3d88c0a8f",
+      "name": "Withdrawal Request Trade FO",
+      "type": "coachView",
+      "typeName": "Coach View",
+      "details": {},
+      "hasDetails": false
+    }
+  ]
+}

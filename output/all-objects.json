@@ -1,0 +1,2083 @@
+{
+  "totalCount": 203,
+  "objects": [
+    {
+      "id": "25.4de86ec1-53b9-4472-8ae0-17c04487a8d3",
+      "versionId": "9c0572c1-cb23-4399-9a0f-5e0a8c559bdc",
+      "name": "",
+      "type": "bpd",
+      "typeName": "Business Process Definition",
+      "details": {}
+    },
+    {
+      "id": "25.cdbb0d70-3d5a-4206-948e-194d0bed57ea",
+      "versionId": "897407a2-f6d8-42f4-90f7-6daf3aa7c9f5",
+      "name": "",
+      "type": "bpd",
+      "typeName": "Business Process Definition",
+      "details": {}
+    },
+    {
+      "id": "61.81d07735-1367-4a03-a508-9c646519dab0",
+      "versionId": "9fb6fc34-81c2-4016-87d4-39318c34ede4",
+      "name": "0aacb363-83b1-4d0a-959d-7ab705b08e5c.zip",
+      "type": "managedAsset",
+      "typeName": "Managed Asset",
+      "details": {}
+    },
+    {
+      "id": "1.b7869400-09ed-4f15-972f-39c44a324089",
+      "versionId": "3d49ff53-f14e-445c-826a-2e1e534e63f3",
+      "name": "1.b7869400-09ed-4f15-972f-39c44a324089",
+      "type": "process",
+      "typeName": "Process",
+      "details": {}
+    },
+    {
+      "id": "21.8ce8b34e-54bb-4623-a4c9-ab892efacac6",
+      "versionId": "e0c7f213-6cb7-43fb-b599-f705d7b67a59",
+      "name": "Action",
+      "type": "epv",
+      "typeName": "Environment Property Variable",
+      "details": {}
+    },
+    {
+      "id": "1.c042b0b3-9130-4489-8642-a4a851c1b331",
+      "versionId": "bdbad7cb-8c38-4cd3-9fa4-2f0110d5e0d2",
+      "name": "Add Advance Payment",
+      "type": "process",
+      "typeName": "Process",
+      "details": {}
+    },
+    {
+      "id": "64.ab2ea11b-7c5e-4835-9ed4-18708eee21be",
+      "versionId": "9bbe4e1d-2915-4f99-9ebc-c9ed04293d85",
+      "name": "Advance Payments Used",
+      "type": "coachView",
+      "typeName": "Coach View",
+      "details": {
+        "bindingType": "usedAdvancePayment",
+        "configOptions": [
+          "tmpUsedAdvancePayment",
+          "TotalAllocatedAmountinRequestCurrency",
+          "requestCurrency",
+          "addBtn",
+          "isChecker",
+          "currencyVis",
+          "currncy",
+          "requestID",
+          "CIF",
+          "alertMessage",
+          "errorVis"
+        ],
+        "inlineScripts": [
+          {
+            "name": "Inline Javascript",
+            "scriptType": "JS",
+            "scriptBlock": "var isUpdate = false;\r\r\nvar item = {};\r\r\nthis.addAdvancePayment = function  () {\r\r\n\tthis.context.options.currencyVis.set(\"value\", \"READONLY\");\r\r\n\titem = this.context.options.tmpUsedAdvancePayment.get(\"value\");\t\r\r\n\tif (isUpdate && item.get(\"AllocatedAmountinRequestCurrency\")!=undefined && item.get(\"AllocatedAmountinRequestCurrency\")!=null && this.context.options.tmpUsedAdvancePayment.get(\"value\").get(\"AmountAllocated\") > 0 && this.context.options.tmpUsedAdvancePayment.get(\"value\").get(\"AmountAllocated\") < this.context.options.tmpUsedAdvancePayment.get(\"value\").get(\"outstandingAmount\") && this.context.options.tmpUsedAdvancePayment.get(\"value\").get(\"AllocatedAmountinRequestCurrency\") > 0 ){\r\r\n\t\tvar input = this.context.options.requestID.get(\"value\") +\"-\"+ this.context.options.tmpUsedAdvancePayment.get(\"value\").get(\"AllocatedAmountinRequestCurrency\") +\"-\"+ this.context.options.tmpUsedAdvancePayment.get(\"value\").get(\"AmountAllocated\") +\"-\"+ this.context.options.tmpUsedAdvancePayment.get(\"value\").get(\"DBID\");\r\r\n\t\t\t\r\r\n\t\tthis.ui.get(\"UpdateAdvancePaymentCall\").execute(input);\r\r\n\t\t\r\r\n\t}\r\r\n\telse{\r\r\n\t\tif ( (item.get(\"AmountAllocated\")!=undefined && item.get(\"AmountAllocated\")!=null && item.get(\"AmountAllocated\") > 0 && item.get(\"AmountAllocated\") <= item.get(\"outstandingAmount\") ) && (item.get(\"beneficiaryName\")!=null && item.get(\"beneficiaryName\")!= \"\" && item.get(\"beneficiaryName\")!= undefined) && this.context.options.tmpUsedAdvancePayment.get(\"value\").get(\"AllocatedAmountinRequestCurrency\") > 0) {\r\r\n//\t\t\tthis.ui.get(\"advancePaymentTable\").appendElement(item);\r\r\n\t\t\tvar input = this.context.options.requestID.get(\"value\") +\"-\"+ this.context.options.tmpUsedAdvancePayment.get(\"value\").get(\"AllocatedAmountinRequestCurrency\") +\"-\"+ this.context.options.tmpUsedAdvancePayment.get(\"value\").get(\"AmountAllocated\") +\"-\"+ this.context.options.tmpUsedAdvancePayment.get(\"value\").get(\"DBID\");\r\r\n\t\t\t\r\r\n\t\t\tthis.ui.get(\"AddAdvancePaymentCall\").execute(input);\r\r\n\t\t\t\r\r\n\r\r\n\t\t}else{\r\r\n\t\t\talert(\"can not add\");\r\r\n\t\t}\r\r\n\t}\r\r\n\r\r\n//\tthis.sumAllocated();\r\r\n}\r\r\nthis.addtoTable = function name () {\r\r\n\tthis.ui.get(\"updateButton\").setEnabled(true);\r\r\n\tthis.context.binding.get(\"value\").add(item);\r\r\n\tthis.context.options.tmpUsedAdvancePayment.set(\"value\", {});\r\r\n\tthis.context.options.tmpUsedAdvancePayment.get(\"value\").set(\"invoiceCurrency\", {});\r\r\n}\r\r\nthis.updateinTable = function () {\r\r\n\t\r\r\n\tvar selectedItem= this.ui.get(\"advancePaymentTable\").getSelectedIndex();\r\r\n//\t----------------------------------------------------------------------\r\r\n\tthis.ui.get(\"advancePaymentTable\").removeRecord(selectedItem);\r\r\n\tthis.ui.get(\"advancePaymentTable\").appendElement(item);\r\r\n//\t--------------------------------------------------------------------\t\t\t\r\r\n\tthis.context.options.tmpUsedAdvancePayment.set(\"value\", {});\r\r\n\tthis.context.options.tmpUsedAdvancePayment.get(\"value\").set(\"invoiceCurrency\", {});\r\r\n\tisUpdate = false;\r\r\n}\r\r\n\r\r\nthis.getAdvancePayment = function () {\r\r\n\tvar input  = this.ui.get(\"AdvancePaymentRequestNumber\").getData()+\"-\"+this.context.options.CIF.get(\"value\")+\"-\"+this.context.options.requestID.get(\"value\");\r\r\n\t\r\r\n\tthis.ui.get(\"retrieveAdvancePayment\").execute(input);\r\r\n}\r\r\n\r\r\nthis.updateBTNDisable = function  (rowSelected) {\r\r\n\t\r\r\n\tvar input = this.context.options.requestID.get(\"value\") +\"-\"+ rowSelected.DBID;\r\r\n\t\t\t\r\r\n\tthis.ui.get(\"DeleteAdvancePaymentCall\").execute(input);\r\r\n\t\r\r\n\tvar amount = this.context.options.TotalAllocatedAmountinRequestCurrency.get(\"value\") - rowSelected.AllocatedAmountinRequestCurrency\r\r\n\tif (this.context.binding.get(\"value\").length() == 1) {\r\r\n\t\tthis.ui.get(\"updateButton\").setEnabled(false);\r\r\n\t\t\r\r\n\t\tif (this.context.options.currncy.get(\"value\") == true) {\r\r\n\t\t\tthis.context.options.currencyVis.set(\"value\", \"DEFAULT\");\r\r\n\t\t}\r\r\n\t}\r\r\n\tthis.context.options.TotalAllocatedAmountinRequestCurrency.set(\"value\", amount);\r\r\n\r\r\n}\r\r\nthis.sumAllocated = function  () {\r\r\n\tvar sum = 0.0;\r\r\n\t\r\r\n//\talert(\"sum\");\r\r\n\tthis.context.options.TotalAllocatedAmountinRequestCurrency.set(\"value\", sum);\r\r\n\r\r\n\tfor (var i=0; i<this.context.binding.get(\"value\").length(); i++) {\r\r\n\t\tsum+=this.context.binding.get(\"value\").get(i).get(\"AllocatedAmountinRequestCurrency\");\r\r\n\t}\r\r\n//\tthis.context.options.addBtn.set(\"value\", false);\r\r\n//\tthis.context.options.vis.set(\"value\", \"EDITABLE\");\t\r\r\n//\tthis.context.options.vis.set(\"value\", \"READONLY\");\r\r\n\tthis.context.options.TotalAllocatedAmountinRequestCurrency.set(\"value\", sum);\r\r\n//\tthis.ui.get(\"addbutton\").setEnabled(true);\r\r\n//\tthis.ui.get(\"addbutton\").setEnabled(false);\r\r\n\tthis.ui.get(\"addbutton\").hide();\r\r\n\t\r\r\n}\r\r\nthis.resetAdvancePayment = function  () {\r\r\n\tisUpdate = false;\r\r\n\t\r\r\n\tthis.context.options.tmpUsedAdvancePayment.set(\"value\", {});\r\r\n\tthis.context.options.tmpUsedAdvancePayment.get(\"value\").set(\"invoiceCurrency\", {});\r\r\n//\tthis.context.options.vis.set(\"value\", \"EDITABLE\");\t\r\r\n//\tthis.context.options.vis.set(\"value\", \"READONLY\");\r\r\n//\tthis.ui.get(\"addbutton\").setEnabled(true);\r\r\n//\tthis.ui.get(\"addbutton\").setEnabled(false);\r\r\n\tthis.ui.get(\"addbutton\").hide();\r\r\n\t\r\r\n}\r\r\nthis.updateAdvancePayment = function  () {\r\r\n\tisUpdate = true;\r\r\n\tvar selectedItem= this.ui.get(\"advancePaymentTable\").getSelectedRecord();\r\r\n\tthis.context.options.tmpUsedAdvancePayment.set(\"value\", selectedItem);\r\r\n\r\r\n}\r\r\nthis.convert = function  () {\r\r\n\r\r\n\tif(this.context.options.requestCurrency.get(\"value\") !=\"\" && this.context.options.requestCurrency.get(\"value\") !=null && this.context.options.requestCurrency.get(\"value\") !=undefined){\r\r\n\t\t\tvar amount = this.context.options.tmpUsedAdvancePayment.get(\"value\").get(\"AmountAllocated\");\r\r\n\t\t\tvar fromCurrency = this.context.options.tmpUsedAdvancePayment.get(\"value\").get(\"invoiceCurrency\").get(\"code\");\r\r\n\t\t\tvar toCurrency = this.context.options.requestCurrency.get(\"value\");\r\r\n\t\t\tthis.ui.get(\"convertCurrency\").execute(amount+\"-\"+fromCurrency+\"-\"+toCurrency);\r\r\n//\t\t\tthis.context.options.vis.set(\"value\", \"EDITABLE\");\r\r\n//\t\t\tthis.ui.get(\"addbutton\").setEnabled(true);\r\r\n//\t\t\tthis.ui.get(\"addbutton\").show();\r\r\n\t\t\t\r\r\n\t}else{\r\r\n\t\talert(\"please select Request Currency\");\r\r\n\t}\r\r\n}\r\r\n\r\r\nthis.checkerVis = function  () {\r\r\n\tif (this.context.options.isChecker.get(\"value\") == true) {\r\r\n\t\tthis.ui.get(\"Horizontal_Layout3\").setVisible(false,true);\r\r\n\t\tthis.ui.get(\"Horizontal_Layout4\").setVisible(false,true);\r\r\n\t\tthis.ui.get(\"retrive_data\").setVisible(false,true);\r\r\n\t\tthis.ui.get(\"update_Layout\").setVisible(false,true);\r\r\n\t\tthis.ui.get(\"advancePaymentTable\").setEnabled(false);\r\r\n\t}\r\r\n}\r\r\n\r\r\n//----------------------------------------------------------------\r\r\n//function to view alert in case of get customer info error\r\r\nthis.AjaxErrorHandling = function(errorMSG)\r\r\n{\r\r\n\tthis.context.options.alertMessage.set(\"value\", errorMSG);\r\r\n\tthis.context.options.errorVis.set(\"value\", \"EDITABLE\")\r\r\n}"
+          }
+        ]
+      },
+      "hasDetails": true
+    },
+    {
+      "id": "64.dd4f7118-11c6-4a2d-af1d-7252d135594d",
+      "versionId": "751cea61-0365-436f-8b20-ba8bc06176ae",
+      "name": "Advice Lines",
+      "type": "coachView",
+      "typeName": "Coach View",
+      "details": {
+        "bindingType": "AdviceLines"
+      },
+      "hasDetails": true
+    },
+    {
+      "id": "64.1bff8164-e990-449a-85ee-473fa1c4f905",
+      "versionId": "65a693d1-072c-46c6-8473-11c68cbe68fc",
+      "name": "Alert Message",
+      "type": "coachView",
+      "typeName": "Coach View",
+      "details": {
+        "configOptions": [
+          "alertMessage"
+        ]
+      },
+      "hasDetails": true
+    },
+    {
+      "id": "12.e9e590bc-d1fd-48b5-9733-9a6240af3e5c",
+      "versionId": "278a2d99-8254-4442-a9dc-649bef3152d3",
+      "name": "Approvals",
+      "type": "twClass",
+      "typeName": "Business Object",
+      "details": {}
+    },
+    {
+      "id": "1.421a8257-34a5-45f9-b03f-a68e989d4ab8",
+      "versionId": "8bbff875-a233-445f-9a27-b8bfa2be6cad",
+      "name": "Approvals Comments",
+      "type": "process",
+      "typeName": "Process",
+      "details": {}
+    },
+    {
+      "id": "1.43e432f4-0618-40df-9601-41aef33a2c23",
+      "versionId": "f7acd706-a1f7-47c0-9bd1-7c96fd6e4a14",
+      "name": "Approve Request by Credit Admin Execution Checker",
+      "type": "process",
+      "typeName": "Process",
+      "details": {}
+    },
+    {
+      "id": "1.07f8c418-7e5f-4b13-90a2-1e2660fc7597",
+      "versionId": "dc656848-3a27-4cf3-bc0f-be7095712a50",
+      "name": "Attachment",
+      "type": "process",
+      "typeName": "Process",
+      "details": {}
+    },
+    {
+      "id": "12.66faea5a-d7f8-4aa5-9764-d2cd1e72285f",
+      "versionId": "7b9204f6-55b3-4b8a-9a28-ad1d7e0dbe49",
+      "name": "Attachment",
+      "type": "twClass",
+      "typeName": "Business Object",
+      "details": {}
+    },
+    {
+      "id": "64.f1067f18-e2fe-4f8d-8cdb-a948cb0eb0f7",
+      "versionId": "509ac3cb-bc5d-46f1-90b1-7c78b39d7a26",
+      "name": "Attachment",
+      "type": "coachView",
+      "typeName": "Coach View",
+      "details": {
+        "bindingType": "attach",
+        "configOptions": [
+          "canUpdate",
+          "canCreate",
+          "canDelete",
+          "ECMproperties",
+          "visiable"
+        ],
+        "inlineScripts": [
+          {
+            "name": "Inline Javascript",
+            "scriptType": "JS",
+            "scriptBlock": "//this.add = function() {\r\r\n//\talert(\"adding\");\r\r\n////\tthis.context.binding.get(\"value\").set(\"name\", \"Others\");\r\r\n////\tthis.ui.get(\"documentTypeDescription\").setEnabled(true);\r\r\n////\t\r\r\n//}\r\r\nvar flag = false\r\r\nthis.makeflagtrue = function () {\r\r\n\tflag = true;\r\r\n\talert(\"makeing\");\r\r\n}\r\r\nthis.addAttacmentValidation=function () {\r\r\n\talert(flag);\r\r\n\tvar len = this.context.binding.get(\"value\").length();\r\r\n\tthis.context.binding.get(\"value\").get(len-1).set(\"name\", \"others\")\r\r\n//\t\r\r\n//\tthis.context.binding.get(\"value\").get(len).set(\"name\", \"Others\");\r\r\n//\tthis.ui.get(\"documentTypeDescription\").setEnabled(true);\r\r\n\r\r\n\t\r\r\n}\r\r\nthis.visControl = function  () {\r\r\n\r\r\n\tif (this.context.options.visiable.get(\"value\")) {\r\r\n\t\tthis.ui.get(\"Table\").setEnabled(true);\r\r\n\t\tthis.ui.get(\"Button1\").setVisible(true,true);\r\r\n\t}else{\r\r\n\t\tthis.ui.get(\"Table\").setEnabled(false);\r\r\n\t\tthis.ui.get(\"Button1\").setVisible(false,false);\r\r\n\t}\r\r\n\t\r\r\n\t\r\r\n}\r\r\nthis.setCMISquery = function  () {\r\r\n\tvar parent=this.context.options.parentPath;\r\r\n\tvar query =\"SELECT * FROM cmis:Document WHERE IN_TREE('\"+parent+\"')\";\r\r\n\tthis.context.options.cmisQuery.set(\"value\", query);\r\r\n}"
+          }
+        ]
+      },
+      "hasDetails": true
+    },
+    {
+      "id": "1.ecd7d5e6-9ab6-4f46-b38c-5afbc2dc21a3",
+      "versionId": "f3ffbae2-1002-46d8-aae2-2da8c742857c",
+      "name": "Authorize FileNet",
+      "type": "process",
+      "typeName": "Process",
+      "details": {}
+    },
+    {
+      "id": "1.a195e5d7-a7f4-4419-84bc-2bcff38a6561",
+      "versionId": "65a7057c-2e92-4adb-b5f0-39e53b996520",
+      "name": "Authorize ICAP",
+      "type": "process",
+      "typeName": "Process",
+      "details": {}
+    },
+    {
+      "id": "64.bec7782b-c964-4a09-b74f-0ec737efa310",
+      "versionId": "2015adea-0de0-452d-b1ac-974b47bb9e44",
+      "name": "Basic Details",
+      "type": "coachView",
+      "typeName": "Coach View",
+      "details": {
+        "bindingType": "IDCrequest",
+        "configOptions": [
+          "addBill",
+          "deleteBill",
+          "addInvoice",
+          "deleteInvoice",
+          "hasWithdraw",
+          "havePaymentTerm",
+          "alertMessage",
+          "billExist",
+          "invoiceExist",
+          "errorVis"
+        ],
+        "inlineScripts": [
+          {
+            "name": "Inline Javascript",
+            "scriptType": "JS",
+            "scriptBlock": "// this.haveParentIDCRequestNumber = function  () {\r\r\n//\tif (this.context.binding.get(\"value\").get(\"IDCRequestNature\").get(\"englishdescription\") == \"Update Request\") {\r\r\n//\t\tthis.ui.get(\"parentIDCRequestNumber\").setVisible(true,true);\r\r\n//\t\t\r\r\n//\t}else{\r\r\n//\t\tthis.ui.get(\"parentIDCRequestNumber\").setVisible(false,true);\r\r\n//\t\t\r\r\n//\t}\r\r\n// }\r\r\nvar bill = {};\r\r\n this.checkBill = function (value) {\r\r\n \tbill =value;\r\r\n \tvar input = this.context.binding.get(\"value\").get(\"appInfo\").get(\"instanceID\")+\"-\"+value.getData();\r\r\n \tthis.ui.get(\"checkBillCall\").execute(input);\r\r\n }\r\r\n this.setBillValidation = function () {\r\r\n \tif (this.context.options.billExist.get(\"value\") == 1) {\r\r\n \t\tbill.setValid(false,\"WARNING : This Bill Is Used Before In Another Request\");\r\r\n \t}else{\r\r\n \t\tbill.setValid(true);\r\r\n \t}\r\r\n }\r\r\n \r\r\n var invoice = {};\r\r\n this.checkInvoice = function (value) {\r\r\n// \talert(\"checkInvoice\");\r\r\n \tinvoice =value;\r\r\n \tvar input = this.context.binding.get(\"value\").get(\"appInfo\").get(\"instanceID\")+\"-\"+invoice.getData();\r\r\n// \talert(input);\r\r\n \tthis.ui.get(\"checkInvoiceCall\").execute(input);\r\r\n }\r\r\n this.setInvoiceValidation = function () {\r\r\n// \talert(this.context.options.invoiceExist.get(\"value\"));\r\r\n \tif (this.context.options.invoiceExist.get(\"value\") == 1) {\r\r\n \t\tinvoice.setValid(false,\"WARNING : This Invoice Is Used Before In Another Request\");\r\r\n \t}else{\r\r\n \t\tinvoice.setValid(true);\r\r\n \t}\r\r\n }\r\r\n \r\r\n this.haveFlexCubeContractNumber = function  () {\r\r\n// \talert(\"test\");\r\r\n \tif (this.context.binding.get(\"value\").get(\"IDCRequestNature\").get(\"englishdescription\") == \"New Request\" && this.context.binding.get(\"value\").get(\"appInfo\").get(\"stepName\") == \"IDC Execution Hub - Initiation\") {\r\r\n \t\tthis.ui.get(\"FlexCubeContractNumber\").setEnabled(true);\r\r\n \t}\r\r\n \telse{\r\r\n \tthis.ui.get(\"FlexCubeContractNumber\").setEnabled(false);\r\r\n \t}\r\r\n \t\r\r\n }\r\r\n \r\r\n this.hasWithdrawRequest = function  () {\r\r\n \tif (this.context.binding.get(\"value\").get(\"IDCRequestType\").get(\"englishdescription\")==\"IDC Acknowledgement\") {\r\r\n \t\tif (this.context.options.hasWithdraw.get(\"value\")) {\r\r\n\t \t\tthis.ui.get(\"Output_Text2\").setEnabled(true);\r\r\n\t \t\tthis.ui.get(\"Switch1\").setEnabled(true);\r\r\n\t \t}\t\r\r\n \t}else{\r\r\n \t\tthis.ui.get(\"Output_Text2\").setVisible(false,true);\r\r\n\t \t\tthis.ui.get(\"Switch1\").setVisible(false,true);\r\r\n \t}\r\r\n\t \t\r\r\n }\r\r\n this.havePaymentTerm = function  () {\r\r\n \tif (this.context.binding.get(\"value\").get(\"paymentTerms\").get(\"englishdescription\") == \"Sight\") {\r\r\n \t\tthis.context.options.havePaymentTerm.set(\"value\",  \"NONE\") ;\r\r\n \t}else{\r\r\n \t\tthis.context.options.havePaymentTerm.set(\"value\",  \"DEFAULT\") ;\r\r\n \t}\r\r\n }\r\r\n //------------------------------------------------------------\r\r\n//function to view alert in case of get customer info error\r\r\nthis.AjaxErrorHandling = function(errorMSG)\r\r\n{\r\r\n\tthis.context.options.alertMessage.set(\"value\", errorMSG);\r\r\n\tthis.ui.get(\"Error_Message\").setVisible(true);\r\r\n\tthis.ui.get(\"Error_Message/Alert_Modal\").setVisible(true);\r\r\n}"
+          }
+        ]
+      },
+      "hasDetails": true
+    },
+    {
+      "id": "64.3d13e9b9-bcc9-4fe9-ac80-3c287115f705",
+      "versionId": "c0891929-974a-4a9d-a8c0-bcde1ce66e4e",
+      "name": "Basic Details 2",
+      "type": "coachView",
+      "typeName": "Coach View",
+      "details": {
+        "bindingType": "IDCrequest",
+        "configOptions": [
+          "addBill",
+          "deleteBill",
+          "addInvoice",
+          "deleteInvoice",
+          "hasWithdraw",
+          "havePaymentTerm",
+          "alertMessage",
+          "billExist",
+          "invoiceExist",
+          "errorVis",
+          "isHub",
+          "interestVis",
+          "idcContract",
+          "InterestAndChargesList",
+          "exRate",
+          "stage",
+          "adviceCodeList"
+        ],
+        "inlineScripts": [
+          {
+            "name": "Inline Javascript",
+            "scriptType": "JS",
+            "scriptBlock": "// this.haveParentIDCRequestNumber = function  () {\r\r\n//\tif (this.context.binding.get(\"value\").get(\"IDCRequestNature\").get(\"englishdescription\") == \"Update Request\") {\r\r\n//\t\tthis.ui.get(\"parentIDCRequestNumber\").setVisible(true,true);\r\r\n//\t\t\r\r\n//\t}else{\r\r\n//\t\tthis.ui.get(\"parentIDCRequestNumber\").setVisible(false,true);\r\r\n//\t\t\r\r\n//\t}\r\r\n// }\r\r\nvar bill = {};\r\r\n this.checkBill = function (value) {\r\r\n \tbill =value;\r\r\n \tvar input = this.context.binding.get(\"value\").get(\"appInfo\").get(\"instanceID\")+\"-\"+value.getData();\r\r\n \tthis.ui.get(\"checkBillCall\").execute(input);\r\r\n }\r\r\n this.setBillValidation = function () {\r\r\n \tif (this.context.options.billExist.get(\"value\") == 1) {\r\r\n \t\tbill.setValid(false,\"WARNING : This Bill Is Used Before In Another Request\");\r\r\n \t}else{\r\r\n \t\tbill.setValid(true);\r\r\n \t}\r\r\n }\r\r\n \r\r\n var invoice = {};\r\r\n this.checkInvoice = function (value) {\r\r\n// \talert(\"checkInvoice\");\r\r\n \tinvoice =value;\r\r\n \tvar input = this.context.binding.get(\"value\").get(\"appInfo\").get(\"instanceID\")+\"-\"+invoice.getData();\r\r\n// \talert(input);\r\r\n \tthis.ui.get(\"checkInvoiceCall\").execute(input);\r\r\n }\r\r\n this.setInvoiceValidation = function () {\r\r\n// \talert(this.context.options.invoiceExist.get(\"value\"));\r\r\n \tif (this.context.options.invoiceExist.get(\"value\") == 1) {\r\r\n \t\tinvoice.setValid(false,\"WARNING : This Invoice Is Used Before In Another Request\");\r\r\n \t}else{\r\r\n \t\tinvoice.setValid(true);\r\r\n \t}\r\r\n }\r\r\n \r\r\n this.haveFlexCubeContractNumber = function  () {\r\r\n// \talert(\"test\");\r\r\n \tif (this.context.binding.get(\"value\").get(\"IDCRequestNature\").get(\"englishdescription\") == \"New Request\" && this.context.binding.get(\"value\").get(\"appInfo\").get(\"stepName\") == \"IDC Execution Hub - Initiation\") {\r\r\n \t\tthis.ui.get(\"FlexCubeContractNumber\").setEnabled(true);\r\r\n \t}\r\r\n \telse{\r\r\n \tthis.ui.get(\"FlexCubeContractNumber\").setEnabled(false);\r\r\n \t}\r\r\n \t\r\r\n }\r\r\n \r\r\n this.hasWithdrawRequest = function  () {\r\r\n \tif (this.context.binding.get(\"value\").get(\"IDCRequestType\").get(\"englishdescription\")==\"IDC Acknowledgement\") {\r\r\n \t\tif (this.context.options.hasWithdraw.get(\"value\")) {\r\r\n\t \t\tthis.ui.get(\"Output_Text2\").setEnabled(true);\r\r\n\t \t\tthis.ui.get(\"Switch1\").setEnabled(true);\r\r\n\t \t}\t\r\r\n \t}else{\r\r\n \t\tthis.ui.get(\"Output_Text2\").setVisible(false,true);\r\r\n\t \t\tthis.ui.get(\"Switch1\").setVisible(false,true);\r\r\n \t}\r\r\n\t \t\r\r\n }\r\r\n this.havePaymentTerm = function  () {\r\r\n \tif (this.context.binding.get(\"value\").get(\"paymentTerms\").get(\"englishdescription\") == \"Sight\") {\r\r\n \t\tthis.context.options.havePaymentTerm.set(\"value\",  \"NONE\") ;\r\r\n \t}else{\r\r\n \t\tthis.context.options.havePaymentTerm.set(\"value\",  \"DEFAULT\") ;\r\r\n \t}\r\r\n }\r\r\n //------------------------------------------------------------\r\r\n//function to view alert in case of get customer info error\r\r\nthis.AjaxErrorHandling = function(errorMSG)\r\r\n{\r\r\n\tthis.context.options.alertMessage.set(\"value\", errorMSG);\r\r\n\tthis.context.options.errorVis.set(\"value\", \"EDITABLE\");\r\r\n}\r\r\n\r\r\n//-------------------------------------------------------------------Drop 2--------------------------------------------------------------------------------------\r\r\nthis.getInterestAndCharges = function (){\r\r\n//alert(this.context.options.idcContract.get(\"value\").get(\"IDCProduct\").get(\"englishdescription\"));\r\r\n\t// if(this.context.options.isHub.get(\"value\") == true){ //Option Here\r\r\n\t\tthis.context.options.interestVis.set(\"value\", \"NONE\");\r\r\n\t\tthis.context.options.idcContract.get(\"value\").set(\"interestRate\", 0);\r\r\n\t\tvar code = this.context.options.idcContract.get(\"value\").get(\"IDCProduct\").get(\"code\");\r\r\n\t\tvar event = this.context.binding.get(\"value\").get(\"IDCRequestStage\");\r\r\n\t\tvar concat = code + \",\" + event +\"\";\r\r\n\t\t// this.context.options.concatComm.set(\"value\", concat);\r\r\n\t\tthis.ui.get(\"GetChargeAndDetails1\").execute(concat);\r\r\n\t// }\r\r\n}\r\r\n\r\r\nvar chargesIndex = 0;\r\r\nvar finalMinAmount = 0;\r\r\nvar firstDefaultAm = 0;\r\r\nthis.setInterestsAndCharges = function (){\r\r\n\tvar j = 0;\r\r\n\tvar defaultAmount = 0;\r\r\n\t// this.context.binding.get(\"value\").set(\"haveInterest\" , false);\r\r\n\t\r\r\n\tthis.context.options.idcContract.get(\"value\").set(\"commissionsAndCharges\", []);\r\r\n\tfor (var i=0; i<this.context.options.InterestAndChargesList.get(\"value\").length() ; i++) {\r\r\n\tif (this.context.options.InterestAndChargesList.get(\"value\").get(i).get(\"ruleType\") != null &&\r\r\n\t\tthis.context.options.InterestAndChargesList.get(\"value\").get(i).get(\"ruleType\") != \"\"&&\r\r\n\t\tthis.context.options.InterestAndChargesList.get(\"value\").get(i).get(\"ruleType\") != undefined) {\r\r\n\t\tif (this.context.options.InterestAndChargesList.get(\"value\").get(i).get(\"ruleType\") == \"Interest\" \r\r\n\t\t\t&& this.context.binding.get(\"value\").get(\"IDCRequestType\").get(\"englishdescription\") != \"ICAP\" \r\r\n\t\t\t&& this.context.binding.get(\"value\").get(\"IDCRequestType\").get(\"englishdescription\")!=\"IDC Payment\") \r\r\n\t\t{\r\r\n\t\t\t// this.context.binding.get(\"value\").set(\"haveInterest\" , true);\r\r\n\t\t\t// this.ui.get(\"contract_Interest_Details\").setVisible(true,true);\r\r\n\t\t\talert(\"Interest Found : \"+ this.context.options.idcContract.get(\"value\").get(\"interestRate\"));\r\r\n\t\t\tthis.context.options.interestVis.set(\"value\", \"EDITABLE\");\r\r\n\t\t\tthis.context.options.idcContract.get(\"value\").set(\"interestRate\", this.context.options.InterestAndChargesList.get(\"value\").get(i).get(\"rate\"));\r\r\n\r\r\n\t\t}else if (this.context.options.InterestAndChargesList.get(\"value\").get(i).get(\"ruleType\") == \"Charge\"){\r\r\n\t\t\tthis.context.options.idcContract.get(\"value\").get(\"commissionsAndCharges\").add({});\r\r\n\t\t\tthis.context.options.idcContract.get(\"value\").get(\"commissionsAndCharges\").get(j).set(\"defaultCurrency\",{});\r\r\n\t\t\tthis.context.options.idcContract.get(\"value\").get(\"commissionsAndCharges\").get(j).get(\"defaultCurrency\").set(\"code\", this.context.options.InterestAndChargesList.get(\"value\").get(i).get(\"basisAmountCurrency\"));\r\r\n\t\t\tthis.context.options.idcContract.get(\"value\").get(\"commissionsAndCharges\").get(j).set(\"component\", this.context.options.InterestAndChargesList.get(\"value\").get(i).get(\"component\"));\r\r\n\t\t\tthis.context.options.idcContract.get(\"value\").get(\"commissionsAndCharges\").get(j).set(\"debitedAccount\", {});\r\r\n\t\t\tthis.context.options.idcContract.get(\"value\").get(\"commissionsAndCharges\").get(j).get(\"debitedAccount\").set(\"accountClass\", \"Customer Account\");\r\r\n\t\t\tthis.context.options.idcContract.get(\"value\").get(\"commissionsAndCharges\").get(j).get(\"debitedAccount\").set(\"isGLVerifiedC\", false);\r\r\n\t\t\tthis.context.options.idcContract.get(\"value\").get(\"commissionsAndCharges\").get(j).get(\"debitedAccount\").set(\"accountCurrency\", {});\r\r\n\t\t\tthis.context.options.idcContract.get(\"value\").get(\"commissionsAndCharges\").get(j).get(\"debitedAccount\").set(\"isGLFoundC\", true);\r\r\n\t\t\tthis.context.options.idcContract.get(\"value\").get(\"commissionsAndCharges\").get(j).set(\"waiver\", false);\r\r\n\t\t\tthis.context.options.idcContract.get(\"value\").get(\"commissionsAndCharges\").get(j).set(\"debitedAmount\", {});\r\r\n\t\t\talert(\"Charges Found: \" + this.context.options.idcContract.get(\"value\").get(\"commissionsAndCharges\").get(j).get(\"defaultCurrency\").get(\"code\"));\r\r\n\t\t\t\r\r\n\t\t\t//Caluc Default Amount\r\r\n\t\t\tif (this.context.options.InterestAndChargesList.get(\"value\").get(i).get(\"rateType\") == \"Flat Amount\") {\r\r\n\t\t\t\tdefaultAmount = this.context.options.InterestAndChargesList.get(\"value\").get(i).get(\"flatAmount\");\r\r\n\t\t\t}else if (this.context.options.InterestAndChargesList.get(\"value\").get(i).get(\"rateType\") == \"Fixed Rate\"){\r\r\n\t\t\t\tvar rate = this.context.options.InterestAndChargesList.get(\"value\").get(i).get(\"rate\");\r\r\n\t\t\t\tdefaultAmount = rate / 100 * (this.context.binding.get(\"value\").get(\"financialDetails\").get(\"amtPayableByNBE\"));\r\r\n\t\t\t}\r\r\n\t\t\t\r\r\n\t\t\t//Compare with Min Amount\r\r\n\t\t\tvar minAmount = this.context.options.InterestAndChargesList.get(\"value\").get(i).get(\"minAmount\");\r\r\n\t\t\tif (minAmount > 0) {\r\r\n\t\t\t\tif (this.context.options.InterestAndChargesList.get(\"value\").get(i).get(\"basisAmountCurrency\") == \r\r\n\t\t\t\t\tthis.context.binding.get(\"value\").get(\"financialDetails\").get(\"documentCurrency\").get(\"code\")) {\r\r\n\t\t\t\t\tthis.context.options.idcContract.get(\"value\").get(\"commissionsAndCharges\").get(j).set(\"defaultAmount\", minAmount);\r\r\n\t\t\t\t\tthis.context.options.idcContract.get(\"value\").get(\"commissionsAndCharges\").get(j).set(\"chargeAmount\", this.context.options.idcContract.get(\"value\").get(\"commissionsAndCharges\").get(j).get(\"defaultAmount\"));\r\r\n\t\t\t\t}else{\r\r\n\t\t\t\t\tfinalMinAmount = minAmount;\r\r\n\t\t\t\t\tfirstDefaultAm = defaultAmount;\r\r\n\t\t\t\t\tchargesIndex =  j;\r\r\n\t\t\t\t\tvar basisC = this.context.options.InterestAndChargesList.get(\"value\").get(i).get(\"basisAmountCurrency\");\r\r\n\t\t\t\t\tvar requestC = this.context.binding.get(\"value\").get(\"financialDetails\").get(\"documentCurrency\").get(\"code\");\r\r\n\t\t\t\t\tvar concated = {ccFrom : basisC , ccTo : requestC , type:\"TRANSFER\" , sType:\"S\"};\r\r\n\t\t\t\t\tvar concatExCurrency = JSON.stringify(concated);\r\r\n\t\t\t\t\tthis.ui.get(\"GetExchangeRate\").execute(concatExCurrency);\r\r\n\t\t\t\t}\r\r\n\t\t\t}else{\r\r\n\t\t\t\tthis.context.options.idcContract.get(\"value\").get(\"commissionsAndCharges\").get(j).set(\"defaultAmount\", defaultAmount);\r\r\n\t\t\t\tthis.context.options.idcContract.get(\"value\").get(\"commissionsAndCharges\").get(j).set(\"chargeAmount\", this.context.options.idcContract.get(\"value\").get(\"commissionsAndCharges\").get(j).get(\"defaultAmount\"));\r\r\n\t\t\t}\r\r\n\r\r\n\t\t\tj+=1;\r\r\n\t\t}\r\r\n\t}\r\r\n\t}\r\r\n}\r\r\n\r\r\nthis.exchangedDefaultAmount = function (){\r\r\n\tvar record = chargesIndex;\r\r\n\tvar rate = this.context.options.exRate.get(\"value\");\r\r\n\tvar minAm = finalMinAmount;\r\r\n\tvar exMinAmount = rate * minAm;\r\r\n\tif (exMinAmount > firstDefaultAm) {\r\r\n\t\tthis.context.options.idcContract.get(\"value\").get(\"commissionsAndCharges\").get(record).set(\"defaultAmount\", exMinAmount);\r\r\n\t}else{\r\r\n\t\tthis.context.options.idcContract.get(\"value\").get(\"commissionsAndCharges\").get(record).set(\"defaultAmount\", firstDefaultAm);\r\r\n\t}\r\r\n\tthis.context.options.idcContract.get(\"value\").get(\"commissionsAndCharges\").get(record).set(\"chargeAmount\", this.context.options.idcContract.get(\"value\").get(\"commissionsAndCharges\").get(record).get(\"defaultAmount\"));\r\r\n}\r\r\n\r\r\nthis.prepareAdvice = function  () {\r\r\n\t if(this.context.binding.get(\"value\").get(\"IDCRequestType\").get(\"englishdescription\") != \"ICAP\"){\r\r\n\t\tvar code = this.context.options.idcContract.get(\"value\").get(\"IDCProduct\").get(\"code\");\r\r\n\t\tvar event = this.context.binding.get(\"value\").get(\"IDCRequestStage\");\r\r\n\t\tvar concated = event + \"-\" + code +\"\";\r\r\n\t\tconsole.log(concated);\r\r\n\t\tthis.ui.get(\"GetAdviceCode\").execute(concated);\r\r\n\t }\r\r\n}\r\r\n\r\r\nthis.setAdviceData = function () {\r\r\n\tthis.context.options.idcContract.get(\"value\").set(\"advices\", []);\r\r\n\tfor (var i=0; i< this.context.options.adviceCodeList.get(\"value\").length(); i++) {\r\r\n\t\tthis.context.options.idcContract.get(\"value\").get(\"advices\").add({});\r\r\n\t\tthis.context.options.idcContract.get(\"value\").get(\"advices\").get(i).set(\"adviceCode\", this.context.options.adviceCodeList.get(\"value\").get(i));\r\r\n\t\tthis.context.options.idcContract.get(\"value\").get(\"advices\").get(i).set(\"advicelines\", {});\r\r\n\t}\r\r\n}"
+          }
+        ]
+      },
+      "hasDetails": true
+    },
+    {
+      "id": "12.dc2c5e47-1c75-43ac-86a7-93a939c19b0f",
+      "versionId": "f755037d-9b00-4989-aa29-1ce4ed282db5",
+      "name": "BasicDetails",
+      "type": "twClass",
+      "typeName": "Business Object",
+      "details": {}
+    },
+    {
+      "id": "12.a025468c-38bc-4809-b337-57da9e95dacb",
+      "versionId": "ead285b1-af6c-4d2e-abef-275c70e7d9dd",
+      "name": "BeneficiaryDetails",
+      "type": "twClass",
+      "typeName": "Business Object",
+      "details": {}
+    },
+    {
+      "id": "64.e641d290-3254-4ce6-9377-d17c2feeeba0",
+      "versionId": "cc541601-bff4-461f-a756-cf5cda293c6a",
+      "name": "Booked View",
+      "type": "coachView",
+      "typeName": "Coach View",
+      "details": {
+        "bindingType": "bookedFacilities",
+        "configOptions": [
+          "BookedFacilityVis",
+          "noPendingCasesVis"
+        ]
+      },
+      "hasDetails": true
+    },
+    {
+      "id": "21.f83b19ad-8a7f-4026-bded-63fd31478fbd",
+      "versionId": "53118022-8ec6-44e8-a17c-0bcb737bd430",
+      "name": "BPMTeamsNamesReassign",
+      "type": "epv",
+      "typeName": "Environment Property Variable",
+      "details": {}
+    },
+    {
+      "id": "1.8f81ee30-b515-498c-b076-7fcf05c5013d",
+      "versionId": "3314b751-9904-485b-ab67-4e3bf2f6d912",
+      "name": "Branch Hub filter service",
+      "type": "process",
+      "typeName": "Process",
+      "details": {}
+    },
+    {
+      "id": "1.97fd22db-6f52-40ce-95fc-a4ebf732dbf2",
+      "versionId": "8e12ecd0-e7fc-4851-bcd1-6e3046f5bb9b",
+      "name": "CAD filter service",
+      "type": "process",
+      "typeName": "Process",
+      "details": {}
+    },
+    {
+      "id": "1.6d2930cb-0b25-4940-913e-e6643366bf6a",
+      "versionId": "f3308354-323b-4503-8927-8816e96a8247",
+      "name": "Cancel IDC",
+      "type": "process",
+      "typeName": "Process",
+      "details": {}
+    },
+    {
+      "id": "1.96dc5449-b281-4b46-8b84-bf73531c54ff",
+      "versionId": "98330fbf-f4e8-4b51-a613-c860095f6cd3",
+      "name": "cancel request",
+      "type": "process",
+      "typeName": "Process",
+      "details": {}
+    },
+    {
+      "id": "12.5a746545-c6b4-49a5-85fe-aaccc003f1ef",
+      "versionId": "01e6db89-c5ca-40aa-9099-2bfcd99d7370",
+      "name": "CashCollateralAccount",
+      "type": "twClass",
+      "typeName": "Business Object",
+      "details": {}
+    },
+    {
+      "id": "12.0b55eb1a-7871-4183-b9ee-f4146bfa5d07",
+      "versionId": "c975380a-eff0-4ded-a897-6da87fa50f6f",
+      "name": "ChargesObj",
+      "type": "twClass",
+      "typeName": "Business Object",
+      "details": {}
+    },
+    {
+      "id": "1.37eab8a6-3b8b-4e52-8824-851827e9889b",
+      "versionId": "8037e590-cde5-4c5f-bb6f-9d59bac51cdf",
+      "name": "Check Assign Large Corprate",
+      "type": "process",
+      "typeName": "Process",
+      "details": {}
+    },
+    {
+      "id": "1.0edd3d3e-45ce-4d92-9d7a-fb84c86a1488",
+      "versionId": "585872b8-a86e-40e7-8ebc-b9330273605d",
+      "name": "Check Bill",
+      "type": "process",
+      "typeName": "Process",
+      "details": {}
+    },
+    {
+      "id": "1.0d6d9e00-0481-4275-82a8-9bfdb143a2f8",
+      "versionId": "e7d1f10e-fd04-4367-ba26-aeab4c3edb93",
+      "name": "Check Customer Accounts",
+      "type": "process",
+      "typeName": "Process",
+      "details": {}
+    },
+    {
+      "id": "1.6081d75e-a1c6-4d00-ade0-18cd3cfaaffa",
+      "versionId": "4875899d-0a9a-4397-8eca-291e30427256",
+      "name": "Check Existing CIF",
+      "type": "process",
+      "typeName": "Process",
+      "details": {}
+    },
+    {
+      "id": "1.417ae6ff-837a-426f-b651-d8e3e8810d90",
+      "versionId": "64cf0631-8b5b-4884-8a3a-ab390d205a43",
+      "name": "Check Existing GL Account",
+      "type": "process",
+      "typeName": "Process",
+      "details": {}
+    },
+    {
+      "id": "1.5b59000d-e60c-4dee-87e1-34bfc64da51b",
+      "versionId": "5e845de4-135d-454c-bd98-e073e2c3c138",
+      "name": "Check Invoice",
+      "type": "process",
+      "typeName": "Process",
+      "details": {}
+    },
+    {
+      "id": "1.a3bac1a8-8d2c-46d2-8eb7-dcc05001e258",
+      "versionId": "da92b884-e937-45c3-b77b-13a00d6fd441",
+      "name": "Check Large corporate in DB",
+      "type": "process",
+      "typeName": "Process",
+      "details": {}
+    },
+    {
+      "id": "1.51cfa3b6-ac55-4472-8d92-9c7aac143ff1",
+      "versionId": "3b6bd824-0af0-4285-a55d-5235f1cbefd2",
+      "name": "Client-Side Human Service",
+      "type": "process",
+      "typeName": "Process",
+      "details": {}
+    },
+    {
+      "id": "1.ac6ff0af-98bb-4d5c-b7fe-2ec84aebba72",
+      "versionId": "70293360-6bc8-4040-a332-b55749401b80",
+      "name": "Client-Side Human Service_1",
+      "type": "process",
+      "typeName": "Process",
+      "details": {}
+    },
+    {
+      "id": "64.e45b18e8-a83a-4484-8089-b2ab3c33146a",
+      "versionId": "a0033234-5701-409e-ae02-871323b4035c",
+      "name": "Commissions And Charges",
+      "type": "coachView",
+      "typeName": "Coach View",
+      "details": {
+        "bindingType": "CommissionsAndChargesDetails",
+        "configOptions": [
+          "CommAccountList",
+          "customerCIF",
+          "accounteeCIF",
+          "caseCIF",
+          "draweeCIF",
+          "isChecker",
+          "exRate",
+          "accountIndexC",
+          "alertMessage",
+          "errorVis"
+        ],
+        "inlineScripts": [
+          {
+            "name": "Inline Javascript",
+            "scriptType": "JS",
+            "scriptBlock": "this.debitedAmountSum = function (value){\r\r\n\tvar index = value.ui.getIndex();\r\r\n\tvar changeAm = this.ui.get(\"ChangeAmount[\"+index+\"]\").getData();\r\r\n\tvar nRate = this.ui.get(\"NegotiatedExchangeRate[\"+index+\"]\").getData();\r\r\n\tvar sum = changeAm * nRate;\r\r\n\tthis.ui.get(\"DebitedAmountinAccountCurrency[\"+index+\"]\").setData(sum);\r\r\n}\r\r\n\r\r\nthis.executeService = function (value){\r\r\n\tvar index = value.ui.getIndex();\r\r\n\tif (value.getData() == \"Customer Account\"){\r\r\n       \tthis.ui.get(\"AccountBranchCode1[\"+index+\"]\").setEnabled(false);\r\r\n       \tthis.ui.get(\"AccountCurrency1[\"+index+\"]\").setEnabled(false);\r\r\n\t\tthis.ui.get(\"AccountNumberGL[\"+index+\"]\").setEnabled(false);\r\r\n        \tthis.ui.get(\"VerifyGLAccountBtn[\"+index+\"]\").setEnabled(false);\r\r\n       \tthis.ui.get(\"Owner1[\"+index+\"]\").setEnabled(true);\r\r\n    \t\tif (this.ui.get(\"Owner1[\"+index+\"]\").getData() != \"\") {\r\r\n   \t  \t\tthis.ui.get(\"AccountNumber[\"+index+\"]\").setEnabled(true);\r\r\n    \t  \t\tthis.ui.get(\"AccountNumberGL[\"+index+\"]\").setData(\"\");\r\r\n    \t\t}\r\r\n\t}else if (value.getData() == \"GL Account\"){\r\r\n\t\tthis.ui.get(\"AccountBranchCode1[\"+index+\"]\").setEnabled(true);\r\r\n       \tthis.ui.get(\"AccountCurrency1[\"+index+\"]\").setEnabled(true);\r\r\n\t\tthis.ui.get(\"AccountNumber[\"+index+\"]\").setEnabled(false);\r\r\n\t\tthis.ui.get(\"Owner1[\"+index+\"]\").setEnabled(false);\r\r\n   \t  \tthis.ui.get(\"VerifyGLAccountBtn[\"+index+\"]\").setEnabled(true);\r\r\n\t\tthis.ui.get(\"AccountNumberGL[\"+index+\"]\").setEnabled(true);\r\r\n\t\tthis.ui.get(\"AccountNumber[\"+index+\"]\").setData(\"\");\r\r\n\t\tthis.ui.get(\"Decimal1[\"+index+\"]\").setData(\"\");\r\r\n\t\tthis.ui.get(\"Output_Text1[\"+index+\"]\").setData(\"\");\r\r\n\t\tthis.ui.get(\"AccountBranchCode1[\"+index+\"]\").setData(\"\");\r\r\n\t\tthis.ui.get(\"AccountCurrency1[\"+index+\"]\").setData(\"\");\r\r\n    }\r\r\n}\r\r\n\r\r\nthis.executeGL = function (value){\r\r\n\tvar index = value.ui.getIndex();\r\r\n//\tvalue.setEnabled(false);\r\r\n\tthis.context.options.accountIndexC.set(\"value\", value.ui.getIndex());\r\r\n\tvar data = this.context.binding.get(\"value\").get(index).get(\"debitedAccount\").get(\"GLAccountNumber\");\r\r\n\tthis.ui.get(\"CheckexistingGLAccount1[\"+index+\"]\").execute(data);\r\r\n}\r\r\n\r\r\nthis.setAccountInfo = function (value){\r\r\n\tfor (var i=0; i<this.context.options.CommAccountList.get(\"value\").length(); i++) {\r\r\n\t\tif (this.context.options.CommAccountList.get(\"value\").get(i).get(\"accountNO\") == value.getData()) {\r\r\n\t\t\r\r\n\t\t\t// this.context.options.commClassCode.set(\"value\", this.context.options.CommAccountList.get(\"value\").get(i).get(\"accountClassCode\"));\r\r\n\t\t\t// var commClassCode =  this.context.options.commClassCode.get(\"value\");//SA04\r\r\n\t\t\tcommClassCode = this.context.options.CommAccountList.get(\"value\").get(i).get(\"accountClassCode\");\r\r\n\t\t\tvar code = commClassCode.substring(0,1);\r\r\n\t\t\t\r\r\n\t\t\tif (code == \"O\" || code == \"D\"){\t\t\r\r\n\t\t\t\tthis.context.binding.get(\"value\").get(value.ui.getIndex()).get(\"debitedAccount\").set(\"isOverDraft\", true);\r\r\n\t\t\t}else{\r\r\n\t\t\t\tthis.context.binding.get(\"value\").get(value.ui.getIndex()).get(\"debitedAccount\").set(\"isOverDraft\", false);\r\r\n\t\t\t}\r\r\n\t\t\t\r\r\n\t\t\tthis.context.binding.get(\"value\").get(value.ui.getIndex()).get(\"debitedAccount\").set(\"accountBranchCode\", this.context.options.CommAccountList.get(\"value\").get(i).get(\"branchCode\"));\r\r\n\t\t\tthis.context.binding.get(\"value\").get(value.ui.getIndex()).get(\"debitedAccount\").set(\"accountCurrency\",{});\r\r\n\t\t\tthis.context.binding.get(\"value\").get(value.ui.getIndex()).get(\"debitedAccount\").get(\"accountCurrency\").set(\"code\", this.context.options.CommAccountList.get(\"value\").get(i).get(\"currencyCode\"));\r\r\n\t\t\tthis.context.binding.get(\"value\").get(value.ui.getIndex()).get(\"debitedAccount\").set(\"accountBalance\", this.context.options.CommAccountList.get(\"value\").get(i).get(\"balance\"));\r\r\n\t\t\tthis.context.binding.get(\"value\").get(value.ui.getIndex()).get(\"debitedAccount\").set(\"balanceSign\", this.context.options.CommAccountList.get(\"value\").get(i).get(\"balanceType\"));\r\r\n\t\t}\r\r\n\t}\r\r\n}\r\r\n\r\r\nthis.validGlAccount = function (value){\r\r\n\trecord = value.ui.getIndex();\r\r\n\tif (!this.context.binding.get(\"value\").get(record).get(\"debitedAccount\").get(\"isGLFoundC\")) {\r\r\n\t\tthis.ui.get(\"AccountNumberGL[\"+record+\"]\").setValid(false, \"Account Not Found!\");\r\r\n\t}else{\r\r\n\t\tthis.ui.get(\"AccountNumberGL[\"+record+\"]\").setValid(true);\r\r\n\t}\r\r\n}\r\r\n\r\r\nthis.setPartyCIF = function (value){\r\r\n\tvar index = value.ui.getIndex();\r\r\n\tthis.ui.get(\"AccountNumber[\"+index+\"]\").setEnabled(true);\r\r\n\tif (value.getData() == \"Accountee\") {\r\r\n\t\tthis.context.binding.get(\"value\").get(index).get(\"debitedAccount\").set(\"commCIF\", this.context.options.accounteeCIF.get(\"value\"));\r\r\n\t}else if (value.getData() == \"Case In Need\") {\r\r\n\t\tthis.context.binding.get(\"value\").get(index).get(\"debitedAccount\").set(\"commCIF\", this.context.options.caseCIF.get(\"value\"));\r\r\n\t}else{\r\r\n\t\tthis.context.binding.get(\"value\").get(index).get(\"debitedAccount\").set(\"commCIF\", this.context.options.draweeCIF.get(\"value\"));\r\r\n\t}\r\r\n\tthis.ui.get(\"GetCustomerAccount1[\"+index+\"]\").execute(this.context.binding.get(\"value\").get(index).get(\"debitedAccount\").get(\"commCIF\"));\r\r\n}\r\r\n\r\r\nthis.setExchangeRate = function (value){\r\r\n\tvar index = value.ui.getIndex();\r\r\n\tif(value.getData() != \"\" && value.getData() != null && value.getData() != undefined){\r\r\n\t\tif (this.ui.get(\"defaultCurrency[\"+index+\"]\").getData() == value.getData()) {\r\r\n\t\t\tthis.ui.get(\"StandardExchangeRate[\"+index+\"]\").setData(1.0);\r\r\n\t\t\tthis.ui.get(\"NegotiatedExchangeRate[\"+index+\"]\").setData(this.ui.get(\"StandardExchangeRate[\"+index+\"]\").getData());\r\r\n\t\t}else{\r\r\n\t\t\tvar defaultCurrency = this.ui.get(\"defaultCurrency[\"+index+\"]\").getData();\r\r\n\t\t\tvar accountCurrency = value.getData();\r\r\n\t\t\tconcatedCurrency = {ccFrom : defaultCurrency , ccTo : accountCurrency , type:\"TRANSFER\" , sType:\"S\"};\r\r\n\t\t\tvar inputCurr = JSON.stringify(concatedCurrency);\r\r\n\t\t\tthis.ui.get(\"GetExchangeRate[\"+index+\"]\").execute(inputCurr);\r\r\n\t\t}\r\r\n\t}\r\r\n}\r\r\n\r\r\nthis.setExServiceResults = function (value){\r\r\n\tvar index = value.ui.getIndex();\r\r\n\tthis.ui.get(\"StandardExchangeRate[\"+index+\"]\").setData(this.context.options.exRate.get(\"value\"));\r\r\n\tthis.ui.get(\"NegotiatedExchangeRate[\"+index+\"]\").setData(this.ui.get(\"StandardExchangeRate[\"+index+\"]\").getData());\r\r\n\tthis.ui.get(\"NegotiatedExchangeRate[\"+index+\"]\").setEnabled(true);\r\r\n}\r\r\n\r\r\nthis.setCommAccounts = function (value){\r\r\n\tvar index = value.ui.getIndex();\r\r\n\tthis.context.binding.get(\"value\").get(index).set(\"commAccountList\" , []);\r\r\n\tfor (var i=0; i<this.context.options.CommAccountList.get(\"value\").length(); i++) {\r\r\n\t\tthis.context.binding.get(\"value\").get(index).get(\"commAccountList\").add({name:this.context.options.CommAccountList.get(\"value\").get(i).get(\"accountNO\") , value:this.context.options.CommAccountList.get(\"value\").get(i).get(\"accountNO\")});\r\r\n\t}\r\r\n}\r\r\n\r\r\nthis.resetGLButton = function (value){\r\r\n\tvar index = value.ui.getIndex();\r\r\n\tthis.ui.get(\"VerifyGLAccountBtn[\"+index+\"]\").setData(false);\r\r\n}\r\r\n\r\r\nthis.accountVis = function(value){\r\r\n\tvalue.setEnabled(false);\r\r\n\tvar index = value.ui.getIndex();\r\r\n\tif(this.context.options.isChecker.get(\"value\") == true || this.ui.get(\"Owner1[\"+index+\"]\").getData() == \"\"){\r\r\n\t\tvalue.setEnabled(false);\r\r\n\t}else\r\r\n\t\tvalue.setEnabled(true);\r\r\n}\r\r\n\r\r\nthis.validateDigits = function (value){\r\r\n\tvar index = value.ui.getIndex();\r\r\n\tif(isNaN(Number(value.getData()))){\r\r\n\t\tvalue.setData(\"\");\r\r\n\t\tvalue.setValid(false ,\"must be digits\");\r\r\n\t\treturn false;\r\r\n\t}else\r\r\n\t{\r\r\n\t\tvalue.setValid(true);\r\r\n\t\treturn true;\r\r\n\t}\r\r\n}\r\r\n\r\r\nthis.validateOverDraft = function (value) {\r\r\n\tvar index = value.ui.getIndex();\r\r\n\tif (this.context.binding.get(\"value\").get(index).get(\"debitedAccount\").get(\"isOverDraft\") == true) {\r\r\n\t\tthis.ui.get(\"DebitedAmountinAccountCurrency[\"+index+\"]\").setValid(false,\"WARNING: Must be < Account Balance\");\r\r\n\t}else{\r\r\n\t\tthis.ui.get(\"DebitedAmountinAccountCurrency[\"+index+\"]\").setValid(true);\r\r\n\t}\r\r\n}\r\r\n//--------------------------------------------------------------------------------Drop_2----------------------------------------------------------------------------------------\r\r\n//------------------------------------------------------------\r\r\n//function to view alert in case of get customer info error\r\r\nthis.AjaxErrorHandling = function(errorMSG)\r\r\n{\r\r\n\tthis.context.options.alertMessage.set(\"value\", errorMSG);\r\r\n\tthis.context.options.errorVis.set(\"value\", \"EDITABLE\")\r\r\n}"
+          }
+        ]
+      },
+      "hasDetails": true
+    },
+    {
+      "id": "12.89a53d06-50b8-41df-a5cc-5e4f61147b6d",
+      "versionId": "acd6d01e-d2a6-4544-b543-fab8d2f8f23a",
+      "name": "CommissionsAndChargesDetails",
+      "type": "twClass",
+      "typeName": "Business Object",
+      "details": {}
+    },
+    {
+      "id": "61.45b9ebf8-56b3-4774-b7a1-ec385ab045f8",
+      "versionId": "4bea6092-0194-4871-a30f-d9e260fe0946",
+      "name": "common.js",
+      "type": "managedAsset",
+      "typeName": "Managed Asset",
+      "details": {}
+    },
+    {
+      "id": "64.0fa21995-2169-498c-ba2e-ea66c3dc5616",
+      "versionId": "b7059166-d296-437a-9e30-5607ea8f75c7",
+      "name": "Contract Creation",
+      "type": "coachView",
+      "typeName": "Coach View",
+      "details": {
+        "loadJsFunction": "if(this.context.binding.get(\"value\").get(\"haveInterest\") == false){\r\r\n\tthis.ui.get(\"contract_Interest_Details\").setVisible(false,true);\r\r\n}else if (this.context.binding.get(\"value\").get(\"haveInterest\") == true){\r\r\n\tthis.ui.get(\"contract_Interest_Details\").setVisible(true,true);\r\r\n}",
+        "bindingType": "IDCContract",
+        "configOptions": [
+          "contractcashCollateralsOption",
+          "advicesOption",
+          "contractLimitsTrackingOption",
+          "contractInterestDetailsOption",
+          "contractTransactionDetailsOption",
+          "concatString",
+          "accountList",
+          "requestCurrency",
+          "isGLFound",
+          "isSuccessful",
+          "customerCIF",
+          "adviceCodeList",
+          "selectedBIC",
+          "accounteeCIF",
+          "caseCIF",
+          "exRate",
+          "amtPayableByNBE",
+          "contractAmount",
+          "accountIndex",
+          "isChecker",
+          "stage",
+          "facilityCIF",
+          "errorMessage",
+          "selectedCIF",
+          "Suppressedvis",
+          "interestIsVisible",
+          "alertMessage",
+          "errorVis",
+          "interestVis"
+        ],
+        "inlineScripts": [
+          {
+            "name": "Inline Javascript",
+            "scriptType": "JS",
+            "scriptBlock": "this.visabilityController = function  (id) {\r\r\n\tvar temp;\r\r\n\tswitch (id) {\r\r\n//    \tcase \"contract_Interest_Details\": temp = this.context.options.contractInterestDetailsOption.get(\"value\")\r\r\n//      break;\r\r\n       \tcase \"contract_cash_Collaterals\": temp = this.context.options.contractcashCollateralsOption.get(\"value\")\r\r\n       \tbreak;\r\r\n       \tcase \"contract_Limits_Tracking\": temp = this.context.options.contractLimitsTrackingOption.get(\"value\")\r\r\n       \tbreak;\r\r\n       \tcase \"contract_Advices\": temp = this.context.options.advicesOption.get(\"value\")\r\r\n       \tbreak;\r\r\n       \tcase \"contract_Transaction_Details\": temp = this.context.options.contractTransactionDetailsOption.get(\"value\")\r\r\n       \tbreak;\r\r\n\t}\r\r\n\tif (temp) \r\r\n\t\tthis.ui.get(id).setVisible(true,true);\r\r\n\telse\r\r\n\t\tthis.ui.get(id).setVisible(false,true);\r\r\n}\r\r\n\r\r\nthis.maturityDateSum = function (value){\r\r\n\tvar maturityDate= new Date();\r\r\n\tvar baseDate = this.context.binding.get(\"value\").get(\"transactionBaseDate\").getDate();\r\r\n\tvar transDays = this.context.binding.get(\"value\").get(\"transactionTransitDays\");\r\r\n\tvar tenorDays = this.context.binding.get(\"value\").get(\"transactionTenorDays\");\r\r\n\tif (value.getData() <= 0) {\r\r\n\t\tvalue.setValid(false,\"Days Must be > 0\");\r\r\n//\t\tvalue.setData(0);\r\r\n\t}else{\r\r\n\t\tvalue.setValid(true);\r\r\n\t\tmaturityDate.setDate(baseDate + transDays + tenorDays);\r\r\n\t\tthis.context.binding.get(\"value\").set(\"transactionMaturityDate\", maturityDate);\r\r\n\t}\r\r\n}\r\r\n\r\r\nthis.swiftValid = function (value){\r\r\n\tregexString = /^(?![\\s])[a-zA-Z0-9.,()\\/='+:?!\\\"%&*<>;{@#_ \\r\\n-\\s]*$/;\r\r\n\tregex = new RegExp(regexString);\r\r\n\tif (!regex.test(value.getData())){\r\r\n\t\tvalue.setValid(false,\"Not Valid Format The Allowed characters is: Alphanumeric and . , – ( ) / = ‘ + : ? ! ” % & * < > ; { @ # _ CrLf Space\");\r\r\n\t}else{\r\r\n\t\tvalue.setValid(true);\r\r\n\t}\r\r\n}\r\r\n\r\r\nthis.setAccountList = function (){\r\r\n\tfor (var i=0; i<this.context.options.accountList.get(\"value\").length(); i++) {\r\r\n\t\tthis.context.binding.get(\"value\").get(\"accountNumberList\").add({name: this.context.options.accountList.get(\"value\").get(i).get(\"accountNO\"), value: this.context.options.accountList.get(\"value\").get(i).get(\"accountNO\")});\r\r\n\t}\r\r\n}\r\r\n\r\r\nthis.setAccountInfo = function (value){\r\r\n\tvar record = value.ui.getIndex();\r\r\n\tfor (var i=0; i<this.context.options.accountList.get(\"value\").length(); i++) {\r\r\n\t\tif (this.context.options.accountList.get(\"value\").get(i).get(\"accountNO\") == value.getData().name) {\r\r\n\t\t\tthis.context.binding.get(\"value\").get(\"cashCollateralAccounts\").get(record).set(\"accountBranchCode\", this.context.options.accountList.get(\"value\").get(i).get(\"branchCode\"));\r\r\n\t\t\tthis.context.binding.get(\"value\").get(\"cashCollateralAccounts\").get(record).set(\"accountCurrency\", this.context.options.accountList.get(\"value\").get(i).get(\"currencyCode\"));\r\r\n\t\t}\r\r\n\t}\r\r\n}\r\r\n\r\r\nthis.executeService = function (value){\r\r\n\tvar index = value.ui.getIndex();\r\r\n\tif (value.getData() == \"Customer Account\"){\r\r\n\t\tthis.ui.get(\"CustomerAccountTable/AccountNumber[\"+index+\"]\").setEnabled(true);\r\r\n\t\talert(\"CA\");\r\r\n\t\tthis.ui.get(\"CustomerAccountTable/AccountBranchCode[\"+index+\"]\").setEnabled(false);\r\r\n\t\tthis.ui.get(\"CustomerAccountTable/AccountCurrency[\"+index+\"]\").setEnabled(false);\r\r\n\t\tthis.ui.get(\"CustomerAccountTable/AccountNumberGL[\"+index+\"]\").setEnabled(false);\r\r\n\t\tthis.ui.get(\"CustomerAccountTable/AccountNumberGL[\"+index+\"]\").setData(\"\");\r\r\n\t\tthis.ui.get(\"CustomerAccountTable/VerifyGLAccountBtn[\"+index+\"]\").hide();\r\r\n\t}else if(value.getData() == \"GL Account\"){\r\r\n\t\tthis.ui.get(\"CustomerAccountTable/AccountNumberGL[\"+index+\"]\").setEnabled(true);\r\r\n\t\talert(\"GL\");\r\r\n\t\tthis.ui.get(\"CustomerAccountTable/AccountBranchCode[\"+index+\"]\").setEnabled(true);\r\r\n\t\tthis.ui.get(\"CustomerAccountTable/AccountCurrency[\"+index+\"]\").setEnabled(true);\r\r\n\t\tthis.ui.get(\"CustomerAccountTable/AccountNumber[\"+index+\"]\").setEnabled(false);\r\r\n\t\tthis.ui.get(\"CustomerAccountTable/AccountNumber[\"+index+\"]\").setData(\"\");\r\r\n\t\tthis.ui.get(\"CustomerAccountTable/VerifyGLAccountBtn[\"+index+\"]\").setVisible(true,true);\r\r\n\t}\r\r\n}\r\r\n\r\r\nthis.buttonBL = function (value){\r\r\n\tvar record = value.ui.getIndex();\r\r\n\tvalue.setValid(true);\r\r\n\tthis.ui.get(\"CustomerAccountTable/VerifyGLAccountBtn[\"+record+\"]\").setEnabled(true);\r\r\n\tthis.ui.get(\"CustomerAccountTable/VerifyGLAccountBtn[\"+record+\"]\").setData(false);\r\r\n}\r\r\n\r\r\nthis.executeGL = function (value){\r\r\n\tvar record = value.ui.getIndex();\r\r\n//\tthis.ui.get(\"CustomerAccountTable/ VerifyGLAccountBtn[\"+record+\"]\").setEnabled(false);\r\r\n\tvar data = this.context.binding.get(\"value\").get(\"cashCollateralAccounts\").get(record).get(\"GLAccountNumber\");\r\r\n\tthis.context.options.accountIndex.set(\"value\", value.ui.getIndex());\r\r\n\tthis.ui.get(\"CheckexistingGLAccount1\").execute(data);\r\r\n}\r\r\n\r\r\nthis.validGlAccount = function (){\r\r\n\trecord = this.context.options.accountIndex.get(\"value\");\r\r\n\tthis.context.binding.get(\"value\").get(\"cashCollateralAccounts\").get(record).set(\"isGLFound\", this.context.options.isGLFound.get(\"value\"));\r\r\n\tif (this.context.binding.get(\"value\").get(\"cashCollateralAccounts\").get(record).get(\"isGLFound\") == false) {\r\r\n\t\tthis.ui.get(\"CustomerAccountTable/AccountNumberGL[\"+record+\"]\").setValid(false, \"Account Not Found!\");\r\r\n\t}else{\r\r\n\t\tthis.ui.get(\"CustomerAccountTable/AccountNumberGL[\"+record+\"]\").setValid(true);\r\r\n\t}\r\r\n}\r\r\n\r\r\n\r\r\nthis.setFromCurrency = function (value){\r\r\n\tvar fromCur = value.getData().code;\r\r\n\tvar toCur = this.context.options.requestCurrency.get(\"value\");\r\r\n\tif (fromCur != toCur) {\r\r\n//\t\tvar concatCur = fromCur + \",\" + toCur +\"\";\r\r\n\t\tvar concatCur2 = {ccFrom : fromCur , ccTo : toCur , type: \"TRANSFER\" , sType:\"S\"}\r\r\n\t\tvar concatCur2JSON = JSON.stringify(concatCur2);\r\r\n\t\tthis.ui.get(\"GetExchangeRate1\").execute(concatCur2JSON);\r\r\n\t}\r\r\n}\r\r\n\r\r\nthis.validateSwift = function (view) {\r\r\n\tregexString = /^(?![\\s])[a-zA-Z0-9.,()\\/='+:?!\\\"%&*<>;{@#_-]{0,34}[a-zA-Z0-9.,()\\/='+:?!\\\"%&*<>;{@#_-](?<![\\s-])$/;\r\r\n\tregex = new RegExp(regexString);\r\r\n\tif (view.getData() != \"\") {\r\r\n\t\tif (!regex.test(view.getData())){\r\r\n\t\t\t view.setValid(false,\"Only Allowed characters is: Alphanumeric and . , – ( ) / = ‘ + : ? ! ” % & * < > ; { @ # _ CrLf Space\");\r\r\n\t\t}\r\r\n\t\telse{\r\r\n\t\t\tview.setValid(true);\r\r\n\t\t}\r\r\n\t}\r\r\n}\r\r\n\r\r\nthis.calucInterestAmount = function (){\r\r\n\tvar interestRate = this.context.binding.get(\"value\").get(\"interestRate\")+\"\";\r\r\n\tvar contractAmount = this.context.options.contractAmount.get(\"value\")+\"\";\r\r\n\tvar interestToDate = this.context.binding.get(\"value\").get(\"interestToDate\");\r\r\n\tvar interestfromDate = this.context.binding.get(\"value\").get(\"interestFromDate\");\r\r\n\tvar diff = (interestToDate.getTime() - interestfromDate.getTime());\r\r\n\tif (diff <= 0) {\r\r\n\t\tthis.ui.get(\"ToDate\").setValid(false,\"Interest To Date must be > From Date\")\r\r\n\t}else{\r\r\n\t\tvar diffDays = diff / (1000 * 3600 * 24);\r\r\n\t\tvar concatInterest = interestRate + \",\" + contractAmount + \",\" + Math.ceil(diffDays) +\"\";\r\r\n\t\t// this.context.options.concatInterest.set(\"value\", concatInterest);\r\r\n\t\tthis.ui.get(\"GetInterestAmount1\").execute(concatInterest);\r\r\n\t}\r\r\n}\r\r\n\r\r\nthis.validateDigits = function (value){\r\r\n\tvar index = value.ui.getIndex();\r\r\n\tif(isNaN(Number(value.getData()))){\r\r\n\t\tvalue.setData(\"\");\r\r\n\t\tvalue.setValid(false ,\"must be digits\");\r\r\n\t\treturn false;\r\r\n\t}else\r\r\n\t{\r\r\n\t\tvalue.setValid(true);\r\r\n\t\treturn true;\r\r\n\t}\r\r\n}\r\r\n\r\r\nthis.showAccountTable = function (value){\r\r\n\tif (this.context.binding.get(\"value\").get(\"collateralAmount\") <= 0) {\r\r\n\t\tthis.ui.get(\"CustomerAccountTable\").setVisible(false,true);\r\r\n\t}else{\r\r\n\t\tthis.ui.get(\"CustomerAccountTable\").setVisible(true,true);\r\r\n\t}\r\r\n\t\t\r\r\n}\r\r\n//----------------------------------------------------------------------------Drop_2--------------------------------\r\r\n//------------------------------------------------------------\r\r\n//function to view alert in case of get customer info error\r\r\nthis.AjaxErrorHandling = function(errorMSG)\r\r\n{\r\r\n\tthis.context.options.alertMessage.set(\"value\", errorMSG);\r\r\n\tthis.context.options.errorVis.set(\"value\", \"EDITABLE\")\r\r\n}\r\r\n\r\r\nthis.test = function (value){\r\r\n\tvar i = value.ui.getIndex();\r\r\n\tthis.ui.get(\"CustomerAccountTable/AccountNumberGL[\"+i+\"]\").setValid(false,\"WOOOOW\");\r\r\n}"
+          }
+        ]
+      },
+      "hasDetails": true
+    },
+    {
+      "id": "64.9940a6bf-7b99-412b-a9c2-2484d4c53ed5",
+      "versionId": "2fee23dd-76fc-485e-8d35-7a43b7a22e07",
+      "name": "Contract Liquidation",
+      "type": "coachView",
+      "typeName": "Coach View",
+      "details": {
+        "loadJsFunction": "if (this.context.options.isChecker.get(\"value\") == true) {\r\r\n\tthis.ui.get(\"Vertical_Settlement\").setEnabled(false);\r\r\n//\tthis.ui.get(\"DebitedAccountDetails1\").setEnabled(false);\r\r\n//\tthis.ui.get(\"DebitedAmount1\").setEnabled(false);\r\r\n}else{\r\r\n\tthis.ui.get(\"Vertical_Settlement\").setEnabled(true);\r\r\n//\tthis.ui.get(\"DebitedAccountDetails1\").setEnabled(true);\r\r\n//\tthis.ui.get(\"DebitedAmount1\").setEnabled(true);\r\r\n}\r\r\n\r\r\n\r\r\n//if (this.context.options.liquidationVis.get(\"value\")){\r\r\n//\tthis.ui.get(\"ContractLiquidation\").setVisible(true,true);\r\r\n//}else{\r\r\n//\tthis.ui.get(\"ContractLiquidation\").setVisible(false,true);\r\r\n//}",
+        "bindingType": "IDCContract",
+        "configOptions": [
+          "sAccountList",
+          "customerCIF",
+          "isGLFound",
+          "exchangeCurrency",
+          "liquidationVis",
+          "liqDone",
+          "selectedAction",
+          "accountIndex",
+          "isChecker",
+          "tempSettlement",
+          "exRate",
+          "concatExCurrency",
+          "accounteeCIF",
+          "caseCIF",
+          "draweeCIF",
+          "alertMessage",
+          "accountClassCode",
+          "errorVis"
+        ],
+        "inlineScripts": [
+          {
+            "name": "Inline Javascript",
+            "scriptType": "JS",
+            "scriptBlock": "this.executeService = function (value){\r\r\n    var index = value.ui.getIndex();\r\r\n    if (value.getData() == \"Customer Account\"){\r\r\n    \t\tthis.ui.get(\"AccountBranchCode[\"+index+\"]\").setEnabled(false);\r\r\n       \tthis.ui.get(\"AccountCurrency[\"+index+\"]\").setEnabled(false);\r\r\n\t\tthis.ui.get(\"AccountNumberGL[\"+index+\"]\").setEnabled(false);\r\r\n        \tthis.ui.get(\"VerifyGLAccountBtn[\"+index+\"]\").setEnabled(false);\r\r\n       \t this.ui.get(\"Owner1[\"+index+\"]\").setEnabled(true);\r\r\n    \t\tif (this.ui.get(\"Owner1[\"+index+\"]\").getData() != \"\") {\r\r\n   \t  \t\tthis.ui.get(\"AccountNumber[\"+index+\"]\").setEnabled(true);\r\r\n    \t  \t\tthis.ui.get(\"AccountNumberGL[\"+index+\"]\").setData(\"\");\r\r\n    \t\t}\r\r\n\t}else if (value.getData() == \"GL Account\"){\r\r\n\t\tthis.ui.get(\"AccountBranchCode[\"+index+\"]\").setEnabled(true);\r\r\n       \tthis.ui.get(\"AccountCurrency[\"+index+\"]\").setEnabled(true);\r\r\n//\t\tthis.ui.get(\"Owner1[\"+index+\"]\").setData(\"\");\r\r\n\t\tthis.ui.get(\"AccountNumber[\"+index+\"]\").setEnabled(false);\r\r\n\t\tthis.ui.get(\"Owner1[\"+index+\"]\").setEnabled(false);\r\r\n   \t  \tthis.ui.get(\"VerifyGLAccountBtn[\"+index+\"]\").setEnabled(true);\r\r\n\t\tthis.ui.get(\"AccountNumberGL[\"+index+\"]\").setEnabled(true);\r\r\n\t\tthis.ui.get(\"AccountNumber[\"+index+\"]\").setData(\"\");\r\r\n\t\tthis.ui.get(\"Decimal1[\"+index+\"]\").setData(\"\");\r\r\n\t\tthis.ui.get(\"Output_Text1[\"+index+\"]\").setData(\"\");\r\r\n\t\tthis.ui.get(\"Text2[\"+index+\"]\").setData(\"\");\r\r\n\t\tthis.ui.get(\"AccountCurrency1[\"+index+\"]\").setData(\"\");\r\r\n    }\r\r\n}\r\r\n\r\r\nthis.debitPercentageRule = function (value){\r\r\n\tif(value.getData() == \"Percentage\"){\r\r\n\t\tthis.ui.get(\"DebitPercentage\").setEnabled(true);\r\r\n\t\tthis.ui.get(\"DebitedAmountinLiquidationCurrency\").setEnabled(false);\r\r\n\t\t\r\r\n\t}else{\r\r\n        this.ui.get(\"DebitPercentage\").setEnabled(false);\r\r\n        this.ui.get(\"DebitedAmountinLiquidationCurrency\").setEnabled(true);\r\r\n   \t}\r\r\n\r\r\n} \r\r\n\r\r\nthis.dAmntAccountSum = function (value){\r\r\n\tvar record = value.ui.getIndex();\r\r\n\tvar a = this.ui.get(\"DebitedAmountinLiquidationCurrency[\"+record+\"]\").getData();\r\r\n\tvar b = this.ui.get(\"NegotiatedExchangeRate[\"+record+\"]\").getData();\r\r\n\tif ( (a != null && a != undefined) && (b != null && b != undefined)) {\r\r\n\t\tthis.ui.get(\"DebitedAmountinAccountCurrency[\"+record+\"]\").setData(this.ui.get(\"DebitedAmountinLiquidationCurrency[\"+record+\"]\").getData() * this.ui.get(\"NegotiatedExchangeRate[\"+record+\"]\").getData());\r\r\n\t}\t\t\r\r\n}\r\r\n\r\r\nthis.setAccountInfo = function (value){\r\r\n\tfor (var i=0; i<this.context.options.sAccountList.get(\"value\").length(); i++) {\r\r\n\t\tif (this.context.options.sAccountList.get(\"value\").get(i).get(\"accountNO\") == value.getData()) {\r\r\n\t\t\tthis.context.binding.get(\"value\").get(\"settlementAccounts\").get(value.ui.getIndex()).get(\"debitedAccount\").set(\"accountBalance\", this.context.options.sAccountList.get(\"value\").get(i).get(\"balance\"));\r\r\n\t\t\tthis.context.options.accountClassCode.set(\"value\", this.context.options.sAccountList.get(\"value\").get(i).get(\"accountClassCode\"));\r\r\n\t\t\tvar accountClassCode =  this.context.options.accountClassCode.get(\"value\");//SA04\r\r\n\t\t\tvar code = accountClassCode.substring(0,1);\r\r\n\t\t\t\r\r\n\t\t\tif (code == \"O\" || code == \"D\"){\t\t\r\r\n\t\t\t\tthis.context.binding.get(\"value\").get(\"settlementAccounts\").get(value.ui.getIndex()).get(\"debitedAccount\").set(\"isOverDraft\", true);\r\r\n\t\t\t}else{\r\r\n\t\t\t\tthis.context.binding.get(\"value\").get(\"settlementAccounts\").get(value.ui.getIndex()).get(\"debitedAccount\").set(\"isOverDraft\", false);\r\r\n\t\t\t}\r\r\n\t\t\talert(this.context.binding.get(\"value\").get(\"settlementAccounts\").get(value.ui.getIndex()).get(\"debitedAccount\").get(\"isOverDraft\"));\r\r\n\t\t\tif (this.context.binding.get(\"value\").get(\"settlementAccounts\").get(value.ui.getIndex()).get(\"debitedAccount\").get(\"accountClass\") == \"Customer Account\") {\r\r\n\t\t\t\tthis.context.binding.get(\"value\").get(\"settlementAccounts\").get(value.ui.getIndex()).get(\"debitedAccount\").set(\"accountCurrency\", {});\r\r\n\t\t\t\tthis.context.binding.get(\"value\").get(\"settlementAccounts\").get(value.ui.getIndex()).get(\"debitedAccount\").get(\"accountCurrency\").set(\"code\", this.context.options.sAccountList.get(\"value\").get(i).get(\"currencyCode\"));\r\r\n\t\t\t\tthis.context.binding.get(\"value\").get(\"settlementAccounts\").get(value.ui.getIndex()).get(\"debitedAccount\").set(\"accountBranchCode\", this.context.options.sAccountList.get(\"value\").get(i).get(\"branchCode\"));\r\r\n\t\t\t\tthis.context.binding.get(\"value\").get(\"settlementAccounts\").get(value.ui.getIndex()).get(\"debitedAccount\").set(\"balanceSign\", this.context.options.sAccountList.get(\"value\").get(i).get(\"balanceType\"));\r\r\n\t\t\t}\r\r\n\t\t}\r\r\n\t}\r\r\n}\r\r\n\r\r\nthis.validGlAccount = function (value){\r\r\n\tvar record = value.ui.getIndex();\r\r\n\tif (this.context.binding.get(\"value\").get(\"settlementAccounts\").get(record).get(\"debitedAccount\").get(\"isGLFoundC\") == false) {\r\r\n\t\tthis.ui.get(\"AccountNumberGL[\"+record+\"]\").setValid(false, \"Account Not Found!\");\r\r\n\t}else{\r\r\n\t\tthis.ui.get(\"AccountNumberGL[\"+record+\"]\").setValid(true);\r\r\n\t}\r\r\n}\r\r\n\r\r\nthis.setExchangeOnResult = function (){\r\r\n\tthis.ui.get(\"NegotiatedExchangeRate\").setData(this.ui.get(\"NegotiatedExchangeRate\").getData());\r\r\n}\r\r\n\r\r\nthis.executeServ = function (value){\r\r\n\tvar record = value.ui.getIndex();\r\r\n\tvar data = this.context.binding.get(\"value\").get(\"settlementAccounts\").get(record).get(\"debitedAccount\").get(\"GLAccountNumber\");\r\r\n\tthis.ui.get(\"CheckexistingGLAccount1[\"+record+\"]\").execute(data);\r\r\n}\r\r\n\r\r\nthis.addAccount = function (){\r\r\n\tthis.context.binding.get(\"value\").get(\"settlementAccounts\").add({});\r\r\n\tthis.context.binding.get(\"value\").get(\"settlementAccounts\").get(this.context.binding.get(\"value\").get(\"settlementAccounts\").length()-1).set(\"debitedAccount\",{});\r\r\n\tthis.context.binding.get(\"value\").get(\"settlementAccounts\").get(this.context.binding.get(\"value\").get(\"settlementAccounts\").length()-1).get(\"debitedAccount\").set(\"accountClass\",\"Customer Account\");\r\r\n\tthis.context.binding.get(\"value\").get(\"settlementAccounts\").get(this.context.binding.get(\"value\").get(\"settlementAccounts\").length()-1).get(\"debitedAccount\").set(\"accountCurrency\",{});\r\r\n\tthis.context.binding.get(\"value\").get(\"settlementAccounts\").get(this.context.binding.get(\"value\").get(\"settlementAccounts\").length()-1).set(\"debitedAmount\",{});\r\r\n}\r\r\n\r\r\nthis.removeAccount = function (value){\r\r\n\tindex = value.ui.getIndex();\r\r\n\tthis.context.options.tempSettlement.set(\"value\", []);\r\r\n\tfor (var i=0; i<this.context.binding.get(\"value\").get(\"settlementAccounts\").length(); i++) {\r\r\n\t\tif (i != index) {\r\r\n\t\t\tthis.context.options.tempSettlement.get(\"value\").add(this.context.binding.get(\"value\").get(\"settlementAccounts\").get(i));\r\r\n\t\t}\r\r\n\t}\r\r\n\tthis.context.binding.get(\"value\").get(\"settlementAccounts\").remove(index);\r\r\n\tfor (var i=0; i<this.context.options.tempSettlement.get(\"value\").length(); i++) {\r\r\n\t\tthis.context.binding.get(\"value\").get(\"settlementAccounts\").get(i).set(\"debitedAccount\", this.context.options.tempSettlement.get(\"value\").get(i).get(\"debitedAccount\"));\r\r\n\t\tthis.context.binding.get(\"value\").get(\"settlementAccounts\").get(i).set(\"debitedAmount\", this.context.options.tempSettlement.get(\"value\").get(i).get(\"debitedAmount\"));\r\r\n\t}\r\r\n\tconsole.dir(this.context.binding.get(\"value\").get(\"settlementAccounts\"));\r\r\n}\r\r\n\r\r\nthis.settlementVis = function (){\r\r\n\tif (this.context.options.isChecker.get(\"value\") == true) {\r\r\n\t\tthis.ui.get(\"DebitedAccountDetails1\").setEnabled(false);\r\r\n\t\tthis.ui.get(\"DebitedAmount1\").setEnabled(false);\r\r\n\t}else{\r\r\n\t\tthis.ui.get(\"DebitedAccountDetails1\").setEnabled(true);\r\r\n\t\tthis.ui.get(\"DebitedAmount1\").setEnabled(true);\r\r\n\t}\r\r\n}\r\r\n\r\r\nthis.setExchangeRate = function (value){\r\r\n\tvar index = value.ui.getIndex();\r\r\n\tif (this.ui.get(\"LiquidateionCurrency\").getData() == value.getData()) {\r\r\n\t\tthis.ui.get(\"StandardExchangeRate[\"+index+\"]\").setData(1.0);\r\r\n\t\tthis.ui.get(\"NegotiatedExchangeRate[\"+index+\"]\").setData(1.0);\r\r\n\t}else{\r\r\n\t\tvar defaultCurrency = this.ui.get(\"LiquidateionCurrency\").getData();\r\r\n\t\tvar accountCurrency = value.getData();\r\r\n\t\tconcatedCurrency = {ccFrom : defaultCurrency , ccTo : accountCurrency , type:\"TRANSFER\" , sType:\"S\"};\r\r\n\t\tinputCurr = JSON.stringify(concatedCurrency);\r\r\n\t\tthis.ui.get(\"GetExchangeRate[\"+index+\"]\").execute(inputCurr);\r\r\n\t}\t\r\r\n}\r\r\n\r\r\nthis.setExServiceResults = function (value){\r\r\n\tvar index = value.ui.getIndex();\r\r\n\tthis.ui.get(\"StandardExchangeRate[\"+index+\"]\").setData(this.context.options.exRate.get(\"value\"));\r\r\n\tthis.ui.get(\"NegotiatedExchangeRate[\"+index+\"]\").setData(this.ui.get(\"StandardExchangeRate[\"+index+\"]\").getData());\r\r\n\tthis.ui.get(\"NegotiatedExchangeRate[\"+index+\"]\").setEnabled(true);\r\r\n}\r\r\n\r\r\nthis.setOwnerCIF = function (value){\r\r\n\tvar record = value.ui.getIndex();\r\r\n\tif (this.context.options.isChecker.get(\"value\") == false) {\r\r\n\t\tthis.ui.get(\"AccountNumber[\"+record+\"]\").setEnabled(true);\r\r\n\t}\r\r\n\tif (value.getData() == \"Accountee\") {\r\r\n\t\tthis.context.binding.get(\"value\").get(\"settlementAccounts\").get(record).set(\"settCIF\", this.context.options.accounteeCIF.get(\"value\"));\r\r\n\t}else if (value.getData() == \"Case In Need\") {\r\r\n\t\tthis.context.binding.get(\"value\").get(\"settlementAccounts\").get(record).set(\"settCIF\", this.context.options.caseCIF.get(\"value\"));\r\r\n\t}else{\r\r\n\t\tthis.context.binding.get(\"value\").get(\"settlementAccounts\").get(record).set(\"settCIF\", this.context.options.draweeCIF.get(\"value\"));\r\r\n\t}\r\r\n\tthis.ui.get(\"GetCustomerAccount1[\"+record+\"]\").execute(this.context.binding.get(\"value\").get(\"settlementAccounts\").get(record).get(\"settCIF\"));\r\r\n}\r\r\n\r\r\nthis.setSettAccounts = function (value){\r\r\n\tvar index = value.ui.getIndex();\r\r\n\tthis.context.binding.get(\"value\").get(\"settlementAccounts\").get(index).set(\"accountNumberList\" , []);\r\r\n\tfor (var i=0; i<this.context.options.sAccountList.get(\"value\").length(); i++) {\r\r\n\t\tthis.context.binding.get(\"value\").get(\"settlementAccounts\").get(index).get(\"accountNumberList\").add({name:this.context.options.sAccountList.get(\"value\").get(i).get(\"accountNO\") , value:this.context.options.sAccountList.get(\"value\").get(i).get(\"accountNO\")});\r\r\n\t}\r\r\n}\r\r\n\r\r\nthis.resetGLButton = function (value){\r\r\n\tvar index = value.ui.getIndex();\r\r\n\tthis.ui.get(\"VerifyGLAccountBtn[\"+index+\"]\").setData(false);\r\r\n}\r\r\n\r\r\nthis.accountVis = function(value){\r\r\n\tvalue.setEnabled(false);\r\r\n\tvar index = value.ui.getIndex();\r\r\n\tif(this.context.options.isChecker.get(\"value\") == true || this.ui.get(\"Owner1[\"+index+\"]\").getData() == null || this.ui.get(\"Owner1[\"+index+\"]\").getData() == undefined || this.ui.get(\"Owner1[\"+index+\"]\").getData() == \"\"){\r\r\n\t\tvalue.setEnabled(false);\r\r\n\t}else{\r\r\n\t\tvalue.setEnabled(true);\r\r\n\t}\r\r\n}\r\r\n\r\r\nthis.validateDigits = function (value){\r\r\n\tvar index = value.ui.getIndex();\r\r\n\tif(isNaN(Number(value.getData()))){\r\r\n\t\tvalue.setData(\"\");\r\r\n\t\tvalue.setValid(false ,\"must be digits\");\r\r\n\t\treturn false;\r\r\n\t}else\r\r\n\t{\r\r\n\t\tvalue.setValid(true);\r\r\n\t\treturn true;\r\r\n\t}\r\r\n}\r\r\n\r\r\nthis.setDebitPercAmount = function (value){\r\r\n\tfor (var i=0; i<this.context.binding.get(\"value\").get(\"settlementAccounts\").length(); i++) {\t\t\r\r\n\t\tif (value.getData() == \"Percentage\") {\r\r\n\t\t\tthis.ui.get(\"DebitPercentage[\"+i+\"]\").setEnabled(true);\r\r\n\t\t\tthis.ui.get(\"DebitedAmountinLiquidationCurrency[\"+i+\"]\").setEnabled(false);\r\r\n\t\t\t\r\r\n\t\t}else{\r\r\n\t\t\tthis.ui.get(\"DebitPercentage[\"+i+\"]\").setEnabled(false);\r\r\n\t\t\tthis.ui.get(\"DebitedAmountinLiquidationCurrency[\"+i+\"]\").setEnabled(true);\r\r\n\t\t}\r\r\n\t}\r\r\n}\r\r\n\r\r\nthis.dAmtLiqCurSum = function (){\r\r\n\tif (this.context.binding.get(\"value\").get(\"liquidationSummary\").get(\"debitBasisby\") == \"Percentage\") {\r\r\n\t\tfor (var i=0; i<this.context.binding.get(\"value\").get(\"settlementAccounts\").length(); i++) {\r\r\n\t\t\tvar liqAmnt = this.context.binding.get(\"value\").get(\"liquidationSummary\").get(\"liquidationAmt\");\r\r\n\t\t\tvar perc = this.context.binding.get(\"value\").get(\"settlementAccounts\").get(i).get(\"debitedAmount\").get(\"debitPercentage\");\r\r\n\t\t\tvar result = liqAmnt * perc;\r\r\n\t\t\tthis.context.binding.get(\"value\").get(\"settlementAccounts\").get(i).get(\"debitedAmount\").set(\"debitedAmtinLiquidationCurrency\", result);\r\r\n\t\t}\r\r\n\t}\r\r\n}\r\r\n\r\r\nthis.validateOverDraft = function (value) {\r\r\n\tvar index = value.ui.getIndex();\r\r\n\tif (this.context.binding.get(\"value\").get(\"settlementAccounts\").get(index).get(\"debitedAccount\").get(\"isOverDraft\") == true) {\r\r\n\t\tthis.ui.get(\"DebitedAmountinAccountCurrency[\"+index+\"]\").setValid(false,\"WARNING: Must be < Account Balance\");\r\r\n\t}else{\r\r\n\t\tthis.ui.get(\"DebitedAmountinAccountCurrency[\"+index+\"]\").setValid(true);\r\r\n\t}\r\r\n}\r\r\n//----------------------------------------------------------------Drop_2----------------------------------------------------------------------\r\r\n//------------------------------------------------------------\r\r\n//function to view alert in case of get customer info error\r\r\nthis.AjaxErrorHandling = function(errorMSG)\r\r\n{\r\r\n\tthis.context.options.alertMessage.set(\"value\", errorMSG);\r\r\n\tthis.context.options.errorVis.set(\"value\", \"EDITABLE\")\r\r\n}"
+          }
+        ]
+      },
+      "hasDetails": true
+    },
+    {
+      "id": "12.69b935ab-8de6-458e-aa2c-f8c8ff4862f3",
+      "versionId": "d7a1872d-d258-41fc-aaba-37d02b71730f",
+      "name": "ContractAdvice",
+      "type": "twClass",
+      "typeName": "Business Object",
+      "details": {}
+    },
+    {
+      "id": "12.a39439e0-d96f-443a-9929-0d2b1f90de8e",
+      "versionId": "27accf05-b38e-4895-a915-e183dc1a7ba2",
+      "name": "ContractLimitTracking",
+      "type": "twClass",
+      "typeName": "Business Object",
+      "details": {}
+    },
+    {
+      "id": "1.4e624381-ed2d-4716-836c-494f4210ce96",
+      "versionId": "bef73ddf-aa6e-45da-b496-cb2893a566d9",
+      "name": "convert currency",
+      "type": "process",
+      "typeName": "Process",
+      "details": {}
+    },
+    {
+      "id": "1.a1e8f4f0-cbdc-4bcf-8b29-71b9b2096058",
+      "versionId": "44205fb7-bc66-494c-aa1f-cfd44732b820",
+      "name": "Create CIF Folder",
+      "type": "process",
+      "typeName": "Process",
+      "details": {}
+    },
+    {
+      "id": "1.45e2a149-1d4a-4946-ad59-f81f1424f100",
+      "versionId": "d8df3b6e-051c-495b-8085-957e0914d5e6",
+      "name": "Create Folder FileNet",
+      "type": "process",
+      "typeName": "Process",
+      "details": {}
+    },
+    {
+      "id": "1.76e93686-1290-441b-87b6-9e3624b6ce34",
+      "versionId": "9891c5eb-aed4-470e-8b57-637f29eb7d1f",
+      "name": "Create Folder Structure",
+      "type": "process",
+      "typeName": "Process",
+      "details": {}
+    },
+    {
+      "id": "1.e94a0fdc-1a9b-4a6c-b79e-6491efdb1f25",
+      "versionId": "203cbf5e-3e8a-44a9-bc4c-1d2fe5420e28",
+      "name": "Create IDC Customs Release Request",
+      "type": "process",
+      "typeName": "Process",
+      "details": {}
+    },
+    {
+      "id": "1.19d05118-4f9d-482a-afd5-662663bc3612",
+      "versionId": "c6684745-aea7-48d3-b17a-570cd239aa61",
+      "name": "Create IDC Request",
+      "type": "process",
+      "typeName": "Process",
+      "details": {}
+    },
+    {
+      "id": "1.7eee0980-1508-423c-95a0-c08797e92721",
+      "versionId": "24201065-1d0c-49f7-b4a6-2361ce7b2758",
+      "name": "Create IDC Reversal Request",
+      "type": "process",
+      "typeName": "Process",
+      "details": {}
+    },
+    {
+      "id": "1.e2bdefe5-4826-4c86-8897-1bfda517d27d",
+      "versionId": "b18cbb03-cd9f-4625-b5ab-6154de5e0b4b",
+      "name": "Create IDC Withdrawal Request",
+      "type": "process",
+      "typeName": "Process",
+      "details": {}
+    },
+    {
+      "id": "1.92ae0e54-fe7e-4f8f-a009-7220bb980c9b",
+      "versionId": "14b4332a-9733-4a90-b9e2-81cbbcbcddc9",
+      "name": "Create Liquidation",
+      "type": "process",
+      "typeName": "Process",
+      "details": {}
+    },
+    {
+      "id": "64.656cc232-8247-43c3-9481-3cc7a9aec2e6",
+      "versionId": "d6db6ece-5692-4e79-b517-1fb798ac4e53",
+      "name": "Customer Information",
+      "type": "coachView",
+      "typeName": "Coach View",
+      "details": {
+        "bindingType": "customer",
+        "configOptions": [
+          "instanceview"
+        ],
+        "inlineScripts": [
+          {
+            "name": "Inline Javascript",
+            "scriptType": "JS",
+            "scriptBlock": "this.visControler = function  () {\r\r\n\tif (this.context.options.instanceview.get(\"value\") == true) {\r\r\n \t\tthis.ui.get(\"FacilityType1\").setEnabled(false);\r\r\n \t\tthis.ui.get(\"ImportCardNumber1\").setEnabled(false);\r\r\n \t}\r\r\n}\r\r\n\r\r\n//------------------------------------------------------------\r\r\n//function to view alert in case of get customer info error\r\r\nthis.AjaxErrorHandling = function(errorMSG)\r\r\n{\r\r\n\tthis.context.options.alertMessage.set(\"value\", errorMSG);\r\r\n\tthis.ui.get(\"Error_Message\").setVisible(true);\r\r\n\tthis.ui.get(\"Error_Message/Alert_Modal\").setVisible(true);\r\r\n}"
+          }
+        ]
+      },
+      "hasDetails": true
+    },
+    {
+      "id": "12.cc907e5e-4284-4dc5-8dea-8792e0a471c1",
+      "versionId": "195418d2-6669-40e0-9bc5-d9ecd8a746d8",
+      "name": "CustomerInformation",
+      "type": "twClass",
+      "typeName": "Business Object",
+      "details": {}
+    },
+    {
+      "id": "1.97607171-1a4e-436c-8b92-7a6920219722",
+      "versionId": "8ebcbfcb-ab1c-4985-b703-1a40cd13a88e",
+      "name": "Customs Release Approval Mail Service",
+      "type": "process",
+      "typeName": "Process",
+      "details": {}
+    },
+    {
+      "id": "64.b8ed6603-6938-4eb1-be9a-cf77018c844f",
+      "versionId": "d1507c06-d2b2-4563-8b42-f1d021ab386d",
+      "name": "Customs Release Main",
+      "type": "coachView",
+      "typeName": "Coach View",
+      "details": {},
+      "hasDetails": false
+    },
+    {
+      "id": "1.9f0a859b-5010-4ab6-947a-81ad99803cf1",
+      "versionId": "7d0eadd2-805f-4406-bcc8-2ad6b25b4340",
+      "name": "Database Integration",
+      "type": "process",
+      "typeName": "Process",
+      "details": {}
+    },
+    {
+      "id": "1.2d69e423-2547-4495-845d-7bccbf743136",
+      "versionId": "4e69ec98-b083-4250-b444-8312c68bf7aa",
+      "name": "DB BPM Audit user tasks",
+      "type": "process",
+      "typeName": "Process",
+      "details": {}
+    },
+    {
+      "id": "12.d249aea6-d076-4da7-887d-0f1dbba9713d",
+      "versionId": "eed975dc-c6f5-496f-9d1e-7d7566847ff5",
+      "name": "DBLookup",
+      "type": "twClass",
+      "typeName": "Business Object",
+      "details": {}
+    },
+    {
+      "id": "64.6ac8a533-b05a-45a1-9e46-1c4542e6b8be",
+      "versionId": "ce1826d0-8f84-40a3-9e7b-1b4ecc0d75df",
+      "name": "DC History",
+      "type": "coachView",
+      "typeName": "Coach View",
+      "details": {
+        "bindingType": "appLog"
+      },
+      "hasDetails": true
+    },
+    {
+      "id": "64.f9e6899d-e7d7-4296-ba71-268fcd57e296",
+      "versionId": "a1e6cd50-2ba5-41c9-988d-5798953e1273",
+      "name": "DC Templete",
+      "type": "coachView",
+      "typeName": "Coach View",
+      "details": {
+        "loadJsFunction": "//if(this.context.options.isCAD.get(\"value\") == false){\r\r\n//\tthis.ui.get(\"checkPendingCasesBtn\").setVisible(false,true);\r\r\n//}else{\r\r\n//\tthis.ui.get(\"checkPendingCasesBtn\").setVisible(true,true);\r\r\n//}\r\r\n\r\r\n//alert(this.context.viewid);",
+        "bindingType": "appinfo",
+        "configOptions": [
+          "buttonName",
+          "hasApprovals",
+          "hasReturnReason",
+          "approvals",
+          "stepLog",
+          "action",
+          "selectedAction",
+          "approvalsReadOnly",
+          "invalidTabs",
+          "validationMessage",
+          "isCAD",
+          "successMessage"
+        ],
+        "inlineScripts": [
+          {
+            "name": "Inline Javascript",
+            "scriptType": "JS",
+            "scriptBlock": "this.showApprovals = function  () {\r\r\n\tif (this.context.options.hasApprovals.get(\"value\")) {\r\r\n\t\tthis.ui.get(\"approvalsLayout\").setVisible(true,true);\r\r\n\t\tif (this.context.options.approvalsReadOnly.get(\"value\")) {\r\r\n\t\t\tthis.ui.get(\"approvalsLayout\").setEnabled(false);\r\r\n\t\t}else{\r\r\n\t\t\tthis.ui.get(\"approvalsLayout\").setEnabled(true);\r\r\n\t\t}\r\r\n\r\r\n\t}else{\r\r\n\r\r\n\t\tthis.ui.get(\"approvalsLayout\").setVisible(false,true);\r\r\n\t}\r\r\n\t\r\r\n}\r\r\n\r\r\nthis.showReturnReason = function  () {\r\r\n\tif (this.context.options.hasReturnReason.get(\"value\") && ((this.context.options.selectedAction.get(\"value\") == \"Return To Trade FO\") || (this.context.options.selectedAction.get(\"value\") == \"Return to Initiator\") || (this.context.options.selectedAction.get(\"value\") == \"Return To Maker\"))) {\r\r\n\t\tthis.ui.get(\"ReturnReason\").setVisible(true,true);\r\r\n\t}else{\r\r\n\t\tthis.ui.get(\"ReturnReason\").setVisible(false,true);\r\r\n\t}\r\r\n}\r\r\n\r\r\nthis.showAction = function  () {\r\r\n\tif (this.context.binding.get(\"value\").get(\"subStatus\") == \"\") {\r\r\n\t\tthis.ui.get(\"Single_Select1\").setVisible(false,true);\r\r\n\t\tthis.ui.get(\"Text1\").setVisible(false,true);\r\r\n\t}\r\r\n}\r\r\n\r\r\nthis.showBookedFacility = function(tabId){\r\r\n\t  // Remove the \"active\" class from all tabs\r\r\n//  var tabs = document.getElementsByClassName(\"tab\");\r\r\n//  for (var i = 0; i < tabs.length; i++) {\r\r\n//    tabs[i].classList.remove(\"active\");\r\r\n//  }\r\r\n  \r\r\n  // Add the \"active\" class to the selected tab\r\r\n  var selectedTab = document.getElementById(tabId);\r\r\n  selectedTab.classList.add(\"active\");\r\r\n}"
+          }
+        ]
+      },
+      "hasDetails": true
+    },
+    {
+      "id": "12.07546a6c-13be-4fe9-93f0-33c48a8492c7",
+      "versionId": "4518ff06-f0b0-4fd1-95ce-a46f0ccc545f",
+      "name": "DebitedAccount",
+      "type": "twClass",
+      "typeName": "Business Object",
+      "details": {}
+    },
+    {
+      "id": "12.c15fd1af-f202-42aa-a4b5-3ebd0d5c99ad",
+      "versionId": "ec3b484f-7df6-480e-aec8-dae6ed427f8a",
+      "name": "DebitedAmount",
+      "type": "twClass",
+      "typeName": "Business Object",
+      "details": {}
+    },
+    {
+      "id": "1.68698fcd-008a-4312-8428-1b0aee0e67c8",
+      "versionId": "1513ec0e-fca2-4de3-8dcd-a3cb5b9a2f69",
+      "name": "Delete Advance Payment",
+      "type": "process",
+      "typeName": "Process",
+      "details": {}
+    },
+    {
+      "id": "1.7dcf1057-2d3e-4d5f-bea7-4f12cca3d3c4",
+      "versionId": "3edca62b-a2ba-49cb-9a95-8581fdf9bd17",
+      "name": "Deployment Service Flow",
+      "type": "process",
+      "typeName": "Process",
+      "details": {}
+    },
+    {
+      "id": "12.ae22157e-8e19-4a60-a294-712ff5dc96df",
+      "versionId": "9496e657-47bc-45ae-a0ca-577b0a711399",
+      "name": "ECMproperties",
+      "type": "twClass",
+      "typeName": "Business Object",
+      "details": {}
+    },
+    {
+      "id": "21.c7b9680f-d22f-48b4-8325-2716ee46bef1",
+      "versionId": "710d2c30-6310-4c36-b657-c8d10e814e46",
+      "name": "ECMProperties",
+      "type": "epv",
+      "typeName": "Environment Property Variable",
+      "details": {}
+    },
+    {
+      "id": "62.bb4641b5-49e7-44bc-941e-1b41651c0851",
+      "versionId": "909079cb-c2d4-4e12-b0cf-8c52306427bd",
+      "name": "Environment Variables",
+      "type": "environmentVariableSet",
+      "typeName": "Environment Variables",
+      "details": {}
+    },
+    {
+      "id": "64.46690ca1-5521-4e5c-bc9e-ecb22d75ca97",
+      "versionId": "436ce08d-104e-4e18-bb0a-7ddeeab82936",
+      "name": "Error Message",
+      "type": "coachView",
+      "typeName": "Coach View",
+      "details": {
+        "configOptions": [
+          "alertMessage",
+          "errorVis"
+        ]
+      },
+      "hasDetails": true
+    },
+    {
+      "id": "1.dc54f3f7-6c6c-4ef0-92ef-d60cbcf0c82b",
+      "versionId": "dde5b93d-5f58-413a-9c4e-335d330420ad",
+      "name": "Escalation Mail Service",
+      "type": "process",
+      "typeName": "Process",
+      "details": {}
+    },
+    {
+      "id": "12.1c5aeb6a-6abf-4187-85bf-d2c79a8bffa1",
+      "versionId": "735d5b41-c5de-477e-992d-12cb012779dd",
+      "name": "ExchangeCurrency",
+      "type": "twClass",
+      "typeName": "Business Object",
+      "details": {}
+    },
+    {
+      "id": "1.7073c330-e8a8-4bd8-94fb-d764787dffeb",
+      "versionId": "bb90ce49-9010-4cee-8d4d-ea8f86ab229d",
+      "name": "Execution HUB Filter Service",
+      "type": "process",
+      "typeName": "Process",
+      "details": {}
+    },
+    {
+      "id": "1.4c90d45f-cb2b-4afd-bc7a-b0f825c061a3",
+      "versionId": "8a086af6-181f-4fe2-b687-29cf973a43d4",
+      "name": "Execution Hub Processing Withdrawal Request",
+      "type": "process",
+      "typeName": "Process",
+      "details": {}
+    },
+    {
+      "id": "1.041e4df2-7de8-4ce4-85a2-24f4482c8a7a",
+      "versionId": "d6c4dd61-a0ce-410e-a5e1-aefc566f9b0e",
+      "name": "Execution Hub Processing Withdrawal Request Review",
+      "type": "process",
+      "typeName": "Process",
+      "details": {}
+    },
+    {
+      "id": "1.0f065bb2-7741-40cd-bc78-8e7d29bcd8e5",
+      "versionId": "1396a188-ab01-4a12-8965-b83193544c74",
+      "name": "FC_Get Account Number",
+      "type": "process",
+      "typeName": "Process",
+      "details": {}
+    },
+    {
+      "id": "50.95ec9bf9-2d5a-4fc5-8dd1-e6d6a55a836c",
+      "versionId": "7646c625-de65-4b75-84ee-66577834dae6",
+      "name": "FiledsNames",
+      "type": "resourceBundleGroup",
+      "typeName": "Resource Bundle",
+      "details": {}
+    },
+    {
+      "id": "1.b066b0aa-3b41-4663-a2f1-ca880f07a183",
+      "versionId": "39ccb957-5a9e-4cc1-af21-148756d18c2e",
+      "name": "Filter CA Team",
+      "type": "process",
+      "typeName": "Process",
+      "details": {}
+    },
+    {
+      "id": "64.74d3cb97-ad59-4249-847b-a21122e44b22",
+      "versionId": "a9997453-f712-494b-9341-469590d7acc2",
+      "name": "Financial Details  Branch",
+      "type": "coachView",
+      "typeName": "Coach View",
+      "details": {
+        "bindingType": "financialDetails",
+        "configOptions": [
+          "requestType",
+          "docAmount",
+          "currncy",
+          "CIF",
+          "accountsList",
+          "tmpUsedAdvancePayment",
+          "haveAmountAdvanced",
+          "isChecker",
+          "currencyVis",
+          "requestID",
+          "alertMessage",
+          "errorVis"
+        ],
+        "inlineScripts": [
+          {
+            "name": "Inline Javascript",
+            "scriptType": "JS",
+            "scriptBlock": "this.visabilityController = function  () {\r\r\n\tvar type = this.context.options.requestType.get(\"value\");\r\r\n\r\r\n\tif (type == \"ICAP\" || type == \"IDC Execution\" || type == \"IDC Completion\" || type == \"IDC Amendment\") {\r\r\n\r\r\n\t\tthis.ui.get(\"SelectExistingAdvancePayments\").setVisible(true,true);\r\r\n\t}else{\r\r\n\r\r\n\t\tthis.ui.get(\"SelectExistingAdvancePayments\").setVisible(false,true);\r\r\n\t}\r\r\n\r\r\n\tif(this.context.options.docAmount.get(\"value\") == false){\r\r\n\t\t\r\r\n\t\tthis.ui.get(\"DocumentAmount\").setEnabled(false);\r\r\n\t}else{\r\r\n\t\tthis.ui.get(\"DocumentAmount\").setEnabled(true);\r\r\n\t}\r\r\n\tif(this.context.options.currncy.get(\"value\") == false){\r\r\n\t\tthis.ui.get(\"Currency\").setEnabled(false);\r\r\n\t\tthis.context.options.currencyVis.set(\"value\", \"READONLY\");\r\r\n\t}else{\r\r\n\t\tthis.ui.get(\"Currency\").setEnabled(true);\r\r\n\t\tthis.context.options.currencyVis.set(\"value\", \"DEFAULT\");\r\r\n\t}\r\r\n}\r\r\nthis.calculateAmountPayablebyNBE = function  () {\r\r\n\tvar payable = this.context.binding.get(\"value\").get(\"documentAmount\") - this.context.binding.get(\"value\").get(\"amtPaidbyOtherBanks\") -  this.context.binding.get(\"value\").get(\"discountAmt\") - this.context.binding.get(\"value\").get(\"amountAdvanced\");\r\r\n\tthis.context.binding.get(\"value\").set(\"amtPayableByNBE\", payable);\r\r\n\tif (this.context.options.requestType == \"ICAP\") {\r\r\n\t\tif(payable > 0){\r\r\n\t\t\tdocument.getElementById(\"text-input-Financial_Details_Trade_FO1:AmountPayablebyNBE\").style.backgroundColor = \"#eb8724\";\r\r\n\t\t\tthis.ui.get(\"AmountPayablebyNBE\").setValid(false,\"the amount is more than 0 and request type is ICAP\");\r\r\n\t\t}else{\r\r\n\t\t\tdocument.getElementById(\"text-input-Financial_Details_Trade_FO1:AmountPayablebyNBE\").style.backgroundColor = \"#ffffff\";\r\r\n\t\t\tthis.ui.get(\"AmountPayablebyNBE\").setValid(true);\r\r\n\t\t}\r\r\n\t}else if(payable < 0){\r\r\n\t\tthis.ui.get(\"AmountPayablebyNBE\").setValid(false,\"this field is madatory\");\r\r\n\t}\r\r\n\t\r\r\n}\r\r\n\r\r\nthis.resetAdvancePayment = function  () {\r\r\n\tthis.context.options.tmpUsedAdvancePayment.set(\"value\", {});\r\r\n\tthis.context.options.tmpUsedAdvancePayment.get(\"value\").set(\"invoiceCurrency\", {});\r\r\n\tthis.context.binding.get(\"value\").set(\"usedAdvancePayment\", []);\r\r\n//\tthis.context.binding.get(\"value\").get(\"usedAdvancePayment\").set(\"invoiceCurrency\", {});\r\r\n}\r\r\nthis.haveAmountAdvanced = function  () {\r\r\n\tif (this.context.binding.get(\"value\").get(\"isAdvancePaymentsUsed\") == true) {\r\r\n\t\tthis.context.options.haveAmountAdvanced.set(\"value\", \"READONLY\");\r\r\n\t}else{\r\r\n\t\tthis.context.options.haveAmountAdvanced.set(\"value\", \"DEFAULT\");\r\r\n\t}\r\r\n}\r\r\n\r\r\n//------------------------------------------------------------\r\r\n//function to view alert in case of get customer info error\r\r\nthis.AjaxErrorHandling = function(errorMSG)\r\r\n{\r\r\n\tthis.context.options.alertMessage.set(\"value\", errorMSG);\r\r\n\tthis.context.options.errorVis.set(\"value\", \"EDITABLE\")\r\r\n}"
+          }
+        ]
+      },
+      "hasDetails": true
+    },
+    {
+      "id": "64.7020f6c3-7f8d-4052-81e6-d5b6b89f97e9",
+      "versionId": "28375554-07f2-465b-8af1-b91ac2ac9540",
+      "name": "Financial Details  Branch Compliance Review",
+      "type": "coachView",
+      "typeName": "Coach View",
+      "details": {
+        "bindingType": "financialDetails"
+      },
+      "hasDetails": true
+    },
+    {
+      "id": "64.848ab487-8214-4d8b-88fd-a9cac5257791",
+      "versionId": "5059dce7-b1d2-4b7f-b88b-c9a36bf1972e",
+      "name": "Financial Details Trade FO",
+      "type": "coachView",
+      "typeName": "Coach View",
+      "details": {
+        "bindingType": "financialDetails",
+        "configOptions": [
+          "havePaymentTerms",
+          "requestType",
+          "haveTradeFOReferenceNumber",
+          "beneficiaryDetails",
+          "haveAmountAdvanced",
+          "ischecker",
+          "LimitsVis"
+        ],
+        "inlineScripts": [
+          {
+            "name": "Inline Javascript",
+            "scriptType": "JS",
+            "scriptBlock": "this.LimitsVisible = function  () {\r\r\n\tif ((this.context.options.requestType.get(\"value\") == \"IDC Execution\" || this.context.options.requestType.get(\"value\") == \"IDC Completion\" || this.context.options.requestType.get(\"value\") == \"IDC Amendment\") && this.context.binding.get(\"value\").get(\"amtDeferredAvalized\") > 0) {\r\r\n\t\tthis.context.options.LimitsVis.set(\"value\", \"DEFAULT\");\r\r\n\t}\r\r\n\telse{\r\r\n\t\tthis.context.options.LimitsVis.set(\"value\", \"READONLY\");\r\r\n\t}\r\r\n}\r\r\n\r\r\nthis.isEqualPAybaleByNBE = function  () {\r\r\n\tvar payable = this.context.binding.get(\"value\").get(\"amtPayableByNBE\");\r\r\n\tvar sum =  this.context.binding.get(\"value\").get(\"facilityAmtWithNoCurrency\")+this.context.binding.get(\"value\").get(\"cashAmtInDocCurrency\")+this.context.binding.get(\"value\").get(\"CashAmtWithNoCurrency\")+this.context.binding.get(\"value\").get(\"facilityAmtInDocCurrency\");\r\r\n\r\r\n\r\r\n\r\r\n\tif (sum!=payable) {\r\r\n\t\tthis.ui.get(\"FacilityAmountNoCurrency\").setValid(false,\"please ensure that the follwing fields is equal to Amount Payable by NBE:Facility Amount No Currency,Cash Amount Document Currency,Cash Amount No Currency,Facility Amount Document Currency\");\r\r\n\t\tthis.ui.get(\"CashAmountDocumentCurrency\").setValid(false,\"please ensure that the follwing fields is equal to Amount Payable by NBE:Facility Amount No Currency,Cash Amount Document Currency,Cash Amount No Currency,Facility Amount Document Currency\");\r\r\n\t\tthis.ui.get(\"CashAmountNoCurrency\").setValid(false,\"please ensure that the follwing fields is equal to Amount Payable by NBE:Facility Amount No Currency,Cash Amount Document Currency,Cash Amount No Currency,Facility Amount Document Currency\");\r\r\n\t\tthis.ui.get(\"FacilityAmountDocumentCurrency\").setValid(false,\"please ensure that the follwing fields is equal to Amount Payable by NBE:Facility Amount No Currency,Cash Amount Document Currency,Cash Amount No Currency,Facility Amount Document Currency\");\r\r\n\t}else{\r\r\n\t\t\r\r\n\t\tthis.ui.get(\"FacilityAmountNoCurrency\").setValid(true);\r\r\n\t\tthis.ui.get(\"CashAmountDocumentCurrency\").setValid(true);\r\r\n\t\tthis.ui.get(\"CashAmountNoCurrency\").setValid(true);\r\r\n\t\tthis.ui.get(\"FacilityAmountDocumentCurrency\").setValid(true);\r\r\n\r\r\n\t}\r\r\n}\r\r\nvar avalizationFlag = true;\r\r\nthis.avalization = function  () {\r\r\n\tthis.context.binding.get(\"value\").get(\"amtDeferredNoAvalized\")\r\r\n\tvar payable = this.context.binding.get(\"value\").get(\"amtPayableByNBE\");\r\r\n\tvar sum =  this.context.binding.get(\"value\").get(\"amtSight\")+this.context.binding.get(\"value\").get(\"amtDeferredNoAvalized\")+this.context.binding.get(\"value\").get(\"amtDeferredAvalized\");\r\r\n\tif (sum!=payable) {\r\r\n\t\tavalizationFlag = false;\r\r\n\t\tthis.ui.get(\"AmountSight\").setValid(false,\"please ensure that the follwing fields is equal to Amount Payable by NBE:Amount Sight,Amount Deferred - No Avalization,Amount Deferred - Avalization\");\r\r\n\t\tthis.ui.get(\"AmountDeferredNoAvalization\").setValid(false,\"please ensure that the follwing fields is equal to Amount Payable by NBE:Amount Sight,Amount Deferred - No Avalization,Amount Deferred - Avalization\");\r\r\n\t\tthis.ui.get(\"AmountDeferredAvalization\").setValid(false,\"please ensure that the follwing fields is equal to Amount Payable by NBE:Amount Sight,Amount Deferred - No Avalization,Amount Deferred - Avalization\");\r\r\n\t\t\r\r\n\t}else{\r\r\n\t\t\r\r\n\t\tthis.ui.get(\"AmountSight\").setValid(true);\r\r\n\t\tthis.ui.get(\"AmountDeferredNoAvalization\").setValid(true);\r\r\n\t\tthis.ui.get(\"AmountDeferredAvalization\").setValid(true);\r\r\n\t}\r\r\n}\r\r\n\r\r\nthis.checkPartiAlavalization = function  () {\r\r\n\tvar noAvalization = this.ui.get(\"AmountDeferredNoAvalization\").getData();\r\r\n\tvar avalization = this.ui.get(\"AmountDeferredAvalization\").getData();\r\r\n\tif (avalization > 0 && noAvalization > 0) {\r\r\n\t\tthis.ui.get(\"AmountDeferredNoAvalization\").setValid(false,\"partial avalization not allowed\");\r\r\n\t\tthis.ui.get(\"AmountDeferredAvalization\").setValid(false,\"partial avalization not allowed\");\r\r\n\t}else{\r\r\n\t\tif(avalizationFlag){\r\r\n\t\tthis.ui.get(\"AmountDeferredNoAvalization\").setValid(true);\r\r\n\t\tthis.ui.get(\"AmountDeferredAvalization\").setValid(true);\r\r\n\t\t}\r\r\n\t}\r\r\n}\r\r\n\r\r\nthis.calculateAmountPayablebyNBE = function  () {\r\r\n\tvar payable = this.context.binding.get(\"value\").get(\"documentAmount\") - this.context.binding.get(\"value\").get(\"amtPaidbyOtherBanks\") -  this.context.binding.get(\"value\").get(\"discountAmt\") - this.context.binding.get(\"value\").get(\"amountAdvanced\");\r\r\n\tthis.context.binding.get(\"value\").set(\"amtPayableByNBE\", payable);\r\r\n\tif (this.context.options.requestType == \"ICAP\") {\r\r\n\t\tif(payable > 0){\r\r\n\t\t\tdocument.getElementById(\"text-input-Financial_Details_Trade_FO1:AmountPayablebyNBE\").style.backgroundColor = \"#eb8724\";\r\r\n\t\t\tthis.ui.get(\"AmountPayablebyNBE\").setValid(false,\"the amount is more than 0 and request type is ICAP\");\r\r\n\t\t}else{\r\r\n\t\t\tdocument.getElementById(\"text-input-Financial_Details_Trade_FO1:AmountPayablebyNBE\").style.backgroundColor = \"#ffffff\";\r\r\n\t\t\tthis.ui.get(\"AmountPayablebyNBE\").setValid(true);\r\r\n\t\t}\r\r\n\t}else if(payable < 0){\r\r\n\t\tthis.ui.get(\"AmountPayablebyNBE\").setValid(false,\"this field must be more than 0\");\r\r\n\t}\r\r\n\t\r\r\n}\r\r\n\r\r\nthis.haveTradeFOReferenceNumber = function  () {\r\r\n\r\r\n\tif (this.context.options.haveTradeFOReferenceNumber.get(\"value\")==false) {\r\r\n\r\r\n\t\tthis.ui.get(\"TradeFOReferenceNumber\").setEnabled(false);\r\r\n\t\tthis.ui.get(\"ExecutionHubCode\").setEnabled(false);\r\r\n\t}else{\r\r\n\r\r\n\t\tthis.ui.get(\"TradeFOReferenceNumber\").setEnabled(true);\r\r\n\t\tthis.ui.get(\"ExecutionHubCode\").setEnabled(true);\r\r\n\t}\r\r\n}\r\r\n\r\r\nthis.setbeneficiaryDetails = function  () {\r\r\n\tthis.context.options.beneficiaryDetails.set(\"value\", this.context.binding.get(\"value\").get(\"beneficiaryDetails\"));\r\r\n\t\r\r\n}\r\r\nthis.checkIsChecker = function  () {\r\r\n\tif (this.context.options.ischecker == true) {\r\r\n\t\tthis.ui.get(\"CorrespondentRefNum\").setEnabled(false);\r\r\n\t\tthis.ui.get(\"AmountAdvanced\").setEnabled(false);\r\r\n\t\t\r\r\n\t}\r\r\n\telse{\r\r\n\t\tthis.ui.get(\"CorrespondentRefNum\").setEnabled(true);\r\r\n\t\tthis.ui.get(\"AmountAdvanced\").setEnabled(true);\r\r\n\t}\r\r\n}\r\r\n\r\r\n//------------------------------------------------------------\r\r\n//function to view alert in case of get customer info error\r\r\nthis.AjaxErrorHandling = function(errorMSG)\r\r\n{\r\r\n\tthis.context.options.alertMessage.set(\"value\", errorMSG);\r\r\n\tthis.context.options.errorVis.set(\"value\", \"EDITABLE\")\r\r\n}"
+          }
+        ]
+      },
+      "hasDetails": true
+    },
+    {
+      "id": "12.47b1b163-7266-46de-9171-529c0b65a377",
+      "versionId": "e02397b0-4e8a-494e-8846-ca7de5eeb925",
+      "name": "FinancialDetails",
+      "type": "twClass",
+      "typeName": "Business Object",
+      "details": {}
+    },
+    {
+      "id": "1.16e2cdd0-aac9-42ab-a4de-fcf8895b3c3c",
+      "versionId": "78c0d0be-a20e-445e-95d5-f717564a75f6",
+      "name": "Generate BPM Request Number",
+      "type": "process",
+      "typeName": "Process",
+      "details": {}
+    },
+    {
+      "id": "1.1d264c59-eafd-4f05-a029-411f466237ce",
+      "versionId": "e79ea78c-c820-4f80-8789-75c76644ffc9",
+      "name": "get advance payment",
+      "type": "process",
+      "typeName": "Process",
+      "details": {}
+    },
+    {
+      "id": "1.46038073-457c-489f-9972-9349737b8a6e",
+      "versionId": "d76e2b87-c084-41a4-aa81-1336fec3d7f3",
+      "name": "Get Advices Code",
+      "type": "process",
+      "typeName": "Process",
+      "details": {}
+    },
+    {
+      "id": "1.e3028b61-b01a-4a56-a086-244083a8d445",
+      "versionId": "a9cd3b56-b156-47f9-a16d-22b9ac5b4562",
+      "name": "Get Applicant and Accountee Facility Codes",
+      "type": "process",
+      "typeName": "Process",
+      "details": {}
+    },
+    {
+      "id": "1.71c9670f-4700-465f-a303-3053d933a16e",
+      "versionId": "61c8ad15-3252-4361-8e7e-221b85be1614",
+      "name": "Get Applied Charges",
+      "type": "process",
+      "typeName": "Process",
+      "details": {}
+    },
+    {
+      "id": "1.97d210e4-a1d3-4893-93d2-e6e4a3e76cdf",
+      "versionId": "1e6e6ff5-ed7e-4182-adc9-529fba296f72",
+      "name": "Get BIC Codes",
+      "type": "process",
+      "typeName": "Process",
+      "details": {}
+    },
+    {
+      "id": "1.8804be93-df98-44b0-bf01-1f35970dfee0",
+      "versionId": "14d6ae4e-b614-4869-aed1-77097c4f9d22",
+      "name": "get booked facilities",
+      "type": "process",
+      "typeName": "Process",
+      "details": {}
+    },
+    {
+      "id": "1.ca00ae5d-7e75-4b8a-bc01-7a95d477c541",
+      "versionId": "e65c6a95-f84a-4e05-8ebb-09058fcf8781",
+      "name": "Get Booked Facilities",
+      "type": "process",
+      "typeName": "Process",
+      "details": {}
+    },
+    {
+      "id": "1.cc39766e-740a-4aae-91d4-983d3f72c00c",
+      "versionId": "56dde49f-61bb-48fe-b400-384a4961055d",
+      "name": "Get CBE Sanctions",
+      "type": "process",
+      "typeName": "Process",
+      "details": {}
+    },
+    {
+      "id": "1.caf369f2-a2d3-4b1b-bec5-ace8bfe23165",
+      "versionId": "3d6f0975-26c1-481d-8b98-ef96abe9d20f",
+      "name": "Get Center by branch code",
+      "type": "process",
+      "typeName": "Process",
+      "details": {}
+    },
+    {
+      "id": "1.69de9393-41a9-476a-9c6c-10054e92ebb8",
+      "versionId": "c0102c8d-302a-4a3b-8d2c-d4e7365549f9",
+      "name": "Get Charge Details",
+      "type": "process",
+      "typeName": "Process",
+      "details": {}
+    },
+    {
+      "id": "1.b24f815d-f98b-4f2e-9dbe-f7601985749f",
+      "versionId": "49fe4e23-b3ad-4893-9ab8-00a157ea3a7e",
+      "name": "Get Country of Origin",
+      "type": "process",
+      "typeName": "Process",
+      "details": {}
+    },
+    {
+      "id": "1.753ea3e8-d234-409e-9fb2-015400e4c9fb",
+      "versionId": "b3bd252b-5841-4c98-beb8-464d9f17622b",
+      "name": "Get Customer Accounts",
+      "type": "process",
+      "typeName": "Process",
+      "details": {}
+    },
+    {
+      "id": "1.473ca24e-c03e-4a25-b37a-58cd047b0fff",
+      "versionId": "106b6b3d-c66b-4e95-b1f1-a138f6a138c3",
+      "name": "Get Customer Information",
+      "type": "process",
+      "typeName": "Process",
+      "details": {}
+    },
+    {
+      "id": "1.55393dcd-3352-41df-9690-75cb207d48b8",
+      "versionId": "44eda8be-e2fb-4ce2-ad48-42ed1f19b2af",
+      "name": "Get Exchange Rate",
+      "type": "process",
+      "typeName": "Process",
+      "details": {}
+    },
+    {
+      "id": "1.6cb94b35-ca38-4aee-8b8e-7ca2e59e39df",
+      "versionId": "ec61280d-a56e-4d5b-ab3c-a1f96ccb1fed",
+      "name": "Get Facility Codes",
+      "type": "process",
+      "typeName": "Process",
+      "details": {}
+    },
+    {
+      "id": "1.027e3afb-1a94-4896-883d-daa4cdfee232",
+      "versionId": "cf9b85d7-e4d2-4dc2-9e41-5fd3490c6154",
+      "name": "Get HUB name by code",
+      "type": "process",
+      "typeName": "Process",
+      "details": {}
+    },
+    {
+      "id": "1.97d49092-c827-40be-bf11-7146f12c0134",
+      "versionId": "f530bd28-2c3c-41f6-b43c-502d7363fd16",
+      "name": "Get IDC initiator",
+      "type": "process",
+      "typeName": "Process",
+      "details": {}
+    },
+    {
+      "id": "1.0d77a33d-fe75-4164-87ca-b9d0a0b91640",
+      "versionId": "e1b8f376-4c18-4c89-9511-78d482f982ae",
+      "name": "Get Interest Amount",
+      "type": "process",
+      "typeName": "Process",
+      "details": {}
+    },
+    {
+      "id": "1.c3124e3b-0cdd-4710-a44b-6071a04e76dc",
+      "versionId": "6a1c2fa3-a60c-4e20-bb2d-08875bb8983e",
+      "name": "Get Party Details",
+      "type": "process",
+      "typeName": "Process",
+      "details": {}
+    },
+    {
+      "id": "1.ea9515b6-c5b0-44b3-a1e0-28767d8f1fa1",
+      "versionId": "011905f4-bb8b-46d2-bfb6-2eef2cdbeefa",
+      "name": "get party type",
+      "type": "process",
+      "typeName": "Process",
+      "details": {}
+    },
+    {
+      "id": "1.b16e9737-5d24-4229-83f7-2e9dc0637416",
+      "versionId": "94cb3c17-ad1a-444c-9443-0a79e03f9a2e",
+      "name": "Get Product Codes",
+      "type": "process",
+      "typeName": "Process",
+      "details": {}
+    },
+    {
+      "id": "1.4cba4a0e-1cea-4df8-ab8c-fa24e0c88c13",
+      "versionId": "154abbc4-880d-4892-bb07-4e009700c72b",
+      "name": "Get Request Number And CBE",
+      "type": "process",
+      "typeName": "Process",
+      "details": {}
+    },
+    {
+      "id": "1.95226f60-a3cc-4d6c-9b80-5bca5cc430e2",
+      "versionId": "0cd7c585-f3c1-4732-8390-ee6b46efcaf3",
+      "name": "Get Required Documents",
+      "type": "process",
+      "typeName": "Process",
+      "details": {}
+    },
+    {
+      "id": "1.9545825f-4a3f-43f2-82b0-a6b75c82df6f",
+      "versionId": "393eb98b-f609-4418-a6e4-4b41c166b773",
+      "name": "getLookups",
+      "type": "process",
+      "typeName": "Process",
+      "details": {}
+    },
+    {
+      "id": "1.01554586-6b73-40b1-957d-c2491f071bbb",
+      "versionId": "efbec366-e797-45d2-9a92-b625a913f937",
+      "name": "getRequestType",
+      "type": "process",
+      "typeName": "Process",
+      "details": {}
+    },
+    {
+      "id": "61.4e7caef0-428a-4547-bc22-4226413e0adf",
+      "versionId": "e39255ca-b683-4836-9b40-fc39e9a35b8b",
+      "name": "header1.png",
+      "type": "managedAsset",
+      "typeName": "Managed Asset",
+      "details": {}
+    },
+    {
+      "id": "1.e93f9906-c4e8-472c-be9e-35e8202551c9",
+      "versionId": "a6922de6-9abf-4932-adeb-91bc37d9a2ba",
+      "name": "Hub Initiation Trade Compliance",
+      "type": "process",
+      "typeName": "Process",
+      "details": {}
+    },
+    {
+      "id": "1.b8deeb2e-af87-4d78-a0c3-a27d16bb22f8",
+      "versionId": "c05f5cd6-2cbd-4661-9b0e-cfac593be59e",
+      "name": "Hub Liquidation Trade Compliance",
+      "type": "process",
+      "typeName": "Process",
+      "details": {}
+    },
+    {
+      "id": "64.d221b564-11f7-4ff9-84d6-ace71c94126c",
+      "versionId": "fd93e00c-668f-4e2e-93d5-445e6ad8c5d1",
+      "name": "IDC Booked Facility",
+      "type": "coachView",
+      "typeName": "Coach View",
+      "details": {
+        "bindingType": "bookedfacility",
+        "configOptions": [
+          "BookedFacilityVis",
+          "noPendingCasesVis",
+          "noPendingCasesMsg"
+        ]
+      },
+      "hasDetails": true
+    },
+    {
+      "id": "25.20ec3263-cd76-4c3d-8882-363ec29555fd",
+      "versionId": "05b2e5f1-ff1b-4750-b084-e72f5bfe325d",
+      "name": "IDC Customs Release",
+      "type": "bpd",
+      "typeName": "Business Process Definition",
+      "details": {}
+    },
+    {
+      "id": "1.5cb2beea-428b-42ba-b1c1-8b6c92bc89a0",
+      "versionId": "5b8d1ff7-42b7-4543-b983-c04f8bab91c2",
+      "name": "IDC Execution Hub Initiation",
+      "type": "process",
+      "typeName": "Process",
+      "details": {}
+    },
+    {
+      "id": "1.9e0de1a3-7709-49c8-9b29-963ea4784c51",
+      "versionId": "85b06b71-d037-473a-ad80-0b3621c3ab1c",
+      "name": "IDC Execution Hub Initiation 2",
+      "type": "process",
+      "typeName": "Process",
+      "details": {}
+    },
+    {
+      "id": "1.480ae8a4-054d-4c43-9b3a-7c7c03194306",
+      "versionId": "7e04ed62-6c92-45e9-8f7b-ba07ba12821a",
+      "name": "IDC Execution Hub Initiation Review",
+      "type": "process",
+      "typeName": "Process",
+      "details": {}
+    },
+    {
+      "id": "1.6ed24840-941d-48c8-9769-8bbc53ced721",
+      "versionId": "1787bd0b-57eb-40ed-bcd5-f68fa6250b8b",
+      "name": "IDC Execution Hub Liquidation",
+      "type": "process",
+      "typeName": "Process",
+      "details": {}
+    },
+    {
+      "id": "1.8e17d2f7-29ca-4085-ba10-ed50e8088ff3",
+      "versionId": "21b131c1-4106-447a-80fa-8885da8b2e9b",
+      "name": "IDC Execution Hub Liquidation Review",
+      "type": "process",
+      "typeName": "Process",
+      "details": {}
+    },
+    {
+      "id": "1.bd478cbf-52d1-4705-9fe4-6868408a5256",
+      "versionId": "b85f4944-ce3a-4078-a025-170cba6c5726",
+      "name": "IDC Initialization Process Service",
+      "type": "process",
+      "typeName": "Process",
+      "details": {}
+    },
+    {
+      "id": "25.76082daa-5c1c-4f37-b09c-3a01e36f276c",
+      "versionId": "dd161cd6-32b2-4b6d-ae58-da143ec15b27",
+      "name": "IDC Request",
+      "type": "bpd",
+      "typeName": "Business Process Definition",
+      "details": {}
+    },
+    {
+      "id": "1.30211575-677e-4082-b83a-a9d7592dfc68",
+      "versionId": "b415f71e-aee9-47ae-8bd8-e10e6b8b2f70",
+      "name": "IDC Request Details UI",
+      "type": "process",
+      "typeName": "Process",
+      "details": {}
+    },
+    {
+      "id": "1.8ef1af07-5249-42da-b1a2-40f2e2ea490f",
+      "versionId": "161d88a3-89d1-4f29-8cc4-84d5dfcca131",
+      "name": "IDC Request Details UI 2",
+      "type": "process",
+      "typeName": "Process",
+      "details": {}
+    },
+    {
+      "id": "1.80b52f2e-cf28-4943-b3bd-447b9230d1db",
+      "versionId": "0d14b68b-3083-4c3b-bd61-c787c3aecd10",
+      "name": "IDC Request Details UI 3",
+      "type": "process",
+      "typeName": "Process",
+      "details": {}
+    },
+    {
+      "id": "1.89b422a8-bd14-41af-8dbc-4155dc2154f8",
+      "versionId": "633735f9-ea5d-4aa6-8174-333f080f3db3",
+      "name": "IDC Request Details UI_1",
+      "type": "process",
+      "typeName": "Process",
+      "details": {}
+    },
+    {
+      "id": "25.d582b1c1-db43-4886-b5bb-cfc5fc703349",
+      "versionId": "789eb2c2-20f4-443c-ab44-4eeb9b50209f",
+      "name": "IDC Reversal",
+      "type": "bpd",
+      "typeName": "Business Process Definition",
+      "details": {}
+    },
+    {
+      "id": "1.e5318bc6-7232-4e45-a258-184ebb476098",
+      "versionId": "6532a569-a7f8-46fc-9b2b-4e37e36ae8f5",
+      "name": "IDC test",
+      "type": "process",
+      "typeName": "Process",
+      "details": {}
+    },
+    {
+      "id": "25.410525f9-7abe-4470-ba1b-0afa24a6570b",
+      "versionId": "7b1eb06e-54ef-4654-abfa-ffb77bee1b6f",
+      "name": "IDC Withdrawal",
+      "type": "bpd",
+      "typeName": "Business Process Definition",
+      "details": {}
+    },
+    {
+      "id": "12.e9597b68-6c68-4101-ab1c-d6f8af32c79d",
+      "versionId": "742ff11a-1e1e-4ef4-91a8-4ebf2985cb25",
+      "name": "IDCBookedFacility",
+      "type": "twClass",
+      "typeName": "Business Object",
+      "details": {}
+    },
+    {
+      "id": "12.7209faed-a82e-4fd1-a6a0-1b0d0d7445f1",
+      "versionId": "26ee22d0-fa5d-445e-8daa-cccca5d45a32",
+      "name": "IDCContract",
+      "type": "twClass",
+      "typeName": "Business Object",
+      "details": {}
+    },
+    {
+      "id": "12.7a9e1924-91cb-42e8-a103-4e1d967340f1",
+      "versionId": "aa249f18-0202-4682-97c7-63f5b9232cbd",
+      "name": "IDCCustomsReleaseRequest",
+      "type": "twClass",
+      "typeName": "Business Object",
+      "details": {}
+    },
+    {
+      "id": "21.2dce7af7-b766-40ab-acc0-0e77449191aa",
+      "versionId": "58240db9-3890-473c-91d1-463ae5514834",
+      "name": "IDCCustomsReleaseSuStatus",
+      "type": "epv",
+      "typeName": "Environment Property Variable",
+      "details": {}
+    },
+    {
+      "id": "12.7f4fdce8-dfe9-472a-a501-530e9a76af67",
+      "versionId": "ddd44f72-c19b-4d04-93ae-331d609df38c",
+      "name": "IDCRequest",
+      "type": "twClass",
+      "typeName": "Business Object",
+      "details": {}
+    },
+    {
+      "id": "12.36df9eba-480f-4caa-9609-6a99e6f2c474",
+      "versionId": "317e6ac4-2627-4504-82ff-537a25747abb",
+      "name": "IDCReversalRequest",
+      "type": "twClass",
+      "typeName": "Business Object",
+      "details": {}
+    },
+    {
+      "id": "21.14b71d5c-752c-49c4-afba-cff5d026e9cd",
+      "versionId": "2d17c6b5-15b1-458f-b8f0-b67ac4849a43",
+      "name": "IDCReversalSubStatus",
+      "type": "epv",
+      "typeName": "Environment Property Variable",
+      "details": {}
+    },
+    {
+      "id": "12.9f3bdc5d-083e-4370-b8d4-f0a7541dcf11",
+      "versionId": "6ac32352-9901-46a8-8706-8f824cd3ff6c",
+      "name": "IDCRoutingDetails",
+      "type": "twClass",
+      "typeName": "Business Object",
+      "details": {}
+    },
+    {
+      "id": "21.0bb89e09-258a-4bd1-b3a7-137a3219209f",
+      "versionId": "349ef8f7-015c-4811-bb64-40ad15e2daee",
+      "name": "IDCstage",
+      "type": "epv",
+      "typeName": "Environment Property Variable",
+      "details": {}
+    },
+    {
+      "id": "21.e5829eee-0ab1-4f47-9191-f0f8705bc33e",
+      "versionId": "45f71686-4dfb-46c1-9af4-51cb4c0b4d2c",
+      "name": "IDCState",
+      "type": "epv",
+      "typeName": "Environment Property Variable",
+      "details": {}
+    },
+    {
+      "id": "21.a82c0a5a-df05-4f98-8b44-6ff5304c9b3e",
+      "versionId": "7ea9f3d1-a287-4a97-a5ad-83b50748869d",
+      "name": "IDCStatus",
+      "type": "epv",
+      "typeName": "Environment Property Variable",
+      "details": {}
+    },
+    {
+      "id": "21.02818ba4-c183-4dfb-8924-18e2d9a515dd",
+      "versionId": "53a1eef5-10d4-4f0e-884c-456e873b9d49",
+      "name": "IDCsubStatus",
+      "type": "epv",
+      "typeName": "Environment Property Variable",
+      "details": {}
+    },
+    {
+      "id": "12.11032488-ce0d-4b06-aafc-179676224382",
+      "versionId": "0fa51b78-2b2f-42b5-b1bf-2e05405fdec4",
+      "name": "IDCWithdrawalRequest",
+      "type": "twClass",
+      "typeName": "Business Object",
+      "details": {}
+    },
+    {
+      "id": "21.a6e09805-0e21-4bb5-8e25-1aa9a5db67ad",
+      "versionId": "3953824e-5917-4b87-b6ed-efb06ac2cf10",
+      "name": "IDCWithdrawalSubStatus",
+      "type": "epv",
+      "typeName": "Environment Property Variable",
+      "details": {}
+    },
+    {
+      "id": "1.06eaabde-33db-480a-9d65-982fa27c2eac",
+      "versionId": "45d0fd4f-b287-4f32-a11d-c0369b35bc14",
+      "name": "Insert IDC Request",
+      "type": "process",
+      "typeName": "Process",
+      "details": {}
+    },
+    {
+      "id": "12.eee84bca-f05c-48ad-9df2-43b9d111df36",
+      "versionId": "4afc7c87-3b6a-400c-8d8f-04fcba9fcebd",
+      "name": "Invoice",
+      "type": "twClass",
+      "typeName": "Business Object",
+      "details": {}
+    },
+    {
+      "id": "64.9e7e0016-3899-48ff-9db4-bea34bea40f0",
+      "versionId": "c173f944-afe2-4038-be7e-d5a90cd32beb",
+      "name": "Limits Tracking",
+      "type": "coachView",
+      "typeName": "Coach View",
+      "details": {
+        "bindingType": "idcContract",
+        "configOptions": [
+          "SectionVis",
+          "facilityPercentageToBookVis",
+          "facilitiesCodesList",
+          "facility",
+          "LimitsVis",
+          "limitMessage"
+        ],
+        "inlineScripts": [
+          {
+            "name": "Inline Javascript",
+            "scriptType": "JS",
+            "scriptBlock": "this.vis = function  () {\r\r\n\tif (this.ui.get(\"LimitsTrackingRequired\").getData() == true) {\r\r\n\t\tthis.ui.get(\"GetFacility\").click();\r\r\n\t}\r\r\n\telse{\r\r\n\t\tthis.context.options.SectionVis.set(\"value\", \"NONE\");\r\r\n\t\tthis.context.binding.get(\"value\").set(\"facilities\", []);\r\r\n\t\tthis.context.options.facility.get(\"value\").set(\"facilityCode\", {});\r\r\n\r\r\n\t}\r\r\n}\r\r\nthis.haveFicility = function name (parameter) {\r\r\n\tif (this.ui.get(\"LimitsTrackingRequired\").getData() == true) {\r\r\n\t\tthis.context.options.SectionVis.set(\"value\", \"DEFAULT\");\r\r\n\t}\r\r\n\telse{\r\r\n\t\tthis.context.options.SectionVis.set(\"value\", \"NONE\");\r\r\n\r\r\n\t}\r\r\n}"
+          }
+        ]
+      },
+      "hasDetails": true
+    },
+    {
+      "id": "12.ed2ab873-bea8-42bc-b684-6086fef5926a",
+      "versionId": "f8ea2889-f8cf-405e-a519-df68bddf2561",
+      "name": "LiquidationSummary",
+      "type": "twClass",
+      "typeName": "Business Object",
+      "details": {}
+    },
+    {
+      "id": "64.23b35509-ef0d-4932-a3c5-3f3700e945b1",
+      "versionId": "e35f281c-415b-4672-9861-fb9c8cadac1d",
+      "name": "local facility",
+      "type": "coachView",
+      "typeName": "Coach View",
+      "details": {
+        "bindingType": "creditFacilityInfo",
+        "configOptions": [
+          "creditFacilityInfoVis",
+          "facilitiesCodesList",
+          "CashCoverPercentageAndAmountVis",
+          "facilityPercentageToBookVis",
+          "facilityCodeVis",
+          "deleteFacility",
+          "SectionVis",
+          "facility",
+          "liabAndCashCoverVis"
+        ]
+      },
+      "hasDetails": true
+    },
+    {
+      "id": "50.d37ebe05-41d3-47ac-9237-53de467d6a4a",
+      "versionId": "8abe40c3-12aa-468d-a12f-99435df5e489",
+      "name": "Lookups",
+      "type": "resourceBundleGroup",
+      "typeName": "Resource Bundle",
+      "details": {}
+    },
+    {
+      "id": "64.7a7ff012-3e34-4c17-949a-ed83917c49bf",
+      "versionId": "5c3c22fd-c39b-407c-b2ac-a7ba610ef812",
+      "name": "new view",
+      "type": "coachView",
+      "typeName": "Coach View",
+      "details": {
+        "bindingType": "IDCContract",
+        "inlineScripts": [
+          {
+            "name": "Inline Javascript",
+            "scriptType": "JS",
+            "scriptBlock": "var value1 = 0;\r\r\nvar value2 = 0;\r\r\nthis.test1 = function (){\r\r\n\tvalue1 = 1010\r\r\n\talert(value1);\r\r\n}\r\r\n\r\r\nthis.test2 = function(){\r\r\n//\tvalue1 = 11;\r\r\n\talert(value1);\r\r\n}"
+          }
+        ]
+      },
+      "hasDetails": true
+    },
+    {
+      "id": "12.af731d60-bee2-4d24-bfed-30192291dbd7",
+      "versionId": "c0a588f3-7d27-47f9-9ec1-9bc9b19bc51f",
+      "name": "Parties",
+      "type": "twClass",
+      "typeName": "Business Object",
+      "details": {}
+    },
+    {
+      "id": "64.42200ef0-f4f7-4d44-aa41-e48db0e2da1f",
+      "versionId": "a3d608d5-1e66-480d-a9fe-673d01395e39",
+      "name": "Party",
+      "type": "coachView",
+      "typeName": "Coach View",
+      "details": {
+        "bindingType": "Party",
+        "configOptions": [
+          "partyTypeList",
+          "concatString",
+          "BeneficiaryDetails",
+          "partyIndex",
+          "customerFullDetails",
+          "selectedBIC",
+          "customerCIF",
+          "accounteeCIF",
+          "caseCIF",
+          "addressBICList",
+          "selectedCIF",
+          "alertMessage",
+          "errorVis"
+        ],
+        "inlineScripts": [
+          {
+            "name": "Inline Javascript",
+            "scriptType": "JS",
+            "scriptBlock": "this.validateParty = function (value){\r\r\n\tvar record = value.ui.getIndex();\r\r\n\tthis.ui.get(\"PartyTable/address[\"+record+\"]\").setEnabled(false);\r\r\n\tthis.ui.get(\"PartyTable/media[\"+record+\"]\").setEnabled(false);\r\r\n\tvar newString = \"\";\r\r\n\t//Concat string\r\r\n\tfor (var i=0; i<this.context.binding.get(\"value\").length(); i++) {\r\r\n\t\tnewString +=this.context.binding.get(\"value\").get(i).get(\"partyType\").name +\",\";\r\r\n\t}\r\r\n\tthis.context.options.concatString.set(\"value\", newString);\r\r\n    //Default values\r\r\n\tif (value.getData().name == \"Accountee\"|| value.getData().name == \"Case in Need\") {\r\r\n\t\tthis.context.binding.get(\"value\").get(record).set(\"country\", \"EG\");\r\r\n\t}\r\r\n\r\r\n\tif (value.getData().name == \"Remitting Bank\"){\r\r\n\t\tthis.context.binding.get(\"value\").get(record).set(\"media\", \"SWIFT\");\r\r\n\t\tthis.context.binding.get(\"value\").get(record).set(\"reference\", this.context.options.BeneficiaryDetails.get(\"value\").get(\"correspondentRefNum\"));\r\r\n\t\tthis.ui.get(\"PartyTable/address[\"+record+\"]\").setEnabled(true);\r\r\n\t\tthis.ui.get(\"PartyTable/media[\"+record+\"]\").setEnabled(true);\r\r\n\t\t\r\r\n\t}else{\r\r\n\t\tthis.context.binding.get(\"value\").get(record).set(\"media\", \"\");\r\r\n\t\tthis.ui.get(\"PartyTable/address[\"+record+\"]\").setData(\"\");\r\r\n\t\tthis.context.binding.get(\"value\").get(record).set(\"language\", \"ENG\");\r\r\n\t\tthis.context.binding.get(\"value\").get(record).set(\"reference\", \"NO REF\")\r\r\n\t}\r\r\n}\r\r\n\r\r\nthis.setPartyId = function (value){\r\r\n\tvar record = value.ui.getIndex();\r\r\n\tthis.context.options.partyIndex.set(\"value\", record);\r\r\n\tthis.context.binding.get(\"value\").get(record).set(\"isRetrived\", false);\r\r\n\t\r\r\n\tif (this.context.binding.get(\"value\").get(record).get(\"partyType\").name == \"Accountee\") {\r\r\n        \tthis.context.options.accounteeCIF.set(\"value\", value.getData());\r\r\n\t}else if (this.context.binding.get(\"value\").get(record).get(\"partyType\").name == \"Case in Need\") {\r\r\n        \tthis.context.options.caseCIF.set(\"value\", value.getData());\r\r\n\t}\r\r\n\t\r\r\n\tif(isNaN(Number(value.getData())) || value.getData().length < 8){\r\r\n        value.setValid(false , \"must be 8 digits\");\r\r\n\t\treturn false;\r\r\n\t}else{\r\r\n        value.setValid(true);\r\r\n\t\treturn true;\t\r\r\n\t}\r\r\n}\r\r\n\r\r\nthis.concatOnDelete = function (value){\r\r\n\tvar newString = \"\";\r\r\n\tfor (var i=0; i<this.context.binding.get(\"value\").length(); i++) {\r\r\n\t\tif (i == value && i > 1) {\r\r\n\t\t\tcontinue;\r\r\n\t\t}\r\r\n\t\tnewString +=this.context.binding.get(\"value\").get(i).get(\"partyType\").name +\",\";\r\r\n\t}\r\r\n\tthis.context.options.concatString.set(\"value\", newString);\r\r\n}\r\r\n\r\r\nthis.drawerNotNBE = function (){\r\r\n    if (this.context.binding.get(\"value\").get(1).get(\"isNbeCustomer\") == false){\r\r\n        this.context.binding.get(\"value\").get(1).set(\"country\", this.context.options.BeneficiaryDetails.get(\"value\").get(\"country\").get(\"englishdescription\"));\r\r\n\t\tthis.context.binding.get(\"value\").get(1).set(\"name\", this.context.options.BeneficiaryDetails.get(\"value\").get(\"name\"));\r\r\n\t}\r\r\n}\r\r\n\r\r\nthis.mapPartyData = function (){\r\r\n    record = this.context.options.partyIndex.get(\"value\");\r\r\n\tthis.context.binding.get(\"value\").get(record).set(\"address1\", this.context.options.customerFullDetails.get(\"value\").get(\"customerAddress\").get(\"addressLine1\"));\r\r\n\tthis.context.binding.get(\"value\").get(record).set(\"address2\", this.context.options.customerFullDetails.get(\"value\").get(\"customerAddress\").get(\"addressLine2\"));\r\r\n\tthis.context.binding.get(\"value\").get(record).set(\"address3\", this.context.options.customerFullDetails.get(\"value\").get(\"customerAddress\").get(\"addressLine3\"));\r\r\n\tthis.context.binding.get(\"value\").get(record).set(\"name\", this.context.options.customerFullDetails.get(\"value\").get(\"EnglishName\"));\r\r\n\tthis.context.binding.get(\"value\").get(record).set(\"country\",\"EG\");\r\r\n\tthis.context.binding.get(\"value\").get(record).set(\"language\", \"ENG\");\r\r\n}\r\r\n\r\r\nthis.clickEx = function (value){\r\r\n\trecord = value.ui.getIndex();\r\r\n\tvalue.setData(true);\r\r\n\tif (this.context.binding.get(\"value\").get(record).get(\"partyCIF\") != \"\" && this.context.binding.get(\"value\").get(record).get(\"partyCIF\") != null && this.context.binding.get(\"value\").get(record).get(\"partyCIF\") != undefined) {\r\r\n\t\tif (this.context.binding.get(\"value\").get(record).get(\"partyType\").name != \"Remitting Bank\"){\r\r\n\t    \t\tthis.context.binding.get(\"value\").get(record).set(\"partyId\",  this.context.binding.get(\"value\").get(record).get(\"partyCIF\"));\r\r\n\t\t}else{\r\r\n\t        \tthis.context.binding.get(\"value\").get(record).set(\"partyId\", this.context.binding.get(\"value\").get(1).get(\"partyCIF\"));\r\r\n\t        \tthis.ui.get(\"GetAddressBIC\").execute(this.context.binding.get(\"value\").get(record).get(\"partyCIF\"));\r\r\n\t\t}\r\r\n\t    \tthis.ui.get(\"GetPartyDetails1\").execute(this.context.binding.get(\"value\").get(record).get(\"partyCIF\"));\r\r\n\t}\t\r\r\n}\r\r\n\r\r\nthis.setBIC = function (value){\r\r\n    this.context.options.selectedBIC.set(\"value\", value.getData());\r\r\n}\r\r\n//---------------------------------------------------------------------------Drop_2--------------------------------------------------\r\r\n//------------------------------------------------------------\r\r\n//function to view alert in case of get customer info error\r\r\nthis.AjaxErrorHandling = function(errorMSG)\r\r\n{\r\r\n\tthis.context.options.alertMessage.set(\"value\", errorMSG);\r\r\n\tthis.context.options.errorVis.set(\"value\", \"EDITABLE\")\r\r\n}\r\r\n\r\r\nthis.disableRetrieveBtn = function (value){\r\r\n\tvar record = value.ui.getIndex();\r\r\n\tif (record != 1){\r\r\n//\t\tvalue.setEnabled(false);\r\r\n\t\tvalue.hide();\r\r\n\t}else{\r\r\n\t\tvalue.setEnabled(true);\r\r\n\t}\r\r\n\tif(record == 1 && this.context.binding.get(\"value\").get(record).get(\"isNbeCustomer\") == true){\r\r\n\t\tthis.ui.get(\"PartyTable/RetrieveBtn[\"+record+\"]\").setEnabled(true);\r\r\n\t}else if (record != 1){\r\r\n\t\tthis.ui.get(\"PartyTable/RetrieveBtn[\"+record+\"]\").setEnabled(true);\r\r\n\t}else {\r\r\n\t\tthis.ui.get(\"PartyTable/RetrieveBtn[\"+record+\"]\").setEnabled(false);\r\r\n\t}\r\r\n}"
+          }
+        ]
+      },
+      "hasDetails": true
+    },
+    {
+      "id": "64.38c25c09-3e0f-4fe1-9480-9d69b975cd28",
+      "versionId": "220c10f0-a0a6-4465-862a-6c565bb42cdc",
+      "name": "Payment Terms",
+      "type": "coachView",
+      "typeName": "Coach View",
+      "details": {
+        "bindingType": "paymentTerm"
+      },
+      "hasDetails": true
+    },
+    {
+      "id": "12.9ff3139c-f226-4eb9-b5b9-d827d8c74d45",
+      "versionId": "7500088f-ea63-4b80-a51c-531e13334edc",
+      "name": "PaymentTerm",
+      "type": "twClass",
+      "typeName": "Business Object",
+      "details": {}
+    },
+    {
+      "id": "1.05e3bb1d-d52a-4ff9-9141-8307f650a0c9",
+      "versionId": "503010f5-4243-4cbd-8d62-134c3d03e82e",
+      "name": "Print Documents for Customer",
+      "type": "process",
+      "typeName": "Process",
+      "details": {}
+    },
+    {
+      "id": "1.31a44e81-e812-4dc3-b80d-e2bd710a4bad",
+      "versionId": "07c9f141-bdc5-4c5a-80e4-4d509a68ca82",
+      "name": "Print Withdrawal Documents",
+      "type": "process",
+      "typeName": "Process",
+      "details": {}
+    },
+    {
+      "id": "63.e4004116-1272-4dd8-b1dc-f57199b8335f",
+      "versionId": "2acc7763-1f08-4258-8ba3-db78a6f141bc",
+      "name": "Process App Settings",
+      "type": "projectDefaults",
+      "typeName": "Project Settings",
+      "details": {}
+    },
+    {
+      "id": "64.bd0ada34-acf3-449a-91df-9aa363c2b280",
+      "versionId": "c9d6f1fe-8209-4c83-94b9-0e48eb4187b4",
+      "name": "Products Details",
+      "type": "coachView",
+      "typeName": "Coach View",
+      "details": {
+        "bindingType": "ProductsDetails",
+        "configOptions": [
+          "testList"
+        ],
+        "inlineScripts": [
+          {
+            "name": "Inline Javascript",
+            "scriptType": "JS",
+            "scriptBlock": "//------------------------------------------------------------\r\r\n//function to view alert in case of get customer info error\r\r\nthis.AjaxErrorHandling = function(errorMSG)\r\r\n{\r\r\n\tthis.context.options.alertMessage.set(\"value\", errorMSG);\r\r\n\tthis.context.options.errorVis.set(\"value\", \"EDITABLE\")\r\r\n}"
+          }
+        ]
+      },
+      "hasDetails": true
+    },
+    {
+      "id": "12.8dacb128-2b07-4eaf-a2c1-3a0cb480a228",
+      "versionId": "5db42eaf-ee63-4bbf-a6c2-2df63fc28a99",
+      "name": "ProductsDetails",
+      "type": "twClass",
+      "typeName": "Business Object",
+      "details": {}
+    },
+    {
+      "id": "1.272ad8b7-8ea1-4c8e-af76-b7534aa5129f",
+      "versionId": "01e1a627-a82b-427d-a98b-b906a323ebd0",
+      "name": "Retrieve Customer Facilities",
+      "type": "process",
+      "typeName": "Process",
+      "details": {}
+    },
+    {
+      "id": "1.f19131b2-2481-4c62-a40d-8f829cdeb66a",
+      "versionId": "5e659ced-4faf-498d-a457-4cbae46aa683",
+      "name": "Retrieve Request Data",
+      "type": "process",
+      "typeName": "Process",
+      "details": {}
+    },
+    {
+      "id": "1.1f68d702-993e-4d40-b851-571e35cda577",
+      "versionId": "60f2e782-0763-4672-822d-fcfe07eed11b",
+      "name": "Reversal Approval Mail Service",
+      "type": "process",
+      "typeName": "Process",
+      "details": {}
+    },
+    {
+      "id": "64.cfe950a2-9b16-4c82-9ca9-b8a5b2ffaa58",
+      "versionId": "b6f54eb0-4763-4805-ba70-d6e12612f41f",
+      "name": "Reversal Request Main",
+      "type": "coachView",
+      "typeName": "Coach View",
+      "details": {},
+      "hasDetails": false
+    },
+    {
+      "id": "1.16931d1e-3b6a-4725-9805-a04464e7991e",
+      "versionId": "8f5fff8e-eede-42ee-9e4c-eb63136b1769",
+      "name": "Review IDC Customs Release Request",
+      "type": "process",
+      "typeName": "Process",
+      "details": {}
+    },
+    {
+      "id": "1.0903f902-3a18-4b6d-9e59-1d4ad6437937",
+      "versionId": "3be3f9f3-da8c-48b4-96a7-f9f34867f5c7",
+      "name": "Review IDC Customs Release Request by Trade FO",
+      "type": "process",
+      "typeName": "Process",
+      "details": {}
+    },
+    {
+      "id": "1.fcc27b9d-793f-4d79-b8ed-d17e5877201f",
+      "versionId": "5ebd982d-c295-488a-bbb1-ee9c2b94f322",
+      "name": "Review IDC Request by Branch Compliance Rep",
+      "type": "process",
+      "typeName": "Process",
+      "details": {}
+    },
+    {
+      "id": "1.81cc6ee4-96cd-4a6a-97cf-31c4094876fd",
+      "versionId": "c2c0b863-5b00-40de-8288-46bdf43cc88c",
+      "name": "Review IDC Request by Trade Front Office",
+      "type": "process",
+      "typeName": "Process",
+      "details": {}
+    },
+    {
+      "id": "1.98cf1a97-9e24-44c6-9e06-44065464f45b",
+      "versionId": "ad47be90-8369-4426-9c29-87af02e7a6f7",
+      "name": "Review IDC Reversal Request",
+      "type": "process",
+      "typeName": "Process",
+      "details": {}
+    },
+    {
+      "id": "1.3beb46eb-40aa-4939-bf56-225a33b731fd",
+      "versionId": "0c9d8b08-496a-46a7-ac85-8e75fcece42a",
+      "name": "Review IDC Withdrawal Request by Compliance Rep",
+      "type": "process",
+      "typeName": "Process",
+      "details": {}
+    },
+    {
+      "id": "1.53b740e1-0338-4573-9e9b-780485ae5319",
+      "versionId": "84e6726d-00a9-4c2d-b9b1-b70a6adca153",
+      "name": "Review IDC Withdrawal Request by Trade FO",
+      "type": "process",
+      "typeName": "Process",
+      "details": {}
+    },
+    {
+      "id": "1.bc5434f8-0ff6-4fd6-9439-6c25b23d1300",
+      "versionId": "ee5d4846-722c-40a1-a087-2e737861204c",
+      "name": "Review Pending Queue by Credit Admin Execution Maker",
+      "type": "process",
+      "typeName": "Process",
+      "details": {}
+    },
+    {
+      "id": "1.15b5fc3d-bb22-4981-b2bc-bafefbe8f721",
+      "versionId": "f2021bfe-5e00-413e-a463-631eaeb79b7a",
+      "name": "Review Request by Credit Admin Execution Maker",
+      "type": "process",
+      "typeName": "Process",
+      "details": {}
+    },
+    {
+      "id": "1.f964f62b-c99c-41db-81e6-d7c13f5ef504",
+      "versionId": "e8837f42-8ac9-4aab-8dd8-8209314b2499",
+      "name": "Review Request by Treasury Checker",
+      "type": "process",
+      "typeName": "Process",
+      "details": {}
+    },
+    {
+      "id": "1.d5475add-79dd-4468-9671-f08aa8c7c181",
+      "versionId": "dd4b2646-7c46-40a3-85f2-19ad98279d06",
+      "name": "Review Request by Treasury Maker",
+      "type": "process",
+      "typeName": "Process",
+      "details": {}
+    },
+    {
+      "id": "12.449bd82a-6888-4a7f-ab7d-01ca0e3d9b8e",
+      "versionId": "c11ff2ec-f930-4008-92a6-94da816492dd",
+      "name": "Sequence",
+      "type": "twClass",
+      "typeName": "Business Object",
+      "details": {}
+    },
+    {
+      "id": "12.36aae433-b480-4a1f-861b-6d30c09351a1",
+      "versionId": "c904d9e8-f1cd-4e33-be30-df0bc0b41801",
+      "name": "SettlementAccount",
+      "type": "twClass",
+      "typeName": "Business Object",
+      "details": {}
+    },
+    {
+      "id": "64.f547d7e6-17be-4187-b0e1-14f05f5fdfd4",
+      "versionId": "e86d619b-ccd6-4aee-ba0a-271a3fca7bfb",
+      "name": "Start New Request",
+      "type": "coachView",
+      "typeName": "Coach View",
+      "details": {
+        "bindingType": "IDCRequest",
+        "configOptions": [
+          "parentIDCRequest",
+          "retrieveRequest",
+          "retrieveCustomer",
+          "alertMessage",
+          "errorVis"
+        ],
+        "inlineScripts": [
+          {
+            "name": "Inline Javascript",
+            "scriptType": "JS",
+            "scriptBlock": "this.getCustomer = function () {\r\r\n\tthis.ui.get(\"retrieveCustomerServiceCall\").execute(this.ui.get(\"cif\").getData());\r\r\n\t}\r\r\n\r\r\nthis.getRequest = function (callback) {\r\r\n\tthis.ui.get(\"retrieveRequestServiceCall\").execute(this.ui.get(\"parentIDCRequestNumber\").getData());\r\r\n\t}\r\r\n\r\r\nthis.showParentIDC = function  () {\r\r\n\tif (this.context.binding.get(\"value\").get(\"IDCRequestNature\").get(\"englishdescription\") == \"Update Request\") {\r\r\n\t\tthis.ui.get(\"parentIDCRequestNumber\").setVisible(true,true);\r\r\n\t\tthis.ui.get(\"requestDate\").setVisible(true,true);\r\r\n\t\tthis.ui.get(\"retrieveRequest\").setVisible(true,true);\r\r\n\t\tthis.ui.get(\"beneficiaryName\").setVisible(true,true);\r\r\n\t}else{\r\r\n\t\tthis.ui.get(\"parentIDCRequestNumber\").setVisible(false,true);\r\r\n\t\tthis.ui.get(\"requestDate\").setVisible(false,true);\r\r\n\t\tthis.ui.get(\"retrieveRequest\").setVisible(false,true);\r\r\n\t\tthis.ui.get(\"beneficiaryName\").setVisible(false,true);\r\r\n\t\tthis.resetParentIDC();\r\r\n\t}\r\r\n}\r\r\nthis.resetParentIDC = function  () {\r\r\n\tthis.ui.get(\"parentIDCRequestNumber\").setData(\"\");\r\r\n\tthis.ui.get(\"requestDate\").setData(\"\");\r\r\n\tthis.ui.get(\"retrieveRequest\").setData(false);\r\r\n\tthis.ui.get(\"beneficiaryName\").setData(\"\");\r\r\n}\r\r\nthis.resetParentIDC2 = function  () {\r\r\n\t\r\r\n\tthis.ui.get(\"requestDate\").setData(\"\");\r\r\n\tthis.ui.get(\"retrieveRequest\").setData(false);\r\r\n\tthis.ui.get(\"beneficiaryName\").setData(\"\");\r\r\n}\r\r\n\r\r\n//------------------------------------------------------------\r\r\n//function to view alert in case of get customer info error\r\r\nthis.AjaxErrorHandling = function(errorMSG)\r\r\n{\r\r\n\tthis.context.options.alertMessage.set(\"value\", errorMSG);\r\r\n\tthis.context.options.errorVis.set(\"value\", \"EDITABLE\")\r\r\n}"
+          }
+        ]
+      },
+      "hasDetails": true
+    },
+    {
+      "id": "64.122789dd-9d59-4a0d-b507-23e1fe2141c4",
+      "versionId": "9114d9e6-c538-4644-ba42-c22956c12cda",
+      "name": "Swift Message Data",
+      "type": "coachView",
+      "typeName": "Coach View",
+      "details": {
+        "bindingType": "SwiftMessageData",
+        "configOptions": [
+          "selctedBic"
+        ],
+        "inlineScripts": [
+          {
+            "name": "Inline Javascript",
+            "scriptType": "JS",
+            "scriptBlock": "this.validateSwift = function (view) {\r\r\n\r\r\n//\tregexString = /^(?![\\s])[a-zA-Z0-9.,-()\\/='+:?!\\\"%&*<>;{@#_-]{0,34}[a-zA-Z0-9.,-()\\/='+:?!\\\"%&*<>;{@#_-](?<![\\s-])$/;\r\r\n\tregexString = /^(?![\\s])[a-zA-Z0-9.,()\\/='+:?!\\\"%&*<>;{@#_ \\r\\n-\\s]*$/;\r\r\n\r\r\n\tregex = new RegExp(regexString);\r\r\n\t\r\r\n\tif (view.getData() != \"\") {\r\r\n\t\tif (!regex.test(view.getData())){\r\r\n\r\r\n\t\t\t view.setValid(false,\"Only Allowed characters is: Alphanumeric and . , – ( ) / = ‘ + : ? ! ” % & * < > ; { @ # _ CrLf Space\");\r\r\n\t\t\t\r\r\n\t\t}\r\r\n\t\telse{\r\r\n\t\t\tview.setValid(true);\r\r\n\t\t}\r\r\n\t}\r\r\n}\r\r\n\r\r\nthis.visControler = function  () {\r\r\n//\tthis.context.binding.set(\"value\", {});\r\r\n\tthis.context.binding.get(\"value\").set(\"intermediary\", {});\r\r\n\tthis.context.binding.get(\"value\").set(\"accountWithInstitution\",{});\r\r\n\tthis.context.binding.get(\"value\").set(\"intermediaryReimbursementInstitution\",{});\r\r\n\tthis.context.binding.get(\"value\").set(\"receiverCorrespondent\",{});\r\r\n\tthis.context.binding.get(\"value\").set(\"detailsOfPayment\",{});\r\r\n\tthis.context.binding.get(\"value\").set(\"orderingInstitution\",{});\r\r\n\tthis.context.binding.get(\"value\").set(\"beneficiaryInstitution\",{});\r\r\n\tthis.context.binding.get(\"value\").set(\"ultimateBeneficiary\",{});\r\r\n\tthis.context.binding.get(\"value\").set(\"orderingCustomer\",{});\r\r\n\tthis.context.binding.get(\"value\").set(\"senderToReciever\",{});\r\r\n\tthis.ui.get(\"TransferType\").setData(\"\");\r\r\n\tthis.ui.get(\"CoverRequired\").setData(\"\");\r\r\n\tthis.ui.get(\"ReceiverofCover\").setData(\"\");\r\r\n\tthis.ui.get(\"receiver\").setData(\"\");\r\r\n\t\r\r\n\tthis.ui.get(\"ReceiverofCover\").setEnabled(true);\r\r\n\tthis.ui.get(\"receiver\").setEnabled(true);\r\r\n\t\t\r\r\n\tthis.ui.get(\"detailsofPaymentPanel\").setVisible(true,true);\r\r\n\tthis.ui.get(\"CoverRequired\").setVisible(true,true);\r\r\n\tthis.ui.get(\"DetailsofCharge\").setVisible(true,true);\r\r\n\tthis.ui.get(\"orderingCustomerPanel\").setVisible(true,true);\r\r\n\tthis.ui.get(\"ultimateBeneficiaryPanel\").setVisible(true,true);\r\r\n\tthis.ui.get(\"Vertical_Layout1\").setVisible(true,true);\r\r\n\tthis.ui.get(\"RTGSNetworkType\").setVisible(false,true);\r\r\n//---------------------------------------------------------------------------1--------------------------------------------------\r\r\n\tif (this.context.binding.get(\"value\").get(\"swiftMessageOption\") == \"Option 1: Serial Payment – Send MT 103\") {\r\r\n\t\tthis.ui.get(\"TransferType\").setData(\"Customer Transfer\");\r\r\n\t\tthis.ui.get(\"TransferType\").setEnabled(false);\r\r\n\t\tthis.ui.get(\"CoverRequired\").setData(\"No\");\r\r\n\t\tthis.ui.get(\"CoverRequired\").setEnabled(false);\r\r\n\t\tthis.ui.get(\"RTGS\").setData(\"No\");\r\r\n\t\tthis.ui.get(\"ReceiverofCover\").setEnabled(false);\r\r\n\t\tthis.ui.get(\"ReceiverofCover\").setData(\"\");\r\r\n\t\tthis.ui.get(\"receiver\").setEnabled(false);\r\r\n\t\tthis.ui.get(\"receiver\").setData(\"\");\r\r\n\t\t\r\r\n\t\t\r\r\n\t}\r\r\n//-------------------------------------------------------------------------2----------------------------------------------------\t\r\r\n\telse if (this.context.binding.get(\"value\").get(\"swiftMessageOption\") == \"Option 2: Cover Payment – Send MT 103 and MT 202 COV\") {\r\r\n\t\tthis.ui.get(\"TransferType\").setData(\"Customer Transfer\");\r\r\n\t\tthis.ui.get(\"TransferType\").setEnabled(false);\r\r\n\t\tthis.ui.get(\"CoverRequired\").setData(\"Yes\");\r\r\n\t\tthis.ui.get(\"CoverRequired\").setEnabled(false);\r\r\n\t\tthis.ui.get(\"RTGS\").setData(\"No\");\r\r\n\t\tthis.ui.get(\"RTGS\").setEnabled(false);\r\r\n\t\t\r\r\n\t}\r\r\n//--------------------------------------------------------------------------3---------------------------------------------------\t\r\r\n\telse if (this.context.binding.get(\"value\").get(\"swiftMessageOption\") == \"Option 3: Bank to Bank Payment (1) – Send MT 202 and MT 400\") {\r\r\n\t\tthis.ui.get(\"detailsofPaymentPanel\").setVisible(false,true);\r\r\n\t\tthis.ui.get(\"CoverRequired\").setVisible(false,true);\r\r\n\t\tthis.ui.get(\"DetailsofCharge\").setVisible(false,true);\r\r\n\t\tthis.ui.get(\"orderingCustomerPanel\").setVisible(false,true);\r\r\n\t\tthis.ui.get(\"ultimateBeneficiaryPanel\").setVisible(false,true);\r\r\n\t\t\r\r\n\t\tthis.ui.get(\"TransferType\").setData(\"Bank Transfer\");\r\r\n\t\tthis.ui.get(\"TransferType\").setEnabled(false);\r\r\n\t\t\r\r\n\t\tthis.ui.get(\"ReceiverofCover\").setEnabled(false);\r\r\n\t\tthis.ui.get(\"ReceiverofCover\").setData(\"\");\r\r\n\t\tthis.ui.get(\"receiver\").setEnabled(false);\r\r\n\t\tthis.ui.get(\"receiver\").setData(\"\");\r\r\n\t\t\r\r\n\t\tthis.ui.get(\"RTGS\").setData(\"No\");\r\r\n\t\tthis.ui.get(\"RTGS\").setEnabled(false);\r\r\n\t}\r\r\n//-------------------------------------------------------------------------4---------------------------------------------------\t\r\r\n\telse if(this.context.binding.get(\"value\").get(\"swiftMessageOption\") == \"Option 4: Bank to Bank Payment (2) – Send MT 400\"){\r\r\n\t\tthis.ui.get(\"Vertical_Layout1\").setVisible(false,true);\r\r\n\t\r\r\n\t}\r\r\n//-------------------------------------------------------------------------5---------------------------------------------------\t\r\r\n\telse if (this.context.binding.get(\"value\").get(\"swiftMessageOption\") == \"Option 5: Bank to Bank (Local) – Send MT 202\") {\r\r\n\t\tthis.ui.get(\"detailsofPaymentPanel\").setVisible(false,true);\r\r\n\t\tthis.ui.get(\"DetailsofCharge\").setVisible(false,true);\r\r\n\t\tthis.ui.get(\"orderingCustomerPanel\").setVisible(false,true);\r\r\n\t\tthis.ui.get(\"ultimateBeneficiaryPanel\").setVisible(false,true);\r\r\n\t\tthis.ui.get(\"RTGSNetworkType\").setVisible(true,true);\r\r\n\t\t\r\r\n\t\tthis.ui.get(\"TransferType\").setEnabled(false);\r\r\n\t\tthis.ui.get(\"CoverRequired\").setEnabled(false);\r\r\n\t\t\r\r\n\t\tthis.ui.get(\"TransferType\").setData(\"Bank Transfer\");\r\r\n\t\tthis.ui.get(\"CoverRequired\").setData(\"No\");\r\r\n\t\tthis.ui.get(\"ReceiverofCover\").setEnabled(false);\r\r\n\t\tthis.ui.get(\"ReceiverofCover\").setData(\"\");\r\r\n\t\tthis.ui.get(\"receiver\").setEnabled(false);\r\r\n\t\tthis.ui.get(\"receiver\").setData(\"\");\r\r\n\t\t\r\r\n\t\tthis.ui.get(\"RTGS\").setData(\"Yes\");\r\r\n\t\tthis.ui.get(\"RTGS\").setEnabled(false);\r\r\n\t\tthis.ui.get(\"RTGSNetworkType\").setData(\"PEG\");\r\r\n\t\tthis.ui.get(\"RTGSNetworkType\").setEnabled(false);\r\r\n\t}\r\r\n}\r\r\n//------------------------------------------------------------\r\r\n//function to view alert in case of get customer info error\r\r\nthis.AjaxErrorHandling = function(errorMSG)\r\r\n{\r\r\n\tthis.context.options.alertMessage.set(\"value\", errorMSG);\r\r\n\tthis.context.options.errorVis.set(\"value\", \"EDITABLE\")\r\r\n}"
+          }
+        ]
+      },
+      "hasDetails": true
+    },
+    {
+      "id": "12.770d3eea-9807-42ad-9ce2-c280a5145765",
+      "versionId": "671a4c32-56b6-4340-955e-901c20e68aec",
+      "name": "SwiftMessageData",
+      "type": "twClass",
+      "typeName": "Business Object",
+      "details": {}
+    },
+    {
+      "id": "12.ce3e5b4a-d024-4ff8-a49e-3a6a44d42027",
+      "versionId": "696f7c3a-7502-4d3b-bde7-b021c1f82a93",
+      "name": "SwiftMessagePart",
+      "type": "twClass",
+      "typeName": "Business Object",
+      "details": {}
+    },
+    {
+      "id": "21.3e88aca7-236e-4c3d-9b1c-b9c8ca160106",
+      "versionId": "69a1c596-5799-47f3-b252-021e4c2da9d7",
+      "name": "TeamsNameBPM",
+      "type": "epv",
+      "typeName": "Environment Property Variable",
+      "details": {}
+    },
+    {
+      "id": "1.c0682bdf-40ae-48f0-92cc-390e1358e90a",
+      "versionId": "bf0d74be-3729-4165-b924-2c4e3faa3bce",
+      "name": "test",
+      "type": "process",
+      "typeName": "Process",
+      "details": {}
+    },
+    {
+      "id": "64.66b344b9-e786-4183-bb38-58b60b772b7f",
+      "versionId": "b2f379a3-f9b6-4dc7-be0f-7e0ffabc035f",
+      "name": "test",
+      "type": "coachView",
+      "typeName": "Coach View",
+      "details": {
+        "bindingType": "idc",
+        "inlineScripts": [
+          {
+            "name": "Inline Javascript",
+            "scriptType": "JS",
+            "scriptBlock": "this.runJson = function  () {\r\r\nconsole.log(this.context.binding.get(\"value\"));\r\r\n//console.log(JSON.stringify(this.context.binding.get(\"value\")));\r\r\n//\tthis.ui.get(\"Service_Call1\").execute(JSON.stringify(this.context.binding.get(\"value\")));\r\r\n}"
+          }
+        ]
+      },
+      "hasDetails": true
+    },
+    {
+      "id": "1.7cd9c833-9de0-441c-987b-2cea94c2b257",
+      "versionId": "7065b81a-a1fb-4044-a3d4-9c906e371585",
+      "name": "test json",
+      "type": "process",
+      "typeName": "Process",
+      "details": {}
+    },
+    {
+      "id": "25.adb8fd93-1422-4df4-8c36-cbcc83243295",
+      "versionId": "a6db8ada-5bdc-482c-9c72-525ca73c4881",
+      "name": "Test Nested Process",
+      "type": "bpd",
+      "typeName": "Business Process Definition",
+      "details": {}
+    },
+    {
+      "id": "1.d4263736-0fea-47c5-90ea-cc6b49adfcec",
+      "versionId": "3af2140b-3fba-4022-a668-ec75b0cd31b4",
+      "name": "Test Swift",
+      "type": "process",
+      "typeName": "Process",
+      "details": {}
+    },
+    {
+      "id": "64.b2d6d2ef-7c03-4419-bc73-52cbde1405b8",
+      "versionId": "bf849d2a-62f5-4f22-a118-410ad559c482",
+      "name": "test View",
+      "type": "coachView",
+      "typeName": "Coach View",
+      "details": {
+        "bindingType": "IDCContract"
+      },
+      "hasDetails": true
+    },
+    {
+      "id": "1.b0d126fc-c26e-4e48-b3c8-bf0af0485476",
+      "versionId": "005a140d-13e1-414c-9ef4-f919a087df20",
+      "name": "testjson",
+      "type": "process",
+      "typeName": "Process",
+      "details": {}
+    },
+    {
+      "id": "1.1fe1e7f7-ce9c-401f-991c-b6eebe370d51",
+      "versionId": "5a364f9c-7622-48fb-8573-30f0a640056e",
+      "name": "Trade Compliance",
+      "type": "process",
+      "typeName": "Process",
+      "details": {}
+    },
+    {
+      "id": "1.33e9489c-6751-46e8-bc5c-74b573bdd856",
+      "versionId": "8373c3f5-cf50-4f0d-9cb4-d5aed9bc8bc1",
+      "name": "update advance payment",
+      "type": "process",
+      "typeName": "Process",
+      "details": {}
+    },
+    {
+      "id": "1.604d7736-0fa5-4f03-af3c-19556056fdbf",
+      "versionId": "0fb863f6-fe34-4648-9789-a8058a27dc3e",
+      "name": "update facility",
+      "type": "process",
+      "typeName": "Process",
+      "details": {}
+    },
+    {
+      "id": "1.a9a7070b-cdbb-4f64-af6c-39dafcf87f59",
+      "versionId": "cbf38ad1-7216-4342-a2f8-852a4004eda1",
+      "name": "Update History",
+      "type": "process",
+      "typeName": "Process",
+      "details": {}
+    },
+    {
+      "id": "1.e75c339e-472e-439b-878f-bfafd0c4b968",
+      "versionId": "6719e525-cf7b-433e-bdeb-8fac927dd57f",
+      "name": "Update IDC Request",
+      "type": "process",
+      "typeName": "Process",
+      "details": {}
+    },
+    {
+      "id": "12.fc23c5c1-8fd3-4584-89be-8352a606da67",
+      "versionId": "b2d3cafb-f9b5-4d6c-8855-6c1d930a5c5b",
+      "name": "UsedAdvancePayment",
+      "type": "twClass",
+      "typeName": "Business Object",
+      "details": {}
+    },
+    {
+      "id": "1.02d07ad8-f212-4ea3-8b5e-e8457d984314",
+      "versionId": "e7d97031-56df-4548-a0ab-0e5948847fd0",
+      "name": "validate accounts and attachment",
+      "type": "process",
+      "typeName": "Process",
+      "details": {}
+    },
+    {
+      "id": "1.72840b39-03cc-42d8-a24b-01650b923101",
+      "versionId": "acfb07f7-5517-43f9-a493-0bdd78068752",
+      "name": "Validate BIC",
+      "type": "process",
+      "typeName": "Process",
+      "details": {}
+    },
+    {
+      "id": "1.65481b15-1f15-43d3-b21f-fd25532bd3a4",
+      "versionId": "ce761e63-874e-4d57-8f2d-e48808e443de",
+      "name": "Validate Collateral Amount",
+      "type": "process",
+      "typeName": "Process",
+      "details": {}
+    },
+    {
+      "id": "1.c04ab227-0184-4fcd-99e2-b165319d2807",
+      "versionId": "db717c91-795e-42b4-8aa4-ab91b87ea3f7",
+      "name": "Validate Required Documents",
+      "type": "process",
+      "typeName": "Process",
+      "details": {}
+    },
+    {
+      "id": "64.ed284446-1ac5-42cf-9523-6dd8086928a0",
+      "versionId": "8042f717-d79f-43f0-a7a6-247937b596c9",
+      "name": "Validation Helper",
+      "type": "coachView",
+      "typeName": "Coach View",
+      "details": {
+        "configOptions": [
+          "runTimeValid",
+          "stop",
+          "disableSubmit"
+        ],
+        "inlineScripts": [
+          {
+            "name": "Inline Javascript",
+            "scriptType": "JS",
+            "scriptBlock": "_this = this;\r\r\n\r\r\nvar displayText = \"Display_Text1\";\r\r\nconst generalTab = \"GENERAL\";\r\r\nvar tabSectionId = \"\";\r\r\nvar tabSection = \"\";\r\r\nvar counter = 0;\r\r\nvar errorSectionId = \"ErrorSection_Panel1\";\r\r\nvar stopLib = _this.context.options.stop.get(\"value\") || false;\r\r\nvar runTime = _this.context.options.runTimeValid.get(\"value\") || false;\r\r\n//var disableSubmit = _this.context.options.disableSubmit.get(\"value\") || false;\r\r\n\r\r\n_this.startLib2 = function () {\r\r\n\ttabSection = document.querySelector('[role=\"tablist\"]');\r\r\n\ttabSectionId = _this.getTabSectionId(tabSection);\r\r\n\r\r\n\tvar viewErrorList = bpmext.ui.getInvalidViews();\r\r\n\r\r\n\t//Disable submit until all valid\r\r\n\t// if (viewErrorList.length > 0) {\r\r\n\t// \tif (disableSubmit) {\r\r\n\t// \t\tbpmext.ui.getView(\"DC_Templete1\").enableSubmit(false);\r\r\n\t// \t}\r\r\n\t// } else {\r\r\n\t// \t_this.resetRedCircle();\r\r\n\t// \tbpmext.ui.getView(\"DC_Templete1\").enableSubmit(true);\r\r\n\t// }\r\r\n\r\r\n\tif (!viewErrorList || viewErrorList.length === 0) {\r\r\n\t\t_this.ui.get(errorSectionId).setVisible(false, true);\r\r\n\t\treturn;\r\r\n\t}\r\r\n\r\r\n\tconst errMapList = viewErrorList\r\r\n\t\t.map((view) => _this.constructErrorMap(view))\r\r\n\t\t.filter(function (obj) {\r\r\n\t\t\treturn obj != null;\r\r\n\t\t});\r\r\n\r\r\n\tvar viewMapList = [];\r\r\n\t_this.resetRedCircle();\r\r\n\tviewMapList = _this.organizeErrorsByTab(errMapList);\r\r\n\r\r\n\t// Add counter red circle\r\r\n\t_this.resetRedCircle();\r\r\n\tviewMapList.forEach((viewMap) => _this.addRedCircleToTab(viewMap));\r\r\n\r\r\n\t//Add panel with tabs and messages\r\r\n\t_this.ui.get(errorSectionId).setVisible(true, true);\r\r\n\tsetTimeout(() => {\r\r\n\t\t_this.constructValidPanel(viewMapList);\r\r\n\t}, 200);\r\r\n};\r\r\n\r\r\n_this.getTabInfoFirst = function (tabSection) {\r\r\n\tconst tabElementList = tabSection?.children;\r\r\n\tvar tabsInfo = {};\r\r\n\tfor (var i = 0; i < tabElementList.length; i++) {\r\r\n\t\tvar tabElement = tabElementList[i];\r\r\n\r\r\n\t\tvar tabInnerText = tabElement.innerText.split(\"\\n\")[0].replaceAll(\" \", \"\");\r\r\n\t\tif (!tabInnerText || tabElement.getAttribute(\"role\") !== \"tab\") continue;\r\r\n\r\r\n\t\ttabsInfo[tabInnerText] = {\r\r\n\t\t\ttabDomID: tabElement.id,\r\r\n\t\t\ttabPathId: i,\r\r\n\t\t};\r\r\n\t}\r\r\n\r\r\n\treturn tabsInfo;\r\r\n};\r\r\n\r\r\n_this.resetRedCircle = function () {\r\r\n\tconst redCircles = document.querySelectorAll(\".red-circle\");\r\r\n\tif (!redCircles) return null;\r\r\n\tredCircles.forEach((circle) => circle.remove());\r\r\n};\r\r\n\r\r\n_this.getTabSectionId = function (tabSection) {\r\r\n\tif (!tabSection) return;\r\r\n\tvar currentElement = tabSection;\r\r\n\r\r\n\twhile (currentElement && currentElement !== document.body) {\r\r\n\t\tif (currentElement.classList.contains(\"Tab_Section\")) {\r\r\n\t\t\ttabSectionId = currentElement.getAttribute(\"control-name\");\r\r\n\t\t\tbreak;\r\r\n\t\t}\r\r\n\r\r\n\t\tcurrentElement = currentElement.parentElement;\r\r\n\t}\r\r\n\r\r\n\treturn tabSectionId;\r\r\n};\r\r\n\r\r\n_this.constructValidPanel = function (viewMapList) {\r\r\n\tif (!viewMapList || viewMapList.length == 0) return;\r\r\n\tvar tabNameListHTML = \"\";\r\r\n\r\r\n\tfor (let i = 0; i < viewMapList.length; i++) {\r\r\n\t\tvar tabData = viewMapList[i].tab;\r\r\n\t\tvar messageList = viewMapList[i].messages;\r\r\n\r\r\n\t\tif (!tabData) continue;\r\r\n\r\r\n\t\tvar tabDomId = tabData.domId;\r\r\n\t\tvar tabName = tabData.name || generalTab;\r\r\n\t\tvar errorListId = `error-list-${tabDomId}`;\r\r\n\t\tvar tabIndex = tabData.pathId;\r\r\n\t\tvar errorListHTML = generateErrorListHTML(messageList, tabName, tabIndex);\r\r\n\r\r\n\t\ttabNameListHTML += generateTabItemHTML(\r\r\n\t\t\ttabName,\r\r\n\t\t\ttabDomId,\r\r\n\t\t\terrorListId,\r\r\n\t\t\ttabIndex,\r\r\n\t\t\terrorListHTML\r\r\n\t\t);\r\r\n\t}\r\r\n\r\r\n\ttabNameListHTML = `<ul class=\"tab-list\">${tabNameListHTML}</ul>`;\r\r\n\t_this.ui.get(displayText).setText(tabNameListHTML);\r\r\n\r\r\n\tfunction generateErrorListHTML(listOfErrors, tabName, tabIndex) {\r\r\n\t\treturn listOfErrors\r\r\n\t\t\t.map(function (error, i) {\r\r\n\t\t\t\tvar fieldDomId = error.field.domId;\r\r\n\t\t\t\tvar fieldPathId = error.field.pathId;\r\r\n\t\t\t\tvar targetMessage = error.message;\r\r\n\t\t\t\tvar panelString = \"\";\r\r\n\t\t\t\terror.field.panels.forEach((element) => {\r\r\n\t\t\t\t\tpanelString += element + \"@@\";\r\r\n\t\t\t\t});\r\r\n\r\r\n\t\t\t\treturn `<li><a href=\"#${fieldDomId}\" class=\"message-link\" message-id=\"${fieldDomId}\" onclick=\"_this.activateField('${tabName}','${panelString}','${tabIndex}','${fieldPathId}');\">${targetMessage}</a></li>`;\r\r\n\t\t\t})\r\r\n\t\t\t.join(\"\");\r\r\n\t}\r\r\n\r\r\n\tfunction generateTabItemHTML(tabName, tabDomId, errorListId, tabIndex, errorListHTML) {\r\r\n\t\treturn `<li class=\"tab-item\">\r\r\n\t\t\t<div class=\"tab-container\">\r\r\n\t\t\t\t<div class=\"tab-header\">\r\r\n\t\t\t\t<a href=\"#${tabDomId}\" class=\"tab-name\"\r\r\n\t\t\t\t\tonclick=\"_this.activateTab('${tabDomId}','${tabName}','${tabIndex}');window.scrollTo(0,document.getElementById('${tabDomId}').offsetTop+150);\">${tabName}:</a>\r\r\n\t\t\t\t<button id=\"toggleBtn_${errorListId}\" class=\"toggle-btn\" onclick=\"_this.toggleErrorList('${errorListId}');\">&#11165;</button>\r\r\n\t\t\t\t</div>\r\r\n\t\t\t\t<ul id=\"${errorListId}\" class=\"error-list\" style=\"display:none;\">${errorListHTML}</ul>\r\r\n\t\t\t</div>\r\r\n\t\t</li>`;\r\r\n\t}\r\r\n};\r\r\n\r\r\n_this.activateTab = function (tabDomId, tabName, tabIndex) {\r\r\n\tif (!tabName || !tabIndex) return;\r\r\n\r\r\n\tif (tabName !== generalTab) {\r\r\n\t\tpage.ui.get(tabSectionId).setCurrentPane(tabIndex);\r\r\n\t\tif (tabDomId) {\r\r\n\t\t\tvar tabElement = document.getElementById(tabDomId);\r\r\n\t\t\t_this.highLighElement(tabElement);\r\r\n\t\t}\r\r\n\t}\r\r\n};\r\r\n\r\r\n_this.toggleErrorList = function (errorListId) {\r\r\n\tif (!errorListId) return;\r\r\n\r\r\n\tvar errorList = document.getElementById(errorListId);\r\r\n\tvar toggleBtn = document.getElementById(`toggleBtn_${errorListId}`);\r\r\n\r\r\n\tif (errorList.style.display === \"none\" || errorList.style.display === \"\") {\r\r\n\t\terrorList.style.display = \"block\";\r\r\n\t\ttoggleBtn.innerHTML = \"&#11167;\"; // Change to expanded icon\r\r\n\t} else {\r\r\n\t\terrorList.style.display = \"none\";\r\r\n\t\ttoggleBtn.innerHTML = \"&#11165;\"; // Change to collapsed icon\r\r\n\t}\r\r\n\r\r\n\ttoggleBtn.classList.toggle(\"collapsed\");\r\r\n};\r\r\n\r\r\n_this.activateField = function (tabName, panelString, tabIndex, fieldPathId) {\r\r\n\tif (!fieldPathId) return;\r\r\n\tvar panelList = panelString.split(\"@@\").filter((e) => e !== \"\");\r\r\n\t// console.dir(panelList);\r\r\n\tif (tabIndex && tabSectionId && tabName !== generalTab) {\r\r\n\t\tpage.ui.get(tabSectionId).setCurrentPane(tabIndex);\r\r\n\t}\r\r\n\tif (panelList && panelList.length > 0) {\r\r\n\t\tfor (let i = 0; i < panelList.length; i++) {\r\r\n\t\t\tpage.ui.get(panelList[i]).expand();\r\r\n\t\t}\r\r\n\t\tsetTimeout(function () {\r\r\n\t\t\t_this.focusOnElement(fieldPathId);\r\r\n\t\t}, 300);\r\r\n\t}\r\r\n\t_this.focusOnElement(fieldPathId);\r\r\n};\r\r\n\r\r\n_this.focusOnElement = function (fieldPathId) {\r\r\n\tvar fieldElement = page.ui.get(fieldPathId).context.element;\r\r\n\t_this.highLighElement(fieldElement);\r\r\n\r\r\n\tpage.ui.get(fieldPathId).focus();\r\r\n};\r\r\n\r\r\n_this.highLighElement = function (fieldElement) {\r\r\n\tif (!fieldElement) return;\r\r\n\r\r\n\tfieldElement.classList.add(\"highlighted-field\");\r\r\n\tsetTimeout(function () {\r\r\n\t\tfieldElement.classList.remove(\"highlighted-field\");\r\r\n\t}, 1500);\r\r\n};\r\r\n\r\r\n_this.addRedCircleToTab = function (viewMap) {\r\r\n\tif (!viewMap.tab.domId) return;\r\r\n\r\r\n\tconst messagesCount = viewMap.messages.length;\r\r\n\tconst tabDomId = viewMap.tab.domId;\r\r\n\tconst tabElement = document.getElementById(tabDomId);\r\r\n\tif (!tabElement) return;\r\r\n\r\r\n\tconst existingCircle = tabElement.querySelector(\".red-circle\");\r\r\n\r\r\n\tif (!existingCircle) {\r\r\n\t\tconst redCircle = document.createElement(\"div\");\r\r\n\t\tredCircle.classList.add(\"red-circle\");\r\r\n\t\tredCircle.innerText = messagesCount;\r\r\n\t\ttabElement.appendChild(redCircle);\r\r\n\t} else {\r\r\n\t\texistingCircle.innerText = messagesCount;\r\r\n\t}\r\r\n};\r\r\n\r\r\n_this.constructErrorMap = function (fieldElement) {\r\r\n\tif (!fieldElement || !fieldElement.context.element || !fieldElement._bpmextViewNode)\r\r\n\t\treturn null;\r\r\n\r\r\n\tvar fieldDomId = fieldElement.context.element.id;\r\r\n\tvar fieldParents = _this.getFieldParents(fieldDomId);\r\r\n\tvar isField = Object.keys(fieldElement._bpmextViewNode._data.context.subview).length === 0;\r\r\n\tif (isField) {\r\r\n\t\terrorMap = {\r\r\n\t\t\tfield: {\r\r\n\t\t\t\tmessage: fieldElement._bpmextVE?.errors?.[0]?.message || \"\",\r\r\n\t\t\t\tdomId: fieldDomId,\r\r\n\t\t\t\tpathId: fieldElement.context.element.getAttribute(\"control-name\"),\r\r\n\t\t\t\tviewId: fieldElement.context.element.getAttribute(\"data-viewid\"),\r\r\n\t\t\t},\r\r\n\r\r\n\t\t\tpanels: fieldParents.cPanelList /*[list of \"SPARKCPanel\"]*/,\r\r\n\r\r\n\t\t\tview: fieldParents.viewObj,\r\r\n\t\t};\r\r\n\t\treturn errorMap;\r\r\n\t}\r\r\n};\r\r\n\r\r\n_this.getFieldParents = function (elementId) {\r\r\n\tvar fieldParents = {\r\r\n\t\tviewObj: {\r\r\n\t\t\tname: \"\",\r\r\n\t\t\tdomId: \"\",\r\r\n\t\t\tpathId: \"\",\r\r\n\t\t},\r\r\n\t\tcPanelList: [],\r\r\n\t};\r\r\n\tconst cPanelClass = \"Collapsible_Panel\";\r\r\n\tconst tabClass = \"tab-pane\";\r\r\n\r\r\n\tlet currentElement = document.getElementById(elementId);\r\r\n\r\r\n\twhile (currentElement && currentElement !== document.body) {\r\r\n\t\tif (currentElement.classList.contains(tabClass)) {\r\r\n\t\t\tfieldParents.viewObj.name = currentElement.getAttribute(\"aria-label\");\r\r\n\t\t\tfieldParents.viewObj.domId = currentElement.id;\r\r\n\t\t\tfieldParents.viewObj.pathId = currentElement.getAttribute(\"control-name\");\r\r\n\t\t} else if (currentElement.classList.contains(cPanelClass)) {\r\r\n\t\t\tfieldParents.cPanelList.unshift(currentElement.getAttribute(\"control-name\"));\r\r\n\t\t}\r\r\n\r\r\n\t\tcurrentElement = currentElement.parentNode;\r\r\n\t}\r\r\n\treturn fieldParents;\r\r\n};\r\r\n\r\r\n_this.organizeErrorsByTab = function (errorList) {\r\r\n\tconst viewMap = new Map();\r\r\n\tvar tabsInfo = {};\r\r\n\tif (tabSection) {\r\r\n\t\ttabsInfo = _this.getTabInfoFirst(tabSection);\r\r\n\t}\r\r\n\r\r\n\terrorList.forEach((error) => {\r\r\n\t\tif (error) {\r\r\n\t\t\tvar viewName = error.view.name;\r\r\n\t\t\tif (viewName) {\r\r\n\t\t\t\tvar tabName = viewName?.replaceAll(\" \", \"\") + \"\";\r\r\n\t\t\t}\r\r\n\r\r\n\t\t\tif (!viewMap.has(viewName)) {\r\r\n\t\t\t\tviewMap.set(viewName, {\r\r\n\t\t\t\t\tview: {\r\r\n\t\t\t\t\t\tname: viewName,\r\r\n\t\t\t\t\t\tdomId: error.view.domId,\r\r\n\t\t\t\t\t\tpathId: error.view.pathId,\r\r\n\t\t\t\t\t},\r\r\n\t\t\t\t\tmessages: [],\r\r\n\t\t\t\t\ttab: {\r\r\n\t\t\t\t\t\tname: viewName,\r\r\n\t\t\t\t\t\tdomId: tabsInfo[tabName]?.tabDomID,\r\r\n\t\t\t\t\t\tpathId: tabsInfo[tabName]?.tabPathId,\r\r\n\t\t\t\t\t},\r\r\n\t\t\t\t});\r\r\n\t\t\t}\r\r\n\r\r\n\t\t\t// Add the error message to the corresponding tab entry\r\r\n\t\t\tviewMap.get(viewName).messages.push({\r\r\n\t\t\t\tmessage: error.field.message,\r\r\n\t\t\t\tfield: {\r\r\n\t\t\t\t\tdomId: error.field.domId,\r\r\n\t\t\t\t\tpathId: error.field.pathId,\r\r\n\t\t\t\t\tviewId: error.field.viewId,\r\r\n\t\t\t\t\tpanels: [...error.panels],\r\r\n\t\t\t\t},\r\r\n\t\t\t});\r\r\n\t\t}\r\r\n\t});\r\r\n\r\r\n\t// Convert the map values to an array of tab objects\r\r\n\tconst organizedTabs = [...viewMap.values()];\r\r\n\tconsole.dir(organizedTabs);\r\r\n\treturn organizedTabs;\r\r\n};\r\r\n\r\r\n_this.getTabInfo = function (viewName) {\r\r\n\tif (!viewName || viewName == \"\") return;\r\r\n\r\r\n\tconst tabElementList = tabSection?.children;\r\r\n\r\r\n\tfor (var i = 0; i < tabElementList.length; i++) {\r\r\n\t\tvar tabElement = tabElementList[i];\r\r\n\r\r\n\t\tvar tabInnerText = tabElement.innerText.split(\"\\n\")[0].trim();\r\r\n\t\tif (!tabInnerText || tabElement.role != \"tab\") return;\r\r\n\t\tconsole.log(tabInnerText.replaceAll(\" \", \"\"));\r\r\n\r\r\n\t\tif (tabInnerText.replaceAll(\" \", \"\") == viewName.replaceAll(\" \", \"\")) {\r\r\n\t\t\treturn `${viewName.trim()}&${tabElement.id}&${i}`;\r\r\n\t\t}\r\r\n\t}\r\r\n};\r\r\n\r\r\n//=======================================REQUIRED===============================================//\r\r\nrequire([\"com.ibm.bpm.coach/engine\"], function (engine) {\r\r\n\tvar dve = engine._deliverValidationEvents;\r\r\n\tengine._deliverValidationEvents = function (event, viewMap, isClear) {\r\r\n\t\tdve(event, viewMap, isClear); // original processing first\r\r\n\t\t// console.log(\"_deliverValidationEvents\", event, viewMap, isClear);\r\r\n\t}.bind(engine);\r\r\n\tvar hve = engine.handleValidationEvent;\r\r\n\tengine.handleValidationEvent = function (event) {\r\r\n\t\thve(event);\r\r\n\t\t// console.log(\"handleValidationEvent\", event);\r\r\n\t\tif (!stopLib) {\r\r\n\t\t\t_this.startLib2();\r\r\n\t\t}\r\r\n\t}.bind(engine);\r\r\n});\r\r\n\r\r\nvar uvvs = bpmext && bpmext.ui && bpmext.ui.updateViewValidationState;\r\r\nif (uvvs) {\r\r\n\tbpmext.ui.updateViewValidationState = function (view, event) {\r\r\n\t\tuvvs(view, event); //call original handler\r\r\n\t\t// console.log(\"updateViewValidationState\", view, event);\r\r\n\t\tif (!stopLib && runTime) {\r\r\n\t\t\t_this.startLib2();\r\r\n\t\t}\r\r\n\t};\r\r\n}"
+          },
+          {
+            "name": "Inline CSS",
+            "scriptType": "CSS",
+            "scriptBlock": "/* Style for the red circle counter */\r\r\n.red-circle {\r\r\n\tposition: absolute;\r\r\n\ttop: 0;\r\r\n\tright: 0;\r\r\n\twidth: 17px;\r\r\n\theight: 17px;\r\r\n\tbackground-color: red;\r\r\n\tborder-radius: 50%;\r\r\n\tdisplay: flex;\r\r\n\tjustify-content: center;\r\r\n\talign-items: center;\r\r\n\tcolor: white;\r\r\n\tfont-weight: bold;\r\r\n}\r\r\n\r\r\n.tab-link {\r\r\n\tfont-size: medium;\r\r\n}\r\r\n\r\r\n/* Style for the tab list */\r\r\n.tab-list {\r\r\n\tlist-style-type: none;\r\r\n\tpadding: 0;\r\r\n}\r\r\n\r\r\n/* Style for each tab item */\r\r\n.tab-item {\r\r\n\tmargin-bottom: 10px;\r\r\n\tborder: none;\r\r\n\tpadding: 5px;\r\r\n\tdisplay: flex;\r\r\n\talign-items: center;\r\r\n\tlist-style: none;\r\r\n}\r\r\n\r\r\n/* Style for the tab name */\r\r\n.tab-name {\r\r\n\tfont-size: 16px;\r\r\n\tmargin-right: 10px;\r\r\n}\r\r\n\r\r\n.tab-container {\r\r\n\tdisplay: flex;\r\r\n\tflex-direction: column;\r\r\n}\r\r\n\r\r\n.tab-header {\r\r\n\tdisplay: flex;\r\r\n\talign-items: center;\r\r\n}\r\r\n\r\r\n/* Style for the toggle button */\r\r\n.toggle-btn {\r\r\n\tfont-size: 18px;\r\r\n\tcursor: pointer;\r\r\n\tbackground: none; /* Remove background color */\r\r\n\tborder: none; /* Remove border */\r\r\n\tpadding: 5px 10px; /* Add padding */\r\r\n\tmargin-left: -10px;\r\r\n\ttransition: transform 0.1s ease; /*\r\r\n}\r\r\n\r\r\n.toggle-btn.collapsed {\r\r\n\ttransform: rotate(-90deg);\r\r\n\t/* Rotate the button for the collapsed state */\r\r\n}\r\r\n\r\r\n.toggle-btn:active {\r\r\n\ttransform: scale(0.95); /* Add a simple click animation */\r\r\n}\r\r\n\r\r\n.toggle-btn:hover {\r\r\n\tbackground-color: #ddd;\r\r\n\t/* Change background color on hover */\r\r\n}\r\r\n\r\r\n.tab {\r\r\n\tposition: relative;\r\r\n}\r\r\n\r\r\n.tab::after {\r\r\n\tcontent: attr(error-count);\r\r\n\tcolor: red;\r\r\n\tfont-size: 10px;\r\r\n\tposition: absolute;\r\r\n\tright: 5px;\r\r\n\ttop: 5px;\r\r\n}\r\r\n\r\r\n/* Add animation for the highlighted field */\r\r\n.highlighted-field {\r\r\n\tanimation-name: highlight;\r\r\n\tanimation-duration: 1.5s;\r\r\n}\r\r\n\r\r\n@keyframes highlight {\r\r\n\tfrom {\r\r\n\t\tbackground-color: yellow; /* Change this to the starting highlight color */\r\r\n\t}\r\r\n\tto {\r\r\n\t\tbackground-color: initial; /* Change this to the ending background color */\r\r\n\t}\r\r\n}\r\r\n\r\r\n.error-list {\r\r\n\tdisplay: none;\r\r\n\t/* Make the error list a block element */\r\r\n\tmargin-left: 50px;\r\r\n\t/* Remove default margin */\r\r\n\tpadding: 0;\r\r\n\t/* Remove default padding */\r\r\n}\r\r\n\r\r\n.message-link {\r\r\n\tcursor: pointer;\r\r\n}"
+          }
+        ]
+      },
+      "hasDetails": true
+    },
+    {
+      "id": "64.ad8f3ff9-299c-4bd2-afe1-50281ea8b72a",
+      "versionId": "c3118473-49f4-4234-9b37-d25eb1c3120f",
+      "name": "Validation message",
+      "type": "coachView",
+      "typeName": "Coach View",
+      "details": {
+        "bindingType": "validationMessage"
+      },
+      "hasDetails": true
+    },
+    {
+      "id": "1.f2c8f018-67e0-416a-acb3-8af30664cba5",
+      "versionId": "634e32ae-4dfc-4123-bd61-53bd0ef048b8",
+      "name": "Waiting CBE Approval",
+      "type": "process",
+      "typeName": "Process",
+      "details": {}
+    },
+    {
+      "id": "1.700681c9-fc9c-4767-b15d-063fdcbc57ed",
+      "versionId": "c93560c8-10b6-4d12-a981-279cc878a423",
+      "name": "Withdrawal Approval Mail Service",
+      "type": "process",
+      "typeName": "Process",
+      "details": {}
+    },
+    {
+      "id": "64.349d9cfc-f3ed-4901-b89a-59594bac5b4f",
+      "versionId": "0a542800-ca84-4e8f-adaa-96391fe90321",
+      "name": "Withdrawal Request Main",
+      "type": "coachView",
+      "typeName": "Coach View",
+      "details": {},
+      "hasDetails": false
+    },
+    {
+      "id": "64.0d7634e8-859f-4f60-b8ce-a0b32d5a1374",
+      "versionId": "d40f4439-fb45-474b-acf2-8ed3d88c0a8f",
+      "name": "Withdrawal Request Trade FO",
+      "type": "coachView",
+      "typeName": "Coach View",
+      "details": {},
+      "hasDetails": false
+    }
+  ]
+}

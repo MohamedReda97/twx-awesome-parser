@@ -1,0 +1,7 @@
+create table if not exists SnapshotObjectDependency (
+  objectVersionId text not null,
+  snapshotId text not null,
+  objectId text not null
+);
+
+create index if not exists SnapshotObjectDependency_snapshotId_objectId on SnapshotObjectDependency (objectId, snapshotId);

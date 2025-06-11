@@ -1,0 +1,9 @@
+create table if not exists SnapshotDependency (
+  parentSnapshotId text not null,
+  childSnapshotId text not null,
+  rank integer not null,
+  dependencyId text not null
+);
+
+create index if not exists SnapshotDependency_parentSnapshotId on SnapshotDependency (parentSnapshotId);
+create index if not exists SnapshotDependency_childSnapshotId on SnapshotDependency (childSnapshotId);
