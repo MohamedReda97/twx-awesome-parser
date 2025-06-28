@@ -138,21 +138,37 @@ class CSHSDetails {
     }
 
     /**
-     * Load CSHS details from individual object file
+     * Load CSHS details from objects-cshs.json
      * @param {string} cshsId - CSHS object ID
      * @returns {Object} CSHS details
      */
     async loadCSHSDetails(cshsId) {
         try {
-            const response = await fetch(`./output/objects/${cshsId}.json`);
+            // First try to get from objects-cshs.json
+            const response = await fetch('./output/objects-cshs.json');
             if (!response.ok) {
-                throw new Error(`Failed to load CSHS details: ${response.status}`);
+                throw new Error(`Failed to load CSHS objects: ${response.status}`);
             }
             const data = await response.json();
-            return data.details || { variables: { input: [], output: [], private: [] }, elements: { formTasks: [], callActivities: [], exclusiveGateways: [], scriptTasks: [] } };
+            
+            // Find the CSHS object by ID
+            const cshsObject = data.objects.find(obj => obj.id === cshsId);
+            
+            if (cshsObject && cshsObject.details) {
+                return cshsObject.details;
+            }
+            
+            // If not found, return empty structure
+            return { 
+                variables: { input: [], output: [], private: [] }, 
+                elements: { formTasks: [], callActivities: [], exclusiveGateways: [], scriptTasks: [] } 
+            };
         } catch (error) {
             console.error('Error loading CSHS details:', error);
-            return { variables: { input: [], output: [], private: [] }, elements: { formTasks: [], callActivities: [], exclusiveGateways: [], scriptTasks: [] } };
+            return { 
+                variables: { input: [], output: [], private: [] }, 
+                elements: { formTasks: [], callActivities: [], exclusiveGateways: [], scriptTasks: [] } 
+            };
         }
     }
 

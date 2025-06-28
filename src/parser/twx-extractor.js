@@ -350,8 +350,7 @@ class TWXExtractor {
       name: objMeta.name,
       type: objMeta.type,
       typeName: objMeta.typeName,
-      details: {},
-      _fullObjectData: objectData  // Store for CSHS extraction
+      details: {}
     }
 
     // Extract common properties
@@ -427,8 +426,15 @@ class TWXExtractor {
       })).filter(script => script.scriptBlock)
     }
 
+    // Extract layout if it exists
+    if (coachViewElement.layout) {
+      details.layout = Array.isArray(coachViewElement.layout) ? 
+        coachViewElement.layout[0] : coachViewElement.layout;
+    }
+
     // Mark as having detailed information
-    baseObject.hasDetails = !!(details.loadJsFunction || details.bindingType || details.configOptions || details.inlineScripts)
+    baseObject.hasDetails = !!(details.loadJsFunction || details.bindingType || 
+      details.configOptions || details.inlineScripts || details.layout)
   }
 
   /**
@@ -453,8 +459,8 @@ class TWXExtractor {
 
     // If this is a CSHS (processType = 10), extract detailed information
     if (baseObject.subType === '10') {
-      // Pass the full objectData to extract from XML structure, not just processElement
-      this.extractCSHSDetails(baseObject._fullObjectData, baseObject)
+      // Pass the processElement to extract CSHS details
+      this.extractCSHSDetails(processElement, baseObject)
     }
 
     // Mark as having detailed information if it's a CSHS
@@ -463,10 +469,10 @@ class TWXExtractor {
 
   /**
    * Extract CSHS-specific details including variables and elements from XML structure
-   * @param {Object} objectData - Full parsed XML data
+   * @param {Object} processElement - Process XML element
    * @param {Object} baseObject - Base object to add details to
    */
-  extractCSHSDetails(objectData, baseObject) {
+  extractCSHSDetails(processElement, baseObject) {
     // Preserve existing details and add CSHS-specific details
     const details = {
       ...baseObject.details,  // Preserve existing details like processType
@@ -484,9 +490,6 @@ class TWXExtractor {
     }
 
     // Extract variables from the main XML structure
-    const processElement = objectData.teamworks && objectData.teamworks.process ?
-      (Array.isArray(objectData.teamworks.process) ? objectData.teamworks.process[0] : objectData.teamworks.process) :
-      Object.values(objectData)[0]
 
     // Parse processParameter elements (input/output variables)
     if (processElement.processParameter) {

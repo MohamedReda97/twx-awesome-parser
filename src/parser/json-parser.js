@@ -63,22 +63,18 @@ class JSONParser {
     const typeFiles = await this.generateObjectsByTypeFiles(extractedData.objects)
     filesGenerated.push(...typeFiles)
     
-    // 3. Generate complete objects file
-    const objectsFile = await this.generateCompleteObjectsFile(extractedData.objects)
-    filesGenerated.push(objectsFile)
-    
-    // 4. Generate metadata file
-    const metadataFile = await this.generateMetadataFile(extractedData.metadata)
+    // 3. Generate metadata file
+    const metadataFile = await this.generateMetadataFile(extractedData)
     filesGenerated.push(metadataFile)
     
-    // 5. Generate toolkits file if any
+    // 4. Generate toolkits file if any
     if (extractedData.toolkits && extractedData.toolkits.length > 0) {
       const toolkitsFile = await this.generateToolkitsFile(extractedData.toolkits)
       filesGenerated.push(toolkitsFile)
     }
 
     return {
-      filesGenerated,
+      filesGenerated: filesGenerated.filter(Boolean), // Remove any null/undefined entries
       summary: {
         totalObjects: extractedData.objects.length,
         objectTypes: Object.keys(groupByType(extractedData.objects)).length,
@@ -166,49 +162,21 @@ class JSONParser {
   }
 
   /**
-   * Generate individual object files
-   * @param {Array} objects - Array of objects
-   * @returns {Promise<Array>} Array of generated file paths
+   * Individual object files are no longer generated
+   * This method is kept for backward compatibility but returns an empty array
+   * @returns {Promise<Array>} Empty array
    */
-  async generateIndividualObjectFiles(objects) {
-    const objectsDir = path.join(this.outputDir, 'objects')
-
-    // Create objects directory if it doesn't exist
-    if (!fs.existsSync(objectsDir)) {
-      fs.mkdirSync(objectsDir, { recursive: true })
-    }
-
-    const filesGenerated = []
-
-    for (const obj of objects) {
-      const fileName = `${obj.id}.json`
-      const filePath = path.join(objectsDir, fileName)
-
-      fs.writeFileSync(filePath, JSON.stringify(obj, null, 2))
-      filesGenerated.push(filePath)
-    }
-
-    console.log(`Generated ${objects.length} individual object files in: ${objectsDir}`)
-    return filesGenerated
+  async generateIndividualObjectFiles() {
+    return []
   }
 
   /**
-   * Generate complete objects file with all details
-   * @param {Array} objects - Array of objects
-   * @returns {Promise<string>} Generated file path
+   * Complete objects file is no longer generated
+   * This method is kept for backward compatibility but returns null
+   * @returns {Promise<null>} Always returns null
    */
-  async generateCompleteObjectsFile(objects) {
-    const filePath = path.join(this.outputDir, 'all-objects.json')
-    
-    const data = {
-      totalCount: objects.length,
-      objects: objects.sort((a, b) => a.name.localeCompare(b.name))
-    }
-    
-    fs.writeFileSync(filePath, JSON.stringify(data, null, 2))
-    
-    console.log(`Generated complete objects file: ${filePath}`)
-    return filePath
+  async generateCompleteObjectsFile() {
+    return null
   }
 
   /**
