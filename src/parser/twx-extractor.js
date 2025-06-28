@@ -641,94 +641,112 @@ class TWXExtractor {
       scripts: []
     };
 
-    // Helper function to safely access array properties
+    // Helper function to safely access array properties and handle XML structure
     const toArray = (value) => {
       if (!value) return [];
       if (Array.isArray(value)) return value;
-      return [value];
+      if (value === Object(value)) return [value]; // Handle single object case
+      return [];
+    };
+
+    // Helper to get XML attribute value with fallback
+    const getAttr = (obj, attr, defaultValue = '') => {
+      if (!obj) return defaultValue;
+      if (obj[attr] !== undefined) return obj[attr];
+      if (obj.$ && obj.$[attr] !== undefined) return obj.$[attr];
+      return defaultValue;
     };
 
     // Process Parameters (input/output variables)
-    if (processElement.processParameter) {
-      const processParameters = toArray(processElement.processParameter);
-      for (const param of processParameters) {
-        if (!param || !param.$) continue;
-        
-        const name = param.$.name;
-        if (!name) continue;
+    const processParameters = toArray(processElement.processParameter || processElement.parameter);
+    for (const param of processParameters) {
+      if (!param) continue;
+      
+      const name = getAttr(param, 'name');
+      if (!name) continue;
 
-        const variable = {
-          name,
-          type: param.$.parameterType || 'String',
-          hasDefault: param.$.hasDefault === 'true',
-          description: param.$.description || ''
-        };
+      const variable = {
+        name,
+        type: getAttr(param, 'parameterType', 'String'),
+        hasDefault: getAttr(param, 'hasDefault') === 'true',
+        description: getAttr(param, 'description', '')
+      };
 
-        // Add defaultValue if hasDefault is true
-        if (variable.hasDefault && param.$.defaultValue) {
-          variable.defaultValue = param.$.defaultValue;
-        }
+      // Add defaultValue if hasDefault is true
+      if (variable.hasDefault) {
+        variable.defaultValue = getAttr(param, 'defaultValue', '');
+      }
 
-        // Categorize as input or output based on direction
-        // 1 = Input, 2 = Output, 3 = Both
-        const direction = param.$.direction || '1';
-        if (direction === '1' || direction === '3') { // Input or Both
-          details.variables.input.push(variable);
-        }
-        if (direction === '2' || direction === '3') { // Output or Both
-          details.variables.output.push(variable);
-        }
+      // Categorize as input or output based on direction
+      // 1 = Input, 2 = Output, 3 = Both
+      const direction = getAttr(param, 'direction', '1');
+      if (direction === '1' || direction === '3') { // Input or Both
+        details.variables.input.push(variable);
+      }
+      if (direction === '2' || direction === '3') { // Output or Both
+        details.variables.output.push(variable);
       }
     }
 
     // Process Variables (private variables)
-    if (processElement.processVariable) {
-      const processVariables = toArray(processElement.processVariable);
-      for (const variable of processVariables) {
-        if (!variable || !variable.$) continue;
-        
-        const name = variable.$.name;
-        if (!name) continue;
+    const processVariables = toArray(processElement.processVariable || processElement.variable);
+    for (const variable of processVariables) {
+      if (!variable) continue;
+      
+      const name = getAttr(variable, 'name');
+      if (!name) continue;
 
-        const varDetails = {
-          name,
-          type: variable.$.type || 'String',
-          hasDefault: variable.$.hasDefault === 'true',
-          description: variable.$.description || ''
-        };
+      const varDetails = {
+        name,
+        type: getAttr(variable, 'type', 'String'),
+        hasDefault: getAttr(variable, 'hasDefault') === 'true',
+        description: getAttr(variable, 'description', '')
+      };
 
-        // Add defaultValue if hasDefault is true
-        if (varDetails.hasDefault && variable.$.defaultValue) {
-          varDetails.defaultValue = variable.$.defaultValue;
-        }
-
-        details.variables.private.push(varDetails);
+      // Add defaultValue if hasDefault is true
+      if (varDetails.hasDefault) {
+        varDetails.defaultValue = getAttr(variable, 'defaultValue', '');
       }
+
+      details.variables.private.push(varDetails);
     }
 
     // Extract scripts from item → TWComponent → script
-    if (processElement.item) {
-      const items = toArray(processElement.item);
-      for (const item of items) {
-        if (!item || !item.TWComponent) continue;
+    const items = toArray(processElement.item);
+    for (const item of items) {
+      if (!item || !item.TWComponent) continue;
+      
+      // Get the item name to use as script name
+      const itemName = item.name ? item.name[0] : 'Unnamed Script';
+      
+      // Process each TWComponent
+      const twComponents = toArray(item.TWComponent);
+      for (const twComponent of twComponents) {
+        if (!twComponent || !twComponent.script) continue;
         
-        const twComponents = toArray(item.TWComponent);
-        for (const twComponent of twComponents) {
-          if (!twComponent.script) continue;
+        // Process each script in the TWComponent
+        const scripts = toArray(twComponent.script);
+        for (const script of scripts) {
+          if (!script) continue;
           
-          const scripts = toArray(twComponent.script);
-          for (const script of scripts) {
-            if (!script) continue;
-            
-            // Handle both script content as text or CDATA
-            const scriptContent = typeof script === 'string' ? script : (script._ || '');
-            if (scriptContent.trim()) {
-              details.scripts.push({
-                name: (script.$ && script.$.name) || 'Unnamed Script',
-                script: this.cleanJavaScript(scriptContent)
-              });
-            }
-          }
+          // Get script content - handle different possible formats
+          let scriptContent = '';
+          if (script._) scriptContent = script._; // Most common case
+          else if (script._text) scriptContent = script._text;
+          else if (script['#text']) scriptContent = script['#text'];
+          else if (typeof script === 'string') scriptContent = script;
+          
+          scriptContent = scriptContent.trim();
+          if (!scriptContent) continue;
+          
+          // Clean up the script content
+          scriptContent = this.cleanJavaScript(scriptContent);
+          
+          // Add the script with the item name as the script name
+          details.scripts.push({
+            name: itemName,
+            script: scriptContent
+          });
         }
       }
     }

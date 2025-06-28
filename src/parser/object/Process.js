@@ -158,10 +158,70 @@ const parseProcess = Performance.makeMeasurable(async (databaseName, jsonData) =
     if (subType === PROCESS_TYPES.ClientSideHumanService) {
       result.details = await parseCSHSDetails(process)
     }
+    
+    // Extract scripts from process
+    const scripts = extractScriptsFromProcess(process);
+    if (scripts.length > 0) {
+      result.scripts = scripts;
+    }
   }
 
   return result
 }, 'parseProcess')
+
+/**
+ * Extract scripts from process items
+ * @param {Object} process - The process object from XML
+ * @returns {Array} Array of script objects with name and content
+ */
+function extractScriptsFromProcess(process) {
+  const scripts = [];
+  
+  // Ensure process has items and it's an array
+  if (!process.item || !Array.isArray(process.item)) {
+    return scripts;
+  }
+  
+  // Process each item
+  process.item.forEach(item => {
+    // Skip if item is null or doesn't have TWComponent
+    if (ParseUtils.isNullXML(item) || !item.TWComponent) {
+      return;
+    }
+    
+    // Get the script name from item name
+    const scriptName = item.name?.[0] || 'unnamed_script';
+    
+    // Handle both single TWComponent and array of TWComponents
+    const components = Array.isArray(item.TWComponent) ? item.TWComponent : [item.TWComponent];
+    
+    // Process each TWComponent
+    components.forEach(component => {
+      // Skip if component is null or doesn't have script
+      if (ParseUtils.isNullXML(component) || !component.script) {
+        return;
+      }
+      
+      // Get script content (handle both string and array cases)
+      const scriptContent = Array.isArray(component.script) ? 
+        component.script[0] : 
+        component.script;
+      
+      // Skip if script content is empty or null
+      if (!scriptContent || ParseUtils.isNullXML(scriptContent)) {
+        return;
+      }
+      
+      // Add script to results
+      scripts.push({
+        name: scriptName,
+        content: scriptContent
+      });
+    });
+  });
+  
+  return scripts;
+}
 
 /**
  * Parse CSHS-specific details including variables and elements
