@@ -457,14 +457,16 @@ class TWXExtractor {
       details.processType = '0'
     }
 
-    // If this is a CSHS (processType = 10), extract detailed information
+    // If this is a CSHS (processType = 10) or Service (processType = 12), extract detailed information
     if (baseObject.subType === '10') {
       // Pass the processElement to extract CSHS details
       this.extractCSHSDetails(processElement, baseObject)
+      baseObject.hasDetails = true
+    } else if (baseObject.subType === '12') {
+      // Pass the processElement to extract Service details
+      this.extractServiceDetails(processElement, baseObject)
+      baseObject.hasDetails = true
     }
-
-    // Mark as having detailed information if it's a CSHS
-    baseObject.hasDetails = baseObject.subType === '10'
   }
 
   /**
@@ -620,6 +622,119 @@ class TWXExtractor {
     } catch (error) {
       console.warn('Error parsing coachflow elements:', error)
     }
+  }
+
+  /**
+   * Extract Service-specific details including parameters, variables and scripts
+   * @param {Object} processElement - Process XML element
+   * @param {Object} baseObject - Base object to add details to
+   */
+  extractServiceDetails(processElement, baseObject) {
+    // Initialize details object with default structure
+    const details = {
+      ...baseObject.details,  // Preserve existing details
+      variables: {
+        input: [],
+        output: [],
+        private: []
+      },
+      scripts: []
+    };
+
+    // Helper function to safely access array properties
+    const toArray = (value) => {
+      if (!value) return [];
+      if (Array.isArray(value)) return value;
+      return [value];
+    };
+
+    // Process Parameters (input/output variables)
+    if (processElement.processParameter) {
+      const processParameters = toArray(processElement.processParameter);
+      for (const param of processParameters) {
+        if (!param || !param.$) continue;
+        
+        const name = param.$.name;
+        if (!name) continue;
+
+        const variable = {
+          name,
+          type: param.$.parameterType || 'String',
+          hasDefault: param.$.hasDefault === 'true',
+          description: param.$.description || ''
+        };
+
+        // Add defaultValue if hasDefault is true
+        if (variable.hasDefault && param.$.defaultValue) {
+          variable.defaultValue = param.$.defaultValue;
+        }
+
+        // Categorize as input or output based on direction
+        // 1 = Input, 2 = Output, 3 = Both
+        const direction = param.$.direction || '1';
+        if (direction === '1' || direction === '3') { // Input or Both
+          details.variables.input.push(variable);
+        }
+        if (direction === '2' || direction === '3') { // Output or Both
+          details.variables.output.push(variable);
+        }
+      }
+    }
+
+    // Process Variables (private variables)
+    if (processElement.processVariable) {
+      const processVariables = toArray(processElement.processVariable);
+      for (const variable of processVariables) {
+        if (!variable || !variable.$) continue;
+        
+        const name = variable.$.name;
+        if (!name) continue;
+
+        const varDetails = {
+          name,
+          type: variable.$.type || 'String',
+          hasDefault: variable.$.hasDefault === 'true',
+          description: variable.$.description || ''
+        };
+
+        // Add defaultValue if hasDefault is true
+        if (varDetails.hasDefault && variable.$.defaultValue) {
+          varDetails.defaultValue = variable.$.defaultValue;
+        }
+
+        details.variables.private.push(varDetails);
+      }
+    }
+
+    // Extract scripts from item → TWComponent → script
+    if (processElement.item) {
+      const items = toArray(processElement.item);
+      for (const item of items) {
+        if (!item || !item.TWComponent) continue;
+        
+        const twComponents = toArray(item.TWComponent);
+        for (const twComponent of twComponents) {
+          if (!twComponent.script) continue;
+          
+          const scripts = toArray(twComponent.script);
+          for (const script of scripts) {
+            if (!script) continue;
+            
+            // Handle both script content as text or CDATA
+            const scriptContent = typeof script === 'string' ? script : (script._ || '');
+            if (scriptContent.trim()) {
+              details.scripts.push({
+                name: (script.$ && script.$.name) || 'Unnamed Script',
+                script: this.cleanJavaScript(scriptContent)
+              });
+            }
+          }
+        }
+      }
+    }
+
+    // Save the extracted details back to the base object
+    baseObject.details = details;
   }
 
   /**
