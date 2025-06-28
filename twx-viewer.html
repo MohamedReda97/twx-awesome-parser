@@ -347,6 +347,134 @@
             opacity: 1;
         }
 
+        /* Search Section Styles */
+        .search-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .search-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 10px 15px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+
+        .search-button {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 0 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .search-button:hover {
+            background: #218838;
+        }
+
+        .search-options {
+            display: flex;
+            gap: 15px;
+            margin-top: 10px;
+        }
+
+        .search-option {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 14px;
+            color: #495057;
+            cursor: pointer;
+        }
+
+        .search-option-input {
+            margin: 0;
+        }
+
+        .search-results {
+            background: white;
+            border: 1px solid #e9ecef;
+            border-radius: 4px;
+            max-height: 400px;
+            overflow-y: auto;
+            padding: 15px;
+        }
+
+        .search-placeholder {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 20px;
+            color: #6c757d;
+            text-align: center;
+        }
+
+        .search-icon {
+            font-size: 32px;
+            margin-bottom: 15px;
+            opacity: 0.7;
+        }
+
+        .search-result-item {
+            padding: 15px;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .search-result-item:last-child {
+            border-bottom: none;
+        }
+
+        .search-result-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .search-result-filename {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .search-result-position {
+            color: #6c757d;
+            font-size: 0.9em;
+        }
+
+        .search-result-snippet {
+            font-family: 'Courier New', monospace;
+            background: #f8f9fa;
+            padding: 8px 12px;
+            border-radius: 4px;
+            margin-top: 8px;
+            font-size: 0.9em;
+            white-space: pre-wrap;
+        }
+
+        .search-result-context {
+            color: #6c757d;
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+
+        .highlight {
+            background-color: #fff3cd;
+            padding: 0 2px;
+            border-radius: 2px;
+            font-weight: 500;
+        }
+
         @media (max-width: 768px) {
             .main-content {
                 flex-direction: column;
@@ -368,19 +496,49 @@
         <div class="header">
             <h1>TWX Artifact Viewer</h1>
             <div class="subtitle">Enhanced Interactive Artifact Browser</div>
-            <div id="project-info" class="project-info" style="margin-top: 15px; opacity: 0.9; font-size: 0.95em;">
-                <span id="project-name">Loading project information...</span>
+        </div>
+        
+        <!-- Search Section -->
+        <div class="search-section">
+            <div class="search-container">
+                <input type="text" id="searchInput" placeholder="Search in XML files..." class="search-input">
+                <button id="searchButton" class="search-button">Search</button>
+                <div class="search-options">
+                    <label class="search-option">
+                        <input type="checkbox" id="matchCase" class="search-option-input">
+                        <span>Match case</span>
+                    </label>
+                    <label class="search-option">
+                        <input type="checkbox" id="wholeWord" class="search-option-input">
+                        <span>Whole word</span>
+                    </label>
+                </div>
+            </div>
+            <div id="searchResults" class="search-results">
+                <!-- Search results will be displayed here -->
+                <div class="search-placeholder">
+                    <div class="search-icon">🔍</div>
+                    <p>Enter a search term to find content in XML files</p>
+                </div>
             </div>
         </div>
 
+        <div id="project-info" class="project-info" style="margin-top: 15px; opacity: 0.9; font-size: 0.95em;">
+                <span id="project-name">Loading project information...</span>
+            </div>
+
+            .group-content.collapsed {
+                max-height: 0;
+                overflow: hidden;
+            }
         <div class="stats-bar">
             <div class="stat-item">
                 <div class="stat-number" id="total-artifacts">-</div>
-                <div class="stat-label">Total Artifacts</div>
+                <div class="stat-label">Artifacts</div>
             </div>
             <div class="stat-item">
                 <div class="stat-number" id="total-types">-</div>
-                <div class="stat-label">Artifact Types</div>
+                <div class="stat-label">Types</div>
             </div>
             <div class="stat-item">
                 <div class="stat-number" id="total-toolkits">-</div>

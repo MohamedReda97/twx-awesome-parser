@@ -11,6 +11,12 @@ class EnhancedTWXViewer {
         this.coachViewModal = null;
         this.cshsModal = null;
         this.cshsInline = null;
+        this.searchResults = [];
+        this.isSearching = false;
+        this.searchOptions = {
+            matchCase: false,
+            wholeWord: false
+        };
         this.init();
     }
 
@@ -25,8 +31,13 @@ class EnhancedTWXViewer {
             // Initialize CSHS inline component
             this.cshsInline = new CSHSDetailsInline();
 
-            await this.loadData();
+            // Setup event listeners before loading data
             this.setupEventListeners();
+            
+            // Show loading state for search
+            this.updateSearchUI('idle');
+            
+            await this.loadData();
             this.renderProjectInfo();
             this.renderStats();
             this.renderTypeFilters();
@@ -35,6 +46,105 @@ class EnhancedTWXViewer {
         } catch (error) {
             this.showError(error);
         }
+    }
+
+    async performSearch() {
+        const deepSearchInput = document.getElementById('searchInput');
+        const searchTerm = deepSearchInput.value.trim();
+        
+        if (!searchTerm) {
+            this.updateSearchUI('idle');
+            return;
+        }
+
+        this.updateSearchUI('searching');
+        this.searchResults = [];
+
+        try {
+            // Build query parameters
+            const params = new URLSearchParams({
+                q: searchTerm,
+                matchCase: this.searchOptions.matchCase,
+                wholeWord: this.searchOptions.wholeWord
+            });
+
+            const response = await fetch(`/api/search?${params}`);
+            
+            if (!response.ok) {
+                throw new Error(`Search failed: ${response.statusText}`);
+            }
+
+            const data = await response.json();
+            this.searchResults = data.results || [];
+            this.updateSearchUI('results');
+        } catch (error) {
+            console.error('Search error:', error);
+            this.updateSearchUI('error', error.message);
+        }
+    }
+
+    updateSearchUI(state, errorMessage = '') {
+        const searchResultsEl = document.getElementById('searchResults');
+        
+        if (!searchResultsEl) return;
+
+        switch (state) {
+            case 'idle':
+                searchResultsEl.innerHTML = `
+                    <div class="search-placeholder">
+                        <div class="search-icon">🔍</div>
+                        <p>Enter a search term to find content in files</p>
+                    </div>`;
+                break;
+                
+            case 'searching':
+                searchResultsEl.innerHTML = `
+                    <div class="search-placeholder">
+                        <div class="search-loading">⏳</div>
+                        <p>Searching...</p>
+                    </div>`;
+                break;
+                
+            case 'results':
+                if (this.searchResults.length === 0) {
+                    searchResultsEl.innerHTML = `
+                        <div class="search-placeholder">
+                            <div class="search-icon">🔍</div>
+                            <p>No results found. Try a different search term.</p>
+                        </div>`;
+                } else {
+                    searchResultsEl.innerHTML = this.searchResults.map(result => `
+                        <div class="search-result-item">
+                            <div class="search-result-header">
+                                <span class="search-result-filename">${result.filename}</span>
+                                <span class="search-result-position">Line ${result.lineNumber}</span>
+                            </div>
+                            <div class="search-result-snippet">
+                                ${this.highlightSearchTerm(result.snippet, deepSearchInput.value.trim())}
+                            </div>
+                            <div class="search-result-context">
+                                ${result.context || ''}
+                            </div>
+                        </div>`
+                    ).join('');
+                }
+                break;
+                
+            case 'error':
+                searchResultsEl.innerHTML = `
+                    <div class="search-placeholder">
+                        <div class="search-error">❌</div>
+                        <p>Error: ${errorMessage || 'Search failed'}</p>
+                    </div>`;
+                break;
+        }
+    }
+
+    highlightSearchTerm(text, term) {
+        if (!term) return text;
+        const escapedTerm = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const regex = new RegExp(`(${escapedTerm})`, 'gi');
+        return text.replace(regex, '<span class="highlight">$1</span>');
     }
 
     async loadData() {
@@ -148,12 +258,42 @@ class EnhancedTWXViewer {
     }
 
     setupEventListeners() {
-        // Search input
-        const searchInput = document.getElementById('search-input');
-        searchInput.addEventListener('input', (e) => {
+        // Search input for artifacts
+        const artifactSearchInput = document.getElementById('search-input');
+        artifactSearchInput.addEventListener('input', (e) => {
             this.searchTerm = e.target.value.toLowerCase();
             this.applyFilters();
         });
+
+        // Deep search functionality
+        const deepSearchInput = document.getElementById('searchInput');
+        const searchButton = document.getElementById('searchButton');
+        const matchCaseCheckbox = document.getElementById('matchCase');
+        const wholeWordCheckbox = document.getElementById('wholeWord');
+
+        if (searchButton) {
+            searchButton.addEventListener('click', () => this.performSearch());
+        }
+
+        if (deepSearchInput) {
+            deepSearchInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    this.performSearch();
+                }
+            });
+        }
+
+        if (matchCaseCheckbox) {
+            matchCaseCheckbox.addEventListener('change', (e) => {
+                this.searchOptions.matchCase = e.target.checked;
+            });
+        }
+
+        if (wholeWordCheckbox) {
+            wholeWordCheckbox.addEventListener('change', (e) => {
+                this.searchOptions.wholeWord = e.target.checked;
+            });
+        }
 
         // View options
         const showDetailsCheckbox = document.getElementById('show-details');
@@ -194,6 +334,10 @@ class EnhancedTWXViewer {
                 this.applyFilters();
             });
         }
+
+        // XML Search functionality
+        // Note: Search input and button event listeners are already set up above
+        // with proper null checks and error handling
     }
 
     renderProjectInfo() {
@@ -469,6 +613,151 @@ class EnhancedTWXViewer {
     hideNoResults() {
         document.getElementById('no-results').style.display = 'none';
         document.getElementById('artifacts-container').style.display = 'block';
+    }
+
+    // Search functionality
+    async performSearch() {
+        const searchInput = document.getElementById('searchInput');
+        const searchTerm = searchInput.value.trim();
+        const matchCase = document.getElementById('matchCase').checked;
+        const wholeWord = document.getElementById('wholeWord').checked;
+
+        if (!searchTerm) {
+            this.updateSearchUI('idle');
+            return;
+        }
+
+        try {
+            this.updateSearchUI('searching');
+            
+            // Build query parameters
+            const params = new URLSearchParams();
+            params.append('q', searchTerm);
+            if (matchCase) params.append('caseSensitive', 'true');
+            if (wholeWord) params.append('wholeWord', 'true');
+            
+            // Make API request
+            const response = await fetch(`/api/search?${params.toString()}`);
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            this.displaySearchResults(data);
+            
+        } catch (error) {
+            console.error('Search error:', error);
+            this.updateSearchUI('error', error.message);
+        }
+    }
+    
+    updateSearchUI(state, errorMessage = '') {
+        const searchResults = document.getElementById('searchResults');
+        
+        switch (state) {
+            case 'idle':
+                searchResults.innerHTML = `
+                    <div class="search-placeholder">
+                        <div class="search-icon">🔍</div>
+                        <p>Enter a search term to find content in XML files</p>
+                    </div>`;
+                break;
+                
+            case 'searching':
+                searchResults.innerHTML = `
+                    <div class="search-placeholder">
+                        <div class="search-loading">⏳</div>
+                        <p>Searching XML files...</p>
+                    </div>`;
+                break;
+                
+            case 'error':
+                searchResults.innerHTML = `
+                    <div class="search-error">
+                        <div class="error-icon">❌</div>
+                        <h4>Search Error</h4>
+                        <p>${errorMessage || 'An error occurred while searching'}</p>
+                        <button onclick="document.querySelector('.search-button').click()">Try Again</button>
+                    </div>`;
+                break;
+        }
+    }
+    
+    displaySearchResults(data) {
+        const searchResults = document.getElementById('searchResults');
+        
+        if (!data.results || data.results.length === 0) {
+            searchResults.innerHTML = `
+                <div class="search-placeholder">
+                    <div class="search-icon">🔍</div>
+                    <p>No results found for "${data.query}"</p>
+                </div>`;
+            return;
+        }
+        
+        // Calculate total matches across all files
+        const totalMatches = data.results.reduce((sum, result) => sum + result.matchCount, 0);
+        
+        let html = `
+            <div class="search-results-header">
+                <h3>Search Results for "${data.query}"</h3>
+                <div class="search-results-count">${totalMatches} matches in ${data.results.length} file${data.results.length !== 1 ? 's' : ''}</div>
+            </div>`;
+            
+        data.results.forEach(result => {
+            const filename = result.file;
+            const objectId = result.path;
+            
+            html += `
+            <div class="search-result-item">
+                <div class="search-result-header">
+                    <div class="search-result-filename">${filename}</div>
+                    <div class="search-result-position">${result.matchCount} match${result.matchCount !== 1 ? 'es' : ''}</div>
+                </div>
+                <div class="search-result-object-id">Path: ${objectId}</div>
+                <div class="search-result-matches">`;
+                
+            // Show first 3 matches, with option to show more
+            const maxVisibleMatches = 3;
+            const matchesToShow = result.matches.slice(0, maxVisibleMatches);
+            const hasMore = result.matches.length > maxVisibleMatches;
+            
+            matchesToShow.forEach(match => {
+                // Truncate long values for display
+                let value = match.value;
+                if (value.length > 200) {
+                    value = value.substring(0, 200) + '...';
+                }
+                
+                // Highlight the search term in the result
+                const searchTerm = data.query.toLowerCase();
+                const highlightedValue = this.escapeHtml(value).replace(
+                    new RegExp(`(${searchTerm})`, 'gi'),
+                    '<span class="highlight">$1</span>'
+                );
+                
+                html += `
+                <div class="search-result-match">
+                    <div class="search-result-path">${match.path}</div>
+                    <div class="search-result-snippet">${highlightedValue}</div>
+                </div>`;
+            });
+            
+            if (hasMore) {
+                const remaining = result.matches.length - maxVisibleMatches;
+                html += `
+                <div class="search-result-more">
+                    + ${remaining} more match${remaining > 1 ? 'es' : ''} in this file
+                </div>`;
+            }
+            
+            html += `
+                </div>
+            </div>`;
+        });
+        
+        searchResults.innerHTML = html;
     }
 }
 
