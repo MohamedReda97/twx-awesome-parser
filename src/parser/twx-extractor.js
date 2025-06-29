@@ -716,38 +716,39 @@ class TWXExtractor {
     for (const item of items) {
       if (!item || !item.TWComponent) continue;
       
-      // Get the item name to use as script name
-      const itemName = item.name ? item.name[0] : 'Unnamed Script';
+      // Get the item name to use as script name (from 'n' element, not 'name')
+      const itemName = item.n || 'Unnamed Script';
       
       // Process each TWComponent
       const twComponents = toArray(item.TWComponent);
       for (const twComponent of twComponents) {
         if (!twComponent || !twComponent.script) continue;
         
-        // Process each script in the TWComponent
-        const scripts = toArray(twComponent.script);
-        for (const script of scripts) {
-          if (!script) continue;
-          
-          // Get script content - handle different possible formats
-          let scriptContent = '';
-          if (script._) scriptContent = script._; // Most common case
-          else if (script._text) scriptContent = script._text;
-          else if (script['#text']) scriptContent = script['#text'];
-          else if (typeof script === 'string') scriptContent = script;
-          
-          scriptContent = scriptContent.trim();
-          if (!scriptContent) continue;
-          
-          // Clean up the script content
-          scriptContent = this.cleanJavaScript(scriptContent);
-          
-          // Add the script with the item name as the script name
-          details.scripts.push({
-            name: itemName,
-            script: scriptContent
-          });
+        // Get script content directly (it's a text node, not an object)
+        let scriptContent = twComponent.script;
+        
+        // Handle if script is wrapped in an object
+        if (typeof scriptContent === 'object' && scriptContent !== null) {
+          if (scriptContent._) scriptContent = scriptContent._;
+          else if (scriptContent._text) scriptContent = scriptContent._text;
+          else if (scriptContent['#text']) scriptContent = scriptContent['#text'];
+          else scriptContent = '';
         }
+        
+        // Ensure it's a string
+        if (typeof scriptContent !== 'string') continue;
+        
+        scriptContent = scriptContent.trim();
+        if (!scriptContent) continue;
+        
+        // Clean up the script content
+        scriptContent = this.cleanJavaScript(scriptContent);
+        
+        // Add the script with the item name as the script name
+        details.scripts.push({
+          name: itemName,
+          script: scriptContent
+        });
       }
     }
 

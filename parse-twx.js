@@ -100,7 +100,20 @@ async function parseTWXFile(twxPath, outputDir) {
   const startTime = Date.now()
   
   try {
-    const results = await parser.parseTWX(twxPath)
+    const results = await parser.parseTWX(twxPath, { includeObjects: true });
+
+    // --- TEMPORARY VERIFICATION ---
+    const processes = results.objects.filter(obj => obj.type === 'process');
+    let scriptsFound = 0;
+    processes.forEach(p => {
+      if (p.details && p.details.scripts && p.details.scripts.length > 0) {
+        scriptsFound += p.details.scripts.length;
+        console.log(`[Verification] Found ${p.details.scripts.length} scripts in process: ${p.name}`);
+      }
+    });
+    console.log(`[Verification] Total scripts found across all processes: ${scriptsFound}`);
+    // --- END TEMPORARY VERIFICATION ---
+    
     const endTime = Date.now()
     const duration = ((endTime - startTime) / 1000).toFixed(2)
     

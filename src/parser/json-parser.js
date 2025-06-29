@@ -25,7 +25,7 @@ class JSONParser {
   /**
    * Parse a TWX file and generate JSON output files
    * @param {string} twxFilePath - Path to the TWX file
-   * @returns {Promise<Object>} Parsing results summary
+   * @returns {Promise<Object>} Parsing return { summary, objects: this.objects }
    */
   async parseTWX(twxFilePath) {
     try {
@@ -40,7 +40,7 @@ class JSONParser {
       console.log(`TWX parsing completed successfully`)
       console.log(`Generated ${results.filesGenerated.length} output files`)
       
-      return results
+      return { ...results, objects: extractedData.objects }
     } catch (error) {
       console.error('Error parsing TWX file:', error)
       throw error

@@ -4,222 +4,230 @@ const { TYPES, SUBTYPES: { Process: PROCESS_TYPES }, OBJECT_DEPENDENCY_TYPES } =
 const Performance = require('../../utils/Performance')
 
 const parseProcess = Performance.makeMeasurable(async (databaseName, jsonData) => {
-  // only parse the object if it hasn't been added yet
-  const process = jsonData.teamworks.process[0]
-  const versionId = process.versionId[0]
+  const process = jsonData.teamworks.process[0];
+  const versionId = process.versionId[0];
+
+  const item = await Registry.ObjectVersion.getById(databaseName, versionId);
+
+  let subType = PROCESS_TYPES.GeneralSystemService;
+  if (process.processType && !ParseUtils.isNullXML(process.processType[0])) {
+    subType = process.processType[0];
+  }
+
   const result = {
-    register: false,
-    versionId
+    register: !item,
+    id: process.$.id,
+    versionId: versionId,
+    name: process.$.name,
+    description: ParseUtils.isNullXML(process.description[0]) ? null : process.description[0],
+    type: TYPES.Process,
+    subType: subType,
+    isExposed: false,
+    dependencies: [],
+    details: {},
+  };
+
+  if (subType === PROCESS_TYPES.AjaxService || !ParseUtils.isNullXML(process.exposedType[0])) {
+    result.isExposed = true;
   }
-  const item = await Registry.ObjectVersion.getById(databaseName, versionId)
-  if (!item) {
-    let subType = PROCESS_TYPES.GeneralSystemService
-    if (process.processType && !ParseUtils.isNullXML(process.processType[0])) {
-      subType = process.processType[0]
-    }
 
-    result.register = true
-    result.id = process.$.id
-    result.name = process.$.name
-    result.description = ParseUtils.isNullXML(process.description[0]) ? null : process.description[0]
-    result.type = TYPES.Process
-    result.subType = subType
-    result.isExposed = false
-    result.dependencies = []
+  // Exposed to Start
+  if (process.participantRef && !ParseUtils.isNullXML(process.participantRef[0])) {
+    result.dependencies.push({
+      childReference: process.participantRef[0],
+      dependencyType: OBJECT_DEPENDENCY_TYPES.Process.ExposedTo,
+    });
+    result.isExposed = true;
+  }
 
-    if (subType === PROCESS_TYPES.AjaxService || !ParseUtils.isNullXML(process.exposedType[0])) {
-      result.isExposed = true
-    }
-
-    // Exposed to Start
-    if (process.participantRef && !ParseUtils.isNullXML(process.participantRef[0])) {
-      result.dependencies.push({
-        childReference: process.participantRef[0],
-        dependencyType: OBJECT_DEPENDENCY_TYPES.Process.ExposedTo
-      })
-      result.isExposed = true
-    }
-
-    // Input and Output Parameters
-    if (process.processParameter) {
-      for (let i = 0; i < process.processParameter.length; i++) {
-        if (!ParseUtils.isNullXML(process.processParameter[i]) && process.processParameter[i].classId && !ParseUtils.isNullXML(process.processParameter[i].classId[0])) {
-          result.dependencies.push({
-            childReference: process.processParameter[i].classId[0],
-            dependencyType: OBJECT_DEPENDENCY_TYPES.Process.Binding,
-            dependencyName: process.processParameter[i].$.name
-          })
-        }
+  // Input and Output Parameters
+  if (process.processParameter) {
+    for (let i = 0; i < process.processParameter.length; i++) {
+      if (!ParseUtils.isNullXML(process.processParameter[i]) && process.processParameter[i].classId && !ParseUtils.isNullXML(process.processParameter[i].classId[0])) {
+        result.dependencies.push({
+          childReference: process.processParameter[i].classId[0],
+          dependencyType: OBJECT_DEPENDENCY_TYPES.Process.Binding,
+          dependencyName: process.processParameter[i].$.name,
+        });
       }
-    }
-
-    // Private Variables
-    if (process.processVariable) {
-      for (let i = 0; i < process.processVariable.length; i++) {
-        if (!ParseUtils.isNullXML(process.processVariable[i]) && process.processVariable[i].classId && !ParseUtils.isNullXML(process.processVariable[i].classId[0])) {
-          result.dependencies.push({
-            childReference: process.processVariable[i].classId[0],
-            dependencyType: OBJECT_DEPENDENCY_TYPES.Process.Variable,
-            dependencyName: process.processVariable[i].$.name
-          })
-        }
-      }
-    }
-
-    // EPVs
-    if (process.EPV_PROCESS_LINK) {
-      for (let i = 0; i < process.EPV_PROCESS_LINK.length; i++) {
-        if (!ParseUtils.isNullXML(process.EPV_PROCESS_LINK[i]) && process.EPV_PROCESS_LINK[i].epvId && !ParseUtils.isNullXML(process.EPV_PROCESS_LINK[i].epvId[0])) {
-          result.dependencies.push({
-            childReference: process.EPV_PROCESS_LINK[i].epvId[0],
-            dependencyType: OBJECT_DEPENDENCY_TYPES.Process.EPV
-          })
-        }
-      }
-    }
-
-    // Resources
-    if (process.RESOURCE_PROCESS_LINK) {
-      for (let i = 0; i < process.RESOURCE_PROCESS_LINK.length; i++) {
-        const item = process.RESOURCE_PROCESS_LINK[i]
-        if (!ParseUtils.isNullXML(item) && item.resourceBundleGroupId && !ParseUtils.isNullXML(item.resourceBundleGroupId[0])) {
-          result.dependencies.push({
-            childReference: item.resourceBundleGroupId[0],
-            dependencyType: OBJECT_DEPENDENCY_TYPES.Process.Resource
-          })
-        }
-      }
-    }
-
-    // UCAs
-    const ucas = ParseUtils.xpath(process, '//ucaRef')
-    if (ucas) {
-      ucas.map(ucaId => {
-        if (!ParseUtils.isNullXML(ucaId)) {
-          result.dependencies.push({
-            childReference: ucaId,
-            dependencyType: OBJECT_DEPENDENCY_TYPES.Process.UCA
-          })
-        }
-      })
-    }
-
-    // Subprocesses
-    const subProcesses = ParseUtils.xpath(process, '//attachedProcessRef')
-    if (subProcesses) {
-      subProcesses.map(subProcessId => {
-        if (!ParseUtils.isNullXML(subProcessId)) {
-          result.dependencies.push({
-            childReference: subProcessId,
-            dependencyType: OBJECT_DEPENDENCY_TYPES.Process.AttachedService
-          })
-        }
-      })
-    }
-
-    // Coaches
-    const coaches = ParseUtils.xpath(process, '//TWComponent/layoutData')
-    if (coaches) {
-      for (let i = 0; i < coaches.length; i++) {
-        const layoutString = coaches[i]
-        if (!ParseUtils.isNullXML(layoutString)) {
-          const jsonLayout = await ParseUtils.parseXML(layoutString, 'layout')
-          const viewIds = ParseUtils.xpath(jsonLayout, '//viewUUID')
-          if (viewIds) {
-            viewIds.map(viewId => {
-              result.dependencies.push({
-                childReference: viewId,
-                dependencyType: OBJECT_DEPENDENCY_TYPES.Process.CoachView
-              })
-            })
-          }
-        }
-      }
-    }
-
-    // Coach Flow
-    if (process.coachflow) {
-      for (let i = 0; i < process.coachflow.length; i++) {
-        if (!ParseUtils.isNullXML(process.coachflow[i])) {
-          const viewIds = ParseUtils.xpath(process.coachflow[i], '//viewUUID')
-          if (viewIds) {
-            viewIds.map(viewId => {
-              result.dependencies.push({
-                childReference: viewId,
-                dependencyType: OBJECT_DEPENDENCY_TYPES.Process.CoachView
-              })
-            })
-          }
-        }
-      }
-    }
-
-    // CSHS-specific parsing
-    if (subType === PROCESS_TYPES.ClientSideHumanService) {
-      result.details = await parseCSHSDetails(process)
-    }
-    
-    // Extract scripts from process
-    const scripts = extractScriptsFromProcess(process);
-    if (scripts.length > 0) {
-      result.scripts = scripts;
     }
   }
 
-  return result
+  // Private Variables
+  if (process.processVariable) {
+    for (let i = 0; i < process.processVariable.length; i++) {
+      if (!ParseUtils.isNullXML(process.processVariable[i]) && process.processVariable[i].classId && !ParseUtils.isNullXML(process.processVariable[i].classId[0])) {
+        result.dependencies.push({
+          childReference: process.processVariable[i].classId[0],
+          dependencyType: OBJECT_DEPENDENCY_TYPES.Process.Variable,
+          dependencyName: process.processVariable[i].$.name,
+        });
+      }
+    }
+  }
+
+  // EPVs
+  if (process.EPV_PROCESS_LINK) {
+    for (let i = 0; i < process.EPV_PROCESS_LINK.length; i++) {
+      if (!ParseUtils.isNullXML(process.EPV_PROCESS_LINK[i]) && process.EPV_PROCESS_LINK[i].epvId && !ParseUtils.isNullXML(process.EPV_PROCESS_LINK[i].epvId[0])) {
+        result.dependencies.push({
+          childReference: process.EPV_PROCESS_LINK[i].epvId[0],
+          dependencyType: OBJECT_DEPENDENCY_TYPES.Process.EPV,
+        });
+      }
+    }
+  }
+
+  // Resources
+  if (process.RESOURCE_PROCESS_LINK) {
+    for (let i = 0; i < process.RESOURCE_PROCESS_LINK.length; i++) {
+      const item = process.RESOURCE_PROCESS_LINK[i];
+      if (!ParseUtils.isNullXML(item) && item.resourceBundleGroupId && !ParseUtils.isNullXML(item.resourceBundleGroupId[0])) {
+        result.dependencies.push({
+          childReference: item.resourceBundleGroupId[0],
+          dependencyType: OBJECT_DEPENDENCY_TYPES.Process.Resource,
+        });
+      }
+    }
+  }
+
+  // UCAs
+  const ucas = ParseUtils.xpath(process, '//ucaRef');
+  if (ucas) {
+    ucas.map((ucaId) => {
+      if (!ParseUtils.isNullXML(ucaId)) {
+        result.dependencies.push({
+          childReference: ucaId,
+          dependencyType: OBJECT_DEPENDENCY_TYPES.Process.UCA,
+        });
+      }
+    });
+  }
+
+  // Subprocesses
+  const subProcesses = ParseUtils.xpath(process, '//attachedProcessRef');
+  if (subProcesses) {
+    subProcesses.map((subProcessId) => {
+      if (!ParseUtils.isNullXML(subProcessId)) {
+        result.dependencies.push({
+          childReference: subProcessId,
+          dependencyType: OBJECT_DEPENDENCY_TYPES.Process.AttachedService,
+        });
+      }
+    });
+  }
+
+  // Coaches
+  const coaches = ParseUtils.xpath(process, '//TWComponent/layoutData');
+  if (coaches) {
+    for (let i = 0; i < coaches.length; i++) {
+      const layoutString = coaches[i];
+      if (!ParseUtils.isNullXML(layoutString)) {
+        const jsonLayout = await ParseUtils.parseXML(layoutString, 'layout');
+        const viewIds = ParseUtils.xpath(jsonLayout, '//viewUUID');
+        if (viewIds) {
+          viewIds.map((viewId) => {
+            result.dependencies.push({
+              childReference: viewId,
+              dependencyType: OBJECT_DEPENDENCY_TYPES.Process.CoachView,
+            });
+          });
+        }
+      }
+    }
+  }
+
+  // Coach Flow
+  if (process.coachflow) {
+    for (let i = 0; i < process.coachflow.length; i++) {
+      if (!ParseUtils.isNullXML(process.coachflow[i])) {
+        const viewIds = ParseUtils.xpath(process.coachflow[i], '//viewUUID');
+        if (viewIds) {
+          viewIds.map((viewId) => {
+            result.dependencies.push({
+              childReference: viewId,
+              dependencyType: OBJECT_DEPENDENCY_TYPES.Process.CoachView,
+            });
+          });
+        }
+      }
+    }
+  }
+
+  // CSHS-specific parsing
+  if (subType === PROCESS_TYPES.ClientSideHumanService) {
+    const cshsDetails = await parseCSHSDetails(process);
+    Object.assign(result.details, cshsDetails);
+  }
+
+  // Extract scripts from process
+  const scripts = extractScriptsFromProcess(process);
+  if (scripts.length > 0) {
+    result.details.scripts = scripts;
+  }
+
+  return result;
 }, 'parseProcess')
 
 /**
- * Extract scripts from process items
+ * Extract scripts from process items and jsonData
  * @param {Object} process - The process object from XML
  * @returns {Array} Array of script objects with name and content
  */
 function extractScriptsFromProcess(process) {
   const scripts = [];
-  
-  // Ensure process has items and it's an array
-  if (!process.item || !Array.isArray(process.item)) {
-    return scripts;
-  }
-  
-  // Process each item
-  process.item.forEach(item => {
-    // Skip if item is null or doesn't have TWComponent
-    if (ParseUtils.isNullXML(item) || !item.TWComponent) {
-      return;
-    }
-    
-    // Get the script name from item name
-    const scriptName = item.name?.[0] || 'unnamed_script';
-    
-    // Handle both single TWComponent and array of TWComponents
-    const components = Array.isArray(item.TWComponent) ? item.TWComponent : [item.TWComponent];
-    
-    // Process each TWComponent
-    components.forEach(component => {
-      // Skip if component is null or doesn't have script
-      if (ParseUtils.isNullXML(component) || !component.script) {
-        return;
-      }
-      
-      // Get script content (handle both string and array cases)
-      const scriptContent = Array.isArray(component.script) ? 
-        component.script[0] : 
-        component.script;
-      
-      // Skip if script content is empty or null
-      if (!scriptContent || ParseUtils.isNullXML(scriptContent)) {
-        return;
-      }
-      
-      // Add script to results
-      scripts.push({
-        name: scriptName,
-        content: scriptContent
+
+  // 1. Extract from <item> -> <TWComponent> -> <script>
+  if (process.item && Array.isArray(process.item)) {
+    process.item.forEach(item => {
+      if (ParseUtils.isNullXML(item) || !item.TWComponent) return;
+
+      const components = Array.isArray(item.TWComponent) ? item.TWComponent : [item.TWComponent];
+      components.forEach(component => {
+        if (ParseUtils.isNullXML(component) || !component.script || ParseUtils.isNullXML(component.script[0])) return;
+
+        const scriptName = item.name?.[0] || 'unnamed_script_from_item';
+        const scriptContent = component.script[0];
+
+        if (scriptContent && typeof scriptContent === 'string') {
+          scripts.push({
+            name: scriptName,
+            content: scriptContent.trim()
+          });
+        }
       });
     });
-  });
-  
+  }
+
+  // 2. Extract from <jsonData>
+  if (process.jsonData && !ParseUtils.isNullXML(process.jsonData[0])) {
+    try {
+      const jsonData = JSON.parse(process.jsonData[0]);
+      const flowElements = jsonData?.rootElement?.[0]?.flowElement;
+
+      if (flowElements && Array.isArray(flowElements)) {
+        flowElements.forEach(element => {
+          // Script tasks
+          if (element.declaredType === 'scriptTask' && element.script?.content?.[0]) {
+            scripts.push({
+              name: element.name || 'unnamed_script_task',
+              content: element.script.content[0].trim()
+            });
+          }
+          // Pre-assignment scripts
+          if (element.extensionElements?.preAssignmentScript?.[0]?.trim()) {
+            scripts.push({
+              name: `${element.name || 'Unnamed'} (pre-assignment)`,
+              content: element.extensionElements.preAssignmentScript[0].trim()
+            });
+          }
+        });
+      }
+    } catch (error) {
+      console.warn(`[Script Extraction] Could not parse jsonData for process ${process.$.name}: ${error.message}`);
+    }
+  }
+
   return scripts;
 }
 
