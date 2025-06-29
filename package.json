@@ -9,7 +9,9 @@
     "docs": "jsdoc2md src/**/*.js > api.md",
     "report-coverage": "codecov",
     "semantic-release": "semantic-release",
-    "commit": "git-cz"
+    "commit": "git-cz",
+    "build": "pkg . --out-path dist",
+    "start": "node app.js"
   },
   "repository": {
     "type": "git",
@@ -52,6 +54,7 @@
     "jsdoc-to-markdown": "^5.0.2",
     "mocha": "^6.2.2",
     "nyc": "^14.1.1",
+    "pkg": "^5.8.1",
     "resnap": "^1.0.1",
     "semantic-release": "^15.13.28",
     "sinon": "^7.5.0",
@@ -71,5 +74,26 @@
     "commitizen": {
       "path": "./node_modules/cz-conventional-changelog"
     }
+  },
+  "bin": {
+    "twx-parser": "./app.js"
+  },
+  "pkg": {
+    "scripts": [
+      "app.js",
+      "src/**/*.js"
+    ],
+    "assets": [
+      "*.html",
+      "*.css", 
+      "*.js",
+      "output/**/*",
+      "TWX example/**/*",
+      "test-xml-files/**/*"
+    ],
+    "targets": [
+      "node18-win-x64"
+    ],
+    "outputPath": "dist"
   }
 }

@@ -226,4 +226,15 @@ class JSONParser {
   }
 }
 
-module.exports = JSONParser
+/**
+ * Convenience function to create JSON output from extracted data
+ * @param {Object} extractedData - Data extracted from TWX file
+ * @param {string} outputDir - Output directory path
+ * @returns {Promise<Object>} Generation results
+ */
+async function createJSONOutput(extractedData, outputDir = './output') {
+  const parser = new JSONParser(outputDir);
+  return await parser.generateOutputFiles(extractedData);
+}
+
+module.exports = { JSONParser, createJSONOutput };

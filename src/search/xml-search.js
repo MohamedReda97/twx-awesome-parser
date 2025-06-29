@@ -135,4 +135,16 @@ class XMLSearch {
     }
 }
 
-module.exports = XMLSearch;
+/**
+ * Convenience function to search for text in XML files
+ * @param {string} searchTerm - The text to search for
+ * @param {string} directory - Directory containing XML files
+ * @param {Object} options - Search options
+ * @returns {Promise<Array>} Array of search results
+ */
+async function searchXMLFiles(searchTerm, directory, options = {}) {
+    const searcher = new XMLSearch();
+    return await searcher.searchInXMLFiles(searchTerm, directory, options);
+}
+
+module.exports = { XMLSearch, searchXMLFiles };
