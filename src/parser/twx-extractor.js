@@ -716,8 +716,8 @@ class TWXExtractor {
     for (const item of items) {
       if (!item || !item.TWComponent) continue;
       
-      // Get the item name to use as script name (from 'n' element, not 'name')
-      const itemName = item.n || 'Unnamed Script';
+      // Get the item name to use as script name (from 'name' element)
+      const itemName = item.name || 'Unnamed Script';
       
       // Process each TWComponent
       const twComponents = toArray(item.TWComponent);
