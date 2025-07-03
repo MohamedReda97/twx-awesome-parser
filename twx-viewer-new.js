@@ -613,25 +613,79 @@ function generateElementsDisplay(elements) {
     
     if (elements.scriptTasks && elements.scriptTasks.length > 0) {
         html += '<h4>Script Tasks</h4>';
-        elements.scriptTasks.forEach(task => {
-            html += `<div class="object-item">
-                <div class="object-name">${task.name}</div>
-                <div class="object-meta">ID: ${task.id}</div>
-            </div>`;
+        elements.scriptTasks.forEach((task, index) => {
+            html += generateElementScriptDisplay(task, `script-task-${index}`, 'Script Task');
         });
     }
     
     if (elements.formTasks && elements.formTasks.length > 0) {
         html += '<h4>Form Tasks</h4>';
-        elements.formTasks.forEach(task => {
-            html += `<div class="object-item">
-                <div class="object-name">${task.name}</div>
-                <div class="object-meta">ID: ${task.id}</div>
-            </div>`;
+        elements.formTasks.forEach((task, index) => {
+            html += generateElementScriptDisplay(task, `form-task-${index}`, 'Form Task');
+        });
+    }
+    
+    if (elements.callActivities && elements.callActivities.length > 0) {
+        html += '<h4>Call Activities</h4>';
+        elements.callActivities.forEach((activity, index) => {
+            html += generateElementScriptDisplay(activity, `call-activity-${index}`, 'Call Activity');
         });
     }
     
     return html || '<p>No process elements found</p>';
+}
+
+/**
+ * Generate expandable script display for process elements
+ */
+function generateElementScriptDisplay(element, elementId, elementType) {
+    const hasScripts = (element.preScript && element.preScript.trim()) || 
+                      (element.postScript && element.postScript.trim()) ||
+                      (element.script && element.script.trim());
+    
+    if (!hasScripts) {
+        // No scripts - show as simple item
+        return `
+            <div class="object-item">
+                <div class="object-name">${element.name || 'Unnamed'}</div>
+                <div class="object-meta">ID: ${element.id} | Type: ${elementType}</div>
+            </div>
+        `;
+    }
+    
+    // Has scripts - show as expandable
+    return `
+        <div class="script-detail-section">
+            <div class="script-detail-header" onclick="toggleScriptSection('${elementId}')">
+                <span class="script-detail-title">⚙️ ${escapeHtml(element.name || 'Unnamed')} (${elementType})</span>
+                <span class="script-toggle" id="${elementId}-toggle">▼</span>
+            </div>
+            <div class="script-detail-content" id="${elementId}">
+                <div class="element-info">
+                    <p><strong>ID:</strong> ${element.id}</p>
+                    <p><strong>Type:</strong> ${elementType}</p>
+                </div>
+                ${element.script && element.script.trim() ? `
+                    <div class="script-section">
+                        <h5>Main Script:</h5>
+                        <div class="code-block">${escapeHtml(element.script.replace(/\r\r\n/g, '\n').replace(/\r\n/g, '\n').replace(/\r/g, '\n'))}</div>
+                    </div>
+                ` : ''}
+                ${element.preScript && element.preScript.trim() ? `
+                    <div class="script-section">
+                        <h5>Pre Script:</h5>
+                        <div class="code-block">${escapeHtml(element.preScript.replace(/\r\r\n/g, '\n').replace(/\r\n/g, '\n').replace(/\r/g, '\n'))}</div>
+                    </div>
+                ` : ''}
+                ${element.postScript && element.postScript.trim() ? `
+                    <div class="script-section">
+                        <h5>Post Script:</h5>
+                        <div class="code-block">${escapeHtml(element.postScript.replace(/\r\r\n/g, '\n').replace(/\r\n/g, '\n').replace(/\r/g, '\n'))}</div>
+                    </div>
+                ` : ''}
+            </div>
+        </div>
+    `;
 }
 
 /**
