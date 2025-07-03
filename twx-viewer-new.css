@@ -247,17 +247,20 @@ body {
 
 .object-types-list {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 1rem;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 0.75rem;
 }
 
 .object-type-card {
     background: #f8f9fa;
     border: 1px solid #dee2e6;
     border-radius: 6px;
-    padding: 1rem;
+    padding: 0.75rem;
     cursor: pointer;
     transition: all 0.2s ease;
+    min-height: 60px;
+    display: flex;
+    align-items: center;
 }
 
 .object-type-card:hover {
@@ -273,14 +276,15 @@ body {
 
 .object-type-header {
     display: flex;
-    justify-content: between;
+    justify-content: space-between;
     align-items: center;
-    margin-bottom: 0.5rem;
+    width: 100%;
 }
 
 .object-type-name {
     font-weight: 600;
     color: #495057;
+    font-size: 0.95rem;
 }
 
 .object-count-badge {
@@ -288,13 +292,8 @@ body {
     color: white;
     padding: 0.2rem 0.6rem;
     border-radius: 12px;
-    font-size: 0.8rem;
+    font-size: 0.75rem;
     margin-left: auto;
-}
-
-.object-type-description {
-    color: #6c757d;
-    font-size: 0.9rem;
 }
 
 /* Objects List Styles */
@@ -533,6 +532,96 @@ body {
 .variables-table th {
     background: #f8f9fa;
     font-weight: 600;
+}
+
+/* Variable Boxes Layout */
+.variables-boxes {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-top: 0.5rem;
+}
+
+.variable-type-section {
+    margin-bottom: 1rem;
+}
+
+.variable-type-title {
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: #495057;
+    font-size: 1rem;
+}
+
+.variable-boxes-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.variable-box {
+    display: inline-flex;
+    align-items: center;
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    padding: 0.4rem 0.6rem;
+    font-size: 0.85rem;
+    position: relative;
+    min-width: 80px;
+    max-width: 200px;
+}
+
+.variable-box .variable-name {
+    margin: 0 0.3rem;
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.variable-box .default-indicator {
+    width: 12px;
+    height: 12px;
+    border: 1px solid #6c757d;
+    border-radius: 2px;
+    margin-right: 0.3rem;
+    background: transparent;
+    flex-shrink: 0;
+}
+
+.variable-box .default-indicator.has-default {
+    background: #28a745;
+    border-color: #28a745;
+}
+
+.variable-box .default-indicator.has-default::after {
+    content: '✓';
+    color: white;
+    font-size: 8px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+}
+
+.variable-box .direction-arrow {
+    font-size: 0.9rem;
+    margin-left: 0.3rem;
+    color: #6c757d;
+    flex-shrink: 0;
+}
+
+.variable-box .direction-arrow.input {
+    color: #007bff;
+}
+
+.variable-box .direction-arrow.output {
+    color: #28a745;
+}
+
+.variable-box .direction-arrow.both {
+    color: #6f42c1;
 }
 
 /* Responsive Design */

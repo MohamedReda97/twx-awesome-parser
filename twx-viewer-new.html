@@ -43,6 +43,33 @@
 
         <!-- Main Content Area -->
         <main class="main-content">
+            <!-- Deep Search Section -->
+            <section class="deep-search">
+                <div class="collapsible-panel">
+                    <div class="panel-header" onclick="togglePanel('search-panel')">
+                        <span class="panel-title">🔍 Deep Search</span>
+                        <span class="panel-toggle" id="search-toggle">▼</span>
+                    </div>
+                    <div class="panel-content" id="search-panel">
+                        <div class="search-controls">
+                            <input 
+                                type="text" 
+                                id="search-input" 
+                                placeholder="Enter search term (e.g., variable name, function name, text content...)"
+                                onkeyup="handleSearchKeyup(event)"
+                            >
+                            <button onclick="performSearch()" id="search-button">Search</button>
+                            <button onclick="clearSearch()" id="clear-search-button">Clear</button>
+                        </div>
+                        
+                        <div class="search-results" id="search-results" style="display: none;">
+                            <div class="search-info" id="search-info"></div>
+                            <div class="search-results-list" id="search-results-list"></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
             <!-- Object Browser Section -->
             <section class="object-browser">
                 <div class="collapsible-panel">
@@ -75,33 +102,6 @@
                     </div>
                     <div class="panel-content" id="object-details-content">
                         <div class="object-details" id="object-details"></div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Deep Search Section -->
-            <section class="deep-search">
-                <div class="collapsible-panel">
-                    <div class="panel-header" onclick="togglePanel('search-panel')">
-                        <span class="panel-title">🔍 Deep Search</span>
-                        <span class="panel-toggle" id="search-toggle">▼</span>
-                    </div>
-                    <div class="panel-content" id="search-panel">
-                        <div class="search-controls">
-                            <input 
-                                type="text" 
-                                id="search-input" 
-                                placeholder="Enter search term (e.g., variable name, function name, text content...)"
-                                onkeyup="handleSearchKeyup(event)"
-                            >
-                            <button onclick="performSearch()" id="search-button">Search</button>
-                            <button onclick="clearSearch()" id="clear-search-button">Clear</button>
-                        </div>
-                        
-                        <div class="search-results" id="search-results" style="display: none;">
-                            <div class="search-info" id="search-info"></div>
-                            <div class="search-results-list" id="search-results-list"></div>
-                        </div>
                     </div>
                 </div>
             </section>

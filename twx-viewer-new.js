@@ -202,27 +202,37 @@ function displayObjectTypes() {
     // Clear existing content
     container.innerHTML = '';
     
-    // Create type cards
-    Object.keys(currentObjects).forEach(type => {
-        const objectData = currentObjects[type];
-        const count = objectData.objects ? objectData.objects.length : 0;
-        
-        const card = document.createElement('div');
-        card.className = 'object-type-card';
-        card.onclick = () => selectObjectType(type);
-        
-        card.innerHTML = `
-            <div class="object-type-header">
-                <span class="object-type-name">${getDisplayName(type)}</span>
-                <span class="object-count-badge">${count}</span>
-            </div>
-            <div class="object-type-description">
-                ${getTypeDescription(type)}
-            </div>
-        `;
-        
-        container.appendChild(card);
-    });
+    // Define the allowed object types to display
+    const allowedTypes = [
+        'coach-view',
+        'cshs', 
+        'managed-asset',
+        'participant',
+        'process',
+        'business-process-definition'
+    ];
+    
+    // Filter and create type cards only for allowed types
+    Object.keys(currentObjects)
+        .filter(type => allowedTypes.includes(type))
+        .forEach(type => {
+            const objectData = currentObjects[type];
+            const count = objectData.objects ? objectData.objects.length : 0;
+            
+            const card = document.createElement('div');
+            card.className = 'object-type-card';
+            card.onclick = () => selectObjectType(type);
+            
+            // Smaller boxes without description
+            card.innerHTML = `
+                <div class="object-type-header">
+                    <span class="object-type-name">${getDisplayName(type)}</span>
+                    <span class="object-count-badge">${count}</span>
+                </div>
+            `;
+            
+            container.appendChild(card);
+        });
 }
 
 /**
@@ -324,7 +334,7 @@ function displayObjectDetails(object) {
     // Type-specific details
     if (object.details) {
         if (object.details.variables) {
-            const variablesSection = createDetailSection('Variables', generateVariablesDisplay(object.details.variables));
+            const variablesSection = createDetailSection('Variables', generateVariablesDisplay(object.details.variables, selectedObjectType));
             container.appendChild(variablesSection);
         }
         
@@ -400,7 +410,13 @@ function generateBasicInfo(object) {
 /**
  * Generate variables display
  */
-function generateVariablesDisplay(variables) {
+function generateVariablesDisplay(variables, objectType) {
+    // Use box layout for CSHS and Services (process) types
+    if (objectType === 'cshs' || objectType === 'process') {
+        return generateVariablesBoxDisplay(variables);
+    }
+    
+    // Use table layout for other types
     let html = '';
     
     if (variables.input && variables.input.length > 0) {
@@ -422,24 +438,80 @@ function generateVariablesDisplay(variables) {
 }
 
 /**
- * Generate variables table
+ * Generate variables box display for CSHS and Services
  */
-function generateVariablesTable(variables) {
-    let html = '<table class="variables-table"><tr><th>Name</th><th>Type</th><th>Has Default</th><th>Description</th></tr>';
+function generateVariablesBoxDisplay(variables) {
+    let html = '<div class="variables-boxes">';
+    
+    if (variables.input && variables.input.length > 0) {
+        html += generateVariableTypeSection('Input Variables', variables.input, 'input');
+    }
+    
+    if (variables.output && variables.output.length > 0) {
+        html += generateVariableTypeSection('Output Variables', variables.output, 'output');
+    }
+    
+    if (variables.private && variables.private.length > 0) {
+        html += generateVariableTypeSection('Private Variables', variables.private, 'private');
+    }
+    
+    html += '</div>';
+    return html || '<p>No variables found</p>';
+}
+
+/**
+ * Generate a variable type section with boxes
+ */
+function generateVariableTypeSection(title, variables, direction) {
+    let html = `
+        <div class="variable-type-section">
+            <div class="variable-type-title">${title}</div>
+            <div class="variable-boxes-container">
+    `;
     
     variables.forEach(variable => {
-        html += `
-            <tr>
-                <td>${variable.name}</td>
-                <td>${variable.type || 'String'}</td>
-                <td>${variable.hasDefault ? 'Yes' : 'No'}</td>
-                <td>${variable.description || 'N/A'}</td>
-            </tr>
-        `;
+        html += generateVariableBox(variable, direction);
     });
     
-    html += '</table>';
+    html += '</div></div>';
     return html;
+}
+
+/**
+ * Generate a single variable box
+ */
+function generateVariableBox(variable, direction) {
+    const hasDefault = variable.hasDefault || false;
+    const variableName = variable.name || 'unnamed';
+    
+    // Determine arrow based on direction
+    let arrow = '';
+    let arrowClass = '';
+    switch (direction) {
+        case 'input':
+            arrow = '↑';
+            arrowClass = 'input';
+            break;
+        case 'output':
+            arrow = '↓';
+            arrowClass = 'output';
+            break;
+        case 'private':
+            arrow = '↕';
+            arrowClass = 'both';
+            break;
+        default:
+            arrow = '•';
+            arrowClass = '';
+    }
+    
+    return `
+        <div class="variable-box" title="${variable.description || 'No description'}">
+            <div class="default-indicator ${hasDefault ? 'has-default' : ''}"></div>
+            <span class="variable-name">${variableName}</span>
+            <span class="direction-arrow ${arrowClass}">${arrow}</span>
+        </div>
+    `;
 }
 
 /**
@@ -673,15 +745,12 @@ function updateObjectCount() {
 
 function getDisplayName(type) {
     const names = {
-        'process': 'Processes',
-        'coachView': 'Coach Views',
+        'process': 'Services',  // Changed from 'Processes' to 'Services'
+        'coach-view': 'Coach Views',
         'cshs': 'CSHS',
         'business-process-definition': 'Business Process Definitions',
-        'business-object': 'Business Objects',
         'participant': 'Participants',
-        'environment-variables': 'Environment Variables',
-        'managed-asset': 'Managed Assets',
-        'resource-bundle': 'Resource Bundles'
+        'managed-asset': 'Managed Assets'
     };
     
     return names[type] || type.charAt(0).toUpperCase() + type.slice(1);
