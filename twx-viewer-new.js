@@ -166,12 +166,41 @@ async function loadObjectData() {
     try {
         updateStatus('Loading object data...');
         
+        // For testing purposes, load from static files
+        // Comment this section and uncomment the API section when server is available
+        const files = [
+            'objects-coach-view.json',
+            'objects-cshs.json', 
+            'objects-managed-asset.json',
+            'objects-participant.json',
+            'objects-process.json',
+            'objects-business-process-definition.json'
+        ];
+        
+        currentObjects = {};
+        
+        for (const file of files) {
+            try {
+                const response = await fetch(`./output/${file}`);
+                if (response.ok) {
+                    const data = await response.json();
+                    const key = file.replace('objects-', '').replace('.json', '');
+                    currentObjects[key] = data;
+                }
+            } catch (err) {
+                console.log(`Could not load ${file}:`, err.message);
+            }
+        }
+        
+        /* 
+        // API version (use when server is running)
         const response = await fetch('/api/objects');
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
-        
         currentObjects = await response.json();
+        */
+        
         displayObjectTypes();
         updateObjectCount();
         updateStatus('Object data loaded');
@@ -279,6 +308,11 @@ function displayObjectsList(type) {
         container.innerHTML = '<div class="loading">No objects found</div>';
         return;
     }
+
+    // Create grid container for object items
+    const gridContainer = document.createElement('div');
+    gridContainer.className = 'object-list-container';
+    container.appendChild(gridContainer);
     
     objectData.objects.forEach(object => {
         const item = document.createElement('div');
@@ -293,7 +327,7 @@ function displayObjectsList(type) {
             </div>
         `;
         
-        container.appendChild(item);
+        gridContainer.appendChild(item);
     });
 }
 
@@ -387,6 +421,22 @@ function createDetailSection(title, content) {
 function toggleDetailSection(sectionId) {
     const content = document.getElementById(sectionId);
     content.classList.toggle('collapsed');
+}
+
+/**
+ * Toggle script sections (for inline scripts and regular scripts)
+ */
+function toggleScriptSection(sectionId) {
+    const content = document.getElementById(sectionId);
+    const toggle = document.getElementById(sectionId + '-toggle');
+    
+    if (content.classList.contains('collapsed')) {
+        content.classList.remove('collapsed');
+        if (toggle) toggle.textContent = '▼';
+    } else {
+        content.classList.add('collapsed');
+        if (toggle) toggle.textContent = '▶';
+    }
 }
 
 /**
@@ -484,32 +534,10 @@ function generateVariableBox(variable, direction) {
     const hasDefault = variable.hasDefault || false;
     const variableName = variable.name || 'unnamed';
     
-    // Determine arrow based on direction
-    let arrow = '';
-    let arrowClass = '';
-    switch (direction) {
-        case 'input':
-            arrow = '↑';
-            arrowClass = 'input';
-            break;
-        case 'output':
-            arrow = '↓';
-            arrowClass = 'output';
-            break;
-        case 'private':
-            arrow = '↕';
-            arrowClass = 'both';
-            break;
-        default:
-            arrow = '•';
-            arrowClass = '';
-    }
-    
     return `
         <div class="variable-box" title="${variable.description || 'No description'}">
             <div class="default-indicator ${hasDefault ? 'has-default' : ''}"></div>
             <span class="variable-name">${variableName}</span>
-            <span class="direction-arrow ${arrowClass}">${arrow}</span>
         </div>
     `;
 }
@@ -522,11 +550,12 @@ function generateScriptsDisplay(scripts) {
     
     scripts.forEach((script, index) => {
         html += `
-            <div class="detail-section">
-                <div class="detail-section-header" onclick="toggleDetailSection('script-${index}')">
-                    <span class="detail-section-title">📜 ${script.name || `Script ${index + 1}`}</span>
+            <div class="script-detail-section">
+                <div class="script-detail-header" onclick="toggleScriptSection('script-${index}')">
+                    <span class="script-detail-title">📜 ${escapeHtml(script.name || `Script ${index + 1}`)}</span>
+                    <span class="script-toggle" id="script-${index}-toggle">▼</span>
                 </div>
-                <div class="detail-content" id="script-${index}">
+                <div class="script-detail-content" id="script-${index}">
                     <div class="code-block">${escapeHtml(script.script)}</div>
                 </div>
             </div>
@@ -543,13 +572,31 @@ function generateInlineScriptsDisplay(scripts) {
     let html = '';
     
     scripts.forEach((script, index) => {
+        // Handle different script structures (CSHS vs other types)
+        let scriptContent = script.script || script.scriptBlock || 'No script content';
+        
+        // Normalize line endings and handle formatting
+        if (scriptContent && scriptContent !== 'No script content') {
+            scriptContent = scriptContent
+                .replace(/\r\r\n/g, '\n')  // Convert \r\r\n to \n
+                .replace(/\r\n/g, '\n')    // Convert \r\n to \n
+                .replace(/\r/g, '\n');     // Convert standalone \r to \n
+        }
+        
+        const scriptName = script.name || `Inline Script ${index + 1}`;
+        const scriptType = script.scriptType || 'JS';
+        
+        // Create expandable script sections like the regular scripts
         html += `
-            <div class="detail-section">
-                <div class="detail-section-header" onclick="toggleDetailSection('inline-script-${index}')">
-                    <span class="detail-section-title">📜 ${script.name || `Inline Script ${index + 1}`} (${script.scriptType || 'JS'})</span>
+            <div class="script-detail-section">
+                <div class="script-detail-header" onclick="toggleScriptSection('inline-script-${index}')">
+                    <span class="script-detail-title">📜 ${escapeHtml(scriptName)} (${scriptType})</span>
+                    <span class="script-toggle" id="inline-script-${index}-toggle">▼</span>
                 </div>
-                <div class="detail-content" id="inline-script-${index}">
-                    <div class="code-block">${escapeHtml(script.scriptBlock)}</div>
+                <div class="script-detail-content" id="inline-script-${index}">
+                    <div class="code-block">${escapeHtml(scriptContent)}</div>
+                    ${script.preScript && script.preScript.trim() ? `<div class="script-section"><h5>Pre Script:</h5><div class="code-block">${escapeHtml(script.preScript.replace(/\r\r\n/g, '\n').replace(/\r\n/g, '\n').replace(/\r/g, '\n'))}</div></div>` : ''}
+                    ${script.postScript && script.postScript.trim() ? `<div class="script-section"><h5>Post Script:</h5><div class="code-block">${escapeHtml(script.postScript.replace(/\r\r\n/g, '\n').replace(/\r\n/g, '\n').replace(/\r/g, '\n'))}</div></div>` : ''}
                 </div>
             </div>
         `;
@@ -670,7 +717,23 @@ function displaySearchResults(searchTerm) {
         
         // Extract object info
         const objectName = result.objectName || 'Unknown Object';
-        const objectType = result.objectType || 'Unknown Type';
+        const rawObjectType = result.objectType || 'Unknown Type';
+        
+        // Apply display name transformation for consistency
+        let objectType = rawObjectType;
+        
+        // Check if this is a CSHS object (process with subType 10)
+        if (rawObjectType === 'process' || rawObjectType === 'Process') {
+            // Try to find the actual object to check its subType
+            const foundObject = findObjectInCurrentData(result.objectId);
+            if (foundObject && (foundObject.subType === '10' || 
+                (foundObject.details && foundObject.details.processType === '10'))) {
+                objectType = 'CSHS';
+            } else {
+                objectType = 'Services';
+            }
+        }
+        
         const preview = result.preview || (result.matches && result.matches.length > 0 ? result.matches[0].snippet : 'No preview available');
         const matchCount = result.matchCount || (result.matches ? result.matches.length : 0);
         
@@ -703,9 +766,58 @@ function highlightSearchTerm(text, searchTerm) {
  * Show detailed view of search result
  */
 function showSearchResultDetails(result) {
-    // Find and select the object in the main browser
-    // This is a simplified implementation
-    updateStatus(`Viewing search result: ${result.objectName}`);
+    // Try to find the actual object in the parsed data
+    const objectId = result.objectId;
+    let foundObject = null;
+    let foundType = null;
+    
+    // Search through all object types to find the matching object
+    for (const [type, typeData] of Object.entries(currentObjects)) {
+        if (typeData && typeData.objects) {
+            const object = typeData.objects.find(obj => obj.id === objectId);
+            if (object) {
+                foundObject = object;
+                foundType = type;
+                break;
+            }
+        }
+    }
+    
+    if (foundObject) {
+        // Select the object type first if not already selected
+        if (selectedObjectType !== foundType) {
+            selectObjectType(foundType);
+        }
+        
+        // Display the object details
+        selectedObject = foundObject;
+        displayObjectDetails(foundObject);
+        showPanel('object-details-panel');
+        
+        // Update panel title
+        const title = document.getElementById('object-details-title');
+        title.textContent = `📄 ${foundObject.name || 'Unnamed Object'}`;
+        
+        updateStatus(`Viewing search result: ${foundObject.name || 'object'} details`);
+        
+        // Highlight the object in the list if it's currently displayed
+        setTimeout(() => {
+            document.querySelectorAll('.object-item').forEach(item => {
+                item.classList.remove('selected');
+            });
+            // Find and highlight the matching object item
+            const objectItems = document.querySelectorAll('.object-item');
+            objectItems.forEach(item => {
+                const itemText = item.textContent;
+                if (itemText.includes(foundObject.id) || (foundObject.name && itemText.includes(foundObject.name))) {
+                    item.classList.add('selected');
+                    item.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            });
+        }, 100);
+    } else {
+        updateStatus(`Could not find object details for: ${result.objectName}`);
+    }
 }
 
 /**
@@ -772,12 +884,19 @@ function getTypeDescription(type) {
     return descriptions[type] || 'Application objects and components';
 }
 
-function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-}
-
-function escapeRegex(string) {
-    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+/**
+ * Find an object in the current parsed data by ID
+ */
+function findObjectInCurrentData(objectId) {
+    if (!objectId || !currentObjects) return null;
+    
+    for (const [type, typeData] of Object.entries(currentObjects)) {
+        if (typeData && typeData.objects) {
+            const object = typeData.objects.find(obj => obj.id === objectId);
+            if (object) {
+                return object;
+            }
+        }
+    }
+    return null;
 }
