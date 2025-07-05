@@ -1,11 +1,17 @@
 @echo off
-echo Starting TWX Parser Web Server...
-cd /d "%~dp0"
 echo.
-echo If the browser doesn't open automatically, 
-echo manually navigate to the URL shown below:
+echo ========================================
+echo    TWX Parser - Enhanced Web Server
+echo ========================================
 echo.
-node app.js --ui
+echo Starting enhanced web server with API support...
+echo This server provides:
+echo   - Static file serving for the viewer
+echo   - API endpoints for parsing TWX files
+echo   - File upload and processing
+echo   - Search functionality
 echo.
-echo Press any key to exit...
+
+node app.js
+
 pause

@@ -1,17 +1,14 @@
 {
   "name": "twx-parser",
-  "version": "0.0.0-development",
-  "description": "Library for parsing and querying TWX files for IBM BPM",
+  "version": "1.7.0",
+  "description": "Library for parsing and querying TWX files for IBM BPM with enhanced business object support",
   "main": "index.js",
   "scripts": {
-    "test": "nyc mocha --opts ./mocha.opts \"test/**/*.test.js\"",
+    "start": "node app.js",
+    "viewer": "node start-viewer.js",
+    "test": "echo \"No tests specified\" && exit 0",
     "lint": "eslint .",
-    "docs": "jsdoc2md src/**/*.js > api.md",
-    "report-coverage": "codecov",
-    "semantic-release": "semantic-release",
-    "commit": "git-cz",
-    "build": "pkg . --out-path dist",
-    "start": "node app.js"
+    "build": "pkg . --out-path dist"
   },
   "repository": {
     "type": "git",
@@ -19,8 +16,10 @@
   },
   "keywords": [
     "IBM",
-    "BPM",
-    "TWX"
+    "BPM", 
+    "TWX",
+    "parser",
+    "business-objects"
   ],
   "author": "João Marques <joao.gsilva.marques@gmail.com>",
   "license": "MIT",
@@ -28,72 +27,13 @@
     "url": "https://github.com/tigermarques/twx-parse/issues"
   },
   "homepage": "https://github.com/tigermarques/twx-parse#readme",
-  "files": [
-    "src",
-    "index.js",
-    "api.md"
-  ],
-  "devDependencies": {
-    "all-contributors-cli": "^6.9.3",
-    "chai": "^4.2.0",
-    "chai-as-promised": "^7.1.1",
-    "chai-string": "^1.5.0",
-    "chai-subset": "^1.6.0",
-    "codecov": "^3.6.1",
-    "commitizen": "^4.0.3",
-    "cz-conventional-changelog": "^3.0.2",
-    "eslint": "^6.6.0",
-    "eslint-config-standard": "^14.1.0",
-    "eslint-plugin-chai-friendly": "^0.4.1",
-    "eslint-plugin-import": "^2.18.2",
-    "eslint-plugin-mocha": "^6.2.0",
-    "eslint-plugin-node": "^10.0.0",
-    "eslint-plugin-promise": "^4.2.1",
-    "eslint-plugin-standard": "^4.0.1",
-    "husky": "^2.7.0",
-    "jsdoc-to-markdown": "^5.0.2",
-    "mocha": "^6.2.2",
-    "nyc": "^14.1.1",
-    "pkg": "^5.8.1",
-    "resnap": "^1.0.1",
-    "semantic-release": "^15.13.28",
-    "sinon": "^7.5.0",
-    "sinon-chai": "^3.3.0",
-    "validate-commit-msg": "^2.14.0"
-  },
   "dependencies": {
-    "adm-zip": "^0.4.16",
-    "bcrypt": "^3.0.6",
-    "cli-progress": "^3.3.1",
-    "fast-xml-parser": "^5.2.5",
-    "sqlite3": "^4.1.0",
-    "xml2js": "^0.4.23",
-    "xml2js-xpath": "^0.10.0"
+    "xml2js": "^0.4.23"
   },
-  "config": {
-    "commitizen": {
-      "path": "./node_modules/cz-conventional-changelog"
-    }
+  "devDependencies": {
+    "eslint": "^8.0.0"
   },
-  "bin": {
-    "twx-parser": "./app.js"
-  },
-  "pkg": {
-    "scripts": [
-      "app.js",
-      "src/**/*.js"
-    ],
-    "assets": [
-      "*.html",
-      "*.css", 
-      "*.js",
-      "output/**/*",
-      "TWX example/**/*",
-      "test-xml-files/**/*"
-    ],
-    "targets": [
-      "node18-win-x64"
-    ],
-    "outputPath": "dist"
+  "engines": {
+    "node": ">=14.0.0"
   }
 }

@@ -174,7 +174,8 @@ async function loadObjectData() {
             'objects-managed-asset.json',
             'objects-participant.json',
             'objects-process.json',
-            'objects-business-process-definition.json'
+            'objects-business-process-definition.json',
+            'objects-business-object.json'
         ];
         
         currentObjects = {};
@@ -238,7 +239,8 @@ function displayObjectTypes() {
         'managed-asset',
         'participant',
         'process',
-        'business-process-definition'
+        'business-process-definition',
+        'business-object'
     ];
     
     // Filter and create type cards only for allowed types
@@ -319,12 +321,19 @@ function displayObjectsList(type) {
         item.className = 'object-item';
         item.onclick = () => selectObject(object);
         
+        // Generate schema summary for business objects
+        let schemaSummary = '';
+        if (type === 'business-object' && object.details && object.details.schema) {
+            schemaSummary = generateBusinessObjectSummary(object.details.schema);
+        }
+        
         item.innerHTML = `
             <div class="object-name">${object.name || 'Unnamed'}</div>
             <div class="object-meta">
                 ID: ${object.id} | Type: ${object.typeName || type}
                 ${object.subType ? ` | SubType: ${object.subType}` : ''}
             </div>
+            ${schemaSummary}
         `;
         
         gridContainer.appendChild(item);
@@ -390,6 +399,11 @@ function displayObjectDetails(object) {
         if (object.details.elements) {
             const elementsSection = createDetailSection('Process Elements', generateElementsDisplay(object.details.elements));
             container.appendChild(elementsSection);
+        }
+        
+        if (object.details.schema) {
+            const schemaSection = createDetailSection('Business Object Schema', generateBusinessObjectSchemaDisplay(object.details.schema));
+            container.appendChild(schemaSection);
         }
     }
 }
@@ -916,7 +930,8 @@ function getDisplayName(type) {
         'cshs': 'CSHS',
         'business-process-definition': 'Business Process Definitions',
         'participant': 'Participants',
-        'managed-asset': 'Managed Assets'
+        'managed-asset': 'Managed Assets',
+        'business-object': 'Business Objects'
     };
     
     return names[type] || type.charAt(0).toUpperCase() + type.slice(1);
@@ -953,4 +968,169 @@ function findObjectInCurrentData(objectId) {
         }
     }
     return null;
+}
+
+/**
+ * Generate business object schema summary for list display
+ */
+function generateBusinessObjectSummary(schema) {
+    if (!schema || !schema.properties) {
+        return '';
+    }
+
+    const totalProperties = schema.properties.length;
+    const systemTypes = schema.properties.filter(p => p.isSystemType).length;
+    const customTypes = totalProperties - systemTypes;
+    const crossReferences = schema.properties.filter(p => p.resolvedType && !p.isSystemType).length;
+    const circularRefs = schema.properties.filter(p => p.circularReference).length;
+    
+    let indicators = [];
+    if (customTypes > 0) {
+        indicators.push(`<span class="schema-indicator custom-types" title="Custom Types">${customTypes} custom</span>`);
+    }
+    if (crossReferences > 0) {
+        indicators.push(`<span class="schema-indicator cross-refs" title="Cross References">${crossReferences} refs</span>`);
+    }
+    if (circularRefs > 0) {
+        indicators.push(`<span class="schema-indicator circular-refs" title="Circular References">${circularRefs} circular</span>`);
+    }
+    
+    return `
+        <div class="business-object-summary">
+            <div class="schema-stats">
+                <span class="property-count">${totalProperties} properties</span>
+                ${indicators.join('')}
+            </div>
+            <div class="schema-namespace" title="Namespace">${schema.namespace || 'No namespace'}</div>
+        </div>
+    `;
+}
+
+/**
+ * Generate business object schema display
+ */
+function generateBusinessObjectSchemaDisplay(schema) {
+    if (!schema || !schema.properties) {
+        return '<p class="no-data">No schema information available</p>';
+    }
+
+    let html = '';
+
+    // Schema summary
+    html += `
+        <div class="schema-summary">
+            <div class="schema-info">
+                <span class="schema-stat"><strong>Total Properties:</strong> ${schema.properties.length}</span>
+                <span class="schema-stat"><strong>System Types:</strong> ${schema.systemTypesCount || 0}</span>
+                <span class="schema-stat"><strong>Custom Types:</strong> ${schema.customTypesCount || 0}</span>
+                ${schema.namespace ? `<span class="schema-stat"><strong>Namespace:</strong> ${escapeHtml(schema.namespace)}</span>` : ''}
+            </div>
+        </div>
+    `;
+
+    if (schema.error) {
+        html += `<div class="error-message">⚠️ Schema Error: ${escapeHtml(schema.error)}</div>`;
+    }
+
+    // Properties list
+    if (schema.properties.length > 0) {
+        html += '<div class="properties-container">';
+        html += '<h4>Properties</h4>';
+        
+        schema.properties.forEach((property, index) => {
+            html += generatePropertyDisplay(property, 0);
+        });
+        
+        html += '</div>';
+    } else {
+        html += '<p class="no-data">No properties defined</p>';
+    }
+
+    return html;
+}
+
+/**
+ * Generate display for a single property with nested resolution
+ */
+function generatePropertyDisplay(property, depth = 0) {
+    const indent = '  '.repeat(depth);
+    const typeClass = property.isSystemType ? 'system-type' : 'custom-type';
+    const requiredBadge = property.required ? '<span class="required-badge">Required</span>' : '';
+    const arrayBadge = property.isArray ? '<span class="array-badge">Array</span>' : '';
+    const defaultBadge = property.hasDefault ? '<span class="default-badge">Has Default</span>' : '';
+    const circularBadge = property.circularReference ? '<span class="circular-badge">Circular</span>' : '';
+    const unresolvedBadge = property.unresolvedReference ? '<span class="unresolved-badge">Unresolved</span>' : '';
+    
+    let html = `
+        <div class="property-item" style="margin-left: ${depth * 20}px;">
+            <div class="property-header">
+                <span class="property-name">${escapeHtml(property.name)}</span>
+                <span class="property-type ${typeClass}">${escapeHtml(property.type)}</span>
+                ${requiredBadge}
+                ${arrayBadge}
+                ${defaultBadge}
+                ${circularBadge}
+                ${unresolvedBadge}
+            </div>
+            ${property.description ? `<div class="property-description">${escapeHtml(property.description)}</div>` : ''}
+            ${!property.isSystemType && property.namespace ? `<div class="property-namespace">Namespace: ${escapeHtml(property.namespace)}</div>` : ''}
+            ${property.referencedObjectId ? `<div class="property-reference">References: ${escapeHtml(property.referencedObjectId)}</div>` : ''}
+    `;
+
+    // Add resolved type information if available
+    if (property.resolvedType && property.resolvedType.resolved) {
+        html += `
+            <div class="resolved-type-container">
+                <div class="resolved-type-header">
+                    <span class="resolved-type-toggle" onclick="toggleResolvedType('${property.name}_${depth}')">
+                        ▶ ${escapeHtml(property.resolvedType.name)} (${property.resolvedType.properties.length} properties)
+                    </span>
+                </div>
+                <div class="resolved-type-content" id="resolved_${property.name}_${depth}" style="display: none;">
+        `;
+        
+        if (property.resolvedType.properties && property.resolvedType.properties.length > 0) {
+            property.resolvedType.properties.forEach(nestedProperty => {
+                html += generatePropertyDisplay(nestedProperty, depth + 1);
+            });
+        } else {
+            html += '<p class="no-data">No properties in resolved type</p>';
+        }
+        
+        html += `
+                </div>
+            </div>
+        `;
+    } else if (property.circularReference) {
+        html += `
+            <div class="circular-reference-note">
+                <em>Circular reference detected - structure not expanded to prevent infinite recursion</em>
+            </div>
+        `;
+    } else if (property.unresolvedReference) {
+        html += `
+            <div class="unresolved-reference-note">
+                <em>Type definition not found in current workspace</em>
+            </div>
+        `;
+    }
+
+    html += '</div>';
+    return html;
+}
+
+/**
+ * Toggle resolved type visibility
+ */
+function toggleResolvedType(elementId) {
+    const element = document.getElementById(`resolved_${elementId}`);
+    const toggle = document.querySelector(`[onclick="toggleResolvedType('${elementId}')"]`);
+    
+    if (element.style.display === 'none') {
+        element.style.display = 'block';
+        toggle.textContent = toggle.textContent.replace('▶', '▼');
+    } else {
+        element.style.display = 'none';
+        toggle.textContent = toggle.textContent.replace('▼', '▶');
+    }
 }

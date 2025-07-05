@@ -3,6 +3,7 @@ const path = require('path')
 const ADMZip = require('adm-zip')
 const xml2js = require('xml2js')
 const { getTypeName } = require('../utils/type-mappings')
+const BusinessObjectSchemaParser = require('./business-object-schema-parser')
 
 /**
  * Extract and parse TWX file contents
@@ -14,6 +15,7 @@ class TWXExtractor {
       ignoreAttrs: false,
       mergeAttrs: true
     })
+    this.businessObjectParser = new BusinessObjectSchemaParser()
   }
 
   /**
@@ -373,6 +375,10 @@ class TWXExtractor {
           processData = Array.isArray(objectData.teamworks.process) ? objectData.teamworks.process[0] : objectData.teamworks.process
         }
         this.extractProcessDetails(processData, baseObject)
+      } else if (objMeta.type === 'twClass') {
+        // For Business Objects, extract schema information
+        const twClassData = objectData.teamworks && objectData.teamworks.twClass ? objectData.teamworks.twClass : rootElement
+        this.extractBusinessObjectDetails(twClassData, baseObject)
       }
     }
 
@@ -754,6 +760,143 @@ class TWXExtractor {
 
     // Save the extracted details back to the base object
     baseObject.details = details;
+  }
+
+  /**
+   * Extract Business Object specific details including schema structure
+   * @param {Object} twClassElement - Business Object XML element
+   * @param {Object} baseObject - Base object to add details to
+   */
+  extractBusinessObjectDetails(twClassElement, baseObject) {
+    try {
+      // Extract jsonData which contains the schema structure
+      const jsonData = twClassElement.jsonData;
+      
+      if (jsonData) {
+        // Parse the schema using our business object parser
+        const schema = this.businessObjectParser.parseSchema(
+          jsonData, 
+          baseObject.id, 
+          baseObject.name
+        );
+        
+        // Add schema information to details
+        baseObject.details.schema = schema;
+        baseObject.hasDetails = true;
+        
+        // Add summary information for quick display
+        baseObject.details.summary = {
+          totalProperties: schema.properties.length,
+          systemTypes: schema.systemTypesCount,
+          customTypes: schema.customTypesCount,
+          hasComplexTypes: schema.hasComplexTypes,
+          namespace: schema.namespace
+        };
+        
+        // Register this type in the type registry for cross-referencing
+        this.registerBusinessObjectType(baseObject.name, baseObject.id, schema, schema.namespace);
+        
+        console.log(`Extracted schema for ${baseObject.name}: ${schema.properties.length} properties`);
+      } else {
+        // No jsonData available, try to extract from definition structure
+        baseObject.details.schema = this.extractDefinitionBasedSchema(twClassElement, baseObject.id, baseObject.name);
+        baseObject.hasDetails = !!baseObject.details.schema.properties.length;
+      }
+    } catch (error) {
+      console.warn(`Error extracting business object details for ${baseObject.name}:`, error.message);
+      baseObject.details.error = error.message;
+    }
+  }
+
+  /**
+   * Register a business object type for cross-referencing
+   * @param {string} typeName - Name of the business object type
+   * @param {string} typeId - ID of the business object
+   * @param {Object} schema - Schema structure
+   * @param {string} namespace - Type namespace
+   */
+  registerBusinessObjectType(typeName, typeId, schema, namespace) {
+    const typeRegistry = require('../utils/business-object-type-registry');
+    typeRegistry.registerType(typeName, typeId, schema, namespace);
+  }
+
+  /**
+   * Resolve cross-references for all business objects after processing
+   * @param {Array} businessObjects - Array of business object definitions
+   */
+  resolveBusinessObjectCrossReferences(businessObjects) {
+    if (!businessObjects || !Array.isArray(businessObjects)) {
+      return;
+    }
+
+    console.log(`🔗 Resolving cross-references for ${businessObjects.length} business objects...`);
+
+    businessObjects.forEach(businessObject => {
+      if (businessObject.details && businessObject.details.schema) {
+        try {
+          // Resolve cross-references for this business object
+          const resolvedSchema = this.businessObjectParser.resolveCustomTypes(businessObject.details.schema);
+          businessObject.details.schema = resolvedSchema;
+          businessObject.details.crossReferencesResolved = true;
+        } catch (error) {
+          console.warn(`Error resolving cross-references for ${businessObject.name}:`, error.message);
+          businessObject.details.crossReferenceError = error.message;
+        }
+      }
+    });
+
+    // Print resolution statistics
+    const typeRegistry = require('../utils/business-object-type-registry');
+    const stats = typeRegistry.getStats();
+    console.log(`✅ Cross-reference resolution complete:`, stats);
+  }
+
+  /**
+   * Extract schema from definition structure (fallback when jsonData is not available)
+   * @param {Object} twClassElement - Business Object XML element
+   * @param {string} objectId - Object ID
+   * @param {string} objectName - Object name
+   * @returns {Object} Basic schema structure
+   */
+  extractDefinitionBasedSchema(twClassElement, objectId, objectName) {
+    const schema = {
+      id: objectId,
+      name: objectName,
+      type: 'BusinessObject',
+      namespace: null,
+      properties: [],
+      hasComplexTypes: false,
+      systemTypesCount: 0,
+      customTypesCount: 0,
+      source: 'definition'
+    };
+
+    try {
+      // Extract from definition/property structure
+      if (twClassElement.definition && twClassElement.definition.property) {
+        const properties = Array.isArray(twClassElement.definition.property) 
+          ? twClassElement.definition.property 
+          : [twClassElement.definition.property];
+
+        for (const property of properties) {
+          if (property.name && property.classRef) {
+            schema.properties.push({
+              name: property.name,
+              type: 'Unknown', // We don't have type info in definition
+              isSystemType: false,
+              required: property.propertyRequired === true || property.propertyRequired === 'true',
+              isArray: property.arrayProperty === true || property.arrayProperty === 'true',
+              classRef: property.classRef,
+              description: property.description || ''
+            });
+          }
+        }
+      }
+    } catch (error) {
+      console.warn(`Error extracting definition-based schema for ${objectName}:`, error.message);
+    }
+
+    return schema;
   }
 
   /**
