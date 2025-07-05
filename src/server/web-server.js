@@ -361,6 +361,13 @@ class TWXWebServer {
       const extractedData = await extractor.extractTWX(tempFilePath);
       console.log(`Extraction completed. Found ${extractedData.objects.length} objects`);
       
+      // Phase 2: Resolve cross-references for business objects
+      const businessObjects = extractedData.objects.filter(obj => obj.type === 'twClass');
+      if (businessObjects.length > 0) {
+        console.log(`🔗 Phase 2: Resolving cross-references for ${businessObjects.length} business objects...`);
+        extractor.resolveBusinessObjectCrossReferences(businessObjects);
+      }
+      
       // Generate JSON output
       console.log('Generating JSON output...');
       await createJSONOutput(extractedData, outputDir);
