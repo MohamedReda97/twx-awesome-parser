@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TWX Parser - Circular References Test</title>
+    <link rel="stylesheet" href="twx-viewer-new.css">
+</head>
+<body>
+    <div class="container">
+        <h1>TWX Parser - Circular References Test</h1>
+        <p>This page demonstrates the enhanced circular reference display functionality.</p>
+        
+        <div class="test-section">
+            <h2>Test Data: Business Objects with Circular References</h2>
+            <div id="circular-test-results"></div>
+        </div>
+    </div>
+
+    <script src="twx-viewer-new.js"></script>
+    <script>
+        // Test data with circular references - extracted from actual business objects
+        const testData = {
+            "typeName": "Business Object",
+            "objects": [
+                {
+                    "id": "12.attachmentDetails",
+                    "name": "attachmentDetails",
+                    "details": {
+                        "schema": {
+                            "name": "attachmentDetails",
+                            "namespace": "http://NBEODCR",
+                            "properties": [
+                                {
+                                    "name": "Bills",
+                                    "type": "Bills",
+                                    "fullType": "{http://NBEODCR}Bills",
+                                    "isSystemType": false,
+                                    "namespace": "http://NBEODCR",
+                                    "required": false,
+                                    "isArray": true,
+                                    "hasDefault": false,
+                                    "description": {},
+                                    "referencedObjectId": "12.2d7d54a5-0d98-443e-ad21-49ff93c6dc08",
+                                    "customTypeInfo": {
+                                        "namespace": "http://NBEODCR",
+                                        "originalType": "{http://NBEODCR}Bills"
+                                    },
+                                    "circularReference": true,
+                                    "resolvedType": {
+                                        "id": "12.2d7d54a5-0d98-443e-ad21-49ff93c6dc08",
+                                        "name": "Bills",
+                                        "namespace": "http://NBEODCR",
+                                        "properties": []
+                                    }
+                                },
+                                {
+                                    "name": "ecmProperties",
+                                    "type": "ECMproperties",
+                                    "fullType": "{http://NBEODCR}ECMproperties",
+                                    "isSystemType": false,
+                                    "namespace": "http://NBEODCR",
+                                    "required": false,
+                                    "hasDefault": false,
+                                    "description": {},
+                                    "referencedObjectId": "12.b698dbfb-84da-40a5-9db3-676815055e65",
+                                    "customTypeInfo": {
+                                        "namespace": "http://NBEODCR",
+                                        "originalType": "{http://NBEODCR}ECMproperties"
+                                    },
+                                    "circularReference": true,
+                                    "resolvedType": {
+                                        "id": "12.b698dbfb-84da-40a5-9db3-676815055e65",
+                                        "name": "ECMproperties",
+                                        "namespace": "http://NBEDCP",
+                                        "properties": []
+                                    }
+                                },
+                                {
+                                    "name": "folderID",
+                                    "type": "ECMID",
+                                    "fullType": "{http://CIT}ECMID",
+                                    "isSystemType": false,
+                                    "namespace": "http://CIT",
+                                    "required": false,
+                                    "hasDefault": false,
+                                    "description": {},
+                                    "referencedObjectId": "12.3212d5b3-f692-41b3-a893-343dc5c3df01",
+                                    "customTypeInfo": {
+                                        "namespace": "http://CIT",
+                                        "originalType": "{http://CIT}ECMID"
+                                    },
+                                    "unresolvedReference": true,
+                                    "resolvedType": null
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "id": "12.FCTransactions",
+                    "name": "FCTransactions",
+                    "details": {
+                        "schema": {
+                            "name": "FCTransactions",
+                            "namespace": "http://NBEODCR",
+                            "properties": [
+                                {
+                                    "name": "retrievedTransactions",
+                                    "type": "FCTransactions",
+                                    "fullType": "{http://NBEODCR}FCTransactions",
+                                    "isSystemType": false,
+                                    "namespace": "http://NBEODCR",
+                                    "required": false,
+                                    "isArray": true,
+                                    "hasDefault": false,
+                                    "description": {},
+                                    "referencedObjectId": "12.4f8cbf10-1e9b-4a7c-90b9-9641d40fa134",
+                                    "customTypeInfo": {
+                                        "namespace": "http://NBEODCR",
+                                        "originalType": "{http://NBEODCR}FCTransactions"
+                                    },
+                                    "circularReference": true,
+                                    "resolvedType": {
+                                        "id": "12.4f8cbf10-1e9b-4a7c-90b9-9641d40fa134",
+                                        "name": "FCTransactions",
+                                        "namespace": "http://NBEODCR",
+                                        "properties": []
+                                    }
+                                },
+                                {
+                                    "name": "accountDetails",
+                                    "type": "AccountDetails",
+                                    "fullType": "{http://NBEODCR}AccountDetails",
+                                    "isSystemType": false,
+                                    "namespace": "http://NBEODCR",
+                                    "required": false,
+                                    "hasDefault": false,
+                                    "description": {},
+                                    "referencedObjectId": "12.90d4772d-4081-4a73-a8c2-e7f904511cd6",
+                                    "customTypeInfo": {
+                                        "namespace": "http://NBEODCR",
+                                        "originalType": "{http://NBEODCR}AccountDetails"
+                                    },
+                                    "circularReference": true,
+                                    "resolvedType": {
+                                        "id": "12.90d4772d-4081-4a73-a8c2-e7f904511cd6",
+                                        "name": "AccountDetails",
+                                        "namespace": "http://NBEODCR",
+                                        "properties": []
+                                    }
+                                },
+                                {
+                                    "name": "transactionType",
+                                    "type": "String",
+                                    "fullType": "{http://lombardi.ibm.com/schema/}String",
+                                    "isSystemType": true,
+                                    "namespace": "http://lombardi.ibm.com/schema/",
+                                    "required": false,
+                                    "hasDefault": false,
+                                    "description": {}
+                                }
+                            ]
+                        }
+                    }
+                }
+            ]
+        };
+
+        // Load the test data
+        currentObjects = testData;
+
+        // Generate the display for the test data
+        function displayTestResults() {
+            const container = document.getElementById('circular-test-results');
+            let html = '<h3>Enhanced Circular Reference Display</h3>';
+            
+            testData.objects.forEach(obj => {
+                html += `
+                    <div class="object-card">
+                        <h4>${obj.name}</h4>
+                        <div class="business-object-schema">
+                            ${generateBusinessObjectSchemaDisplay(obj.details.schema)}
+                        </div>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+        }
+
+        // Display the test results when the page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            displayTestResults();
+        });
+    </script>
+
+    <style>
+        .test-section {
+            margin: 2rem 0;
+            padding: 1rem;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background: #f9f9f9;
+        }
+
+        .object-card {
+            margin: 1rem 0;
+            padding: 1rem;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            background: white;
+        }
+
+        .object-card h4 {
+            margin: 0 0 1rem 0;
+            color: #333;
+            font-size: 1.2rem;
+        }
+
+        /* Enhanced styling for better visibility */
+        .circular-ref-label {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+    </style>
+</body>
+</html>
