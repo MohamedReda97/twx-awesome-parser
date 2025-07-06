@@ -1072,9 +1072,6 @@ function generatePropertyDisplay(property, depth = 0) {
                 ${circularBadge}
                 ${unresolvedBadge}
             </div>
-            ${property.description ? `<div class="property-description">${escapeHtml(property.description)}</div>` : ''}
-            ${!property.isSystemType && property.namespace ? `<div class="property-namespace">Namespace: ${escapeHtml(property.namespace)}</div>` : ''}
-            ${property.referencedObjectId ? `<div class="property-reference">References: ${escapeHtml(property.referencedObjectId)}</div>` : ''}
     `;
 
     // Add resolved type information if available
@@ -1101,10 +1098,23 @@ function generatePropertyDisplay(property, depth = 0) {
                 </div>
             </div>
         `;
-    } else if (property.circularReference) {
+    } else if (property.circularReference && property.resolvedType) {
+        // Show circular reference but with basic type information
         html += `
-            <div class="circular-reference-note">
-                <em>Circular reference detected - structure not expanded to prevent infinite recursion</em>
+            <div class="resolved-type-section">
+                <div class="resolved-type-header" onclick="toggleResolvedType('${property.name}_${depth}')">
+                    <span class="resolved-type-title">
+                        ▶ ${escapeHtml(property.resolvedType.name)} <span class="circular-ref-label">(Circular Reference)</span>
+                    </span>
+                </div>
+                <div class="resolved-type-content" id="resolved_${property.name}_${depth}" style="display: none;">
+                    <div class="circular-reference-info">
+                        <p><strong>Type:</strong> ${escapeHtml(property.resolvedType.name)}</p>
+                        <p><strong>Namespace:</strong> ${escapeHtml(property.resolvedType.namespace || 'No namespace')}</p>
+                        <p><strong>Object ID:</strong> ${escapeHtml(property.referencedObjectId || 'Unknown')}</p>
+                        <p class="circular-note"><em>This type references back to itself or an ancestor type, creating a circular dependency. The full structure is not expanded to prevent infinite recursion.</em></p>
+                    </div>
+                </div>
             </div>
         `;
     } else if (property.unresolvedReference) {
