@@ -2,13 +2,15 @@
   "name": "twx-parser",
   "version": "1.7.0",
   "description": "Library for parsing and querying TWX files for IBM BPM with enhanced business object support",
-  "main": "index.js",
-  "scripts": {
+  "main": "app.js",
+  "bin": {
+    "twx-parser": "./app.js"
+  },  "scripts": {
     "start": "node app.js",
     "viewer": "node start-viewer.js",
     "test": "echo \"No tests specified\" && exit 0",
     "lint": "eslint .",
-    "build": "pkg . --out-path dist"
+    "build": "pkg . --out-path dist --targets node18-win-x64"
   },
   "repository": {
     "type": "git",
@@ -16,7 +18,7 @@
   },
   "keywords": [
     "IBM",
-    "BPM", 
+    "BPM",
     "TWX",
     "parser",
     "business-objects"
@@ -28,12 +30,21 @@
   },
   "homepage": "https://github.com/tigermarques/twx-parse#readme",
   "dependencies": {
+    "adm-zip": "^0.5.10",
+    "fast-xml-parser": "^4.2.5",
     "xml2js": "^0.4.23"
   },
   "devDependencies": {
-    "eslint": "^8.0.0"
-  },
-  "engines": {
+    "eslint": "^8.0.0",
+    "pkg": "^5.8.1"
+  },  "engines": {
     "node": ">=14.0.0"
+  },  "pkg": {
+    "assets": [
+      "twx-viewer-new.html",
+      "twx-viewer-new.css",
+      "twx-viewer-new.js",
+      "output/*.json"
+    ]
   }
 }

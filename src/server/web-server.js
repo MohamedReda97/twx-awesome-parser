@@ -516,35 +516,60 @@ class TWXWebServer {
     }
     
     return parts;
-  }
-
-  /**
+  }  /**
    * Serve static files
    */
   async serveFile(res, filePath, contentType) {
     try {
-      // Handle bundled environment paths
-      const possiblePaths = [
-        path.join(__dirname, '../../', filePath),  // Development
-        path.join(process.cwd(), filePath),        // Bundled executable
-        path.join(__dirname, '../..', filePath),   // Alternative bundled path
-        filePath // Direct path
-      ];
-      
-      let fullPath = null;
       let content = null;
       
-      // Try each possible path
-      for (const testPath of possiblePaths) {
-        if (fs.existsSync(testPath)) {
-          fullPath = testPath;
-          content = fs.readFileSync(fullPath);
-          break;
+      // In a pkg bundled environment, try to read from the snapshot filesystem
+      if (process.pkg) {
+        try {
+          // pkg stores assets in the snapshot directory
+          const snapshotPath = path.join(__dirname, '../../', filePath);
+          content = fs.readFileSync(snapshotPath);
+        } catch (snapshotError) {
+          // If snapshot read fails, the file might be an asset that needs to be accessed directly
+          try {
+            content = fs.readFileSync(filePath);
+          } catch (directError) {
+            console.log(`Bundled asset read failed for ${filePath}:`, snapshotError.message, directError.message);
+          }
+        }
+      }
+      
+      // If not bundled or bundle read failed, try regular filesystem paths
+      if (!content) {
+        const possiblePaths = [
+          path.join(__dirname, '../../', filePath),  // Development
+          path.join(process.cwd(), filePath),        // Current working directory
+          filePath // Direct path
+        ];
+        
+        // Try each possible path
+        for (const testPath of possiblePaths) {
+          try {
+            if (fs.existsSync(testPath)) {
+              content = fs.readFileSync(testPath);
+              break;
+            }
+          } catch (readError) {
+            console.log(`Failed to read ${testPath}:`, readError.message);
+          }
         }
       }
       
       if (!content) {
-        console.warn(`File not found: ${filePath}, tried paths:`, possiblePaths);
+        const attemptedPaths = process.pkg ? 
+          [path.join(__dirname, '../../', filePath), filePath] :
+          [
+            path.join(__dirname, '../../', filePath),
+            path.join(process.cwd(), filePath),
+            filePath
+          ];
+        
+        console.warn(`File not found: ${filePath}, tried paths: [${attemptedPaths.map(p => `'${p}'`).join(', ')}]`);
         this.send404(res);
         return;
       }
