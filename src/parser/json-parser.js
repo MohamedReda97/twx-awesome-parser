@@ -53,7 +53,6 @@ class JSONParser {
       throw error
     }
   }
-
   /**
    * Generate structured JSON output files
    * @param {Object} extractedData - Data extracted from TWX file
@@ -66,15 +65,33 @@ class JSONParser {
     const summaryFile = await this.generateSummaryFile(extractedData)
     filesGenerated.push(summaryFile)
     
-    // 2. Generate objects by type files
+    // 2. Generate objects by type files (main application objects)
     const typeFiles = await this.generateObjectsByTypeFiles(extractedData.objects)
     filesGenerated.push(...typeFiles)
     
-    // 3. Generate metadata file
+    // 🆕 3. Generate toolkit object files if any
+    if (extractedData.toolkits && extractedData.toolkits.length > 0) {
+      const allToolkitObjects = extractedData.toolkits.flatMap(toolkit => toolkit.objects || [])
+      
+      if (allToolkitObjects.length > 0) {
+        console.log(`📦 Generating toolkit object files for ${allToolkitObjects.length} toolkit objects...`)
+        const toolkitTypeFiles = await this.generateToolkitObjectsByTypeFiles(allToolkitObjects)
+        filesGenerated.push(...toolkitTypeFiles)
+      }
+    }
+
+    // 🆕 4. Generate combined object files (app + toolkit)
+    if (extractedData.allObjects && extractedData.allObjects.length > 0) {
+      console.log(`🔗 Generating combined object files for ${extractedData.allObjects.length} total objects...`)
+      const combinedTypeFiles = await this.generateCombinedObjectsByTypeFiles(extractedData.allObjects)
+      filesGenerated.push(...combinedTypeFiles)
+    }
+    
+    // 5. Generate metadata file
     const metadataFile = await this.generateMetadataFile(extractedData)
     filesGenerated.push(metadataFile)
     
-    // 4. Generate toolkits file if any
+    // 6. Generate enhanced toolkits file if any
     if (extractedData.toolkits && extractedData.toolkits.length > 0) {
       const toolkitsFile = await this.generateToolkitsFile(extractedData.toolkits)
       filesGenerated.push(toolkitsFile)
@@ -83,15 +100,16 @@ class JSONParser {
     return {
       filesGenerated: filesGenerated.filter(Boolean), // Remove any null/undefined entries
       summary: {
-        totalObjects: extractedData.objects.length,
-        objectTypes: Object.keys(groupByType(extractedData.objects)).length,
+        totalObjects: extractedData.allObjects ? extractedData.allObjects.length : extractedData.objects.length,
+        applicationObjects: extractedData.objects.length,
+        toolkitObjects: extractedData.toolkits ? extractedData.toolkits.reduce((sum, tk) => sum + (tk.objects?.length || 0), 0) : 0,
+        objectTypes: Object.keys(groupByType(extractedData.allObjects || extractedData.objects)).length,
         toolkits: extractedData.toolkits.length,
         extractedAt: extractedData.extractedAt,
         sourceFile: extractedData.sourceFile
       }
     }
   }
-
   /**
    * Generate main summary file for the UI
    * @param {Object} extractedData - Extracted data
@@ -100,27 +118,47 @@ class JSONParser {
   async generateSummaryFile(extractedData) {
     const groupedObjects = groupByType(extractedData.objects)
     
+    // 🆕 Calculate toolkit statistics
+    const allToolkitObjects = extractedData.toolkits ? extractedData.toolkits.flatMap(toolkit => toolkit.objects || []) : []
+    const toolkitObjectsByType = groupByType(allToolkitObjects)
+    
+    // 🆕 Calculate combined statistics
+    const allObjects = extractedData.allObjects || extractedData.objects
+    const combinedObjectsByType = groupByType(allObjects)
+    
     const summary = {
       metadata: extractedData.metadata,
       statistics: {
-        totalObjects: extractedData.objects.length,
-        objectTypes: Object.keys(groupedObjects).length,
+        totalObjects: allObjects.length,
+        applicationObjects: extractedData.objects.length,
+        toolkitObjects: allToolkitObjects.length,
+        objectTypes: Object.keys(combinedObjectsByType).length,
         toolkits: extractedData.toolkits.length,
         extractedAt: extractedData.extractedAt,
         sourceFile: extractedData.sourceFile
       },
-      objectsByType: Object.keys(groupedObjects).map(typeName => ({
-        typeName,
-        count: groupedObjects[typeName].length,
-        objects: groupedObjects[typeName].map(obj => ({
-          id: obj.id,
-          name: obj.name,
-          versionId: obj.versionId,
-          type: obj.type,
-          subType: obj.subType,
-          hasDetails: !!obj.details && Object.keys(obj.details).length > 0
-        }))
-      })).sort((a, b) => {
+      objectsByType: Object.keys(combinedObjectsByType).map(typeName => {
+        const allTypeObjects = combinedObjectsByType[typeName] || []
+        const appTypeObjects = allTypeObjects.filter(obj => obj.source === 'application')
+        const toolkitTypeObjects = allTypeObjects.filter(obj => obj.source === 'toolkit')
+        
+        return {
+          typeName,
+          count: allTypeObjects.length,
+          applicationCount: appTypeObjects.length,
+          toolkitCount: toolkitTypeObjects.length,
+          objects: allTypeObjects.map(obj => ({
+            id: obj.id,
+            name: obj.name,
+            versionId: obj.versionId,
+            type: obj.type,
+            subType: obj.subType,
+            source: obj.source, // 🆕 Include source information
+            toolkitInfo: obj.toolkitInfo, // 🆕 Include toolkit info if available
+            hasDetails: !!obj.details && Object.keys(obj.details).length > 0
+          }))
+        }
+      }).sort((a, b) => {
         // Sort CSHS first, then by count descending
         if (a.typeName === 'CSHS') return -1;
         if (b.typeName === 'CSHS') return 1;
@@ -133,6 +171,11 @@ class JSONParser {
     fs.writeFileSync(filePath, JSON.stringify(summary, null, 2))
     
     console.log(`Generated summary file: ${filePath}`)
+    console.log(`  - Total objects: ${summary.statistics.totalObjects}`)
+    console.log(`  - Application objects: ${summary.statistics.applicationObjects}`)
+    console.log(`  - Toolkit objects: ${summary.statistics.toolkitObjects}`)
+    console.log(`  - Toolkits: ${summary.statistics.toolkits}`)
+    
     return filePath
   }
 
@@ -216,6 +259,74 @@ class JSONParser {
     
     console.log(`Generated toolkits file: ${filePath}`)
     return filePath
+  }
+
+  /**
+   * Generate separate files for each toolkit object type
+   * @param {Array} toolkitObjects - Array of toolkit objects
+   * @returns {Promise<Array>} Array of generated file paths
+   */
+  async generateToolkitObjectsByTypeFiles(toolkitObjects) {
+    const groupedObjects = groupByType(toolkitObjects)
+    const filesGenerated = []
+    
+    for (const [typeName, typeObjects] of Object.entries(groupedObjects)) {
+      const fileName = `toolkit-objects-${typeName.toLowerCase().replace(/\s+/g, '-')}.json`
+      const filePath = path.join(this.outputDir, fileName)
+
+      const typeData = {
+        typeName,
+        count: typeObjects.length,
+        source: 'toolkit',
+        objects: typeObjects.sort((a, b) => a.name.localeCompare(b.name))
+      }
+
+      fs.writeFileSync(filePath, JSON.stringify(typeData, null, 2))
+      filesGenerated.push(filePath)
+
+      console.log(`Generated toolkit ${typeName} objects file: ${filePath} (${typeObjects.length} objects)`)
+    }
+
+    return filesGenerated
+  }
+
+  /**
+   * Generate combined files for each object type (app + toolkit)
+   * @param {Array} allObjects - Array of all objects (app + toolkit)
+   * @returns {Promise<Array>} Array of generated file paths
+   */
+  async generateCombinedObjectsByTypeFiles(allObjects) {
+    const groupedObjects = groupByType(allObjects)
+    const filesGenerated = []
+    
+    for (const [typeName, typeObjects] of Object.entries(groupedObjects)) {
+      const appObjects = typeObjects.filter(obj => obj.source === 'application')
+      const toolkitObjects = typeObjects.filter(obj => obj.source === 'toolkit')
+      
+      const fileName = `combined-objects-${typeName.toLowerCase().replace(/\s+/g, '-')}.json`
+      const filePath = path.join(this.outputDir, fileName)
+
+      const typeData = {
+        typeName,
+        count: typeObjects.length,
+        applicationCount: appObjects.length,
+        toolkitCount: toolkitObjects.length,
+        objects: typeObjects.sort((a, b) => {
+          // Sort by source first (app then toolkit), then by name
+          if (a.source !== b.source) {
+            return a.source === 'application' ? -1 : 1
+          }
+          return a.name.localeCompare(b.name)
+        })
+      }
+
+      fs.writeFileSync(filePath, JSON.stringify(typeData, null, 2))
+      filesGenerated.push(filePath)
+
+      console.log(`Generated combined ${typeName} objects file: ${filePath} (${appObjects.length} app + ${toolkitObjects.length} toolkit)`)
+    }
+
+    return filesGenerated
   }
 
   /**
