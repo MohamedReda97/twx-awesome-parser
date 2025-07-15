@@ -169,27 +169,60 @@ async function loadObjectData() {
         // For testing purposes, load from static files
         // Comment this section and uncomment the API section when server is available
         const files = [
-            'objects-coach-view.json',
-            'objects-cshs.json', 
-            'objects-managed-asset.json',
-            'objects-participant.json',
-            'objects-process.json',
-            'objects-business-process-definition.json',
-            'objects-business-object.json'
+            'combined-objects-coach-view.json',
+            'combined-objects-cshs.json', 
+            'combined-objects-managed-asset.json',
+            'combined-objects-participant.json',
+            'combined-objects-process.json',
+            'combined-objects-business-process-definition.json',
+            'combined-objects-business-object.json'
         ];
         
+        // 🆕 Try to load combined files first (app + toolkit objects)
         currentObjects = {};
+        let hasCombinedFiles = false;
         
         for (const file of files) {
             try {
                 const response = await fetch(`./output/${file}`);
                 if (response.ok) {
                     const data = await response.json();
-                    const key = file.replace('objects-', '').replace('.json', '');
+                    const key = file.replace('combined-objects-', '').replace('.json', '');
                     currentObjects[key] = data;
+                    hasCombinedFiles = true;
+                    console.log(`✅ Loaded combined file: ${file} (${data.applicationCount || 0} app + ${data.toolkitCount || 0} toolkit objects)`);
                 }
             } catch (err) {
-                console.log(`Could not load ${file}:`, err.message);
+                console.log(`Could not load combined file ${file}:`, err.message);
+            }
+        }
+        
+        // 🆕 Fallback to original files if combined files not available
+        if (!hasCombinedFiles) {
+            console.log('📄 Combined files not available, loading original object files...');
+            
+            const originalFiles = [
+                'objects-coach-view.json',
+                'objects-cshs.json', 
+                'objects-managed-asset.json',
+                'objects-participant.json',
+                'objects-process.json',
+                'objects-business-process-definition.json',
+                'objects-business-object.json'
+            ];
+            
+            for (const file of originalFiles) {
+                try {
+                    const response = await fetch(`./output/${file}`);
+                    if (response.ok) {
+                        const data = await response.json();
+                        const key = file.replace('objects-', '').replace('.json', '');
+                        currentObjects[key] = data;
+                        console.log(`✅ Loaded original file: ${file} (${data.objects?.length || 0} objects)`);
+                    }
+                } catch (err) {
+                    console.log(`Could not load ${file}:`, err.message);
+                }
             }
         }
         
@@ -204,6 +237,10 @@ async function loadObjectData() {
         
         displayObjectTypes();
         updateObjectCount();
+        
+        // 🆕 Load and display enhanced statistics
+        await loadAndDisplayStatistics();
+        
         updateStatus('Object data loaded');
         
     } catch (error) {
@@ -248,17 +285,38 @@ function displayObjectTypes() {
         .filter(type => allowedTypes.includes(type))
         .forEach(type => {
             const objectData = currentObjects[type];
-            const count = objectData.objects ? objectData.objects.length : 0;
+            const totalCount = objectData.objects ? objectData.objects.length : 0;
+            
+            // 🆕 Calculate app/toolkit breakdown
+            let appCount = 0;
+            let toolkitCount = 0;
+            
+            if (objectData.objects) {
+                appCount = objectData.objects.filter(obj => obj.source === 'application').length;
+                toolkitCount = objectData.objects.filter(obj => obj.source === 'toolkit').length;
+            }
+            
+            // Use explicit counts from combined files if available
+            if (objectData.applicationCount !== undefined) {
+                appCount = objectData.applicationCount;
+            }
+            if (objectData.toolkitCount !== undefined) {
+                toolkitCount = objectData.toolkitCount;
+            }
             
             const card = document.createElement('div');
             card.className = 'object-type-card';
             card.onclick = () => selectObjectType(type);
             
-            // Smaller boxes without description
+            // Enhanced card with app/toolkit breakdown
             card.innerHTML = `
                 <div class="object-type-header">
                     <span class="object-type-name">${getDisplayName(type)}</span>
-                    <span class="object-count-badge">${count}</span>
+                    <div class="object-count-breakdown">
+                        ${appCount > 0 ? `<span class="app-count" title="Application Objects">${appCount}</span>` : ''}
+                        ${toolkitCount > 0 ? `<span class="toolkit-count" title="Toolkit Objects">+${toolkitCount}</span>` : ''}
+                        <span class="total-count">${totalCount}</span>
+                    </div>
                 </div>
             `;
             
@@ -318,8 +376,16 @@ function displayObjectsList(type) {
     
     objectData.objects.forEach(object => {
         const item = document.createElement('div');
-        item.className = 'object-item';
+        item.className = `object-item ${object.source || 'application'}`;
         item.onclick = () => selectObject(object);
+        
+        // 🆕 Add source indicator
+        let sourceIndicator = '';
+        if (object.source === 'toolkit' && object.toolkitInfo) {
+            sourceIndicator = `<span class="toolkit-indicator" title="From ${object.toolkitInfo.name}">[${object.toolkitInfo.shortName}]</span>`;
+        } else if (object.source === 'application') {
+            sourceIndicator = '<span class="app-indicator" title="Application Object">[APP]</span>';
+        }
         
         // Generate schema summary for business objects
         let schemaSummary = '';
@@ -328,12 +394,21 @@ function displayObjectsList(type) {
         }
         
         item.innerHTML = `
-            <div class="object-name">${object.name || 'Unnamed'}</div>
+            <div class="object-header">
+                <div class="object-name">${object.name || 'Unnamed'}</div>
+                ${sourceIndicator}
+            </div>
             <div class="object-meta">
                 ID: ${object.id} | Type: ${object.typeName || type}
                 ${object.subType ? ` | SubType: ${object.subType}` : ''}
             </div>
             ${schemaSummary}
+            ${object.source === 'toolkit' && object.toolkitInfo ? `
+                <div class="toolkit-details">
+                    <strong>Toolkit:</strong> ${object.toolkitInfo.name} (${object.toolkitInfo.shortName})
+                    ${object.toolkitInfo.isSystem ? ' <em>[System]</em>' : ''}
+                </div>
+            ` : ''}
         `;
         
         gridContainer.appendChild(item);
@@ -457,7 +532,7 @@ function toggleScriptSection(sectionId) {
  * Generate basic information display
  */
 function generateBasicInfo(object) {
-    return `
+    let basicInfo = `
         <table class="variables-table">
             <tr><th>Property</th><th>Value</th></tr>
             <tr><td>Name</td><td>${object.name || 'N/A'}</td></tr>
@@ -467,8 +542,27 @@ function generateBasicInfo(object) {
             ${object.subType ? `<tr><td>Sub Type</td><td>${object.subType}</td></tr>` : ''}
             ${object.details?.displayName ? `<tr><td>Display Name</td><td>${object.details.displayName}</td></tr>` : ''}
             ${object.details?.description ? `<tr><td>Description</td><td>${object.details.description}</td></tr>` : ''}
-        </table>
     `;
+    
+    // 🆕 Add source information
+    if (object.source) {
+        basicInfo += `<tr><td>Source</td><td><span class="${object.source === 'toolkit' ? 'toolkit-indicator' : 'app-indicator'}">${object.source.toUpperCase()}</span></td></tr>`;
+    }
+    
+    // 🆕 Add toolkit details if applicable
+    if (object.source === 'toolkit' && object.toolkitInfo) {
+        basicInfo += `
+            <tr><td>Toolkit Name</td><td>${object.toolkitInfo.name}</td></tr>
+            <tr><td>Toolkit Short Name</td><td>${object.toolkitInfo.shortName}</td></tr>
+            <tr><td>Toolkit ID</td><td>${object.toolkitInfo.id}</td></tr>
+            <tr><td>Toolkit File</td><td>${object.toolkitInfo.fileName}</td></tr>
+            ${object.toolkitInfo.isSystem ? '<tr><td>System Toolkit</td><td>Yes</td></tr>' : ''}
+        `;
+    }
+    
+    basicInfo += '</table>';
+    
+    return basicInfo;
 }
 
 /**
@@ -920,7 +1014,38 @@ function updateObjectCount() {
         return sum + (data.objects ? data.objects.length : 0);
     }, 0);
     
-    document.getElementById('object-count').textContent = `${total} objects total`;
+    // 🆕 Calculate app/toolkit breakdown
+    let appTotal = 0;
+    let toolkitTotal = 0;
+    
+    Object.values(currentObjects).forEach(data => {
+        if (data.objects) {
+            appTotal += data.objects.filter(obj => obj.source === 'application').length;
+            toolkitTotal += data.objects.filter(obj => obj.source === 'toolkit').length;
+        }
+        
+        // Use explicit counts from combined files if available
+        if (data.applicationCount !== undefined) {
+            appTotal += data.applicationCount;
+        }
+        if (data.toolkitCount !== undefined) {
+            toolkitTotal += data.toolkitCount;
+        }
+    });
+    
+    // 🆕 Enhanced object count display
+    const objectCountElement = document.getElementById('object-count');
+    if (toolkitTotal > 0) {
+        objectCountElement.innerHTML = `
+            <span class="total-count">${total} objects total</span>
+            <span style="margin-left: 10px; font-size: 0.9em;">
+                (<span class="app-count" style="display: inline-block; margin-right: 5px;">${appTotal} app</span>
+                <span class="toolkit-count" style="display: inline-block;">+${toolkitTotal} toolkit</span>)
+            </span>
+        `;
+    } else {
+        objectCountElement.textContent = `${total} objects total`;
+    }
 }
 
 function getDisplayName(type) {
@@ -1143,4 +1268,73 @@ function toggleResolvedType(elementId) {
         element.style.display = 'none';
         toggle.textContent = toggle.textContent.replace('▼', '▶');
     }
+}
+
+/**
+ * Load and display enhanced statistics
+ */
+async function loadAndDisplayStatistics() {
+    try {
+        // Try to load the enhanced summary file
+        const response = await fetch('./output/twx-summary.json');
+        if (response.ok) {
+            const summaryData = await response.json();
+            displayEnhancedStatistics(summaryData.statistics);
+        }
+    } catch (error) {
+        console.log('Could not load enhanced statistics:', error.message);
+    }
+}
+
+/**
+ * Display enhanced statistics with app/toolkit breakdown
+ */
+function displayEnhancedStatistics(stats) {
+    // Create or update statistics section
+    let statsSection = document.getElementById('enhanced-statistics');
+    if (!statsSection) {
+        statsSection = document.createElement('div');
+        statsSection.id = 'enhanced-statistics';
+        statsSection.className = 'statistics-section';
+        
+        // Insert before the object types section
+        const objectTypesSection = document.querySelector('.object-browser');
+        if (objectTypesSection) {
+            objectTypesSection.parentNode.insertBefore(statsSection, objectTypesSection);
+        }
+    }
+    
+    statsSection.innerHTML = `
+        <div class="collapsible-panel">
+            <div class="panel-header" onclick="togglePanel('statistics-panel')">
+                <span class="panel-title">📊 Object Statistics</span>
+                <span class="panel-toggle" id="statistics-toggle">▼</span>
+            </div>
+            <div class="panel-content" id="statistics-panel">
+                <div class="statistics-grid">
+                    <div class="stat-card total-objects">
+                        <div class="stat-value">${stats.totalObjects || 0}</div>
+                        <div class="stat-label">Total Objects</div>
+                    </div>
+                    <div class="stat-card app-objects">
+                        <div class="stat-value">${stats.applicationObjects || 0}</div>
+                        <div class="stat-label">Application Objects</div>
+                    </div>
+                    <div class="stat-card toolkit-objects">
+                        <div class="stat-value">${stats.toolkitObjects || 0}</div>
+                        <div class="stat-label">Toolkit Objects</div>
+                    </div>
+                    <div class="stat-card toolkits">
+                        <div class="stat-value">${stats.toolkits || 0}</div>
+                        <div class="stat-label">Toolkits</div>
+                    </div>
+                </div>
+                <div class="statistics-details">
+                    <p><strong>Object Types:</strong> ${stats.objectTypes || 0}</p>
+                    <p><strong>Extracted:</strong> ${stats.extractedAt ? new Date(stats.extractedAt).toLocaleString() : 'Unknown'}</p>
+                    <p><strong>Source:</strong> ${stats.sourceFile || 'Unknown'}</p>
+                </div>
+            </div>
+        </div>
+    `;
 }

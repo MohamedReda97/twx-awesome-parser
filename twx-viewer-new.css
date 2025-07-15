@@ -282,18 +282,18 @@ body {
 }
 
 .object-type-name {
-    font-weight: 600;
-    color: #495057;
-    font-size: 0.95rem;
+    font-weight: bold;
+    flex-grow: 1;
 }
 
 .object-count-badge {
     background: #6c757d;
     color: white;
-    padding: 0.2rem 0.6rem;
+    padding: 4px 8px;
     border-radius: 12px;
-    font-size: 0.75rem;
-    margin-left: auto;
+    font-size: 0.8em;
+    font-weight: bold;
+    margin-left: 8px;
 }
 
 /* Objects List Styles */
@@ -332,15 +332,27 @@ body {
     border-color: #bee5eb;
 }
 
-.object-name {
-    font-weight: 600;
-    color: #495057;
-    margin-bottom: 0.25rem;
+.object-item.toolkit {
+    border-left: 4px solid #007bff;
+    background: #f8f9fa;
 }
 
-.object-meta {
-    font-size: 0.8rem;
-    color: #6c757d;
+.object-item.application {
+    border-left: 4px solid #28a745;
+}
+
+.object-name {
+    font-weight: bold;
+    flex-grow: 1;
+}
+
+.toolkit-details {
+    font-size: 0.9em;
+    color: #666;
+    margin-top: 4px;
+    padding: 4px 8px;
+    background: #e7f3ff;
+    border-radius: 4px;
 }
 
 /* Object Details Styles */
@@ -1036,6 +1048,106 @@ body {
     background-color: #dee2e6;
     border-radius: 4px;
     padding: 0.5rem;
+}
+
+/* 🆕 Toolkit Object Indicators */
+.toolkit-indicator {
+    background: #007bff;
+    color: white;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 0.8em;
+    margin-left: 8px;
+    font-weight: bold;
+}
+
+.app-indicator {
+    background: #28a745;
+    color: white;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 0.8em;
+    margin-left: 8px;
+    font-weight: bold;
+}
+
+.object-count-breakdown {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-wrap: wrap;
+}
+
+.app-count {
+    background: #28a745;
+    color: white;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 0.85em;
+    font-weight: bold;
+}
+
+.toolkit-count {
+    background: #007bff;
+    color: white;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 0.85em;
+    font-weight: bold;
+}
+
+.total-count {
+    font-weight: bold;
+    margin-left: 4px;
+    color: #333;
+}
+
+/* Statistics enhancement */
+.statistics-section {
+    margin-bottom: 20px;
+}
+
+.statistics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.stat-card {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid #dee2e6;
+    text-align: center;
+}
+
+.stat-value {
+    font-size: 1.5em;
+    font-weight: bold;
+    color: #495057;
+}
+
+.stat-label {
+    font-size: 0.9em;
+    color: #6c757d;
+    margin-top: 5px;
+}
+
+.stat-card.app-objects .stat-value {
+    color: #28a745;
+}
+
+.stat-card.toolkit-objects .stat-value {
+    color: #007bff;
+}
+
+.stat-card.total-objects .stat-value {
+    color: #343a40;
+}
+
+.stat-card.toolkits .stat-value {
+    color: #6f42c1;
 }
 
 /* Responsive Design */
