@@ -13,7 +13,7 @@ class BusinessObjectSchemaParser {
 
   /**
    * Parse business object schema from jsonData
-   * @param {string} jsonData - JSON string from business object XML
+   * @param {string|Object} jsonData - JSON string or object from business object XML
    * @param {string} objectId - ID of the business object
    * @param {string} objectName - Name of the business object
    * @returns {Object} Parsed schema information
@@ -24,7 +24,18 @@ class BusinessObjectSchemaParser {
         return this.createEmptySchema(objectId, objectName);
       }
 
-      const schema = JSON.parse(jsonData);
+      let schema;
+      
+      // Check if jsonData is already an object (parsed by xml2js) or a string
+      if (typeof jsonData === 'string') {
+        schema = JSON.parse(jsonData);
+      } else if (typeof jsonData === 'object') {
+        schema = jsonData;
+      } else {
+        console.warn(`Unexpected jsonData type for ${objectName}:`, typeof jsonData);
+        return this.createEmptySchema(objectId, objectName, 'Invalid jsonData type');
+      }
+
       return this.extractSchemaStructure(schema, objectId, objectName);
     } catch (error) {
       console.warn(`Error parsing schema for ${objectName}:`, error.message);
