@@ -9,11 +9,12 @@ let selectedObjectType = null;
 let selectedObject = null;
 let searchResults = [];
 let selectedTWXFile = null;
+let showToolkitObjects = false; // New state for toolkit toggle
 
 /**
  * Initialize the application
  */
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     console.log('TWX Viewer New UI loading...');
     loadObjectData();
     updateStatus('Ready - Select a TWX file to begin');
@@ -25,8 +26,8 @@ document.addEventListener('DOMContentLoaded', function() {
 function selectTWXFile() {
     const fileInput = document.getElementById('twx-file-input');
     fileInput.click();
-    
-    fileInput.onchange = function(event) {
+
+    fileInput.onchange = function (event) {
         const file = event.target.files[0];
         if (file) {
             if (file.name.toLowerCase().endsWith('.twx')) {
@@ -68,38 +69,38 @@ async function parseTWXFile() {
     try {
         showParsingStatus('Uploading and parsing TWX file...', 'processing');
         updateProgressBar(10);
-        
+
         // Create FormData to upload file
         const formData = new FormData();
         formData.append('twxFile', selectedTWXFile);
-        
+
         updateProgressBar(30);
-        
+
         // Send file to server for parsing
         const response = await fetch('/api/parse', {
             method: 'POST',
             body: formData
         });
-        
+
         updateProgressBar(60);
-        
+
         if (!response.ok) {
             throw new Error(`Parse failed: ${response.status} ${response.statusText}`);
         }
-        
+
         const result = await response.json();
         updateProgressBar(80);
-        
+
         // Success - reload the object data
         showParsingStatus(`Parsing completed! Found ${result.objectCount || 0} objects.`, 'success');
         updateProgressBar(100);
-        
+
         // Reload the UI with new data
         setTimeout(() => {
             loadObjectData();
             hideParsingStatus();
         }, 2000);
-        
+
     } catch (error) {
         console.error('Parse error:', error);
         showParsingStatus(`Error: ${error.message}`, 'error');
@@ -113,11 +114,11 @@ async function parseTWXFile() {
 function showParsingStatus(message, type = 'processing') {
     const statusDiv = document.getElementById('parsing-status');
     const messageDiv = document.getElementById('status-message');
-    
+
     statusDiv.style.display = 'block';
     statusDiv.className = `parsing-status status-${type}`;
     messageDiv.textContent = message;
-    
+
     if (type === 'processing') {
         document.getElementById('progress-bar').style.display = 'block';
     } else {
@@ -147,7 +148,7 @@ function updateProgressBar(percent) {
 function togglePanel(panelId) {
     const panel = document.getElementById(panelId);
     const toggleIcon = document.getElementById(panelId.replace('-panel', '-toggle'));
-    
+
     if (panel.classList.contains('collapsed')) {
         panel.classList.remove('collapsed');
         toggleIcon.classList.remove('collapsed');
@@ -165,23 +166,23 @@ function togglePanel(panelId) {
 async function loadObjectData() {
     try {
         updateStatus('Loading object data...');
-        
+
         // For testing purposes, load from static files
         // Comment this section and uncomment the API section when server is available
         const files = [
             'combined-objects-coach-view.json',
-            'combined-objects-cshs.json', 
+            'combined-objects-cshs.json',
             'combined-objects-managed-asset.json',
             'combined-objects-participant.json',
             'combined-objects-process.json',
             'combined-objects-business-process-definition.json',
             'combined-objects-business-object.json'
         ];
-        
+
         // 🆕 Try to load combined files first (app + toolkit objects)
         currentObjects = {};
         let hasCombinedFiles = false;
-        
+
         for (const file of files) {
             try {
                 const response = await fetch(`./output/${file}`);
@@ -196,21 +197,21 @@ async function loadObjectData() {
                 console.log(`Could not load combined file ${file}:`, err.message);
             }
         }
-        
+
         // 🆕 Fallback to original files if combined files not available
         if (!hasCombinedFiles) {
             console.log('📄 Combined files not available, loading original object files...');
-            
+
             const originalFiles = [
                 'objects-coach-view.json',
-                'objects-cshs.json', 
+                'objects-cshs.json',
                 'objects-managed-asset.json',
                 'objects-participant.json',
                 'objects-process.json',
                 'objects-business-process-definition.json',
                 'objects-business-object.json'
             ];
-            
+
             for (const file of originalFiles) {
                 try {
                     const response = await fetch(`./output/${file}`);
@@ -225,7 +226,7 @@ async function loadObjectData() {
                 }
             }
         }
-        
+
         /* 
         // API version (use when server is running)
         const response = await fetch('/api/objects');
@@ -234,19 +235,38 @@ async function loadObjectData() {
         }
         currentObjects = await response.json();
         */
-        
+
         displayObjectTypes();
         updateObjectCount();
-        
+
         // 🆕 Load and display enhanced statistics
         await loadAndDisplayStatistics();
-        
+
+        // Debug: Log toolkit objects found
+        console.log('🔍 Debug: Checking for toolkit objects in loaded data...');
+        Object.keys(currentObjects).forEach(objectType => {
+            const objectData = currentObjects[objectType];
+            if (objectData && objectData.objects) {
+                const toolkitObjs = objectData.objects.filter(obj => obj.source === 'toolkit');
+                const appObjs = objectData.objects.filter(obj => obj.source === 'application');
+                console.log(`${objectType}: ${appObjs.length} app objects, ${toolkitObjs.length} toolkit objects`);
+
+                if (toolkitObjs.length > 0) {
+                    console.log(`  Sample toolkit objects:`, toolkitObjs.slice(0, 3).map(obj => ({
+                        name: obj.name,
+                        source: obj.source,
+                        toolkitInfo: obj.toolkitInfo?.shortName
+                    })));
+                }
+            }
+        });
+
         updateStatus('Object data loaded');
-        
+
     } catch (error) {
         console.error('Error loading object data:', error);
         updateStatus('Error loading data');
-        
+
         // Show error in the loading area
         const loadingEl = document.getElementById('object-types-loading');
         if (loadingEl) {
@@ -262,40 +282,40 @@ async function loadObjectData() {
 function displayObjectTypes() {
     const container = document.getElementById('object-types-list');
     const loading = document.getElementById('object-types-loading');
-    
+
     // Hide loading indicator
     if (loading) loading.style.display = 'none';
-    
+
     // Clear existing content
     container.innerHTML = '';
-    
+
     // Define the allowed object types to display
     const allowedTypes = [
         'coach-view',
-        'cshs', 
+        'cshs',
         'managed-asset',
         'participant',
         'process',
         'business-process-definition',
         'business-object'
     ];
-    
+
     // Filter and create type cards only for allowed types
     Object.keys(currentObjects)
         .filter(type => allowedTypes.includes(type))
         .forEach(type => {
             const objectData = currentObjects[type];
-            const totalCount = objectData.objects ? objectData.objects.length : 0;
-            
-            // 🆕 Calculate app/toolkit breakdown
+
+            // Calculate counts based on toolkit toggle
             let appCount = 0;
             let toolkitCount = 0;
-            
+            let displayCount = 0;
+
             if (objectData.objects) {
                 appCount = objectData.objects.filter(obj => obj.source === 'application').length;
                 toolkitCount = objectData.objects.filter(obj => obj.source === 'toolkit').length;
             }
-            
+
             // Use explicit counts from combined files if available
             if (objectData.applicationCount !== undefined) {
                 appCount = objectData.applicationCount;
@@ -303,23 +323,33 @@ function displayObjectTypes() {
             if (objectData.toolkitCount !== undefined) {
                 toolkitCount = objectData.toolkitCount;
             }
-            
+
+            // Calculate display count based on toggle
+            if (showToolkitObjects) {
+                displayCount = appCount + toolkitCount;
+            } else {
+                displayCount = appCount;
+            }
+
             const card = document.createElement('div');
             card.className = 'object-type-card';
             card.onclick = () => selectObjectType(type);
-            
+
             // Enhanced card with app/toolkit breakdown
             card.innerHTML = `
                 <div class="object-type-header">
                     <span class="object-type-name">${getDisplayName(type)}</span>
                     <div class="object-count-breakdown">
-                        ${appCount > 0 ? `<span class="app-count" title="Application Objects">${appCount}</span>` : ''}
-                        ${toolkitCount > 0 ? `<span class="toolkit-count" title="Toolkit Objects">+${toolkitCount}</span>` : ''}
-                        <span class="total-count">${totalCount}</span>
+                        ${showToolkitObjects ?
+                    `${appCount > 0 ? `<span class="app-count" title="Application Objects">${appCount}</span>` : ''}
+                             ${toolkitCount > 0 ? `<span class="toolkit-count" title="Toolkit Objects">+${toolkitCount}</span>` : ''}` :
+                    `<span class="app-count" title="Application Objects Only">${appCount}</span>`
+                }
+                        <span class="total-count">${displayCount}</span>
                     </div>
                 </div>
             `;
-            
+
             container.appendChild(card);
         });
 }
@@ -329,23 +359,59 @@ function displayObjectTypes() {
  */
 function selectObjectType(type) {
     selectedObjectType = type;
-    
+
     // Update UI selection
     document.querySelectorAll('.object-type-card').forEach(card => {
         card.classList.remove('selected');
     });
     event.target.closest('.object-type-card').classList.add('selected');
-    
+
     // Show and populate objects list
     displayObjectsList(type);
     showPanel('objects-list-panel');
-    
+
     // Update panel title
     const title = document.getElementById('objects-list-title');
     const count = currentObjects[type].objects ? currentObjects[type].objects.length : 0;
     title.textContent = `📋 ${getDisplayName(type)} (${count})`;
-    
+
     updateStatus(`Selected ${getDisplayName(type)} - ${count} objects`);
+}
+
+/**
+ * Toggle toolkit objects visibility
+ */
+function toggleToolkitObjects() {
+    showToolkitObjects = document.getElementById('show-toolkit-objects').checked;
+    console.log('Toolkit objects toggle:', showToolkitObjects);
+
+    // Refresh the current view if an object type is selected
+    if (selectedObjectType) {
+        displayObjectsList(selectedObjectType);
+
+        // Update the count in the panel title
+        const filteredObjects = getFilteredObjects(currentObjects[selectedObjectType].objects);
+        const title = document.getElementById('objects-list-title');
+        title.textContent = `📋 ${getDisplayName(selectedObjectType)} (${filteredObjects.length})`;
+    }
+
+    // Update object type cards to show filtered counts
+    displayObjectTypes();
+}
+
+/**
+ * Get filtered objects based on toolkit toggle
+ */
+function getFilteredObjects(objects) {
+    if (!objects) return [];
+
+    if (showToolkitObjects) {
+        // Show all objects (app + toolkit)
+        return objects;
+    } else {
+        // Show only application objects
+        return objects.filter(obj => obj.source !== 'toolkit');
+    }
 }
 
 /**
@@ -353,19 +419,27 @@ function selectObjectType(type) {
  */
 function displayObjectsList(type) {
     const container = document.getElementById('objects-list');
-    
+
     // Check if container exists
     if (!container) {
         console.error('Objects list container not found');
         return;
     }
-    
+
     const objectData = currentObjects[type];
-    
+
     container.innerHTML = '';
-    
+
     if (!objectData || !objectData.objects || objectData.objects.length === 0) {
         container.innerHTML = '<div class="loading">No objects found</div>';
+        return;
+    }
+
+    // Filter objects based on toolkit toggle
+    const filteredObjects = getFilteredObjects(objectData.objects);
+
+    if (filteredObjects.length === 0) {
+        container.innerHTML = '<div class="loading">No objects found (try toggling toolkit objects)</div>';
         return;
     }
 
@@ -373,44 +447,59 @@ function displayObjectsList(type) {
     const gridContainer = document.createElement('div');
     gridContainer.className = 'object-list-container';
     container.appendChild(gridContainer);
-    
-    objectData.objects.forEach(object => {
+
+    filteredObjects.forEach(object => {
         const item = document.createElement('div');
         item.className = `object-item ${object.source || 'application'}`;
         item.onclick = () => selectObject(object);
-        
-        // 🆕 Add source indicator
+
+        // Minimal design - focus on important details
+        let importantDetails = '';
+
+        // Show script count for objects with scripts
+        if (object.details?.scripts?.length > 0) {
+            importantDetails += `<span class="detail-badge scripts">📜 ${object.details.scripts.length} scripts</span>`;
+        }
+
+        // Show variable count for CSHS/Services
+        if (object.details?.variables) {
+            const totalVars = (object.details.variables.input?.length || 0) +
+                (object.details.variables.output?.length || 0) +
+                (object.details.variables.private?.length || 0);
+            if (totalVars > 0) {
+                importantDetails += `<span class="detail-badge variables">🔧 ${totalVars} vars</span>`;
+            }
+        }
+
+        // Show element count for CSHS
+        if (object.details?.elements) {
+            const totalElements = Object.values(object.details.elements).reduce((sum, arr) => sum + (arr?.length || 0), 0);
+            if (totalElements > 0) {
+                importantDetails += `<span class="detail-badge elements">⚙️ ${totalElements} elements</span>`;
+            }
+        }
+
+        // Show property count for business objects
+        if (object.details?.schema?.properties?.length > 0) {
+            importantDetails += `<span class="detail-badge properties">📋 ${object.details.schema.properties.length} props</span>`;
+        }
+
+        // Source indicator
         let sourceIndicator = '';
         if (object.source === 'toolkit' && object.toolkitInfo) {
-            sourceIndicator = `<span class="toolkit-indicator" title="From ${object.toolkitInfo.name}">[${object.toolkitInfo.shortName}]</span>`;
+            sourceIndicator = `<span class="source-badge toolkit">${object.toolkitInfo.shortName}</span>`;
         } else if (object.source === 'application') {
-            sourceIndicator = '<span class="app-indicator" title="Application Object">[APP]</span>';
+            sourceIndicator = '<span class="source-badge app">APP</span>';
         }
-        
-        // Generate schema summary for business objects
-        let schemaSummary = '';
-        if (type === 'business-object' && object.details && object.details.schema) {
-            schemaSummary = generateBusinessObjectSummary(object.details.schema);
-        }
-        
+
         item.innerHTML = `
-            <div class="object-header">
-                <div class="object-name">${object.name || 'Unnamed'}</div>
+            <div class="object-header-minimal">
+                <div class="object-name-minimal">${object.name || 'Unnamed'}</div>
                 ${sourceIndicator}
             </div>
-            <div class="object-meta">
-                ID: ${object.id} | Type: ${object.typeName || type}
-                ${object.subType ? ` | SubType: ${object.subType}` : ''}
-            </div>
-            ${schemaSummary}
-            ${object.source === 'toolkit' && object.toolkitInfo ? `
-                <div class="toolkit-details">
-                    <strong>Toolkit:</strong> ${object.toolkitInfo.name} (${object.toolkitInfo.shortName})
-                    ${object.toolkitInfo.isSystem ? ' <em>[System]</em>' : ''}
-                </div>
-            ` : ''}
+            ${importantDetails ? `<div class="object-details-minimal">${importantDetails}</div>` : ''}
         `;
-        
+
         gridContainer.appendChild(item);
     });
 }
@@ -420,21 +509,21 @@ function displayObjectsList(type) {
  */
 function selectObject(object) {
     selectedObject = object;
-    
+
     // Update UI selection
     document.querySelectorAll('.object-item').forEach(item => {
         item.classList.remove('selected');
     });
     event.target.closest('.object-item').classList.add('selected');
-    
+
     // Show and populate object details
     displayObjectDetails(object);
     showPanel('object-details-panel');
-    
+
     // Update panel title
     const title = document.getElementById('object-details-title');
     title.textContent = `📄 ${object.name || 'Unnamed Object'}`;
-    
+
     updateStatus(`Viewing ${object.name || 'object'} details`);
 }
 
@@ -444,38 +533,38 @@ function selectObject(object) {
 function displayObjectDetails(object) {
     const container = document.getElementById('object-details');
     container.innerHTML = '';
-    
+
     // Basic Information
     const basicInfo = createDetailSection('Basic Information', generateBasicInfo(object));
     container.appendChild(basicInfo);
-    
+
     // Type-specific details
     if (object.details) {
         if (object.details.variables) {
             const variablesSection = createDetailSection('Variables', generateVariablesDisplay(object.details.variables, selectedObjectType));
             container.appendChild(variablesSection);
         }
-        
+
         if (object.details.scripts && object.details.scripts.length > 0) {
             const scriptsSection = createDetailSection('Scripts', generateScriptsDisplay(object.details.scripts));
             container.appendChild(scriptsSection);
         }
-        
+
         if (object.details.inlineScripts && object.details.inlineScripts.length > 0) {
             const inlineScriptsSection = createDetailSection('Inline Scripts', generateInlineScriptsDisplay(object.details.inlineScripts));
             container.appendChild(inlineScriptsSection);
         }
-        
+
         if (object.details.loadJsFunction) {
             const jsSection = createDetailSection('Load JS Function', `<div class="code-block">${object.details.loadJsFunction}</div>`);
             container.appendChild(jsSection);
         }
-        
+
         if (object.details.elements) {
             const elementsSection = createDetailSection('Process Elements', generateElementsDisplay(object.details.elements));
             container.appendChild(elementsSection);
         }
-        
+
         if (object.details.schema) {
             const schemaSection = createDetailSection('Business Object Schema', generateBusinessObjectSchemaDisplay(object.details.schema));
             container.appendChild(schemaSection);
@@ -489,9 +578,9 @@ function displayObjectDetails(object) {
 function createDetailSection(title, content) {
     const section = document.createElement('div');
     section.className = 'detail-section';
-    
+
     const sectionId = 'detail-' + title.toLowerCase().replace(/\s+/g, '-');
-    
+
     section.innerHTML = `
         <div class="detail-section-header" onclick="toggleDetailSection('${sectionId}')">
             <span class="detail-section-title">${title}</span>
@@ -500,7 +589,7 @@ function createDetailSection(title, content) {
             ${content}
         </div>
     `;
-    
+
     return section;
 }
 
@@ -518,7 +607,7 @@ function toggleDetailSection(sectionId) {
 function toggleScriptSection(sectionId) {
     const content = document.getElementById(sectionId);
     const toggle = document.getElementById(sectionId + '-toggle');
-    
+
     if (content.classList.contains('collapsed')) {
         content.classList.remove('collapsed');
         if (toggle) toggle.textContent = '▼';
@@ -543,12 +632,12 @@ function generateBasicInfo(object) {
             ${object.details?.displayName ? `<tr><td>Display Name</td><td>${object.details.displayName}</td></tr>` : ''}
             ${object.details?.description ? `<tr><td>Description</td><td>${object.details.description}</td></tr>` : ''}
     `;
-    
+
     // 🆕 Add source information
     if (object.source) {
         basicInfo += `<tr><td>Source</td><td><span class="${object.source === 'toolkit' ? 'toolkit-indicator' : 'app-indicator'}">${object.source.toUpperCase()}</span></td></tr>`;
     }
-    
+
     // 🆕 Add toolkit details if applicable
     if (object.source === 'toolkit' && object.toolkitInfo) {
         basicInfo += `
@@ -559,9 +648,9 @@ function generateBasicInfo(object) {
             ${object.toolkitInfo.isSystem ? '<tr><td>System Toolkit</td><td>Yes</td></tr>' : ''}
         `;
     }
-    
+
     basicInfo += '</table>';
-    
+
     return basicInfo;
 }
 
@@ -573,25 +662,25 @@ function generateVariablesDisplay(variables, objectType) {
     if (objectType === 'cshs' || objectType === 'process') {
         return generateVariablesBoxDisplay(variables);
     }
-    
+
     // Use table layout for other types
     let html = '';
-    
+
     if (variables.input && variables.input.length > 0) {
         html += '<h4>Input Variables</h4>';
         html += generateVariablesTable(variables.input);
     }
-    
+
     if (variables.output && variables.output.length > 0) {
         html += '<h4>Output Variables</h4>';
         html += generateVariablesTable(variables.output);
     }
-    
+
     if (variables.private && variables.private.length > 0) {
         html += '<h4>Private Variables</h4>';
         html += generateVariablesTable(variables.private);
     }
-    
+
     return html || '<p>No variables found</p>';
 }
 
@@ -600,19 +689,19 @@ function generateVariablesDisplay(variables, objectType) {
  */
 function generateVariablesBoxDisplay(variables) {
     let html = '<div class="variables-boxes">';
-    
+
     if (variables.input && variables.input.length > 0) {
         html += generateVariableTypeSection('Input Variables', variables.input, 'input');
     }
-    
+
     if (variables.output && variables.output.length > 0) {
         html += generateVariableTypeSection('Output Variables', variables.output, 'output');
     }
-    
+
     if (variables.private && variables.private.length > 0) {
         html += generateVariableTypeSection('Private Variables', variables.private, 'private');
     }
-    
+
     html += '</div>';
     return html || '<p>No variables found</p>';
 }
@@ -626,11 +715,11 @@ function generateVariableTypeSection(title, variables, direction) {
             <div class="variable-type-title">${title}</div>
             <div class="variable-boxes-container">
     `;
-    
+
     variables.forEach(variable => {
         html += generateVariableBox(variable, direction);
     });
-    
+
     html += '</div></div>';
     return html;
 }
@@ -641,7 +730,7 @@ function generateVariableTypeSection(title, variables, direction) {
 function generateVariableBox(variable, direction) {
     const hasDefault = variable.hasDefault || false;
     const variableName = variable.name || 'unnamed';
-    
+
     return `
         <div class="variable-box" title="${variable.description || 'No description'}">
             <div class="default-indicator ${hasDefault ? 'has-default' : ''}"></div>
@@ -655,7 +744,7 @@ function generateVariableBox(variable, direction) {
  */
 function generateScriptsDisplay(scripts) {
     let html = '';
-    
+
     scripts.forEach((script, index) => {
         html += `
             <div class="script-detail-section">
@@ -669,7 +758,7 @@ function generateScriptsDisplay(scripts) {
             </div>
         `;
     });
-    
+
     return html;
 }
 
@@ -678,11 +767,11 @@ function generateScriptsDisplay(scripts) {
  */
 function generateInlineScriptsDisplay(scripts) {
     let html = '';
-    
+
     scripts.forEach((script, index) => {
         // Handle different script structures (CSHS vs other types)
         let scriptContent = script.script || script.scriptBlock || 'No script content';
-        
+
         // Normalize line endings and handle formatting
         if (scriptContent && scriptContent !== 'No script content') {
             scriptContent = scriptContent
@@ -690,10 +779,10 @@ function generateInlineScriptsDisplay(scripts) {
                 .replace(/\r\n/g, '\n')    // Convert \r\n to \n
                 .replace(/\r/g, '\n');     // Convert standalone \r to \n
         }
-        
+
         const scriptName = script.name || `Inline Script ${index + 1}`;
         const scriptType = script.scriptType || 'JS';
-        
+
         // Create expandable script sections like the regular scripts
         html += `
             <div class="script-detail-section">
@@ -709,7 +798,7 @@ function generateInlineScriptsDisplay(scripts) {
             </div>
         `;
     });
-    
+
     return html;
 }
 
@@ -718,28 +807,28 @@ function generateInlineScriptsDisplay(scripts) {
  */
 function generateElementsDisplay(elements) {
     let html = '';
-    
+
     if (elements.scriptTasks && elements.scriptTasks.length > 0) {
         html += '<h4>Script Tasks</h4>';
         elements.scriptTasks.forEach((task, index) => {
             html += generateElementScriptDisplay(task, `script-task-${index}`, 'Script Task');
         });
     }
-    
+
     if (elements.formTasks && elements.formTasks.length > 0) {
         html += '<h4>Form Tasks</h4>';
         elements.formTasks.forEach((task, index) => {
             html += generateElementScriptDisplay(task, `form-task-${index}`, 'Form Task');
         });
     }
-    
+
     if (elements.callActivities && elements.callActivities.length > 0) {
         html += '<h4>Call Activities</h4>';
         elements.callActivities.forEach((activity, index) => {
             html += generateElementScriptDisplay(activity, `call-activity-${index}`, 'Call Activity');
         });
     }
-    
+
     return html || '<p>No process elements found</p>';
 }
 
@@ -747,10 +836,10 @@ function generateElementsDisplay(elements) {
  * Generate expandable script display for process elements
  */
 function generateElementScriptDisplay(element, elementId, elementType) {
-    const hasScripts = (element.preScript && element.preScript.trim()) || 
-                      (element.postScript && element.postScript.trim()) ||
-                      (element.script && element.script.trim());
-    
+    const hasScripts = (element.preScript && element.preScript.trim()) ||
+        (element.postScript && element.postScript.trim()) ||
+        (element.script && element.script.trim());
+
     if (!hasScripts) {
         // No scripts - show as simple item
         return `
@@ -760,7 +849,7 @@ function generateElementScriptDisplay(element, elementId, elementType) {
             </div>
         `;
     }
-    
+
     // Has scripts - show as expandable
     return `
         <div class="script-detail-section">
@@ -802,7 +891,7 @@ function generateElementScriptDisplay(element, elementId, elementType) {
 function showPanel(panelId) {
     const panel = document.getElementById(panelId);
     panel.style.display = 'block';
-    
+
     // Expand the panel if it's collapsed
     const contentId = panelId.replace('-panel', '-content');
     const content = document.getElementById(contentId);
@@ -821,33 +910,277 @@ function handleSearchKeyup(event) {
 }
 
 /**
+ * Test function to verify toolkit objects are loaded and searchable
+ */
+function testToolkitSearch() {
+    console.log('🧪 Testing toolkit search functionality...');
+    console.log(`🔧 Toolkit toggle enabled: ${showToolkitObjects}`);
+
+    let totalToolkitObjects = 0;
+    let sampleToolkitObjects = [];
+
+    Object.keys(currentObjects).forEach(objectType => {
+        const objectData = currentObjects[objectType];
+        if (objectData && objectData.objects) {
+            const toolkitObjs = objectData.objects.filter(obj => obj.source === 'toolkit');
+            totalToolkitObjects += toolkitObjs.length;
+
+            if (toolkitObjs.length > 0) {
+                sampleToolkitObjects.push(...toolkitObjs.slice(0, 2).map(obj => ({
+                    name: obj.name,
+                    type: objectType,
+                    toolkit: obj.toolkitInfo?.shortName || 'Unknown'
+                })));
+            }
+        }
+    });
+
+    console.log(`📊 Total toolkit objects found: ${totalToolkitObjects}`);
+    console.log(`📋 Sample toolkit objects:`, sampleToolkitObjects);
+
+    if (totalToolkitObjects > 0 && sampleToolkitObjects.length > 0) {
+        console.log(`✅ Toolkit objects are loaded and should be searchable when toggle is ON`);
+
+        // Test search with a sample toolkit object name
+        const sampleName = sampleToolkitObjects[0].name;
+        console.log(`🔍 Testing search with toolkit object name: "${sampleName}"`);
+
+        if (showToolkitObjects) {
+            const testResults = performClientSideSearch(sampleName);
+            console.log(`📋 Test search results: ${testResults.length} found`);
+            return testResults;
+        } else {
+            console.log(`⚠️ Toolkit toggle is OFF - enable it to search toolkit objects`);
+        }
+    } else {
+        console.log(`❌ No toolkit objects found - check if TWX file contains toolkits`);
+    }
+
+    return [];
+}
+
+/**
+ * Clear search results
+ */
+function clearSearch() {
+    document.getElementById('search-input').value = '';
+    document.getElementById('search-results').style.display = 'none';
+    searchResults = [];
+    updateStatus('Search cleared');
+}
+
+/**
  * Perform deep search
  */
 async function performSearch() {
     const searchTerm = document.getElementById('search-input').value.trim();
-    
+
     if (!searchTerm) {
         alert('Please enter a search term');
         return;
     }
-    
+
     updateStatus('Searching...');
-    
+
+    // Always use client-side search to ensure toolkit objects are included
     try {
-        const response = await fetch(`/api/search?q=${encodeURIComponent(searchTerm)}`);
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
-        searchResults = await response.json();
+        searchResults = performClientSideSearch(searchTerm);
         displaySearchResults(searchTerm);
         updateStatus(`Found ${searchResults.length} results for "${searchTerm}"`);
-        
     } catch (error) {
         console.error('Search error:', error);
         updateStatus('Search failed');
         alert('Search failed: ' + error.message);
     }
+}
+
+/**
+ * Perform client-side search across all loaded objects
+ */
+function performClientSideSearch(searchTerm) {
+    const results = [];
+    const lowerSearchTerm = searchTerm.toLowerCase();
+
+    console.log(`🔍 Starting search for: "${searchTerm}"`);
+    console.log(`🔧 Toolkit objects enabled: ${showToolkitObjects}`);
+
+    let totalObjects = 0;
+    let toolkitObjects = 0;
+    let appObjects = 0;
+    let searchedObjects = 0;
+
+    // Search through all object types
+    Object.keys(currentObjects).forEach(objectType => {
+        const objectData = currentObjects[objectType];
+        if (!objectData || !objectData.objects) {
+            console.log(`⚠️ No objects found for type: ${objectType}`);
+            return;
+        }
+
+        console.log(`📂 Searching in ${objectType}: ${objectData.objects.length} objects`);
+
+        objectData.objects.forEach(obj => {
+            totalObjects++;
+
+            if (obj.source === 'toolkit') {
+                toolkitObjects++;
+            } else {
+                appObjects++;
+            }
+
+            // Skip toolkit objects if toolkit toggle is off
+            if (!showToolkitObjects && obj.source === 'toolkit') {
+                console.log(`⏭️ Skipping toolkit object: ${obj.name} (toggle off)`);
+                return;
+            }
+
+            searchedObjects++;
+
+            const matches = [];
+
+            // Search in object name
+            if (obj.name && obj.name.toLowerCase().includes(lowerSearchTerm)) {
+                matches.push({
+                    field: 'name',
+                    value: obj.name,
+                    snippet: obj.name
+                });
+            }
+
+            // Search in scripts
+            if (obj.details?.scripts) {
+                obj.details.scripts.forEach(script => {
+                    if (script.script && script.script.toLowerCase().includes(lowerSearchTerm)) {
+                        matches.push({
+                            field: 'script',
+                            value: script.name,
+                            snippet: createSnippet(script.script, searchTerm)
+                        });
+                    }
+                });
+            }
+
+            // Search in inline scripts
+            if (obj.details?.inlineScripts) {
+                obj.details.inlineScripts.forEach(script => {
+                    if (script.scriptBlock && script.scriptBlock.toLowerCase().includes(lowerSearchTerm)) {
+                        matches.push({
+                            field: 'inlineScript',
+                            value: script.name,
+                            snippet: createSnippet(script.scriptBlock, searchTerm)
+                        });
+                    }
+                });
+            }
+
+            // Search in variables
+            if (obj.details?.variables) {
+                ['input', 'output', 'private'].forEach(varType => {
+                    if (obj.details.variables[varType]) {
+                        obj.details.variables[varType].forEach(variable => {
+                            if (variable.name && variable.name.toLowerCase().includes(lowerSearchTerm)) {
+                                matches.push({
+                                    field: 'variable',
+                                    value: `${varType}: ${variable.name}`,
+                                    snippet: variable.name
+                                });
+                            }
+                        });
+                    }
+                });
+            }
+
+            // Search in business object properties
+            if (obj.details?.schema?.properties) {
+                obj.details.schema.properties.forEach(property => {
+                    if (property.name && property.name.toLowerCase().includes(lowerSearchTerm)) {
+                        matches.push({
+                            field: 'property',
+                            value: property.name,
+                            snippet: `${property.name} (${property.type})`
+                        });
+                    }
+                });
+            }
+
+            // Search in load JS function
+            if (obj.details?.loadJsFunction && obj.details.loadJsFunction.toLowerCase().includes(lowerSearchTerm)) {
+                matches.push({
+                    field: 'loadJsFunction',
+                    value: 'Load JS Function',
+                    snippet: createSnippet(obj.details.loadJsFunction, searchTerm)
+                });
+            }
+
+            // If we found matches, add this object to results
+            if (matches.length > 0) {
+                results.push({
+                    objectId: obj.id,
+                    objectName: obj.name,
+                    objectType: obj.type,
+                    typeName: obj.typeName || objectType,
+                    source: obj.source || 'application',
+                    toolkitInfo: obj.toolkitInfo,
+                    matches: matches,
+                    matchCount: matches.length,
+                    preview: matches[0].snippet
+                });
+            }
+        });
+    });
+
+    console.log(`📊 Search completed:`);
+    console.log(`  - Total objects scanned: ${totalObjects}`);
+    console.log(`  - Objects actually searched: ${searchedObjects}`);
+    console.log(`  - Application objects: ${appObjects}`);
+    console.log(`  - Toolkit objects: ${toolkitObjects}`);
+    console.log(`  - Results found: ${results.length}`);
+
+    // Debug: Show some sample toolkit objects if any exist
+    if (toolkitObjects > 0) {
+        console.log(`🔧 Sample toolkit objects found:`);
+        Object.keys(currentObjects).forEach(objectType => {
+            const objectData = currentObjects[objectType];
+            if (objectData && objectData.objects) {
+                const toolkitSamples = objectData.objects.filter(obj => obj.source === 'toolkit').slice(0, 3);
+                if (toolkitSamples.length > 0) {
+                    console.log(`  ${objectType}:`, toolkitSamples.map(obj => `${obj.name} (${obj.toolkitInfo?.shortName || 'Unknown'})`));
+                }
+            }
+        });
+    }
+
+    // Debug: Show sample results if any found
+    if (results.length > 0) {
+        console.log(`📋 Sample search results:`);
+        results.slice(0, 3).forEach(result => {
+            console.log(`  - ${result.objectName} (${result.source}) - ${result.matchCount} matches`);
+        });
+    }
+
+    return results;
+}
+
+/**
+ * Create a snippet around the found text
+ */
+function createSnippet(text, searchTerm) {
+    if (!text || !searchTerm) return '';
+
+    const lowerText = text.toLowerCase();
+    const lowerSearchTerm = searchTerm.toLowerCase();
+    const index = lowerText.indexOf(lowerSearchTerm);
+
+    if (index === -1) return text.substring(0, 100) + '...';
+
+    const start = Math.max(0, index - 50);
+    const end = Math.min(text.length, index + searchTerm.length + 50);
+
+    let snippet = text.substring(start, end);
+    if (start > 0) snippet = '...' + snippet;
+    if (end < text.length) snippet = snippet + '...';
+
+    return snippet;
 }
 
 /**
@@ -857,59 +1190,70 @@ function displaySearchResults(searchTerm) {
     const resultsContainer = document.getElementById('search-results');
     const infoContainer = document.getElementById('search-info');
     const listContainer = document.getElementById('search-results-list');
-    
+
     // Show results section
     resultsContainer.style.display = 'block';
-    
+
     // Update info
     infoContainer.innerHTML = `Found <strong>${searchResults.length}</strong> results for "<strong>${searchTerm}</strong>"`;
-    
+
     // Clear and populate results list
     listContainer.innerHTML = '';
-    
+
     if (searchResults.length === 0) {
         listContainer.innerHTML = '<div class="loading">No results found</div>';
         return;
     }
-    
+
     searchResults.forEach((result, index) => {
         const item = document.createElement('div');
         item.className = 'search-result-item';
         item.onclick = () => showSearchResultDetails(result);
-        
+
         // Extract object info
         const objectName = result.objectName || 'Unknown Object';
         const rawObjectType = result.objectType || 'Unknown Type';
-        
+
         // Apply display name transformation for consistency
         let objectType = rawObjectType;
-        
+
         // Check if this is a CSHS object (process with subType 10)
         if (rawObjectType === 'process' || rawObjectType === 'Process') {
             // Try to find the actual object to check its subType
             const foundObject = findObjectInCurrentData(result.objectId);
-            if (foundObject && (foundObject.subType === '10' || 
+            if (foundObject && (foundObject.subType === '10' ||
                 (foundObject.details && foundObject.details.processType === '10'))) {
                 objectType = 'CSHS';
             } else {
                 objectType = 'Services';
             }
         }
-        
+
         const preview = result.preview || (result.matches && result.matches.length > 0 ? result.matches[0].snippet : 'No preview available');
         const matchCount = result.matchCount || (result.matches ? result.matches.length : 0);
-        
+
         // Create match count indicator
         const matchIndicator = matchCount > 1 ? ` (${matchCount} matches)` : '';
-        
+
+        // Add source indicator for toolkit objects
+        let sourceIndicator = '';
+        if (result.source === 'toolkit' && result.toolkitInfo) {
+            sourceIndicator = `<span class="search-source-badge toolkit">${result.toolkitInfo.shortName}</span>`;
+        } else if (result.source === 'application') {
+            sourceIndicator = '<span class="search-source-badge app">APP</span>';
+        }
+
         item.innerHTML = `
             <div class="search-result-header">
                 <span class="search-result-title">${escapeHtml(objectName)}${matchIndicator}</span>
-                <span class="search-result-type">${escapeHtml(objectType)}</span>
+                <div class="search-result-badges">
+                    ${sourceIndicator}
+                    <span class="search-result-type">${escapeHtml(objectType)}</span>
+                </div>
             </div>
-            <div class="search-result-preview">${preview}</div>
+            <div class="search-result-preview">${highlightSearchTerm(preview, searchTerm)}</div>
         `;
-        
+
         listContainer.appendChild(item);
     });
 }
@@ -919,7 +1263,7 @@ function displaySearchResults(searchTerm) {
  */
 function highlightSearchTerm(text, searchTerm) {
     if (!text || !searchTerm) return text;
-    
+
     const regex = new RegExp(`(${escapeRegex(searchTerm)})`, 'gi');
     return escapeHtml(text).replace(regex, '<span class="highlight">$1</span>');
 }
@@ -932,7 +1276,7 @@ function showSearchResultDetails(result) {
     const objectId = result.objectId;
     let foundObject = null;
     let foundType = null;
-    
+
     // Search through all object types to find the matching object
     for (const [type, typeData] of Object.entries(currentObjects)) {
         if (typeData && typeData.objects) {
@@ -944,24 +1288,24 @@ function showSearchResultDetails(result) {
             }
         }
     }
-    
+
     if (foundObject) {
         // Select the object type first if not already selected
         if (selectedObjectType !== foundType) {
             selectObjectType(foundType);
         }
-        
+
         // Display the object details
         selectedObject = foundObject;
         displayObjectDetails(foundObject);
         showPanel('object-details-panel');
-        
+
         // Update panel title
         const title = document.getElementById('object-details-title');
         title.textContent = `📄 ${foundObject.name || 'Unnamed Object'}`;
-        
+
         updateStatus(`Viewing search result: ${foundObject.name || 'object'} details`);
-        
+
         // Highlight the object in the list if it's currently displayed
         setTimeout(() => {
             document.querySelectorAll('.object-item').forEach(item => {
@@ -1013,17 +1357,17 @@ function updateObjectCount() {
     const total = Object.values(currentObjects).reduce((sum, data) => {
         return sum + (data.objects ? data.objects.length : 0);
     }, 0);
-    
+
     // 🆕 Calculate app/toolkit breakdown
     let appTotal = 0;
     let toolkitTotal = 0;
-    
+
     Object.values(currentObjects).forEach(data => {
         if (data.objects) {
             appTotal += data.objects.filter(obj => obj.source === 'application').length;
             toolkitTotal += data.objects.filter(obj => obj.source === 'toolkit').length;
         }
-        
+
         // Use explicit counts from combined files if available
         if (data.applicationCount !== undefined) {
             appTotal += data.applicationCount;
@@ -1032,7 +1376,7 @@ function updateObjectCount() {
             toolkitTotal += data.toolkitCount;
         }
     });
-    
+
     // 🆕 Enhanced object count display
     const objectCountElement = document.getElementById('object-count');
     if (toolkitTotal > 0) {
@@ -1058,7 +1402,7 @@ function getDisplayName(type) {
         'managed-asset': 'Managed Assets',
         'business-object': 'Business Objects'
     };
-    
+
     return names[type] || type.charAt(0).toUpperCase() + type.slice(1);
 }
 
@@ -1074,7 +1418,7 @@ function getTypeDescription(type) {
         'managed-asset': 'Shared assets and resources',
         'resource-bundle': 'Localization and text resources'
     };
-    
+
     return descriptions[type] || 'Application objects and components';
 }
 
@@ -1083,7 +1427,7 @@ function getTypeDescription(type) {
  */
 function findObjectInCurrentData(objectId) {
     if (!objectId || !currentObjects) return null;
-    
+
     for (const [type, typeData] of Object.entries(currentObjects)) {
         if (typeData && typeData.objects) {
             const object = typeData.objects.find(obj => obj.id === objectId);
@@ -1108,7 +1452,7 @@ function generateBusinessObjectSummary(schema) {
     const customTypes = totalProperties - systemTypes;
     const crossReferences = schema.properties.filter(p => p.resolvedType && !p.isSystemType).length;
     const circularRefs = schema.properties.filter(p => p.circularReference).length;
-    
+
     let indicators = [];
     if (customTypes > 0) {
         indicators.push(`<span class="schema-indicator custom-types" title="Custom Types">${customTypes} custom</span>`);
@@ -1119,7 +1463,7 @@ function generateBusinessObjectSummary(schema) {
     if (circularRefs > 0) {
         indicators.push(`<span class="schema-indicator circular-refs" title="Circular References">${circularRefs} circular</span>`);
     }
-    
+
     return `
         <div class="business-object-summary">
             <div class="schema-stats">
@@ -1161,11 +1505,11 @@ function generateBusinessObjectSchemaDisplay(schema) {
     if (schema.properties.length > 0) {
         html += '<div class="properties-container">';
         html += '<h4>Properties</h4>';
-        
+
         schema.properties.forEach((property, index) => {
             html += generatePropertyDisplay(property, 0);
         });
-        
+
         html += '</div>';
     } else {
         html += '<p class="no-data">No properties defined</p>';
@@ -1185,7 +1529,7 @@ function generatePropertyDisplay(property, depth = 0) {
     const defaultBadge = property.hasDefault ? '<span class="default-badge">Has Default</span>' : '';
     const circularBadge = property.circularReference ? '<span class="circular-badge">Circular</span>' : '';
     const unresolvedBadge = property.unresolvedReference ? '<span class="unresolved-badge">Unresolved</span>' : '';
-    
+
     let html = `
         <div class="property-item" style="margin-left: ${depth * 20}px;">
             <div class="property-header">
@@ -1210,7 +1554,7 @@ function generatePropertyDisplay(property, depth = 0) {
                 </div>
                 <div class="resolved-type-content" id="resolved_${property.name}_${depth}" style="display: none;">
         `;
-        
+
         if (property.resolvedType.properties && property.resolvedType.properties.length > 0) {
             property.resolvedType.properties.forEach(nestedProperty => {
                 html += generatePropertyDisplay(nestedProperty, depth + 1);
@@ -1218,7 +1562,7 @@ function generatePropertyDisplay(property, depth = 0) {
         } else {
             html += '<p class="no-data">No properties in resolved type</p>';
         }
-        
+
         html += `
                 </div>
             </div>
@@ -1260,7 +1604,7 @@ function generatePropertyDisplay(property, depth = 0) {
 function toggleResolvedType(elementId) {
     const element = document.getElementById(`resolved_${elementId}`);
     const toggle = document.querySelector(`[onclick="toggleResolvedType('${elementId}')"]`);
-    
+
     if (element.style.display === 'none') {
         element.style.display = 'block';
         toggle.textContent = toggle.textContent.replace('▶', '▼');
@@ -1296,14 +1640,14 @@ function displayEnhancedStatistics(stats) {
         statsSection = document.createElement('div');
         statsSection.id = 'enhanced-statistics';
         statsSection.className = 'statistics-section';
-        
+
         // Insert before the object types section
         const objectTypesSection = document.querySelector('.object-browser');
         if (objectTypesSection) {
             objectTypesSection.parentNode.insertBefore(statsSection, objectTypesSection);
         }
     }
-    
+
     statsSection.innerHTML = `
         <div class="collapsible-panel">
             <div class="panel-header" onclick="togglePanel('statistics-panel')">
