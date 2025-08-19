@@ -109,7 +109,6 @@ class TWXParserApp {
     console.log('✅ Parsing completed! Check the output folder for results.');
     console.log(`📋 Summary: ${extractedData.objects.length} objects processed`);
   }
-
   /**
    * Open browser on the appropriate platform
    */
@@ -118,13 +117,19 @@ class TWXParserApp {
     
     try {
       if (platform === 'win32') {
-        // Windows: Use cmd /c start to properly launch the browser
+        // Windows: Use shell: true for better compatibility
         const child = spawn('cmd', ['/c', 'start', '""', url], {
           detached: true,
           stdio: 'ignore',
-          shell: false
+          shell: true  // Use shell for better Windows compatibility
         });
         child.unref();
+        
+        // Add error handler to catch spawn errors
+        child.on('error', (error) => {
+          console.log(`⚠️  Could not auto-open browser: ${error.message}`);
+          console.log(`📋 Please manually open: ${url}`);
+        });
       } else if (platform === 'darwin') {
         // macOS
         const child = spawn('open', [url], {
@@ -132,6 +137,11 @@ class TWXParserApp {
           stdio: 'ignore'
         });
         child.unref();
+        
+        child.on('error', (error) => {
+          console.log(`⚠️  Could not auto-open browser: ${error.message}`);
+          console.log(`📋 Please manually open: ${url}`);
+        });
       } else {
         // Linux
         const child = spawn('xdg-open', [url], {
@@ -139,6 +149,11 @@ class TWXParserApp {
           stdio: 'ignore'
         });
         child.unref();
+        
+        child.on('error', (error) => {
+          console.log(`⚠️  Could not auto-open browser: ${error.message}`);
+          console.log(`📋 Please manually open: ${url}`);
+        });
       }
     } catch (error) {
       console.log(`⚠️  Could not auto-open browser: ${error.message}`);
