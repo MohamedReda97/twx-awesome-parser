@@ -823,28 +823,71 @@ function generateInlineScriptsDisplay(scripts) {
 function generateElementsDisplay(elements) {
     let html = '';
 
+    // Filter and display script tasks that have scripts
     if (elements.scriptTasks && elements.scriptTasks.length > 0) {
-        html += '<h4>Script Tasks</h4>';
-        elements.scriptTasks.forEach((task, index) => {
-            html += generateElementScriptDisplay(task, `script-task-${index}`, 'Script Task');
-        });
+        const scriptTasksWithScripts = elements.scriptTasks.filter(task =>
+            (task.script && task.script.trim()) ||
+            (task.preScript && task.preScript.trim()) ||
+            (task.postScript && task.postScript.trim())
+        );
+
+        if (scriptTasksWithScripts.length > 0) {
+            html += '<h4>Script Tasks</h4>';
+            scriptTasksWithScripts.forEach((task, index) => {
+                html += generateElementScriptDisplay(task, `script-task-${index}`, 'Script Task');
+            });
+        }
     }
 
+    // Filter and display form tasks that have scripts
     if (elements.formTasks && elements.formTasks.length > 0) {
-        html += '<h4>Form Tasks</h4>';
-        elements.formTasks.forEach((task, index) => {
-            html += generateElementScriptDisplay(task, `form-task-${index}`, 'Form Task');
-        });
+        const formTasksWithScripts = elements.formTasks.filter(task =>
+            (task.script && task.script.trim()) ||
+            (task.preScript && task.preScript.trim()) ||
+            (task.postScript && task.postScript.trim())
+        );
+
+        if (formTasksWithScripts.length > 0) {
+            html += '<h4>Form Tasks</h4>';
+            formTasksWithScripts.forEach((task, index) => {
+                html += generateElementScriptDisplay(task, `form-task-${index}`, 'Form Task');
+            });
+        }
     }
 
+    // Filter and display call activities that have scripts
     if (elements.callActivities && elements.callActivities.length > 0) {
-        html += '<h4>Call Activities</h4>';
-        elements.callActivities.forEach((activity, index) => {
-            html += generateElementScriptDisplay(activity, `call-activity-${index}`, 'Call Activity');
-        });
+        const callActivitiesWithScripts = elements.callActivities.filter(activity =>
+            (activity.script && activity.script.trim()) ||
+            (activity.preScript && activity.preScript.trim()) ||
+            (activity.postScript && activity.postScript.trim())
+        );
+
+        if (callActivitiesWithScripts.length > 0) {
+            html += '<h4>Call Activities</h4>';
+            callActivitiesWithScripts.forEach((activity, index) => {
+                html += generateElementScriptDisplay(activity, `call-activity-${index}`, 'Call Activity');
+            });
+        }
     }
 
-    return html || '<p>No process elements found</p>';
+    // Filter and display exclusive gateways that have scripts
+    if (elements.exclusiveGateways && elements.exclusiveGateways.length > 0) {
+        const gatewaysWithScripts = elements.exclusiveGateways.filter(gateway =>
+            (gateway.script && gateway.script.trim()) ||
+            (gateway.preScript && gateway.preScript.trim()) ||
+            (gateway.postScript && gateway.postScript.trim())
+        );
+
+        if (gatewaysWithScripts.length > 0) {
+            html += '<h4>Exclusive Gateways</h4>';
+            gatewaysWithScripts.forEach((gateway, index) => {
+                html += generateElementScriptDisplay(gateway, `exclusive-gateway-${index}`, 'Exclusive Gateway');
+            });
+        }
+    }
+
+    return html || '<p>No process elements with scripts found</p>';
 }
 
 /**
@@ -876,6 +919,7 @@ function generateElementScriptDisplay(element, elementId, elementType) {
                 <div class="element-info">
                     <p><strong>ID:</strong> ${element.id}</p>
                     <p><strong>Type:</strong> ${elementType}</p>
+                    ${element.calledElement ? `<p><strong>Called Element:</strong> ${element.calledElement}</p>` : ''}
                 </div>
                 ${element.script && element.script.trim() ? `
                     <div class="script-section">

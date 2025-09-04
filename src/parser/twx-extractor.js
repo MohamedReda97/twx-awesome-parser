@@ -587,20 +587,78 @@ class TWXExtractor {
 			this.parseCoachflowElements(processElement.coachflow, details);
 		}
 
-		// After extracting all elements, add script tasks to the main scripts array
-		if (details.elements && details.elements.scriptTasks && details.elements.scriptTasks.length > 0) {
+		// After extracting all elements, add all scripts to the main scripts array
+		if (details.elements) {
 			if (!details.scripts) {
 				details.scripts = [];
 			}
 
-			details.elements.scriptTasks.forEach(scriptTask => {
-				if (scriptTask.script && scriptTask.script.trim()) {
-					details.scripts.push({
-						name: `${scriptTask.name || 'Unnamed Script Task'} (Script Task)`,
-						content: scriptTask.script, // Already cleaned by cleanJavaScript
-						elementType: 'scriptTask',
-						elementId: scriptTask.id,
-						source: scriptTask.source || 'coachflow'
+			// Add script tasks
+			if (details.elements.scriptTasks && details.elements.scriptTasks.length > 0) {
+				details.elements.scriptTasks.forEach(scriptTask => {
+					if (scriptTask.script && scriptTask.script.trim()) {
+						details.scripts.push({
+							name: `${scriptTask.name || 'Unnamed Script Task'} (Script Task)`,
+							content: scriptTask.script,
+							elementType: 'scriptTask',
+							elementId: scriptTask.id,
+							source: 'coachflow'
+						});
+					}
+
+					// Add pre-assignment script
+					if (scriptTask.hasPreScript && scriptTask.preScript && scriptTask.preScript.trim()) {
+						details.scripts.push({
+							name: `${scriptTask.name || 'Unnamed Script Task'} (Pre-Assignment)`,
+							content: scriptTask.preScript,
+							elementType: 'scriptTask',
+							elementId: scriptTask.id,
+							scriptType: 'preAssignment',
+							source: 'coachflow'
+						});
+					}
+
+					// Add post-assignment script
+					if (scriptTask.hasPostScript && scriptTask.postScript && scriptTask.postScript.trim()) {
+						details.scripts.push({
+							name: `${scriptTask.name || 'Unnamed Script Task'} (Post-Assignment)`,
+							content: scriptTask.postScript,
+							elementType: 'scriptTask',
+							elementId: scriptTask.id,
+							scriptType: 'postAssignment',
+							source: 'coachflow'
+						});
+					}
+				});
+			}
+
+			// Add scripts from other element types
+			['callActivities', 'exclusiveGateways', 'formTasks'].forEach(elementType => {
+				if (details.elements[elementType] && details.elements[elementType].length > 0) {
+					details.elements[elementType].forEach(element => {
+						// Add pre-assignment script
+						if (element.hasPreScript && element.preScript && element.preScript.trim()) {
+							details.scripts.push({
+								name: `${element.name || 'Unnamed'} (Pre-Assignment)`,
+								content: element.preScript,
+								elementType: elementType.slice(0, -1), // Remove 's' from plural
+								elementId: element.id,
+								scriptType: 'preAssignment',
+								source: 'coachflow'
+							});
+						}
+
+						// Add post-assignment script
+						if (element.hasPostScript && element.postScript && element.postScript.trim()) {
+							details.scripts.push({
+								name: `${element.name || 'Unnamed'} (Post-Assignment)`,
+								content: element.postScript,
+								elementType: elementType.slice(0, -1), // Remove 's' from plural
+								elementId: element.id,
+								scriptType: 'postAssignment',
+								source: 'coachflow'
+							});
+						}
 					});
 				}
 			});
@@ -733,7 +791,7 @@ class TWXExtractor {
 				const scriptTasks = Array.isArray(userTaskImpl["ns16:scriptTask"]) ? userTaskImpl["ns16:scriptTask"] : [userTaskImpl["ns16:scriptTask"]];
 
 				for (const scriptTask of scriptTasks) {
-					details.elements.scriptTasks.push({
+					const scriptTaskData = {
 						name: scriptTask.name || "Unnamed",
 						id: scriptTask.id,
 						script: scriptTask["ns16:script"] ? this.cleanJavaScript(scriptTask["ns16:script"]) : "",
@@ -741,7 +799,30 @@ class TWXExtractor {
 						hasPostScript: false,
 						preScript: "",
 						postScript: "",
-					});
+					};
+
+					// Extract pre/post assignment scripts from extensionElements
+					if (scriptTask["ns16:extensionElements"]) {
+						const extElements = scriptTask["ns16:extensionElements"];
+
+						if (extElements["ns3:preAssignmentScript"]) {
+							const preScript = this.cleanJavaScript(extElements["ns3:preAssignmentScript"]);
+							if (preScript && preScript.trim()) {
+								scriptTaskData.hasPreScript = true;
+								scriptTaskData.preScript = preScript;
+							}
+						}
+
+						if (extElements["ns3:postAssignmentScript"]) {
+							const postScript = this.cleanJavaScript(extElements["ns3:postAssignmentScript"]);
+							if (postScript && postScript.trim()) {
+								scriptTaskData.hasPostScript = true;
+								scriptTaskData.postScript = postScript;
+							}
+						}
+					}
+
+					details.elements.scriptTasks.push(scriptTaskData);
 				}
 			}
 
@@ -750,14 +831,37 @@ class TWXExtractor {
 				const gateways = Array.isArray(userTaskImpl["ns16:exclusiveGateway"]) ? userTaskImpl["ns16:exclusiveGateway"] : [userTaskImpl["ns16:exclusiveGateway"]];
 
 				for (const gateway of gateways) {
-					details.elements.exclusiveGateways.push({
+					const gatewayData = {
 						name: gateway.name || "Unnamed",
 						id: gateway.id,
 						hasPreScript: false,
 						hasPostScript: false,
 						preScript: "",
 						postScript: "",
-					});
+					};
+
+					// Extract pre/post assignment scripts from extensionElements
+					if (gateway["ns16:extensionElements"]) {
+						const extElements = gateway["ns16:extensionElements"];
+
+						if (extElements["ns3:preAssignmentScript"]) {
+							const preScript = this.cleanJavaScript(extElements["ns3:preAssignmentScript"]);
+							if (preScript && preScript.trim()) {
+								gatewayData.hasPreScript = true;
+								gatewayData.preScript = preScript;
+							}
+						}
+
+						if (extElements["ns3:postAssignmentScript"]) {
+							const postScript = this.cleanJavaScript(extElements["ns3:postAssignmentScript"]);
+							if (postScript && postScript.trim()) {
+								gatewayData.hasPostScript = true;
+								gatewayData.postScript = postScript;
+							}
+						}
+					}
+
+					details.elements.exclusiveGateways.push(gatewayData);
 				}
 			}
 
@@ -766,14 +870,37 @@ class TWXExtractor {
 				const formTasks = Array.isArray(userTaskImpl["ns3:formTask"]) ? userTaskImpl["ns3:formTask"] : [userTaskImpl["ns3:formTask"]];
 
 				for (const formTask of formTasks) {
-					details.elements.formTasks.push({
+					const formTaskData = {
 						name: formTask.name || "Unnamed",
 						id: formTask.id,
 						hasPreScript: false,
 						hasPostScript: false,
 						preScript: "",
 						postScript: "",
-					});
+					};
+
+					// Extract pre/post assignment scripts from extensionElements
+					if (formTask["ns16:extensionElements"]) {
+						const extElements = formTask["ns16:extensionElements"];
+
+						if (extElements["ns3:preAssignmentScript"]) {
+							const preScript = this.cleanJavaScript(extElements["ns3:preAssignmentScript"]);
+							if (preScript && preScript.trim()) {
+								formTaskData.hasPreScript = true;
+								formTaskData.preScript = preScript;
+							}
+						}
+
+						if (extElements["ns3:postAssignmentScript"]) {
+							const postScript = this.cleanJavaScript(extElements["ns3:postAssignmentScript"]);
+							if (postScript && postScript.trim()) {
+								formTaskData.hasPostScript = true;
+								formTaskData.postScript = postScript;
+							}
+						}
+					}
+
+					details.elements.formTasks.push(formTaskData);
 				}
 			}
 
@@ -782,14 +909,38 @@ class TWXExtractor {
 				const callActivities = Array.isArray(userTaskImpl["ns16:callActivity"]) ? userTaskImpl["ns16:callActivity"] : [userTaskImpl["ns16:callActivity"]];
 
 				for (const callActivity of callActivities) {
-					details.elements.callActivities.push({
+					const callActivityData = {
 						name: callActivity.name || "Unnamed",
 						id: callActivity.id,
 						hasPreScript: false,
 						hasPostScript: false,
 						preScript: "",
 						postScript: "",
-					});
+						calledElement: callActivity.calledElement || ""
+					};
+
+					// Extract pre/post assignment scripts from extensionElements
+					if (callActivity["ns16:extensionElements"]) {
+						const extElements = callActivity["ns16:extensionElements"];
+
+						if (extElements["ns3:preAssignmentScript"]) {
+							const preScript = this.cleanJavaScript(extElements["ns3:preAssignmentScript"]);
+							if (preScript && preScript.trim()) {
+								callActivityData.hasPreScript = true;
+								callActivityData.preScript = preScript;
+							}
+						}
+
+						if (extElements["ns3:postAssignmentScript"]) {
+							const postScript = this.cleanJavaScript(extElements["ns3:postAssignmentScript"]);
+							if (postScript && postScript.trim()) {
+								callActivityData.hasPostScript = true;
+								callActivityData.postScript = postScript;
+							}
+						}
+					}
+
+					details.elements.callActivities.push(callActivityData);
 				}
 			}
 		} catch (error) {
