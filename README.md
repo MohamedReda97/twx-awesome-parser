@@ -1,14 +1,17 @@
-[![Build Status](https://travis-ci.org/tigermarques/twx-parse.svg?branch=master)](https://travis-ci.org/tigermarques/twx-parse)
-[![codecov](https://codecov.io/gh/tigermarques/twx-parse/branch/master/graph/badge.svg)](https://codecov.io/gh/tigermarques/twx-parse)
-![npm](https://img.shields.io/npm/v/twx-parser?color=green&label=npm%20package)
+# TWX Parser
 
-# twx-parse
-twx-parse is a library for parsing and querying TWX files for IBM BPM.
+A comprehensive tool for parsing and analyzing IBM BPM Process Applications and Toolkits. The TWX Parser extracts, parses, and visualizes TWX (TeamWorks eXchange) files to help developers understand dependencies, object structures, and process definitions.
 
-## Motivation
-Analyzing IBM BPM Process Applications and Toolkits is not easy when dealing with complex analysis. For example, if you have a toolkit shared by 3 applications, it is challenging to know which toolkit assets each application is actually using. This lack of visibility makes the change management process difficult and time consuming.
+## 🎯 Purpose
 
-This tool aims to parse multiple TWX files and build a data structure that allows to easily discover dependencies, and also allows to easily query these applications and toolkits.
+Analyzing IBM BPM Process Applications and Toolkits can be challenging when dealing with complex analysis scenarios. For example, if you have a toolkit shared by multiple applications, it's difficult to know which toolkit assets each application is actually using. This lack of visibility makes change management processes difficult and time-consuming.
+
+The TWX Parser solves this by:
+- **Extracting** comprehensive data from TWX files
+- **Parsing** business objects, processes, and dependencies
+- **Visualizing** relationships and structures through a web interface
+- **Searching** across all objects and metadata
+- **Generating** detailed JSON reports for further analysis
 
 ## Getting Started
 

@@ -5,7 +5,6 @@ const url = require('url');
 
 // Import existing functionality
 const { searchXMLFiles } = require('../search/xml-search');
-const BusinessObjectBuilderAPI = require('../api/business-object-builder-api');
 
 /**
  * Web server for TWX Parser UI
@@ -14,7 +13,6 @@ class TWXWebServer {
   constructor() {
     this.server = null;
     this.port = 0;
-    this.businessObjectAPI = new BusinessObjectBuilderAPI();
   }
 
   /**
@@ -86,11 +84,7 @@ class TWXWebServer {
       return;
     }
 
-    // Business Object Builder API routes
-    if (pathname.startsWith('/api/business-objects/')) {
-      await this.handleBusinessObjectAPI(req, res, pathname, query);
-      return;
-    }
+
 
     switch (pathname) {
       case '/api/search':
@@ -107,120 +101,9 @@ class TWXWebServer {
     }
   }
 
-  /**
-   * Handle Business Object Builder API requests
-   */
-  async handleBusinessObjectAPI(req, res, pathname, query) {
-    try {
-      switch (pathname) {
-        case '/api/business-objects/types':
-          this.businessObjectAPI.getSupportedTypes(req, res);
-          break;
-        case '/api/business-objects/type-suggestions':
-          req.query = query;
-          this.businessObjectAPI.getTypeSuggestions(req, res);
-          break;
-        case '/api/business-objects/validate':
-          if (req.method === 'POST') {
-            const body = await this.parseJSONBody(req);
-            req.body = body;
-            this.businessObjectAPI.validateJSON(req, res);
-          } else {
-            this.send404(res);
-          }
-          break;
-        case '/api/business-objects/preview':
-          if (req.method === 'POST') {
-            const body = await this.parseJSONBody(req);
-            req.body = body;
-            this.businessObjectAPI.previewBusinessObjects(req, res);
-          } else {
-            this.send404(res);
-          }
-          break;
-        case '/api/business-objects/generate':
-          if (req.method === 'POST') {
-            await this.handleBusinessObjectGeneration(req, res);
-          } else {
-            this.send404(res);
-          }
-          break;
-        default:
-          this.send404(res);
-      }
-    } catch (error) {
-      console.error('Business Object API error:', error);
-      this.send500(res, error.message);
-    }
-  }
 
-  /**
-   * Handle business object generation with file upload
-   */
-  async handleBusinessObjectGeneration(req, res) {
-    try {
-      // Parse multipart form data
-      const { fileData, fileName, formData } = await this.parseMultipartFormWithData(req);
-      
-      if (!fileData || !fileName) {
-        res.writeHead(400, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: 'TWX file is required' }));
-        return;
-      }
 
-      if (!formData.jsonInput) {
-        res.writeHead(400, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: 'JSON input is required' }));
-        return;
-      }
 
-      // Validate file extension
-      if (!fileName.toLowerCase().endsWith('.twx')) {
-        res.writeHead(400, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: 'Invalid file type. Please upload a .twx file' }));
-        return;
-      }
-
-      console.log(`Received TWX file: ${fileName} (${fileData.length} bytes)`)
-
-      // Save uploaded file temporarily
-      const tempDir = './temp/uploads';
-      if (!fs.existsSync(tempDir)) {
-        fs.mkdirSync(tempDir, { recursive: true });
-      }
-      
-      const tempFilePath = path.join(tempDir, `${Date.now()}_${fileName}`);
-      
-      try {
-        fs.writeFileSync(tempFilePath, fileData);
-        console.log(`Saved uploaded file to: ${tempFilePath}`);
-      } catch (writeError) {
-        console.error('Failed to save uploaded file:', writeError);
-        res.writeHead(500, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: 'Failed to save uploaded file' }));
-        return;
-      }
-
-      // Create mock req object for the API
-      const mockReq = {
-        body: {
-          jsonInput: formData.jsonInput,
-          options: formData.options ? JSON.parse(formData.options) : {}
-        },
-        file: {
-          path: tempFilePath,
-          originalname: fileName
-        }
-      };
-
-      // Call the business object API
-      await this.businessObjectAPI.generateBusinessObjects(mockReq, res);
-
-    } catch (error) {
-      console.error('Business object generation error:', error);
-      this.send500(res, error.message);
-    }
-  }
 
   /**
    * Parse JSON body from request
@@ -242,92 +125,7 @@ class TWXWebServer {
     });
   }
 
-  /**
-   * Parse multipart form data with additional form fields
-   */
-  async parseMultipartFormWithData(req) {
-    return new Promise((resolve, reject) => {
-      const chunks = [];
-      let totalLength = 0;
-      
-      req.on('data', chunk => {
-        chunks.push(chunk);
-        totalLength += chunk.length;
-        if (totalLength > 100 * 1024 * 1024) {
-          reject(new Error('File too large (max 100MB)'));
-          return;
-        }
-      });
-      
-      req.on('end', () => {
-        try {
-          const body = Buffer.concat(chunks, totalLength);
-          const contentType = req.headers['content-type'] || '';
-          const boundaryMatch = contentType.match(/boundary=(.+)$/);
-          
-          if (!boundaryMatch) {
-            reject(new Error('No boundary found in Content-Type header'));
-            return;
-          }
-          
-          const boundary = boundaryMatch[1].trim();
-          const boundaryBuffer = Buffer.from(`--${boundary}`);
-          const parts = this.splitBuffer(body, boundaryBuffer);
-          
-          let fileData = null;
-          let fileName = null;
-          const formData = {};
-          
-          for (const part of parts) {
-            if (part.length === 0) continue;
-            
-            const headerEndIndex = part.indexOf(Buffer.from('\r\n\r\n'));
-            if (headerEndIndex === -1) continue;
-            
-            const headers = part.slice(0, headerEndIndex).toString('utf8');
-            const data = part.slice(headerEndIndex + 4);
-            
-            if (headers.includes('Content-Disposition: form-data')) {
-              if (headers.includes('filename=')) {
-                // File field
-                const filenameMatch = headers.match(/filename="([^"]+)"/);
-                fileName = filenameMatch ? filenameMatch[1] : 'unknown.twx';
-                
-                // Remove trailing CRLF
-                fileData = data;
-                if (fileData.length >= 2 && 
-                    fileData[fileData.length - 2] === 0x0D && 
-                    fileData[fileData.length - 1] === 0x0A) {
-                  fileData = fileData.slice(0, -2);
-                }
-              } else {
-                // Regular form field
-                const nameMatch = headers.match(/name="([^"]+)"/);
-                if (nameMatch) {
-                  const fieldName = nameMatch[1];
-                  let fieldValue = data.toString('utf8');
-                  
-                  // Remove trailing CRLF
-                  if (fieldValue.endsWith('\r\n')) {
-                    fieldValue = fieldValue.slice(0, -2);
-                  }
-                  
-                  formData[fieldName] = fieldValue;
-                }
-              }
-            }
-          }
-          
-          resolve({ fileData, fileName, formData });
-          
-        } catch (error) {
-          reject(error);
-        }
-      });
-      
-      req.on('error', reject);
-    });
-  }
+
 
   /**
    * Handle search API requests
