@@ -162,8 +162,55 @@ const parseProcess = Performance.makeMeasurable(async (databaseName, jsonData) =
 
   // Extract scripts from process
   const scripts = extractScriptsFromProcess(process);
+
+  // For CSHS objects, also add script tasks and other scripted elements to the main scripts array
+  if (subType === PROCESS_TYPES.ClientSideHumanService && result.details.elements) {
+    // Add script tasks
+    if (result.details.elements.scriptTasks) {
+      result.details.elements.scriptTasks.forEach(scriptTask => {
+        if (scriptTask.script && scriptTask.script.trim()) {
+          scripts.push({
+            name: `${scriptTask.name || 'Unnamed Script Task'} (Script Task)`,
+            content: scriptTask.script,
+            elementType: 'scriptTask',
+            elementId: scriptTask.id
+          });
+        }
+      });
+    }
+
+    // Add pre/post scripts from all elements
+    ['formTasks', 'callActivities', 'exclusiveGateways'].forEach(elementType => {
+      if (result.details.elements[elementType]) {
+        result.details.elements[elementType].forEach(element => {
+          if (element.preScript && element.preScript.trim()) {
+            scripts.push({
+              name: `${element.name || 'Unnamed'} (Pre-Assignment)`,
+              content: element.preScript,
+              elementType: elementType,
+              elementId: element.id
+            });
+          }
+          if (element.postScript && element.postScript.trim()) {
+            scripts.push({
+              name: `${element.name || 'Unnamed'} (Post-Assignment)`,
+              content: element.postScript,
+              elementType: elementType,
+              elementId: element.id
+            });
+          }
+        });
+      }
+    });
+  }
+
   if (scripts.length > 0) {
     result.details.scripts = scripts;
+  }
+
+  // Debug logging for CSHS script extraction
+  if (subType === PROCESS_TYPES.ClientSideHumanService) {
+    console.log(`[CSHS Debug] ${result.name}: Found ${scripts.length} scripts, ${result.details.elements?.scriptTasks?.length || 0} script tasks`);
   }
 
   return result;
@@ -184,12 +231,22 @@ function extractScriptsFromProcess(process) {
 
       const components = Array.isArray(item.TWComponent) ? item.TWComponent : [item.TWComponent];
       components.forEach(component => {
-        if (ParseUtils.isNullXML(component) || !component.script || ParseUtils.isNullXML(component.script[0])) return;
+        if (ParseUtils.isNullXML(component) || !component.script) return;
 
-        const scriptName = item.name?.[0] || 'unnamed_script_from_item';
-        const scriptContent = component.script[0];
+        const scriptName = item.name?.[0] || item.$.name || 'unnamed_script_from_item';
+        let scriptContent = null;
 
-        if (scriptContent && typeof scriptContent === 'string') {
+        // Handle different script content formats
+        if (Array.isArray(component.script) && component.script.length > 0) {
+          scriptContent = component.script[0];
+        } else if (typeof component.script === 'string') {
+          scriptContent = component.script;
+        } else if (component.script && typeof component.script === 'object') {
+          // Handle script as object with text content
+          scriptContent = component.script._ || component.script['#text'] || component.script.content;
+        }
+
+        if (scriptContent && typeof scriptContent === 'string' && scriptContent.trim()) {
           scripts.push({
             name: scriptName,
             content: scriptContent.trim()
@@ -221,11 +278,57 @@ function extractScriptsFromProcess(process) {
               content: element.extensionElements.preAssignmentScript[0].trim()
             });
           }
+          // Post-assignment scripts
+          if (element.extensionElements?.postAssignmentScript?.[0]?.trim()) {
+            scripts.push({
+              name: `${element.name || 'Unnamed'} (post-assignment)`,
+              content: element.extensionElements.postAssignmentScript[0].trim()
+            });
+          }
         });
       }
     } catch (error) {
       console.warn(`[Script Extraction] Could not parse jsonData for process ${process.$.name}: ${error.message}`);
     }
+  }
+
+  // 3. Extract from <coachflow> for CSHS objects
+  if (process.coachflow && Array.isArray(process.coachflow)) {
+    process.coachflow.forEach((coachflow, index) => {
+      if (ParseUtils.isNullXML(coachflow)) return;
+
+      try {
+        // Look for script elements in coachflow XML
+        const scriptElements = ParseUtils.xpath(coachflow, '//script');
+        if (scriptElements && scriptElements.length > 0) {
+          scriptElements.forEach((scriptContent, scriptIndex) => {
+            if (scriptContent && scriptContent.trim()) {
+              scripts.push({
+                name: `Coachflow Script ${index + 1}-${scriptIndex + 1}`,
+                content: scriptContent.trim()
+              });
+            }
+          });
+        }
+
+        // Look for JavaScript in coachflow text content
+        const coachflowText = typeof coachflow === 'string' ? coachflow : JSON.stringify(coachflow);
+        const jsMatches = coachflowText.match(/<script[^>]*>([\s\S]*?)<\/script>/gi);
+        if (jsMatches) {
+          jsMatches.forEach((match, matchIndex) => {
+            const scriptContent = match.replace(/<script[^>]*>|<\/script>/gi, '').trim();
+            if (scriptContent) {
+              scripts.push({
+                name: `Coachflow Embedded Script ${index + 1}-${matchIndex + 1}`,
+                content: scriptContent
+              });
+            }
+          });
+        }
+      } catch (error) {
+        console.warn(`[Script Extraction] Error parsing coachflow ${index}: ${error.message}`);
+      }
+    });
   }
 
   return scripts;
@@ -345,6 +448,50 @@ async function parseCSHSDetails(process) {
     } catch (error) {
       console.warn('Error parsing CSHS jsonData:', error)
     }
+  }
+
+  // Additional script extraction for CSHS objects from coachflow
+  if (process.coachflow && Array.isArray(process.coachflow)) {
+    process.coachflow.forEach((coachflow, index) => {
+      if (ParseUtils.isNullXML(coachflow)) return;
+
+      try {
+        // Convert coachflow to string for script extraction
+        const coachflowStr = typeof coachflow === 'string' ? coachflow : JSON.stringify(coachflow);
+
+        // Look for embedded JavaScript in various patterns
+        const scriptPatterns = [
+          /<script[^>]*>([\s\S]*?)<\/script>/gi,
+          /"script":\s*"([^"]*(?:\\.[^"]*)*)"/gi,
+          /"scriptBlock":\s*"([^"]*(?:\\.[^"]*)*)"/gi
+        ];
+
+        scriptPatterns.forEach((pattern, patternIndex) => {
+          let match;
+          while ((match = pattern.exec(coachflowStr)) !== null) {
+            let scriptContent = match[1];
+            if (scriptContent && scriptContent.trim()) {
+              // Unescape JSON strings if needed
+              if (patternIndex > 0) {
+                scriptContent = scriptContent.replace(/\\"/g, '"').replace(/\\n/g, '\n').replace(/\\t/g, '\t');
+              }
+
+              // Add to script tasks if it's substantial
+              if (scriptContent.trim().length > 10) {
+                details.elements.scriptTasks.push({
+                  name: `Coachflow Script ${index + 1}-${patternIndex + 1}`,
+                  id: `coachflow-script-${index}-${patternIndex}`,
+                  script: scriptContent.trim(),
+                  source: 'coachflow'
+                });
+              }
+            }
+          }
+        });
+      } catch (error) {
+        console.warn(`Error extracting scripts from coachflow ${index}:`, error);
+      }
+    });
   }
 
   return details

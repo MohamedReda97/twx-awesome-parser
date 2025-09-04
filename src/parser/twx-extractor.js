@@ -527,7 +527,7 @@ class TWXExtractor {
 	extractCSHSDetails(processElement, baseObject) {
 		// Preserve existing details and add CSHS-specific details
 		const details = {
-			...baseObject.details, // Preserve existing details like processType
+			...baseObject.details, // Preserve existing details like processType and scripts
 			variables: {
 				input: [],
 				output: [],
@@ -540,6 +540,11 @@ class TWXExtractor {
 				scriptTasks: [],
 			},
 		};
+
+		// Preserve any existing scripts that were already extracted
+		if (baseObject.details && baseObject.details.scripts) {
+			details.scripts = [...baseObject.details.scripts];
+		}
 
 		// Extract variables from the main XML structure
 
@@ -582,7 +587,130 @@ class TWXExtractor {
 			this.parseCoachflowElements(processElement.coachflow, details);
 		}
 
+		// After extracting all elements, add script tasks to the main scripts array
+		if (details.elements && details.elements.scriptTasks && details.elements.scriptTasks.length > 0) {
+			if (!details.scripts) {
+				details.scripts = [];
+			}
+
+			details.elements.scriptTasks.forEach(scriptTask => {
+				if (scriptTask.script && scriptTask.script.trim()) {
+					details.scripts.push({
+						name: `${scriptTask.name || 'Unnamed Script Task'} (Script Task)`,
+						content: scriptTask.script, // Already cleaned by cleanJavaScript
+						elementType: 'scriptTask',
+						elementId: scriptTask.id,
+						source: scriptTask.source || 'coachflow'
+					});
+				}
+			});
+		}
+
+		// Also extract any additional scripts from coachflow XML structure
+		if (processElement.coachflow) {
+			this.extractAdditionalCoachflowScripts(processElement.coachflow, details);
+		}
+
+		// Debug logging for CSHS script extraction
+		console.log(`[TWXExtractor CSHS Debug] ${baseObject.name}: Final scripts count: ${details.scripts?.length || 0}, script tasks: ${details.elements?.scriptTasks?.length || 0}`);
+
 		baseObject.details = details;
+	}
+
+	/**
+	 * Extract additional scripts from coachflow XML structure
+	 * @param {Object} coachflow - Coachflow structure
+	 * @param {Object} details - Details object to populate
+	 */
+	extractAdditionalCoachflowScripts(coachflow, details) {
+		try {
+			// Convert coachflow to string for pattern matching
+			const coachflowStr = typeof coachflow === 'string' ? coachflow : JSON.stringify(coachflow);
+
+			// Look for various script patterns in the XML
+			const scriptPatterns = [
+				// Script tags
+				/<script[^>]*>([\s\S]*?)<\/script>/gi,
+				// Inline script attributes
+				/script\s*=\s*["']([^"']*(?:\\.[^"']*)*?)["']/gi,
+				// JavaScript function definitions
+				/function\s+\w+\s*\([^)]*\)\s*\{[\s\S]*?\}/gi
+			];
+
+			scriptPatterns.forEach((pattern, patternIndex) => {
+				let match;
+				while ((match = pattern.exec(coachflowStr)) !== null) {
+					let scriptContent = match[1] || match[0];
+					if (scriptContent && scriptContent.trim() && scriptContent.length > 20) {
+						// Clean the script content
+						scriptContent = this.cleanJavaScript(scriptContent);
+
+						if (scriptContent.trim()) {
+							if (!details.scripts) {
+								details.scripts = [];
+							}
+
+							details.scripts.push({
+								name: `Coachflow Script Pattern ${patternIndex + 1}`,
+								content: scriptContent,
+								source: 'coachflow-xml',
+								extractionPattern: patternIndex
+							});
+						}
+					}
+				}
+			});
+		} catch (error) {
+			console.warn('Error extracting additional coachflow scripts:', error);
+		}
+	}
+
+	/**
+	 * Extract additional scripts from coachflow XML structure
+	 * @param {Object} coachflow - Coachflow structure
+	 * @param {Object} details - Details object to populate
+	 */
+	extractAdditionalCoachflowScripts(coachflow, details) {
+		try {
+			// Convert coachflow to string for pattern matching
+			const coachflowStr = typeof coachflow === 'string' ? coachflow : JSON.stringify(coachflow);
+
+			// Look for various script patterns in the XML
+			const scriptPatterns = [
+				// Script tags
+				/<script[^>]*>([\s\S]*?)<\/script>/gi,
+				// Inline script attributes
+				/script\s*=\s*["']([^"']*(?:\\.[^"']*)*?)["']/gi,
+				// JavaScript function definitions
+				/function\s+\w+\s*\([^)]*\)\s*\{[\s\S]*?\}/gi
+			];
+
+			scriptPatterns.forEach((pattern, patternIndex) => {
+				let match;
+				while ((match = pattern.exec(coachflowStr)) !== null) {
+					let scriptContent = match[1] || match[0];
+					if (scriptContent && scriptContent.trim() && scriptContent.length > 20) {
+						// Clean the script content
+						scriptContent = this.cleanJavaScript(scriptContent);
+
+						if (scriptContent.trim()) {
+							if (!details.scripts) {
+								details.scripts = [];
+							}
+
+							details.scripts.push({
+								name: `Coachflow Script Pattern ${patternIndex + 1}`,
+								content: scriptContent,
+								source: 'coachflow-xml',
+								extractionPattern: patternIndex
+							});
+						}
+					}
+				}
+			});
+		} catch (error) {
+			console.warn('Error extracting additional coachflow scripts:', error);
+		}
 	}
 
 	/**

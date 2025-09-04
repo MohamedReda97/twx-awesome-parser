@@ -746,6 +746,18 @@ function generateScriptsDisplay(scripts) {
     let html = '';
 
     scripts.forEach((script, index) => {
+        // Handle different script content property names and formats
+        let scriptContent = script.content || script.script || script.scriptBlock || script.scriptContent || 'No script content';
+
+        // Clean up script content formatting
+        if (scriptContent && scriptContent !== 'No script content') {
+            scriptContent = scriptContent
+                .replace(/\r\r\n/g, '\n')  // Convert \r\r\n to \n
+                .replace(/\r\n/g, '\n')    // Convert \r\n to \n
+                .replace(/\r/g, '\n')      // Convert standalone \r to \n
+                .trim();
+        }
+
         html += `
             <div class="script-detail-section">
                 <div class="script-detail-header" onclick="toggleScriptSection('script-${index}')">
@@ -753,7 +765,10 @@ function generateScriptsDisplay(scripts) {
                     <span class="script-toggle" id="script-${index}-toggle">▼</span>
                 </div>
                 <div class="script-detail-content" id="script-${index}">
-                    <div class="code-block">${escapeHtml(script.script)}</div>
+                    <div class="code-block">${escapeHtml(scriptContent)}</div>
+                    ${script.componentName ? `<div class="script-meta"><strong>Component:</strong> ${escapeHtml(script.componentName)}</div>` : ''}
+                    ${script.elementType ? `<div class="script-meta"><strong>Element Type:</strong> ${escapeHtml(script.elementType)}</div>` : ''}
+                    ${script.elementId ? `<div class="script-meta"><strong>Element ID:</strong> ${escapeHtml(script.elementId)}</div>` : ''}
                 </div>
             </div>
         `;
@@ -1050,11 +1065,12 @@ function performClientSideSearch(searchTerm) {
             // Search in scripts
             if (obj.details?.scripts) {
                 obj.details.scripts.forEach(script => {
-                    if (script.script && script.script.toLowerCase().includes(lowerSearchTerm)) {
+                    const scriptContent = script.content || script.script || script.scriptBlock || script.scriptContent;
+                    if (scriptContent && scriptContent.toLowerCase().includes(lowerSearchTerm)) {
                         matches.push({
                             field: 'script',
                             value: script.name,
-                            snippet: createSnippet(script.script, searchTerm)
+                            snippet: createSnippet(scriptContent, searchTerm)
                         });
                     }
                 });
