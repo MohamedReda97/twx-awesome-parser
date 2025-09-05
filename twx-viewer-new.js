@@ -10,14 +10,45 @@ let selectedObject = null;
 let searchResults = [];
 let selectedTWXFile = null;
 let showToolkitObjects = false; // New state for toolkit toggle
+let aiAnalysisResults = [];
+let aiAnalysisInProgress = false;
+let aiAnalysisController = null; // AbortController for cancelling requests
 
 /**
  * Initialize the application
  */
 document.addEventListener('DOMContentLoaded', function () {
     console.log('TWX Viewer New UI loading...');
+
+    // Debug: Check if functions are defined
+    console.log('Function checks:', {
+        selectTWXFile: typeof selectTWXFile,
+        showAIConfigModal: typeof showAIConfigModal,
+        updateScriptCountDisplay: typeof updateScriptCountDisplay,
+        startAIAnalysis: typeof startAIAnalysis,
+        stopAIAnalysis: typeof stopAIAnalysis,
+        getSelectedObjectTypes: typeof getSelectedObjectTypes
+    });
+
+    // Make functions globally available for debugging
+    window.debugFunctions = {
+        selectTWXFile,
+        showAIConfigModal,
+        updateScriptCountDisplay,
+        startAIAnalysis,
+        stopAIAnalysis,
+        getSelectedObjectTypes
+    };
+
     loadObjectData();
     updateStatus('Ready - Select a TWX file to begin');
+
+    // Initialize AI analysis UI
+    setTimeout(() => {
+        if (typeof updateScriptCountDisplay === 'function') {
+            updateScriptCountDisplay();
+        }
+    }, 100);
 });
 
 /**
@@ -238,6 +269,7 @@ async function loadObjectData() {
 
         displayObjectTypes();
         updateObjectCount();
+        updateScriptCountDisplay(); // Update AI analysis button text
 
         // 🆕 Load and display enhanced statistics
         await loadAndDisplayStatistics();
@@ -546,7 +578,15 @@ function displayObjectDetails(object) {
         }
 
         if (object.details.scripts && object.details.scripts.length > 0) {
-            const scriptsSection = createDetailSection('Scripts', generateScriptsDisplay(object.details.scripts));
+            const scriptsContent = `
+                <div class="scripts-header">
+                    <button onclick="analyzeObjectScripts('${object.id}')" class="btn-secondary ai-analyze-btn">
+                        🤖 Analyze Scripts with AI
+                    </button>
+                </div>
+                ${generateScriptsDisplay(object.details.scripts)}
+            `;
+            const scriptsSection = createDetailSection('Scripts', scriptsContent);
             container.appendChild(scriptsSection);
         }
 
@@ -1741,6 +1781,1107 @@ function displayEnhancedStatistics(stats) {
             </div>
         </div>
     `;
+}
+
+// ===== AI SCRIPT REVIEW FUNCTIONALITY =====
+
+/**
+ * Start AI script analysis
+ */
+async function startAIAnalysis() {
+    if (aiAnalysisInProgress) {
+        showNotification('AI analysis is already in progress', 'warning');
+        return;
+    }
+
+    if (!currentObjects || Object.keys(currentObjects).length === 0) {
+        showNotification('No objects loaded for analysis', 'warning');
+        return;
+    }
+
+    try {
+        aiAnalysisInProgress = true;
+        aiAnalysisController = new AbortController();
+        updateAIAnalysisUI(true);
+
+        // Get selected object type filters
+        const selectedTypes = getSelectedObjectTypes();
+        const excludeToolkit = document.getElementById('filter-exclude-toolkit')?.checked !== false;
+
+        // Collect all scripts - flatten the nested structure and apply filters
+        const allObjects = [];
+        Object.values(currentObjects).forEach(objectData => {
+            if (objectData && objectData.objects && Array.isArray(objectData.objects)) {
+                objectData.objects.forEach(obj => {
+                    // Filter by object type
+                    if (!selectedTypes.includes(obj.type?.toLowerCase())) {
+                        return;
+                    }
+
+                    // Filter out toolkit objects if option is selected
+                    if (excludeToolkit && obj.source === 'toolkit') {
+                        return;
+                    }
+
+                    allObjects.push(obj);
+                });
+            }
+        });
+
+        console.log(`Found ${allObjects.length} objects for script analysis (filtered by type and source)`);
+
+        const response = await fetch('/api/ai-collect-scripts', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ objects: allObjects }),
+            signal: aiAnalysisController.signal
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to collect scripts');
+        }
+
+        const { scripts, statistics } = await response.json();
+
+        if (scripts.length === 0) {
+            showNotification('No scripts found for analysis', 'info');
+            return;
+        }
+
+        showNotification(`Found ${scripts.length} scripts. Starting AI analysis...`, 'info');
+
+        // Start analysis with progress tracking
+        const progressDiv = document.getElementById('ai-analysis-progress');
+        if (progressDiv) {
+            progressDiv.innerHTML = `
+                <div class="progress-container">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="ai-progress-fill" style="width: 0%"></div>
+                    </div>
+                    <div class="progress-text" id="ai-progress-text">Initializing analysis...</div>
+                </div>
+            `;
+        }
+
+        // Start analysis with progressive results
+        const analysisResponse = await fetch('/api/ai-analyze-scripts-progressive', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ scripts }),
+            signal: aiAnalysisController.signal
+        });
+
+        if (!analysisResponse.ok) {
+            throw new Error('AI analysis failed');
+        }
+
+        // Read the response as a stream for progressive updates
+        const reader = analysisResponse.body.getReader();
+        const decoder = new TextDecoder();
+        aiAnalysisResults = [];
+
+        try {
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+
+                const chunk = decoder.decode(value);
+                const lines = chunk.split('\n');
+
+                for (const line of lines) {
+                    if (line.trim() && line.startsWith('data: ')) {
+                        try {
+                            const data = JSON.parse(line.substring(6));
+
+                            if (data.type === 'batch_complete') {
+                                // Add new results to existing results
+                                aiAnalysisResults.push(...data.batchResults);
+
+                                // Update display progressively
+                                displayAIAnalysisResults(aiAnalysisResults, statistics, {
+                                    completed: data.completed,
+                                    total: data.totalBatches,
+                                    inProgress: true
+                                });
+
+                                let progressMessage = `Completed batch ${data.completed} of ${data.totalBatches}`;
+                                if (data.error && data.error.includes('Rate limit')) {
+                                    progressMessage += ' (rate limit handled)';
+                                }
+
+                                updateAnalysisProgress(data.completed, data.totalBatches, progressMessage);
+
+                            } else if (data.type === 'complete') {
+                                displayAIAnalysisResults(aiAnalysisResults, statistics, { inProgress: false });
+                                showNotification(`AI analysis completed! Found ${getTotalIssues(aiAnalysisResults)} issues across ${scripts.length} scripts`, 'success');
+                                break;
+                            } else if (data.type === 'error') {
+                                // Check if it's a rate limit error and provide helpful message
+                                if (data.message.includes('Rate limit') || data.message.includes('429')) {
+                                    throw new Error(`Rate limit exceeded. Try reducing batch size in AI settings or wait a few minutes before retrying. Details: ${data.message}`);
+                                }
+                                throw new Error(data.message);
+                            }
+                        } catch (parseError) {
+                            console.warn('Failed to parse progress data:', parseError);
+                        }
+                    }
+                }
+            }
+        } finally {
+            reader.releaseLock();
+        }
+
+    } catch (error) {
+        if (error.name === 'AbortError') {
+            showNotification('AI analysis was cancelled by user', 'info');
+        } else {
+            console.error('AI analysis error:', error);
+            showNotification('AI analysis failed: ' + error.message, 'error');
+        }
+    } finally {
+        aiAnalysisInProgress = false;
+        aiAnalysisController = null;
+        updateAIAnalysisUI(false);
+    }
+}
+
+/**
+ * Stop ongoing AI analysis
+ */
+function stopAIAnalysis() {
+    if (aiAnalysisController) {
+        aiAnalysisController.abort();
+        showNotification('Stopping AI analysis...', 'info');
+    }
+}
+
+/**
+ * Get selected object types for analysis
+ */
+function getSelectedObjectTypes() {
+    const types = [];
+
+    try {
+        if (document.getElementById('filter-coachview')?.checked) {
+            types.push('coachview');
+        }
+        if (document.getElementById('filter-cshs')?.checked) {
+            types.push('cshs');
+        }
+        if (document.getElementById('filter-service')?.checked) {
+            types.push('service', 'webservice');
+        }
+
+        // If no types selected, default to all types
+        if (types.length === 0) {
+            types.push('coachview', 'cshs', 'service', 'webservice');
+        }
+    } catch (error) {
+        console.warn('Error getting selected object types:', error);
+        // Default to all types if there's an error
+        types.push('coachview', 'cshs', 'service', 'webservice');
+    }
+
+    return types;
+}
+
+/**
+ * Update script count display based on filters
+ */
+function updateScriptCountDisplay() {
+    try {
+        const selectedTypes = getSelectedObjectTypes();
+        const excludeToolkit = document.getElementById('filter-exclude-toolkit')?.checked !== false;
+
+        let totalObjects = 0;
+        let filteredObjects = 0;
+
+        if (currentObjects && typeof currentObjects === 'object') {
+            Object.values(currentObjects).forEach(objectData => {
+                if (objectData && objectData.objects && Array.isArray(objectData.objects)) {
+                    totalObjects += objectData.objects.length;
+
+                    objectData.objects.forEach(obj => {
+                        // Apply same filters as analysis
+                        if (selectedTypes.includes(obj.type?.toLowerCase()) &&
+                            (!excludeToolkit || obj.source !== 'toolkit')) {
+                            filteredObjects++;
+                        }
+                    });
+                }
+            });
+        }
+
+        // Update button text to show filtered count
+        const button = document.getElementById('start-ai-analysis-btn');
+        if (button && !aiAnalysisInProgress) {
+            button.textContent = `🤖 Analyze ${filteredObjects} Objects`;
+        }
+    } catch (error) {
+        console.warn('Error updating script count display:', error);
+    }
+}
+
+/**
+ * Update AI analysis UI state
+ */
+function updateAIAnalysisUI(inProgress) {
+    const button = document.getElementById('start-ai-analysis-btn');
+    const stopButton = document.getElementById('stop-ai-analysis-btn');
+    const progressDiv = document.getElementById('ai-analysis-progress');
+
+    if (button) {
+        button.style.display = inProgress ? 'none' : 'inline-block';
+    }
+
+    if (stopButton) {
+        stopButton.style.display = inProgress ? 'inline-block' : 'none';
+    }
+
+    // Update all AI analyze buttons
+    const aiAnalyzeButtons = document.querySelectorAll('.ai-analyze-btn');
+    aiAnalyzeButtons.forEach(btn => {
+        btn.disabled = inProgress;
+        if (inProgress) {
+            btn.textContent = '🔄 Analyzing...';
+        } else {
+            btn.textContent = '🤖 Analyze Scripts with AI';
+        }
+    });
+
+    if (progressDiv) {
+        progressDiv.style.display = inProgress ? 'block' : 'none';
+        if (!inProgress) {
+            progressDiv.innerHTML = '';
+        }
+    }
+}
+
+/**
+ * Update analysis progress
+ */
+function updateAnalysisProgress(current, total, message) {
+    const progressFill = document.getElementById('ai-progress-fill');
+    const progressText = document.getElementById('ai-progress-text');
+
+    if (progressFill && progressText) {
+        const percentage = Math.round((current / total) * 100);
+        progressFill.style.width = `${percentage}%`;
+        progressText.textContent = `${message} (${current}/${total} - ${percentage}%)`;
+    }
+}
+
+/**
+ * Display AI analysis results
+ */
+function displayAIAnalysisResults(results, statistics, progressInfo = null) {
+    const container = document.getElementById('ai-analysis-results');
+    if (!container) return;
+
+    const totalIssues = getTotalIssues(results);
+    const criticalIssues = getIssuesBySeverity(results, 'critical');
+    const warningIssues = getIssuesBySeverity(results, 'warning');
+    const infoIssues = getIssuesBySeverity(results, 'info');
+
+    // Show progress info if analysis is in progress
+    const progressText = progressInfo && progressInfo.inProgress
+        ? `<div class="progress-info">📊 Completed ${progressInfo.completed} of ${progressInfo.total} batches</div>`
+        : '';
+
+    const html = `
+        <div class="ai-analysis-section">
+            <div class="ai-analysis-header">
+                <h3>🤖 AI Script Analysis Results</h3>
+                ${progressText}
+                <div class="ai-analysis-controls">
+                    <div class="analysis-stats">
+                        <div class="stat-item">
+                            <span class="severity-critical">●</span>
+                            <span>${criticalIssues} Critical</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="severity-warning">●</span>
+                            <span>${warningIssues} Warnings</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="severity-info">●</span>
+                            <span>${infoIssues} Info</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="results-count">📋 ${results.length} Scripts Analyzed</span>
+                        </div>
+                    </div>
+                    <div class="analysis-controls">
+                        <button onclick="exportAIResults('json')" class="btn-secondary">Export JSON</button>
+                        <button onclick="exportAIResults('csv')" class="btn-secondary">Export CSV</button>
+                        <button onclick="showAIConfigModal()" class="btn-secondary">⚙️ Settings</button>
+                    </div>
+                </div>
+            </div>
+            <div class="analysis-table-container">
+                ${generateAIAnalysisTable(results)}
+            </div>
+        </div>
+    `;
+
+    container.innerHTML = html;
+    container.style.display = 'block';
+
+    // Show the AI analysis panel
+    const aiPanel = document.getElementById('ai-analysis-panel');
+    if (aiPanel) {
+        aiPanel.style.display = 'block';
+    }
+}
+
+/**
+ * Generate AI analysis results table
+ */
+function generateAIAnalysisTable(results) {
+    if (!results || results.length === 0) {
+        return '<p>No analysis results to display</p>';
+    }
+
+    let tableHTML = `
+        <table class="analysis-table">
+            <thead>
+                <tr>
+                    <th>Object</th>
+                    <th>Script</th>
+                    <th>Type</th>
+                    <th>Score</th>
+                    <th>Severity</th>
+                    <th>Issue</th>
+                    <th>Line</th>
+                    <th>Suggestion</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+
+    results.forEach(result => {
+        const scriptInfo = getScriptInfoById(result.script_id);
+
+        if (result.issues && result.issues.length > 0) {
+            result.issues.forEach((issue, index) => {
+                tableHTML += `
+                    <tr>
+                        ${index === 0 ? `
+                            <td rowspan="${result.issues.length}">${escapeHtml(scriptInfo?.source_object || 'Unknown')}</td>
+                            <td rowspan="${result.issues.length}">${escapeHtml(scriptInfo?.name || result.script_id)}</td>
+                            <td rowspan="${result.issues.length}">${escapeHtml(scriptInfo?.source_type || 'Unknown')}</td>
+                            <td rowspan="${result.issues.length}">
+                                <span class="overall-score score-${result.overall_score}">${result.overall_score}</span>
+                            </td>
+                        ` : ''}
+                        <td><span class="issue-severity ${issue.severity}">${issue.severity}</span></td>
+                        <td class="issue-description">${escapeHtml(issue.description)}</td>
+                        <td>${issue.line_number || '-'}</td>
+                        <td class="issue-suggestion">${escapeHtml(issue.suggestion || '-')}</td>
+                    </tr>
+                `;
+            });
+        } else {
+            tableHTML += `
+                <tr>
+                    <td>${escapeHtml(scriptInfo?.source_object || 'Unknown')}</td>
+                    <td>${escapeHtml(scriptInfo?.name || result.script_id)}</td>
+                    <td>${escapeHtml(scriptInfo?.source_type || 'Unknown')}</td>
+                    <td><span class="overall-score score-${result.overall_score}">${result.overall_score}</span></td>
+                    <td><span class="issue-severity info">No Issues</span></td>
+                    <td class="issue-description">No issues found</td>
+                    <td>-</td>
+                    <td class="issue-suggestion">-</td>
+                </tr>
+            `;
+        }
+    });
+
+    tableHTML += `
+            </tbody>
+        </table>
+    `;
+
+    return tableHTML;
+}
+
+/**
+ * Get script info by ID (from last collection)
+ */
+function getScriptInfoById(scriptId) {
+    // This would be populated during script collection
+    // For now, extract info from the script ID pattern
+    return {
+        source_object: 'Unknown',
+        name: scriptId,
+        source_type: 'Unknown'
+    };
+}
+
+/**
+ * Get total issues count
+ */
+function getTotalIssues(results) {
+    return results.reduce((total, result) => {
+        return total + (result.issues ? result.issues.length : 0);
+    }, 0);
+}
+
+/**
+ * Get issues count by severity
+ */
+function getIssuesBySeverity(results, severity) {
+    return results.reduce((count, result) => {
+        if (result.issues) {
+            return count + result.issues.filter(issue => issue.severity === severity).length;
+        }
+        return count;
+    }, 0);
+}
+
+/**
+ * Export AI analysis results
+ */
+async function exportAIResults(format) {
+    if (!aiAnalysisResults || aiAnalysisResults.length === 0) {
+        showNotification('No analysis results to export', 'warning');
+        return;
+    }
+
+    try {
+        const response = await fetch('/api/ai-export-results', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ results: aiAnalysisResults, format })
+        });
+
+        if (response.ok) {
+            const result = await response.json();
+            showNotification(`Results exported to ${result.filename}`, 'success');
+        } else {
+            throw new Error('Export failed');
+        }
+    } catch (error) {
+        showNotification('Export failed: ' + error.message, 'error');
+    }
+}
+
+/**
+ * Show notification message
+ */
+function showNotification(message, type = 'info') {
+    // Remove existing notifications
+    const existingNotifications = document.querySelectorAll('.notification');
+    existingNotifications.forEach(n => n.remove());
+
+    const notification = document.createElement('div');
+    notification.className = `notification ${type}`;
+    notification.textContent = message;
+
+    document.body.appendChild(notification);
+
+    setTimeout(() => {
+        notification.remove();
+    }, 5000);
+}
+
+// ===== AI CONFIGURATION FUNCTIONS =====
+
+/**
+ * Show AI configuration modal
+ */
+function showAIConfigModal() {
+    const modal = document.getElementById('ai-config-modal');
+    if (!modal) {
+        createAIConfigModal();
+    }
+
+    loadAIConfiguration();
+    document.getElementById('ai-config-modal').style.display = 'block';
+}
+
+/**
+ * Hide AI configuration modal
+ */
+function hideAIConfigModal() {
+    document.getElementById('ai-config-modal').style.display = 'none';
+}
+
+/**
+ * Create AI configuration modal
+ */
+function createAIConfigModal() {
+    const modalHTML = `
+        <div id="ai-config-modal" class="modal">
+            <div class="modal-content ai-config-modal">
+                <div class="modal-header">
+                    <h2>🤖 AI Script Review Configuration</h2>
+                    <span class="close" onclick="hideAIConfigModal()">&times;</span>
+                </div>
+                <div class="modal-body">
+                    <div class="config-section">
+                        <h3>AI Provider</h3>
+                        <select id="ai-provider-select" onchange="onProviderChange()">
+                            <option value="claude">Claude (Anthropic)</option>
+                            <option value="deepseek">DeepSeek</option>
+                            <option value="gemini">Google Gemini</option>
+                            <option value="groq">Groq</option>
+                            <option value="custom">Custom Endpoint</option>
+                        </select>
+                    </div>
+
+                    <div class="config-section">
+                        <h3>Provider Settings</h3>
+                        <div id="provider-settings">
+                            <!-- Dynamic provider settings will be inserted here -->
+                        </div>
+                    </div>
+
+                    <div class="config-section">
+                        <h3>Analysis Settings</h3>
+                        <div class="setting-group">
+                            <label>Batch Size:</label>
+                            <input type="number" id="batch-size" min="1" max="10" value="3">
+                            <small>Number of scripts per API request. Use 1-2 for Groq to avoid rate limits, 3-5 for other providers.</small>
+                        </div>
+
+                        <div class="setting-group">
+                            <label>Analysis Focus:</label>
+                            <div class="checkbox-group">
+                                <label><input type="checkbox" id="focus-syntax" checked> Syntax Errors</label>
+                                <label><input type="checkbox" id="focus-performance" checked> Performance Issues</label>
+                                <label><input type="checkbox" id="focus-security" checked> Security Vulnerabilities</label>
+                                <label><input type="checkbox" id="focus-best-practices" checked> Best Practices</label>
+                            </div>
+                        </div>
+
+                        <div class="setting-group">
+                            <label><input type="checkbox" id="cache-results" checked> Cache Results</label>
+                            <small>Store analysis results locally for faster access</small>
+                        </div>
+                    </div>
+
+                    <div class="config-section">
+                        <h3>Connection Test</h3>
+                        <button id="test-connection-btn" onclick="testAIConnection()">Test Connection</button>
+                        <div id="connection-status"></div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button onclick="saveAIConfiguration()" class="btn-primary">Save Configuration</button>
+                    <button onclick="hideAIConfigModal()" class="btn-secondary">Cancel</button>
+                </div>
+            </div>
+        </div>
+    `;
+
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+}
+
+/**
+ * Handle provider selection change
+ */
+function onProviderChange() {
+    const provider = document.getElementById('ai-provider-select').value;
+    updateProviderSettings(provider);
+}
+
+/**
+ * Update provider-specific settings UI
+ */
+function updateProviderSettings(provider) {
+    const container = document.getElementById('provider-settings');
+
+    let settingsHTML = '';
+
+    switch (provider) {
+        case 'claude':
+            settingsHTML = `
+                <div class="setting-group">
+                    <label>API Key:</label>
+                    <input type="password" id="claude-api-key" placeholder="sk-ant-...">
+                    <small>Get your API key from <a href="https://console.anthropic.com/" target="_blank">Anthropic Console</a></small>
+                </div>
+                <div class="setting-group">
+                    <label>Model:</label>
+                    <select id="claude-model">
+                        <option value="claude-3-sonnet-20240229">Claude 3 Sonnet</option>
+                        <option value="claude-3-haiku-20240307">Claude 3 Haiku</option>
+                        <option value="claude-3-opus-20240229">Claude 3 Opus</option>
+                    </select>
+                </div>
+                <div class="setting-group">
+                    <label>Max Tokens:</label>
+                    <input type="number" id="claude-max-tokens" value="4000" min="100" max="8000">
+                </div>
+                <div class="setting-group">
+                    <label>Temperature:</label>
+                    <input type="number" id="claude-temperature" value="0.1" min="0" max="1" step="0.1">
+                </div>
+            `;
+            break;
+
+        case 'deepseek':
+            settingsHTML = `
+                <div class="setting-group">
+                    <label>API Key:</label>
+                    <input type="password" id="deepseek-api-key" placeholder="sk-...">
+                    <small>Get your API key from <a href="https://platform.deepseek.com/" target="_blank">DeepSeek Platform</a></small>
+                </div>
+                <div class="setting-group">
+                    <label>Model:</label>
+                    <select id="deepseek-model">
+                        <option value="deepseek-coder">DeepSeek Coder</option>
+                        <option value="deepseek-chat">DeepSeek Chat</option>
+                    </select>
+                </div>
+                <div class="setting-group">
+                    <label>Max Tokens:</label>
+                    <input type="number" id="deepseek-max-tokens" value="4000" min="100" max="8000">
+                </div>
+                <div class="setting-group">
+                    <label>Temperature:</label>
+                    <input type="number" id="deepseek-temperature" value="0.1" min="0" max="1" step="0.1">
+                </div>
+            `;
+            break;
+
+        case 'gemini':
+            settingsHTML = `
+                <div class="setting-group">
+                    <label>API Key:</label>
+                    <input type="password" id="gemini-api-key" placeholder="AIza...">
+                    <small>Get your API key from <a href="https://makersuite.google.com/app/apikey" target="_blank">Google AI Studio</a></small>
+                </div>
+                <div class="setting-group">
+                    <label>Model:</label>
+                    <select id="gemini-model">
+                        <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
+                        <option value="gemini-1.5-flash">Gemini 1.5 Flash</option>
+                        <option value="gemini-pro">Gemini Pro</option>
+                    </select>
+                </div>
+                <div class="setting-group">
+                    <label>Max Tokens:</label>
+                    <input type="number" id="gemini-max-tokens" value="4000" min="100" max="8000">
+                </div>
+                <div class="setting-group">
+                    <label>Temperature:</label>
+                    <input type="number" id="gemini-temperature" value="0.1" min="0" max="1" step="0.1">
+                </div>
+            `;
+            break;
+
+        case 'groq':
+            settingsHTML = `
+                <div class="rate-limit-warning">
+                    <strong>⚠️ Rate Limit Notice:</strong> Groq has strict rate limits (6000 tokens/minute for free tier).
+                    Use smaller batch sizes and lower max tokens to avoid rate limit errors.
+                </div>
+                <div class="setting-group">
+                    <label>API Key:</label>
+                    <input type="password" id="groq-api-key" placeholder="gsk_...">
+                    <small>Get your API key from <a href="https://console.groq.com/keys" target="_blank">Groq Console</a></small>
+                </div>
+                <div class="setting-group">
+                    <label>Model:</label>
+                    <select id="groq-model">
+                        <option value="llama-3.3-70b-versatile">Llama 3.3 70B Versatile (Recommended)</option>
+                        <option value="llama-3.1-70b-versatile">Llama 3.1 70B Versatile</option>
+                        <option value="llama-3.1-8b-instant">Llama 3.1 8B Instant (Faster, more rate limits)</option>
+                        <option value="llama3-70b-8192">Llama 3 70B</option>
+                        <option value="llama3-8b-8192">Llama 3 8B</option>
+                        <option value="mixtral-8x7b-32768">Mixtral 8x7B</option>
+                        <option value="gemma-7b-it">Gemma 7B</option>
+                    </select>
+                </div>
+                <div class="setting-group">
+                    <label>Max Tokens:</label>
+                    <input type="number" id="groq-max-tokens" value="2000" min="100" max="8000">
+                    <small>Lower values reduce rate limit issues (recommended: 2000 or less)</small>
+                </div>
+                <div class="setting-group">
+                    <label>Temperature:</label>
+                    <input type="number" id="groq-temperature" value="0.1" min="0" max="2" step="0.1">
+                </div>
+            `;
+            break;
+
+        case 'custom':
+            settingsHTML = `
+                <div class="setting-group">
+                    <label>Endpoint URL:</label>
+                    <input type="url" id="custom-endpoint" placeholder="https://api.example.com/v1/chat/completions">
+                </div>
+                <div class="setting-group">
+                    <label>API Key (optional):</label>
+                    <input type="password" id="custom-api-key" placeholder="Your API key">
+                </div>
+                <div class="setting-group">
+                    <label>Model:</label>
+                    <input type="text" id="custom-model" placeholder="model-name">
+                </div>
+                <div class="setting-group">
+                    <label>Max Tokens:</label>
+                    <input type="number" id="custom-max-tokens" value="4000" min="100" max="8000">
+                </div>
+                <div class="setting-group">
+                    <label>Temperature:</label>
+                    <input type="number" id="custom-temperature" value="0.1" min="0" max="1" step="0.1">
+                </div>
+                <div class="setting-group">
+                    <label>Custom Headers (JSON):</label>
+                    <textarea id="custom-headers" placeholder='{"Authorization": "Bearer token", "Custom-Header": "value"}'></textarea>
+                </div>
+            `;
+            break;
+    }
+
+    container.innerHTML = settingsHTML;
+}
+
+/**
+ * Load AI configuration from server
+ */
+async function loadAIConfiguration() {
+    try {
+        const response = await fetch('/api/ai-config');
+        if (response.ok) {
+            const config = await response.json();
+            populateConfigurationForm(config);
+        }
+    } catch (error) {
+        console.error('Failed to load AI configuration:', error);
+    }
+}
+
+/**
+ * Populate configuration form with loaded data
+ */
+function populateConfigurationForm(config) {
+    // Set provider
+    document.getElementById('ai-provider-select').value = config.provider || 'claude';
+    onProviderChange();
+
+    // Set general settings
+    document.getElementById('batch-size').value = config.batchSize || 5;
+    document.getElementById('cache-results').checked = config.cacheResults !== false;
+
+    // Set analysis focus checkboxes
+    const focusItems = config.analysisFocus || ['syntax', 'performance', 'security', 'best_practices'];
+    document.getElementById('focus-syntax').checked = focusItems.includes('syntax');
+    document.getElementById('focus-performance').checked = focusItems.includes('performance');
+    document.getElementById('focus-security').checked = focusItems.includes('security');
+    document.getElementById('focus-best-practices').checked = focusItems.includes('best_practices');
+
+    // Set provider-specific settings
+    setTimeout(() => {
+        const provider = config.provider || 'claude';
+        const providerConfig = config.providers?.[provider] || {};
+
+        switch (provider) {
+            case 'claude':
+                if (document.getElementById('claude-api-key')) {
+                    document.getElementById('claude-api-key').value = providerConfig.apiKey || '';
+                    document.getElementById('claude-model').value = providerConfig.model || 'claude-3-sonnet-20240229';
+                    document.getElementById('claude-max-tokens').value = providerConfig.maxTokens || 4000;
+                    document.getElementById('claude-temperature').value = providerConfig.temperature || 0.1;
+                }
+                break;
+            case 'deepseek':
+                if (document.getElementById('deepseek-api-key')) {
+                    document.getElementById('deepseek-api-key').value = providerConfig.apiKey || '';
+                    document.getElementById('deepseek-model').value = providerConfig.model || 'deepseek-coder';
+                    document.getElementById('deepseek-max-tokens').value = providerConfig.maxTokens || 4000;
+                    document.getElementById('deepseek-temperature').value = providerConfig.temperature || 0.1;
+                }
+                break;
+            case 'gemini':
+                if (document.getElementById('gemini-api-key')) {
+                    document.getElementById('gemini-api-key').value = providerConfig.apiKey || '';
+                    document.getElementById('gemini-model').value = providerConfig.model || 'gemini-1.5-pro';
+                    document.getElementById('gemini-max-tokens').value = providerConfig.maxTokens || 4000;
+                    document.getElementById('gemini-temperature').value = providerConfig.temperature || 0.1;
+                }
+                break;
+            case 'groq':
+                if (document.getElementById('groq-api-key')) {
+                    document.getElementById('groq-api-key').value = providerConfig.apiKey || '';
+                    document.getElementById('groq-model').value = providerConfig.model || 'llama-3.3-70b-versatile';
+                    document.getElementById('groq-max-tokens').value = providerConfig.maxTokens || 2000;
+                    document.getElementById('groq-temperature').value = providerConfig.temperature || 0.1;
+                }
+                break;
+            case 'custom':
+                if (document.getElementById('custom-endpoint')) {
+                    document.getElementById('custom-endpoint').value = providerConfig.endpoint || '';
+                    document.getElementById('custom-api-key').value = providerConfig.apiKey || '';
+                    document.getElementById('custom-model').value = providerConfig.model || '';
+                    document.getElementById('custom-max-tokens').value = providerConfig.maxTokens || 4000;
+                    document.getElementById('custom-temperature').value = providerConfig.temperature || 0.1;
+                    document.getElementById('custom-headers').value = JSON.stringify(providerConfig.headers || {}, null, 2);
+                }
+                break;
+        }
+    }, 100);
+}
+
+/**
+ * Save AI configuration
+ */
+async function saveAIConfiguration() {
+    try {
+        const config = collectConfigurationFromForm();
+
+        const response = await fetch('/api/ai-config', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(config)
+        });
+
+        if (response.ok) {
+            showNotification('AI configuration saved successfully', 'success');
+            hideAIConfigModal();
+        } else {
+            throw new Error('Failed to save configuration');
+        }
+    } catch (error) {
+        showNotification('Failed to save AI configuration: ' + error.message, 'error');
+    }
+}
+
+/**
+ * Collect configuration data from form
+ */
+function collectConfigurationFromForm() {
+    const provider = document.getElementById('ai-provider-select').value;
+
+    const config = {
+        provider: provider,
+        batchSize: parseInt(document.getElementById('batch-size').value) || 5,
+        cacheResults: document.getElementById('cache-results').checked,
+        analysisFocus: []
+    };
+
+    // Collect analysis focus
+    if (document.getElementById('focus-syntax').checked) config.analysisFocus.push('syntax');
+    if (document.getElementById('focus-performance').checked) config.analysisFocus.push('performance');
+    if (document.getElementById('focus-security').checked) config.analysisFocus.push('security');
+    if (document.getElementById('focus-best-practices').checked) config.analysisFocus.push('best_practices');
+
+    // Collect provider-specific settings
+    config.providers = {};
+
+    switch (provider) {
+        case 'claude':
+            config.providers.claude = {
+                name: 'Claude (Anthropic)',
+                endpoint: 'https://api.anthropic.com/v1/messages',
+                apiKey: document.getElementById('claude-api-key').value,
+                model: document.getElementById('claude-model').value,
+                maxTokens: parseInt(document.getElementById('claude-max-tokens').value),
+                temperature: parseFloat(document.getElementById('claude-temperature').value)
+            };
+            break;
+        case 'deepseek':
+            config.providers.deepseek = {
+                name: 'DeepSeek',
+                endpoint: 'https://api.deepseek.com/v1/chat/completions',
+                apiKey: document.getElementById('deepseek-api-key').value,
+                model: document.getElementById('deepseek-model').value,
+                maxTokens: parseInt(document.getElementById('deepseek-max-tokens').value),
+                temperature: parseFloat(document.getElementById('deepseek-temperature').value)
+            };
+            break;
+        case 'gemini':
+            config.providers.gemini = {
+                name: 'Google Gemini',
+                endpoint: 'https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent',
+                apiKey: document.getElementById('gemini-api-key').value,
+                model: document.getElementById('gemini-model').value,
+                maxTokens: parseInt(document.getElementById('gemini-max-tokens').value),
+                temperature: parseFloat(document.getElementById('gemini-temperature').value)
+            };
+            break;
+        case 'groq':
+            config.providers.groq = {
+                name: 'Groq',
+                endpoint: 'https://api.groq.com/openai/v1/chat/completions',
+                apiKey: document.getElementById('groq-api-key').value,
+                model: document.getElementById('groq-model').value,
+                maxTokens: parseInt(document.getElementById('groq-max-tokens').value),
+                temperature: parseFloat(document.getElementById('groq-temperature').value)
+            };
+            break;
+        case 'custom':
+            let customHeaders = {};
+            try {
+                customHeaders = JSON.parse(document.getElementById('custom-headers').value || '{}');
+            } catch (e) {
+                console.warn('Invalid custom headers JSON, using empty object');
+            }
+
+            config.providers.custom = {
+                name: 'Custom Endpoint',
+                endpoint: document.getElementById('custom-endpoint').value,
+                apiKey: document.getElementById('custom-api-key').value,
+                model: document.getElementById('custom-model').value,
+                maxTokens: parseInt(document.getElementById('custom-max-tokens').value),
+                temperature: parseFloat(document.getElementById('custom-temperature').value),
+                headers: customHeaders
+            };
+            break;
+    }
+
+    return config;
+}
+
+/**
+ * Test AI connection
+ */
+async function testAIConnection() {
+    const button = document.getElementById('test-connection-btn');
+    const status = document.getElementById('connection-status');
+
+    button.disabled = true;
+    button.textContent = 'Testing...';
+    status.innerHTML = '<div class="loading">Testing connection...</div>';
+
+    try {
+        const config = collectConfigurationFromForm();
+
+        const response = await fetch('/api/ai-test-connection', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(config)
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            status.innerHTML = '<div class="success">✅ Connection successful!</div>';
+        } else {
+            status.innerHTML = `<div class="error">❌ Connection failed: ${result.message}</div>`;
+        }
+    } catch (error) {
+        status.innerHTML = `<div class="error">❌ Test failed: ${error.message}</div>`;
+    } finally {
+        button.disabled = false;
+        button.textContent = 'Test Connection';
+    }
+}
+
+/**
+ * Analyze scripts for a specific object
+ */
+async function analyzeObjectScripts(objectId) {
+    if (aiAnalysisInProgress) {
+        showNotification('AI analysis is already in progress', 'warning');
+        return;
+    }
+
+    // Find the object - flatten the nested structure
+    let targetObject = null;
+    Object.values(currentObjects).forEach(objectData => {
+        if (objectData && objectData.objects && Array.isArray(objectData.objects)) {
+            const found = objectData.objects.find(obj => obj.id === objectId);
+            if (found) {
+                targetObject = found;
+            }
+        }
+    });
+
+    if (!targetObject) {
+        showNotification('Object not found', 'error');
+        return;
+    }
+
+    if (!targetObject.details?.scripts || targetObject.details.scripts.length === 0) {
+        showNotification('No scripts found in this object', 'info');
+        return;
+    }
+
+    try {
+        aiAnalysisInProgress = true;
+        aiAnalysisController = new AbortController();
+        updateAIAnalysisUI(true);
+
+        // Check if this object should be analyzed based on current filters
+        const selectedTypes = getSelectedObjectTypes();
+        const excludeToolkit = document.getElementById('filter-exclude-toolkit')?.checked !== false;
+
+        if (!selectedTypes.includes(targetObject.type?.toLowerCase())) {
+            showNotification(`${targetObject.type} objects are currently filtered out. Enable in AI settings.`, 'warning');
+            return;
+        }
+
+        if (excludeToolkit && targetObject.source === 'toolkit') {
+            showNotification('Toolkit objects are currently excluded from analysis. Disable "Exclude Toolkit Scripts" to analyze.', 'warning');
+            return;
+        }
+
+        // Collect scripts from this object only
+        const response = await fetch('/api/ai-collect-scripts', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ objects: [targetObject] }),
+            signal: aiAnalysisController.signal
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to collect scripts');
+        }
+
+        const { scripts, statistics } = await response.json();
+
+        if (scripts.length === 0) {
+            showNotification('No scripts found for analysis', 'info');
+            return;
+        }
+
+        showNotification(`Analyzing ${scripts.length} scripts from ${targetObject.name}...`, 'info');
+
+        // Start analysis
+        const analysisResponse = await fetch('/api/ai-analyze-scripts', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ scripts }),
+            signal: aiAnalysisController.signal
+        });
+
+        if (!analysisResponse.ok) {
+            throw new Error('AI analysis failed');
+        }
+
+        const analysisResults = await analysisResponse.json();
+        const results = analysisResults.analysis_results || [];
+
+        // Show results in the AI analysis panel
+        displayAIAnalysisResults(results, statistics);
+
+        // Show the AI analysis panel
+        const aiPanel = document.getElementById('ai-analysis-panel');
+        if (aiPanel) {
+            aiPanel.style.display = 'block';
+            // Scroll to the panel
+            aiPanel.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        showNotification(`AI analysis completed for ${targetObject.name}! Found ${getTotalIssues(results)} issues`, 'success');
+
+    } catch (error) {
+        if (error.name === 'AbortError') {
+            showNotification('AI analysis was cancelled by user', 'info');
+        } else {
+            console.error('Object AI analysis error:', error);
+            showNotification('AI analysis failed: ' + error.message, 'error');
+        }
+    } finally {
+        aiAnalysisInProgress = false;
+        aiAnalysisController = null;
+        updateAIAnalysisUI(false);
+    }
 }
 
 
