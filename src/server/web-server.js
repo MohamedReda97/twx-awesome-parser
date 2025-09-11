@@ -12,6 +12,9 @@ const ScriptCollectionService = require('../ai-review/ScriptCollectionService');
 const AIProviderService = require('../ai-review/AIProviderService');
 const AnalysisResultsStorage = require('../ai-review/AnalysisResultsStorage');
 
+// Static Analysis Services
+const StaticAnalysisService = require('../static-analysis/StaticAnalysisService');
+
 /**
  * Web server for TWX Parser UI
  */
@@ -118,11 +121,23 @@ class TWXWebServer {
       case '/api/ai-test-connection':
         await this.handleAITestConnection(req, res);
         break;
+      case '/api/ai-get-prompt-template':
+        await this.handleGetPromptTemplate(req, res);
+        break;
+      case '/api/ai-save-prompt-template':
+        await this.handleSavePromptTemplate(req, res);
+        break;
       case '/api/ai-collect-scripts':
         await this.handleAICollectScripts(req, res);
         break;
       case '/api/ai-analyze-scripts':
         await this.handleAIAnalyzeScripts(req, res);
+        break;
+      case '/api/static-collect-scripts':
+        await this.handleStaticCollectScripts(req, res);
+        break;
+      case '/api/static-analyze-scripts':
+        await this.handleStaticAnalyzeScripts(req, res);
         break;
       case '/api/ai-export-results':
         await this.handleAIExportResults(req, res);
@@ -725,6 +740,80 @@ class TWXWebServer {
       this.sendJSON(res, result);
     } catch (error) {
       this.sendJSON(res, { success: false, message: error.message });
+    }
+  }
+
+  /**
+   * Handle get prompt template API
+   */
+  async handleGetPromptTemplate(req, res) {
+    try {
+      const aiService = new AIScriptReviewService();
+      const template = await aiService.getPromptTemplate();
+
+      this.sendJSON(res, { template });
+    } catch (error) {
+      console.error('Get prompt template error:', error);
+      this.sendJSON(res, { success: false, error: error.message });
+    }
+  }
+
+  /**
+   * Handle save prompt template API
+   */
+  async handleSavePromptTemplate(req, res) {
+    try {
+      const body = await this.parseRequestBody(req);
+      const { template } = JSON.parse(body);
+
+      const aiService = new AIScriptReviewService();
+      await aiService.savePromptTemplate(template);
+
+      this.sendJSON(res, { success: true });
+    } catch (error) {
+      console.error('Save prompt template error:', error);
+      this.sendJSON(res, { success: false, error: error.message });
+    }
+  }
+
+  /**
+   * Handle static script collection API
+   */
+  async handleStaticCollectScripts(req, res) {
+    try {
+      const body = await this.parseRequestBody(req);
+      const { objects } = JSON.parse(body);
+
+      console.log(`📊 Static script collection request: ${objects?.length || 0} objects received`);
+
+      const collectionService = new ScriptCollectionService();
+      const scripts = collectionService.collectAllScripts(objects);
+      const statistics = collectionService.getCollectionStatistics();
+
+      console.log(`✅ Static script collection completed: ${scripts.length} scripts found`);
+
+      this.sendJSON(res, { scripts, statistics });
+    } catch (error) {
+      console.error('❌ Static script collection failed:', error);
+      this.sendJSON(res, { success: false, error: error.message });
+    }
+  }
+
+  /**
+   * Handle static script analysis API
+   */
+  async handleStaticAnalyzeScripts(req, res) {
+    try {
+      const body = await this.parseRequestBody(req);
+      const { scripts } = JSON.parse(body);
+
+      const staticAnalysisService = new StaticAnalysisService();
+      const result = await staticAnalysisService.analyzeScripts(scripts);
+
+      this.sendJSON(res, result);
+    } catch (error) {
+      console.error('Static script analysis error:', error);
+      this.sendJSON(res, { success: false, error: error.message });
     }
   }
 

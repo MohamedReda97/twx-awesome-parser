@@ -53,6 +53,14 @@ class ScriptCollectionService {
         const sourceType = this.getSourceType(obj);
         const sourceName = obj.name || 'Unnamed Object';
 
+        // Store object metadata for use in script collection
+        this.currentObjectMetadata = {
+            object_id: obj.id,
+            object_name: obj.name,
+            object_type: obj.type,
+            object_source: obj.source
+        };
+
         console.log(`🔍 Processing ${sourceType}: ${sourceName} (source: ${obj.source || 'unknown'})`);
 
         // 1. Collect from main scripts array
@@ -194,10 +202,18 @@ class ScriptCollectionService {
 
         // Generate unique ID
         scriptData.id = `script_${++this.scriptIndex}`;
-        
+
+        // Add object metadata if available
+        if (this.currentObjectMetadata) {
+            scriptData.object_id = this.currentObjectMetadata.object_id;
+            scriptData.object_name = this.currentObjectMetadata.object_name;
+            scriptData.object_type = this.currentObjectMetadata.object_type;
+            scriptData.object_source = this.currentObjectMetadata.object_source;
+        }
+
         // Clean and validate content
         scriptData.content = this.cleanScriptContent(scriptData.content);
-        
+
         // Only add if content is substantial (more than just whitespace/comments)
         if (this.isSubstantialScript(scriptData.content)) {
             this.collectedScripts.push(scriptData);

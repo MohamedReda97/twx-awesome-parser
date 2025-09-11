@@ -155,6 +155,81 @@ class AIScriptReviewService {
     }
 
     /**
+     * Get the current prompt template
+     * @returns {Promise<string>} Prompt template
+     */
+    async getPromptTemplate() {
+        const configPath = path.join(this.configDir, 'prompt-template.txt');
+
+        try {
+            if (fs.existsSync(configPath)) {
+                return fs.readFileSync(configPath, 'utf8');
+            }
+        } catch (error) {
+            console.warn('Error reading prompt template:', error);
+        }
+
+        // Return default template if file doesn't exist or can't be read
+        return this.getDefaultPromptTemplate();
+    }
+
+    /**
+     * Save a custom prompt template
+     * @param {string} template - Prompt template to save
+     */
+    async savePromptTemplate(template) {
+        const configPath = path.join(this.configDir, 'prompt-template.txt');
+
+        // Ensure config directory exists
+        if (!fs.existsSync(this.configDir)) {
+            fs.mkdirSync(this.configDir, { recursive: true });
+        }
+
+        fs.writeFileSync(configPath, template, 'utf8');
+    }
+
+    /**
+     * Get the default prompt template
+     * @returns {string} Default prompt template
+     */
+    getDefaultPromptTemplate() {
+        return `You are an expert JavaScript code reviewer specializing in IBM BPM (Business Process Manager) and TeamWorks applications.
+
+Please analyze the following JavaScript code and provide a comprehensive review focusing on:
+
+1. **Syntax Errors**: Any JavaScript syntax issues or parsing problems
+2. **Performance Issues**: Inefficient code patterns, optimization opportunities
+3. **Security Vulnerabilities**: XSS risks, injection vulnerabilities, unsafe practices
+4. **Best Practices**: Code quality, maintainability, IBM BPM/TeamWorks conventions
+5. **TeamWorks Specific**: IBM BPM API usage, tw.* object usage, process variable handling
+
+For each issue found, provide:
+- Severity level (critical, warning, info)
+- Issue type (syntax, performance, security, best_practice, teamworks_specific)
+- Description of the problem
+- Line number (if applicable)
+- Specific suggestion for improvement
+
+Respond in JSON format:
+{
+  "issues": [
+    {
+      "severity": "critical|warning|info",
+      "type": "syntax|performance|security|best_practice|teamworks_specific",
+      "description": "Clear description of the issue",
+      "line_number": 15,
+      "suggestion": "Specific recommendation to fix the issue"
+    }
+  ],
+  "overall_score": "A|B|C|D|F",
+  "summary": "Brief overall assessment of the code quality"
+}
+
+JavaScript Code to Analyze:
+{scripts}`;
+    }
+
+    /**
      * Collect all scripts from parsed objects
      */
     collectScriptsFromObjects(objects) {

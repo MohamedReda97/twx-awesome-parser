@@ -14,7 +14,16 @@
             <p class="subtitle">Browse and analyze IBM BPM TWX files</p>
         </header>
 
-        <!-- File Selection Section -->
+        <!-- Tab Navigation -->
+        <div class="tab-navigation">
+            <button class="tab-button active" onclick="switchTab('objects')" id="objects-tab">📁 TWX Objects</button>
+            <button class="tab-button" onclick="switchTab('ai-analysis')" id="ai-analysis-tab">🤖 AI Analysis</button>
+            <button class="tab-button" onclick="switchTab('static-review')" id="static-review-tab">🔍 Static Review</button>
+        </div>
+
+        <!-- Objects Tab Content -->
+        <div id="objects-tab-content" class="tab-content active">
+            <!-- File Selection Section -->
         <section class="file-selection">
             <div class="collapsible-panel">
                 <div class="panel-header" onclick="togglePanel('file-selection-panel')">
@@ -62,47 +71,6 @@
                             <button onclick="clearSearch()" id="clear-search-button">Clear</button>
                         </div>
 
-                        <!-- AI Analysis Controls -->
-                        <div class="ai-analysis-controls-section">
-                            <h4>🤖 AI Script Review</h4>
-
-                            <!-- Object Type Filters -->
-                            <div class="object-type-filters">
-                                <h5>Select Object Types to Analyze:</h5>
-                                <div class="filter-checkboxes">
-                                    <label class="filter-checkbox">
-                                        <input type="checkbox" id="filter-coachview" checked onchange="updateScriptCountDisplay()">
-                                        <span>📱 Coach Views</span>
-                                        <small>(inline scripts, load JS functions)</small>
-                                    </label>
-                                    <label class="filter-checkbox">
-                                        <input type="checkbox" id="filter-cshs" checked onchange="updateScriptCountDisplay()">
-                                        <span>🔄 CSHS</span>
-                                        <small>(script tasks, pre/post assignment scripts)</small>
-                                    </label>
-                                    <label class="filter-checkbox">
-                                        <input type="checkbox" id="filter-service" checked onchange="updateScriptCountDisplay()">
-                                        <span>⚙️ Services</span>
-                                        <small>(service scripts, web service operations)</small>
-                                    </label>
-                                </div>
-                                <div class="filter-options">
-                                    <label class="filter-checkbox">
-                                        <input type="checkbox" id="filter-exclude-toolkit" checked onchange="updateScriptCountDisplay()">
-                                        <span>🚫 Exclude Toolkit Scripts</span>
-                                        <small>(only analyze application scripts)</small>
-                                    </label>
-                                </div>
-                            </div>
-
-                            <div class="ai-controls">
-                                <button id="start-ai-analysis-btn" onclick="startAIAnalysis()" class="btn-primary">Start AI Analysis</button>
-                                <button id="stop-ai-analysis-btn" onclick="stopAIAnalysis()" class="btn-danger" style="display: none;">⏹️ Stop Analysis</button>
-                                <button onclick="showAIConfigModal()" class="btn-secondary">⚙️ AI Settings</button>
-                            </div>
-                            <div id="ai-analysis-progress" style="display: none;"></div>
-                        </div>
-                        
                         <div class="search-results" id="search-results" style="display: none;">
                             <div class="search-info" id="search-info"></div>
                             <div class="search-results-list" id="search-results-list"></div>
@@ -155,17 +123,185 @@
                     </div>
                 </div>
 
-                <!-- AI Analysis Results Panel -->
-                <div class="collapsible-panel" id="ai-analysis-panel" style="display: none;">
-                    <div class="panel-header" onclick="togglePanel('ai-analysis-content')">
-                        <span class="panel-title">🤖 AI Script Analysis Results</span>
-                        <span class="panel-toggle" id="ai-analysis-toggle">▼</span>
+            </section>
+        </div>
+
+        <!-- AI Analysis Tab Content -->
+        <div id="ai-analysis-tab-content" class="tab-content">
+            <section class="ai-analysis-section">
+                <div class="ai-analysis-container">
+                    <!-- AI Configuration Panel -->
+                    <div class="ai-config-panel">
+                        <h3>🤖 AI Script Analysis Configuration</h3>
+
+                        <!-- Object Type Filters -->
+                        <div class="object-type-filters">
+                            <h4>Select Object Types to Analyze:</h4>
+                            <div class="filter-checkboxes">
+                                <label class="filter-checkbox">
+                                    <input type="checkbox" id="filter-coachview" checked onchange="updateScriptCountDisplay()">
+                                    <span>📱 Coach Views</span>
+                                    <small>(inline scripts, load JS functions)</small>
+                                </label>
+                                <label class="filter-checkbox">
+                                    <input type="checkbox" id="filter-cshs" checked onchange="updateScriptCountDisplay()">
+                                    <span>🔄 CSHS</span>
+                                    <small>(script tasks, pre/post assignment scripts)</small>
+                                </label>
+                                <label class="filter-checkbox">
+                                    <input type="checkbox" id="filter-service" checked onchange="updateScriptCountDisplay()">
+                                    <span>⚙️ Services</span>
+                                    <small>(service scripts, web service operations)</small>
+                                </label>
+                            </div>
+                            <div class="filter-options">
+                                <label class="filter-checkbox">
+                                    <input type="checkbox" id="filter-exclude-toolkit" checked onchange="updateScriptCountDisplay()">
+                                    <span>🚫 Exclude Toolkit Scripts</span>
+                                    <small>(only analyze application scripts)</small>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- AI Controls -->
+                        <div class="ai-controls">
+                            <button id="start-ai-analysis-btn" onclick="startAIAnalysis()" class="btn-primary">Start AI Analysis</button>
+                            <button id="stop-ai-analysis-btn" onclick="stopAIAnalysis()" class="btn-danger" style="display: none;">⏹️ Stop Analysis</button>
+                            <button onclick="showAIConfigModal()" class="btn-secondary">⚙️ AI Settings</button>
+                            <button onclick="showPromptEditor()" class="btn-secondary">📝 Edit Prompt</button>
+                        </div>
+                        <div id="ai-analysis-progress" style="display: none;"></div>
                     </div>
-                    <div class="panel-content" id="ai-analysis-content">
+
+                    <!-- AI Analysis Results -->
+                    <div class="ai-results-panel">
                         <div id="ai-analysis-results"></div>
                     </div>
                 </div>
             </section>
+        </div>
+
+        <!-- Static Review Tab Content -->
+        <div id="static-review-tab-content" class="tab-content">
+            <section class="static-review-section">
+                <div class="static-review-container">
+                    <div class="section-header">
+                        <h2>🔍 Static Code Review</h2>
+                        <p>Automated JavaScript analysis using ESLint, Prettier, and security tools</p>
+                    </div>
+
+                    <!-- Simple Configuration Panel -->
+                    <div class="static-config-section">
+                        <h3>📋 Analysis Configuration</h3>
+
+                        <!-- Object Type Selection -->
+                        <div class="config-group">
+                            <h4>📁 Select Object Types to Analyze</h4>
+                            <div class="filter-checkboxes">
+                                <label><input type="checkbox" id="static-filter-coachview" checked> 🎨 Coach Views</label>
+                                <label><input type="checkbox" id="static-filter-cshs" checked> 📄 CSHS</label>
+                                <label><input type="checkbox" id="static-filter-service" checked> ⚙️ Services</label>
+                            </div>
+                            <div class="object-count-display">
+                                <small id="static-object-count-text">Selected: 0 objects</small>
+                            </div>
+                        </div>
+
+                        <!-- Analysis Options -->
+                        <div class="config-group">
+                            <h4>🔧 Analysis Options</h4>
+                            <div class="filter-checkboxes">
+                                <label><input type="checkbox" id="static-exclude-toolkit" checked> 🚫 Exclude Toolkit Scripts</label>
+                                <label><input type="checkbox" id="static-include-formatting" checked> ✨ Include Formatting Issues</label>
+                                <label><input type="checkbox" id="static-include-complexity" checked> 📊 Include Complexity Analysis</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Start Button -->
+                    <div class="static-controls">
+                        <button id="start-static-analysis-btn" onclick="startStaticAnalysis()" class="btn-primary btn-large">
+                            🔍 Start Static Analysis - 0 Objects
+                        </button>
+                        <button id="stop-static-analysis-btn" onclick="stopStaticAnalysis()" class="btn-danger btn-large" style="display: none;">
+                            ⏹️ Stop Analysis
+                        </button>
+                    </div>
+
+                    <!-- Progress Section -->
+                    <div id="static-analysis-progress" style="display: none;">
+                        <h3>🔄 Analysis in Progress</h3>
+                        <div class="progress-container">
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="static-progress-fill" style="width: 0%"></div>
+                            </div>
+                            <div class="progress-text" id="static-progress-text">Initializing static analysis...</div>
+                        </div>
+                    </div>
+
+                    <!-- Results Section -->
+                    <div id="static-analysis-results" style="display: none;">
+                        <h3>📊 Analysis Results</h3>
+                        <div id="static-results-summary" class="results-summary">
+                            <strong>0</strong> scripts analyzed, <strong>0</strong> with issues, <strong>0</strong> total issues found
+                        </div>
+
+                        <!-- Results Filters -->
+                        <div class="results-filters">
+                            <div class="filter-group">
+                                <label for="static-filter-severity">Severity:</label>
+                                <select id="static-filter-severity" onchange="filterStaticResults()">
+                                    <option value="">All Severities</option>
+                                    <option value="error">Error</option>
+                                    <option value="warning">Warning</option>
+                                    <option value="info">Info</option>
+                                </select>
+                            </div>
+                            <div class="filter-group">
+                                <label for="static-filter-category">Category:</label>
+                                <select id="static-filter-category" onchange="filterStaticResults()">
+                                    <option value="">All Categories</option>
+                                </select>
+                            </div>
+                            <div class="filter-group">
+                                <label for="static-filter-object">Object:</label>
+                                <input type="text" id="static-filter-object" placeholder="Filter by object name..." onkeyup="filterStaticResults()">
+                            </div>
+                            <div class="filter-group">
+                                <button onclick="clearStaticFilters()" class="btn-secondary btn-small">Clear Filters</button>
+                            </div>
+                        </div>
+
+                        <div class="results-count" id="static-results-count">📋 0 Issues Found</div>
+
+                        <div class="results-table-container">
+                            <table id="static-results-table" class="results-table enhanced-table">
+                                <thead>
+                                    <tr>
+                                        <th class="sortable" onclick="sortStaticTable(0)">Script <span class="sort-indicator"></span></th>
+                                        <th class="sortable" onclick="sortStaticTable(1)">Object <span class="sort-indicator"></span></th>
+                                        <th class="sortable" onclick="sortStaticTable(2)">Severity <span class="sort-indicator"></span></th>
+                                        <th class="sortable" onclick="sortStaticTable(3)">Category <span class="sort-indicator"></span></th>
+                                        <th class="sortable" onclick="sortStaticTable(4)">Rule <span class="sort-indicator"></span></th>
+                                        <th>Description</th>
+                                        <th class="sortable" onclick="sortStaticTable(6)">Line <span class="sort-indicator"></span></th>
+                                        <th class="code-column">Code Context</th>
+                                        <th>Suggestion</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="static-results-tbody">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+
+
+
+        </div>
         </main>
 
         <!-- Status Bar -->
@@ -175,6 +311,36 @@
         </footer>
     </div>
 
-    <script src="twx-viewer-new.js?v=2.0"></script>
+    <!-- AI Prompt Editor Modal -->
+    <div id="prompt-editor-modal" class="modal" style="display: none;">
+        <div class="modal-content large-modal">
+            <div class="modal-header">
+                <h3>📝 AI Analysis Prompt Editor</h3>
+                <span class="close" onclick="closePromptEditor()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="prompt-editor-container">
+                    <div class="prompt-info">
+                        <p>This is the prompt template used for AI script analysis. You can customize it to focus on specific aspects or change the analysis style.</p>
+                        <div class="prompt-variables">
+                            <strong>Available Variables:</strong>
+                            <code>{scripts}</code> - The JavaScript code to analyze
+                        </div>
+                    </div>
+                    <div class="prompt-editor">
+                        <label for="prompt-textarea">Analysis Prompt Template:</label>
+                        <textarea id="prompt-textarea" rows="20" placeholder="Enter your custom prompt template..."></textarea>
+                    </div>
+                    <div class="prompt-actions">
+                        <button onclick="resetPromptToDefault()" class="btn-secondary">Reset to Default</button>
+                        <button onclick="savePromptTemplate()" class="btn-primary">Save Template</button>
+                        <button onclick="closePromptEditor()" class="btn-secondary">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="twx-viewer-new.js?v=7.0"></script>
 </body>
 </html>

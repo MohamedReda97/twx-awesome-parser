@@ -14,6 +14,56 @@ let aiAnalysisResults = [];
 let aiAnalysisInProgress = false;
 let aiAnalysisController = null; // AbortController for cancelling requests
 
+// ===== TAB MANAGEMENT =====
+
+/**
+ * Switch between tabs
+ */
+function switchTab(tabName) {
+    try {
+        // Hide all tab contents
+        const tabContents = document.querySelectorAll('.tab-content');
+        tabContents.forEach(content => {
+            content.classList.remove('active');
+        });
+
+        // Remove active class from all tab buttons
+        const tabButtons = document.querySelectorAll('.tab-button');
+        tabButtons.forEach(button => {
+            button.classList.remove('active');
+        });
+
+        // Show selected tab content
+        const selectedTabContent = document.getElementById(`${tabName}-tab-content`);
+        if (selectedTabContent) {
+            selectedTabContent.classList.add('active');
+        }
+
+        // Activate selected tab button
+        const selectedTabButton = document.getElementById(`${tabName}-tab`);
+        if (selectedTabButton) {
+            selectedTabButton.classList.add('active');
+        }
+
+        // Update script count display when switching to analysis tabs
+        if (tabName === 'ai-analysis') {
+            setTimeout(() => {
+                if (typeof updateScriptCountDisplay === 'function') {
+                    updateScriptCountDisplay();
+                }
+            }, 100);
+        } else if (tabName === 'static-review') {
+            setTimeout(() => {
+                if (typeof updateStaticScriptCountDisplay === 'function') {
+                    updateStaticScriptCountDisplay();
+                }
+            }, 100);
+        }
+    } catch (error) {
+        console.error('Error switching tabs:', error);
+    }
+}
+
 /**
  * Initialize the application
  */
@@ -27,7 +77,8 @@ document.addEventListener('DOMContentLoaded', function () {
         updateScriptCountDisplay: typeof updateScriptCountDisplay,
         startAIAnalysis: typeof startAIAnalysis,
         stopAIAnalysis: typeof stopAIAnalysis,
-        getSelectedObjectTypes: typeof getSelectedObjectTypes
+        getSelectedObjectTypes: typeof getSelectedObjectTypes,
+        switchTab: typeof switchTab
     });
 
     // Make functions globally available for debugging
@@ -37,7 +88,14 @@ document.addEventListener('DOMContentLoaded', function () {
         updateScriptCountDisplay,
         startAIAnalysis,
         stopAIAnalysis,
-        getSelectedObjectTypes
+        getSelectedObjectTypes,
+        switchTab,
+        loadObjectData,
+        currentObjects: () => currentObjects,
+        // Static analysis functions
+        startStaticAnalysis: typeof startStaticAnalysis !== 'undefined' ? startStaticAnalysis : null,
+        stopStaticAnalysis: typeof stopStaticAnalysis !== 'undefined' ? stopStaticAnalysis : null,
+        updateStaticScriptCountDisplay: typeof updateStaticScriptCountDisplay !== 'undefined' ? updateStaticScriptCountDisplay : null
     };
 
     loadObjectData();
@@ -48,7 +106,23 @@ document.addEventListener('DOMContentLoaded', function () {
         if (typeof updateScriptCountDisplay === 'function') {
             updateScriptCountDisplay();
         }
+        if (typeof updateStaticScriptCountDisplay === 'function') {
+            updateStaticScriptCountDisplay();
+        }
     }, 100);
+
+    // Add event listeners for static analysis filters (after DOM is loaded)
+    setTimeout(() => {
+        document.getElementById('static-filter-severity')?.addEventListener('change', filterStaticResults);
+        document.getElementById('static-filter-category')?.addEventListener('change', filterStaticResults);
+        document.getElementById('static-filter-object')?.addEventListener('input', filterStaticResults);
+
+        // Add event listeners for static analysis configuration changes
+        document.getElementById('static-filter-coachview')?.addEventListener('change', updateStaticScriptCountDisplay);
+        document.getElementById('static-filter-cshs')?.addEventListener('change', updateStaticScriptCountDisplay);
+        document.getElementById('static-filter-service')?.addEventListener('change', updateStaticScriptCountDisplay);
+        document.getElementById('static-exclude-toolkit')?.addEventListener('change', updateStaticScriptCountDisplay);
+    }, 200);
 });
 
 /**
@@ -1848,6 +1922,9 @@ async function startAIAnalysis() {
             return;
         }
 
+        // Store scripts globally for reference in results display
+        window.collectedScripts = scripts;
+
         showNotification(`Found ${scripts.length} scripts. Starting AI analysis...`, 'info');
 
         // Start analysis with progress tracking
@@ -1963,20 +2040,33 @@ function getSelectedObjectTypes() {
     const types = [];
 
     try {
-        if (document.getElementById('filter-coachview')?.checked) {
+        const coachviewChecked = document.getElementById('filter-coachview')?.checked;
+        const cshsChecked = document.getElementById('filter-cshs')?.checked;
+        const serviceChecked = document.getElementById('filter-service')?.checked;
+
+        console.log('Filter checkboxes:', {
+            coachview: coachviewChecked,
+            cshs: cshsChecked,
+            service: serviceChecked
+        });
+
+        if (coachviewChecked) {
             types.push('coachview');
         }
-        if (document.getElementById('filter-cshs')?.checked) {
+        if (cshsChecked) {
             types.push('cshs');
         }
-        if (document.getElementById('filter-service')?.checked) {
+        if (serviceChecked) {
             types.push('service', 'webservice');
         }
 
         // If no types selected, default to all types
         if (types.length === 0) {
+            console.log('No types selected, defaulting to all types');
             types.push('coachview', 'cshs', 'service', 'webservice');
         }
+
+        console.log('Selected types:', types);
     } catch (error) {
         console.warn('Error getting selected object types:', error);
         // Default to all types if there's an error
@@ -1997,21 +2087,34 @@ function updateScriptCountDisplay() {
         let totalObjects = 0;
         let filteredObjects = 0;
 
+        console.log('Updating script count display:', {
+            selectedTypes,
+            excludeToolkit,
+            currentObjectsKeys: currentObjects ? Object.keys(currentObjects) : 'none'
+        });
+
         if (currentObjects && typeof currentObjects === 'object') {
             Object.values(currentObjects).forEach(objectData => {
                 if (objectData && objectData.objects && Array.isArray(objectData.objects)) {
                     totalObjects += objectData.objects.length;
 
                     objectData.objects.forEach(obj => {
+                        const objType = obj.type?.toLowerCase();
+                        const isSelectedType = selectedTypes.includes(objType);
+                        const isNotToolkit = !excludeToolkit || obj.source !== 'toolkit';
+
+                        console.log(`Object: ${obj.name} (${objType}) - Selected: ${isSelectedType}, NotToolkit: ${isNotToolkit}, Source: ${obj.source}`);
+
                         // Apply same filters as analysis
-                        if (selectedTypes.includes(obj.type?.toLowerCase()) &&
-                            (!excludeToolkit || obj.source !== 'toolkit')) {
+                        if (isSelectedType && isNotToolkit) {
                             filteredObjects++;
                         }
                     });
                 }
             });
         }
+
+        console.log(`Total objects: ${totalObjects}, Filtered objects: ${filteredObjects}`);
 
         // Update button text to show filtered count
         const button = document.getElementById('start-ai-analysis-btn');
@@ -2119,6 +2222,50 @@ function displayAIAnalysisResults(results, statistics, progressInfo = null) {
                     </div>
                 </div>
             </div>
+
+            <!-- Filter Controls -->
+            <div class="results-filter-controls">
+                <div class="filter-group">
+                    <label>Filter by Severity:</label>
+                    <select id="severity-filter" onchange="filterAIResults()">
+                        <option value="">All Severities</option>
+                        <option value="critical">Critical</option>
+                        <option value="warning">Warning</option>
+                        <option value="info">Info</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Filter by Type:</label>
+                    <select id="type-filter" onchange="filterAIResults()">
+                        <option value="">All Types</option>
+                        <option value="syntax">Syntax</option>
+                        <option value="performance">Performance</option>
+                        <option value="security">Security</option>
+                        <option value="best_practice">Best Practice</option>
+                        <option value="analysis_error">Analysis Error</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Filter by Object:</label>
+                    <input type="text" id="object-filter" placeholder="Object name..." onkeyup="filterAIResults()">
+                </div>
+                <div class="filter-group">
+                    <label>Filter by Score:</label>
+                    <select id="score-filter" onchange="filterAIResults()">
+                        <option value="">All Scores</option>
+                        <option value="A">A</option>
+                        <option value="B">B</option>
+                        <option value="C">C</option>
+                        <option value="D">D</option>
+                        <option value="F">F</option>
+                        <option value="N/A">N/A</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <button onclick="clearAIFilters()" class="btn-secondary">Clear Filters</button>
+                </div>
+            </div>
+
             <div class="analysis-table-container">
                 ${generateAIAnalysisTable(results)}
             </div>
@@ -2154,6 +2301,7 @@ function generateAIAnalysisTable(results) {
                     <th>Severity</th>
                     <th>Issue</th>
                     <th>Line</th>
+                    <th>Code</th>
                     <th>Suggestion</th>
                 </tr>
             </thead>
@@ -2178,6 +2326,7 @@ function generateAIAnalysisTable(results) {
                         <td><span class="issue-severity ${issue.severity}">${issue.severity}</span></td>
                         <td class="issue-description">${escapeHtml(issue.description)}</td>
                         <td>${issue.line_number || '-'}</td>
+                        <td class="code-line">${getCodeLineFromScript(scriptInfo, issue.line_number)}</td>
                         <td class="issue-suggestion">${escapeHtml(issue.suggestion || '-')}</td>
                     </tr>
                 `;
@@ -2192,6 +2341,7 @@ function generateAIAnalysisTable(results) {
                     <td><span class="issue-severity info">No Issues</span></td>
                     <td class="issue-description">No issues found</td>
                     <td>-</td>
+                    <td class="code-line">-</td>
                     <td class="issue-suggestion">-</td>
                 </tr>
             `;
@@ -2264,6 +2414,908 @@ async function exportAIResults(format) {
         }
     } catch (error) {
         showNotification('Export failed: ' + error.message, 'error');
+    }
+}
+
+// ===== AI RESULTS FILTERING =====
+
+/**
+ * Filter AI analysis results based on current filter settings
+ */
+function filterAIResults() {
+    const severityFilter = document.getElementById('severity-filter')?.value || '';
+    const typeFilter = document.getElementById('type-filter')?.value || '';
+    const objectFilter = document.getElementById('object-filter')?.value.toLowerCase() || '';
+    const scoreFilter = document.getElementById('score-filter')?.value || '';
+
+    const table = document.querySelector('.analysis-table');
+    if (!table) return;
+
+    const rows = table.querySelectorAll('tbody tr');
+    let visibleCount = 0;
+
+    rows.forEach(row => {
+        let shouldShow = true;
+
+        // Get row data
+        const severityCell = row.querySelector('.issue-severity');
+        const typeCell = row.cells[5]; // Issue column
+        const objectCell = row.cells[0]; // Object column
+        const scoreCell = row.querySelector('.overall-score');
+
+        // Apply severity filter
+        if (severityFilter && severityCell) {
+            const severity = severityCell.textContent.trim().toLowerCase();
+            if (severity !== severityFilter) {
+                shouldShow = false;
+            }
+        }
+
+        // Apply type filter
+        if (typeFilter && typeCell) {
+            const issueText = typeCell.textContent.toLowerCase();
+            if (!issueText.includes(typeFilter)) {
+                shouldShow = false;
+            }
+        }
+
+        // Apply object filter
+        if (objectFilter && objectCell) {
+            const objectText = objectCell.textContent.toLowerCase();
+            if (!objectText.includes(objectFilter)) {
+                shouldShow = false;
+            }
+        }
+
+        // Apply score filter
+        if (scoreFilter && scoreCell) {
+            const score = scoreCell.textContent.trim();
+            if (score !== scoreFilter) {
+                shouldShow = false;
+            }
+        }
+
+        // Show/hide row
+        row.style.display = shouldShow ? '' : 'none';
+        if (shouldShow) visibleCount++;
+    });
+
+    // Update visible count
+    updateFilteredResultsCount(visibleCount, rows.length);
+}
+
+/**
+ * Clear all AI result filters
+ */
+function clearAIFilters() {
+    document.getElementById('severity-filter').value = '';
+    document.getElementById('type-filter').value = '';
+    document.getElementById('object-filter').value = '';
+    document.getElementById('score-filter').value = '';
+
+    filterAIResults();
+}
+
+/**
+ * Update the count of filtered results
+ */
+function updateFilteredResultsCount(visible, total) {
+    const countElement = document.querySelector('.results-count');
+    if (countElement) {
+        if (visible === total) {
+            countElement.innerHTML = `📋 ${total} Scripts Analyzed`;
+        } else {
+            countElement.innerHTML = `📋 ${visible} of ${total} Scripts (filtered)`;
+        }
+    }
+}
+
+/**
+ * Get script information by ID from the collected scripts
+ */
+function getScriptInfoById(scriptId) {
+    // Try to find in the global collected scripts array
+    if (window.collectedScripts && Array.isArray(window.collectedScripts)) {
+        return window.collectedScripts.find(script => script.id === scriptId);
+    }
+
+    // Fallback: try to extract from the script ID if it contains object info
+    return {
+        source_object: 'Unknown',
+        name: scriptId,
+        source_type: 'Unknown'
+    };
+}
+
+/**
+ * Get a specific line of code from a script
+ */
+function getCodeLineFromScript(scriptInfo, lineNumber) {
+    if (!scriptInfo || !scriptInfo.content || !lineNumber) {
+        return '-';
+    }
+
+    try {
+        const lines = scriptInfo.content.split('\n');
+        const lineIndex = parseInt(lineNumber) - 1; // Convert to 0-based index
+
+        if (lineIndex >= 0 && lineIndex < lines.length) {
+            const line = lines[lineIndex].trim();
+            // Truncate long lines and escape HTML
+            if (line.length > 80) {
+                return escapeHtml(line.substring(0, 77) + '...');
+            }
+            return escapeHtml(line) || '(empty line)';
+        }
+    } catch (error) {
+        console.warn('Error getting code line:', error);
+    }
+
+    return '-';
+}
+
+// ===== AI PROMPT EDITOR =====
+
+/**
+ * Show the AI prompt editor modal
+ */
+async function showPromptEditor() {
+    const modal = document.getElementById('prompt-editor-modal');
+    const textarea = document.getElementById('prompt-textarea');
+
+    if (!modal || !textarea) {
+        showNotification('Prompt editor not available', 'error');
+        return;
+    }
+
+    try {
+        // Load current prompt template
+        const response = await fetch('/api/ai-get-prompt-template');
+        if (response.ok) {
+            const { template } = await response.json();
+            textarea.value = template;
+        } else {
+            // Load default template if none exists
+            textarea.value = getDefaultPromptTemplate();
+        }
+
+        modal.style.display = 'block';
+    } catch (error) {
+        console.error('Error loading prompt template:', error);
+        textarea.value = getDefaultPromptTemplate();
+        modal.style.display = 'block';
+    }
+}
+
+/**
+ * Close the prompt editor modal
+ */
+function closePromptEditor() {
+    const modal = document.getElementById('prompt-editor-modal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+}
+
+/**
+ * Save the prompt template
+ */
+async function savePromptTemplate() {
+    const textarea = document.getElementById('prompt-textarea');
+    if (!textarea) {
+        showNotification('Prompt editor not available', 'error');
+        return;
+    }
+
+    const template = textarea.value.trim();
+    if (!template) {
+        showNotification('Prompt template cannot be empty', 'warning');
+        return;
+    }
+
+    try {
+        const response = await fetch('/api/ai-save-prompt-template', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ template })
+        });
+
+        if (response.ok) {
+            showNotification('Prompt template saved successfully', 'success');
+            closePromptEditor();
+        } else {
+            throw new Error('Failed to save prompt template');
+        }
+    } catch (error) {
+        console.error('Error saving prompt template:', error);
+        showNotification('Failed to save prompt template: ' + error.message, 'error');
+    }
+}
+
+/**
+ * Reset prompt to default template
+ */
+function resetPromptToDefault() {
+    const textarea = document.getElementById('prompt-textarea');
+    if (textarea) {
+        textarea.value = getDefaultPromptTemplate();
+        showNotification('Prompt reset to default template', 'info');
+    }
+}
+
+/**
+ * Get the default prompt template
+ */
+function getDefaultPromptTemplate() {
+    return `You are an expert JavaScript code reviewer specializing in IBM BPM (Business Process Manager) and TeamWorks applications.
+
+Please analyze the following JavaScript code and provide a comprehensive review focusing on:
+
+1. **Syntax Errors**: Any JavaScript syntax issues or parsing problems
+2. **Performance Issues**: Inefficient code patterns, optimization opportunities
+3. **Security Vulnerabilities**: XSS risks, injection vulnerabilities, unsafe practices
+4. **Best Practices**: Code quality, maintainability, IBM BPM/TeamWorks conventions
+5. **TeamWorks Specific**: IBM BPM API usage, tw.* object usage, process variable handling
+
+For each issue found, provide:
+- Severity level (critical, warning, info)
+- Issue type (syntax, performance, security, best_practice, teamworks_specific)
+- Description of the problem
+- Line number (if applicable)
+- Specific suggestion for improvement
+
+Respond in JSON format:
+{
+  "issues": [
+    {
+      "severity": "critical|warning|info",
+      "type": "syntax|performance|security|best_practice|teamworks_specific",
+      "description": "Clear description of the issue",
+      "line_number": 15,
+      "suggestion": "Specific recommendation to fix the issue"
+    }
+  ],
+  "overall_score": "A|B|C|D|F",
+  "summary": "Brief overall assessment of the code quality"
+}
+
+JavaScript Code to Analyze:
+{scripts}`;
+}
+
+// ===== STATIC ANALYSIS FUNCTIONALITY =====
+
+let staticAnalysisInProgress = false;
+let staticAnalysisController = null;
+let staticAnalysisResults = [];
+
+/**
+ * Start static code analysis
+ */
+async function startStaticAnalysis() {
+    if (staticAnalysisInProgress) {
+        showNotification('Static analysis is already in progress', 'warning');
+        return;
+    }
+
+    // Debug: Check current objects state
+    console.log('🔍 Debug: Static Analysis - Current Objects State:', {
+        currentObjects: currentObjects,
+        objectKeys: currentObjects ? Object.keys(currentObjects) : 'null',
+        objectCount: currentObjects ? Object.keys(currentObjects).length : 0
+    });
+
+    if (!currentObjects || Object.keys(currentObjects).length === 0) {
+        console.error('❌ No objects loaded for static analysis');
+        showNotification('No objects loaded for analysis. Please load a TWX file first.', 'warning');
+        return;
+    }
+
+    try {
+        staticAnalysisInProgress = true;
+        staticAnalysisController = new AbortController();
+        updateStaticAnalysisUI(true);
+
+        // Get selected object type filters
+        const selectedTypes = getStaticSelectedObjectTypes();
+        const excludeToolkit = document.getElementById('static-exclude-toolkit')?.checked !== false;
+
+        // Collect all scripts - flatten the nested structure and apply filters
+        const allObjects = [];
+        console.log('🔍 Debug: Starting object collection with filters:', {
+            selectedTypes,
+            excludeToolkit,
+            currentObjectsKeys: Object.keys(currentObjects)
+        });
+
+        Object.values(currentObjects).forEach((objectData, index) => {
+            console.log(`🔍 Debug: Processing object data ${index}:`, {
+                hasObjects: !!(objectData && objectData.objects),
+                objectCount: objectData && objectData.objects ? objectData.objects.length : 0,
+                isArray: Array.isArray(objectData.objects)
+            });
+
+            if (objectData && objectData.objects && Array.isArray(objectData.objects)) {
+                objectData.objects.forEach((obj, objIndex) => {
+                    // Filter by object type with special handling for CSHS
+                    let isSelectedType = false;
+
+                    if (selectedTypes.includes('cshs') && obj.type === 'process' &&
+                        (obj.details && obj.details.processType === '10')) {
+                        // This is a CSHS object (process with processType 10)
+                        isSelectedType = true;
+                        console.log(`🔍 Debug: Found CSHS object: ${obj.name} (type: ${obj.type}, processType: ${obj.details.processType})`);
+                    } else if (selectedTypes.includes('process') && obj.type === 'process' &&
+                               (!obj.details || obj.details.processType !== '10')) {
+                        // This is a regular service (process but not CSHS)
+                        isSelectedType = true;
+                        console.log(`🔍 Debug: Found service object: ${obj.name} (type: ${obj.type}, processType: ${obj.details?.processType || 'undefined'})`);
+                    } else if (selectedTypes.includes(obj.type)) {
+                        // Regular type matching (coachView, etc.)
+                        isSelectedType = true;
+                        console.log(`🔍 Debug: Found matching object: ${obj.name} (type: ${obj.type})`);
+                    }
+
+                    if (!isSelectedType) {
+                        if (objIndex < 3) { // Only log first few for debugging
+                            console.log(`🔍 Debug: Skipping object ${obj.name} - type ${obj.type} not in selected types:`, selectedTypes);
+                        }
+                        return;
+                    }
+
+                    // Filter out toolkit objects if option is selected
+                    if (excludeToolkit && obj.source === 'toolkit') {
+                        console.log(`🔍 Debug: Skipping toolkit object: ${obj.name}`);
+                        return;
+                    }
+
+                    console.log(`✅ Debug: Adding object to collection: ${obj.name} (type: ${obj.type}, source: ${obj.source})`);
+                    allObjects.push(obj);
+                });
+            }
+        });
+
+        console.log(`🔍 Debug: Collected ${allObjects.length} objects for static analysis`);
+
+        console.log(`Found ${allObjects.length} objects for static analysis (filtered by type and source)`);
+
+        const response = await fetch('/api/static-collect-scripts', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ objects: allObjects }),
+            signal: staticAnalysisController.signal
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to collect scripts');
+        }
+
+        const responseData = await response.json();
+        const { scripts, statistics } = responseData;
+
+        if (!scripts || !Array.isArray(scripts)) {
+            throw new Error('Invalid response: scripts data is missing or invalid');
+        }
+
+        if (scripts.length === 0) {
+            showNotification('No scripts found for analysis', 'info');
+            return;
+        }
+
+        // Store scripts globally for reference in results display
+        window.staticCollectedScripts = scripts;
+
+        showNotification(`Found ${scripts.length} scripts. Starting static analysis...`, 'info');
+
+        // Start analysis with progress tracking
+        const progressDiv = document.getElementById('static-analysis-progress');
+        if (progressDiv) {
+            progressDiv.style.display = 'block';
+            progressDiv.innerHTML = `
+                <div class="progress-container">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="static-progress-fill" style="width: 0%"></div>
+                    </div>
+                    <div class="progress-text" id="static-progress-text">Initializing static analysis...</div>
+                </div>
+            `;
+        }
+
+        // Start static analysis
+        const analysisResponse = await fetch('/api/static-analyze-scripts', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ scripts }),
+            signal: staticAnalysisController.signal
+        });
+
+        if (!analysisResponse.ok) {
+            throw new Error(`Static analysis failed: ${analysisResponse.status} ${analysisResponse.statusText}`);
+        }
+
+        const analysisResult = await analysisResponse.json();
+
+        if (!analysisResult || typeof analysisResult !== 'object') {
+            throw new Error('Invalid analysis response: expected object');
+        }
+
+        staticAnalysisResults = analysisResult.results || [];
+
+        // Display results
+        displayStaticAnalysisResults(analysisResult);
+
+        // Show completion notification with statistics if available
+        if (analysisResult.statistics && typeof analysisResult.statistics === 'object') {
+            const totalIssues = analysisResult.statistics.totalIssues || 0;
+            const scriptsWithIssues = analysisResult.statistics.scriptsWithIssues || 0;
+            showNotification(`Static analysis completed! Found ${totalIssues} issues in ${scriptsWithIssues} scripts.`, 'success');
+        } else {
+            showNotification('Static analysis completed!', 'success');
+        }
+
+    } catch (error) {
+        if (error.name === 'AbortError') {
+            showNotification('Static analysis was cancelled', 'info');
+        } else {
+            console.error('Static analysis error:', error);
+            showNotification(`Static analysis failed: ${error.message}`, 'error');
+        }
+    } finally {
+        staticAnalysisInProgress = false;
+        staticAnalysisController = null;
+        updateStaticAnalysisUI(false);
+    }
+}
+
+/**
+ * Stop static analysis
+ */
+function stopStaticAnalysis() {
+    if (staticAnalysisController) {
+        staticAnalysisController.abort();
+        showNotification('Stopping static analysis...', 'info');
+    }
+}
+
+/**
+ * Clear static analysis results
+ */
+function clearStaticResults() {
+    staticAnalysisResults = [];
+    const resultsSection = document.getElementById('static-analysis-results');
+    if (resultsSection) {
+        resultsSection.style.display = 'none';
+    }
+
+    const progressSection = document.getElementById('static-analysis-progress');
+    if (progressSection) {
+        progressSection.style.display = 'none';
+    }
+
+    showNotification('Static analysis results cleared', 'info');
+}
+
+/**
+ * Update static analysis UI state
+ */
+function updateStaticAnalysisUI(inProgress) {
+    const startBtn = document.getElementById('start-static-analysis-btn');
+    const stopBtn = document.getElementById('stop-static-analysis-btn');
+
+    if (startBtn) {
+        startBtn.style.display = inProgress ? 'none' : 'inline-block';
+    }
+
+    if (stopBtn) {
+        stopBtn.style.display = inProgress ? 'inline-block' : 'none';
+    }
+
+    // Update object count
+    if (!inProgress) {
+        updateStaticScriptCountDisplay();
+    }
+}
+
+/**
+ * Get selected object types for static analysis
+ */
+function getStaticSelectedObjectTypes() {
+    const types = [];
+
+    try {
+        if (document.getElementById('static-filter-coachview')?.checked) {
+            types.push('coachView'); // Coach View type name
+        }
+        if (document.getElementById('static-filter-cshs')?.checked) {
+            types.push('cshs'); // Special handling for CSHS (process with processType 10)
+        }
+        if (document.getElementById('static-filter-service')?.checked) {
+            types.push('process'); // Process type name (includes both services and CSHS)
+        }
+
+        // If no types selected, default to all types
+        if (types.length === 0) {
+            types.push('coachView', 'cshs', 'process');
+        }
+    } catch (error) {
+        console.warn('Error getting selected object types:', error);
+        types.push('coachView', 'cshs', 'process');
+    }
+
+    return types;
+}
+
+/**
+ * Update static script count display based on filters
+ */
+function updateStaticScriptCountDisplay() {
+    try {
+        const selectedTypes = getStaticSelectedObjectTypes();
+        const excludeToolkit = document.getElementById('static-exclude-toolkit')?.checked !== false;
+
+        let filteredObjects = 0;
+
+        if (currentObjects && typeof currentObjects === 'object') {
+            Object.values(currentObjects).forEach(objectData => {
+                if (objectData && objectData.objects && Array.isArray(objectData.objects)) {
+                    objectData.objects.forEach(obj => {
+                        // Check if object matches selected types with special handling for CSHS
+                        let isSelectedType = false;
+
+                        if (selectedTypes.includes('cshs') && obj.type === 'process' &&
+                            (obj.details && obj.details.processType === '10')) {
+                            // This is a CSHS object (process with processType 10)
+                            isSelectedType = true;
+                        } else if (selectedTypes.includes('process') && obj.type === 'process' &&
+                                   (!obj.details || obj.details.processType !== '10')) {
+                            // This is a regular service (process but not CSHS)
+                            isSelectedType = true;
+                        } else if (selectedTypes.includes(obj.type)) {
+                            // Regular type matching (coachView, etc.)
+                            isSelectedType = true;
+                        }
+
+                        const isNotToolkit = !excludeToolkit || obj.source !== 'toolkit';
+
+                        if (isSelectedType && isNotToolkit) {
+                            filteredObjects++;
+                        }
+                    });
+                }
+            });
+        }
+
+        // Update button text to show filtered count
+        const button = document.getElementById('start-static-analysis-btn');
+        if (button && !staticAnalysisInProgress) {
+            button.textContent = `🔍 Start Static Analysis - ${filteredObjects} Objects`;
+        }
+
+        // Update object count display in configuration section
+        const countText = document.getElementById('static-object-count-text');
+        if (countText) {
+            countText.textContent = `Selected: ${filteredObjects} objects`;
+        }
+    } catch (error) {
+        console.warn('Error updating static script count display:', error);
+    }
+}
+
+/**
+ * Display static analysis results
+ */
+function displayStaticAnalysisResults(analysisResult) {
+    const resultsSection = document.getElementById('static-analysis-results');
+    const progressSection = document.getElementById('static-analysis-progress');
+
+    if (progressSection) {
+        progressSection.style.display = 'none';
+    }
+
+    if (!resultsSection) {
+        console.error('Static results section not found');
+        return;
+    }
+
+    // Show results section
+    resultsSection.style.display = 'block';
+
+    // Update summary
+    const summaryDiv = document.getElementById('static-results-summary');
+    if (summaryDiv && analysisResult.statistics) {
+        const stats = analysisResult.statistics;
+        summaryDiv.innerHTML = `
+            <strong>${stats.totalScripts}</strong> scripts analyzed,
+            <strong>${stats.scriptsWithIssues}</strong> with issues,
+            <strong>${stats.totalIssues}</strong> total issues found
+            <br>
+            <span class="severity-error">Errors: ${stats.issuesBySeverity.error}</span>
+            <span class="severity-warning">Warnings: ${stats.issuesBySeverity.warning}</span>
+            <span class="severity-info">Info: ${stats.issuesBySeverity.info}</span>
+        `;
+    }
+
+    // Generate and display results table
+    generateStaticAnalysisTable(analysisResult.results || []);
+}
+
+/**
+ * Generate static analysis results table
+ */
+function generateStaticAnalysisTable(results) {
+    const tbody = document.getElementById('static-results-tbody');
+    if (!tbody) {
+        console.error('Static results table body not found');
+        return;
+    }
+
+    tbody.innerHTML = '';
+
+    let totalIssues = 0;
+    const categories = new Set();
+
+    results.forEach(scriptResult => {
+        if (!scriptResult.issues || scriptResult.issues.length === 0) {
+            return; // Skip scripts with no issues
+        }
+
+        scriptResult.issues.forEach(issue => {
+            totalIssues++;
+            categories.add(issue.category || 'general');
+
+            const row = document.createElement('tr');
+
+            // Format code context with more lines if available
+            let codeDisplay = issue.code || '-';
+            if (issue.codeContext && Array.isArray(issue.codeContext)) {
+                codeDisplay = issue.codeContext.join('\n');
+            } else if (issue.code && issue.code.length > 50) {
+                // If code is long, format it better
+                codeDisplay = issue.code;
+            }
+
+            row.innerHTML = `
+                <td title="${escapeHtml(scriptResult.scriptName)}">${escapeHtml(truncateText(scriptResult.scriptName, 25))}</td>
+                <td title="${escapeHtml(scriptResult.objectName)}">${escapeHtml(truncateText(scriptResult.objectName, 20))}</td>
+                <td><span class="severity-${issue.severity}">${issue.severity.toUpperCase()}</span></td>
+                <td><span class="category-badge category-${issue.category || 'general'}">${(issue.category || 'general').replace('_', ' ').toUpperCase()}</span></td>
+                <td><code title="${escapeHtml(issue.rule)}">${escapeHtml(issue.rule)}</code></td>
+                <td title="${escapeHtml(issue.description)}">${escapeHtml(truncateText(issue.description, 60))}</td>
+                <td>${issue.line || '-'}</td>
+                <td><div class="static-code-line" title="Click to expand">${escapeHtml(codeDisplay)}</div></td>
+                <td title="${escapeHtml(issue.suggestion || 'No suggestion available')}">${escapeHtml(truncateText(issue.suggestion || 'No suggestion', 40))}</td>
+            `;
+
+            tbody.appendChild(row);
+        });
+    });
+
+    // Update category filter options
+    updateCategoryFilterOptions(Array.from(categories));
+
+    // Update results count
+    updateStaticFilteredResultsCount(totalIssues, totalIssues);
+
+    // Add click handlers for code expansion
+    addCodeExpansionHandlers();
+}
+
+/**
+ * Truncate text to specified length
+ */
+function truncateText(text, maxLength) {
+    if (!text || text.length <= maxLength) return text;
+    return text.substring(0, maxLength) + '...';
+}
+
+/**
+ * Update category filter options
+ */
+function updateCategoryFilterOptions(categories) {
+    const categoryFilter = document.getElementById('static-filter-category');
+    if (!categoryFilter) return;
+
+    // Clear existing options except "All Categories"
+    categoryFilter.innerHTML = '<option value="">All Categories</option>';
+
+    // Add category options
+    categories.sort().forEach(category => {
+        const option = document.createElement('option');
+        option.value = category;
+        option.textContent = category.replace('_', ' ').toUpperCase();
+        categoryFilter.appendChild(option);
+    });
+}
+
+/**
+ * Add code expansion handlers
+ */
+function addCodeExpansionHandlers() {
+    document.querySelectorAll('.static-code-line').forEach(codeDiv => {
+        codeDiv.addEventListener('click', function() {
+            if (this.style.maxHeight === 'none') {
+                this.style.maxHeight = '120px';
+                this.style.overflow = 'hidden';
+            } else {
+                this.style.maxHeight = 'none';
+                this.style.overflow = 'visible';
+            }
+        });
+    });
+}
+
+/**
+ * Clear all static analysis filters
+ */
+function clearStaticFilters() {
+    document.getElementById('static-filter-severity').value = '';
+    document.getElementById('static-filter-category').value = '';
+    document.getElementById('static-filter-object').value = '';
+    filterStaticResults();
+}
+
+/**
+ * Sort static analysis table
+ */
+function sortStaticTable(columnIndex) {
+    const table = document.getElementById('static-results-table');
+    const tbody = table.querySelector('tbody');
+    const rows = Array.from(tbody.querySelectorAll('tr'));
+    const header = table.querySelectorAll('th')[columnIndex];
+    const indicator = header.querySelector('.sort-indicator');
+
+    // Clear other sort indicators
+    table.querySelectorAll('.sort-indicator').forEach(ind => {
+        if (ind !== indicator) {
+            ind.classList.remove('asc', 'desc');
+        }
+    });
+
+    // Determine sort direction
+    let ascending = true;
+    if (indicator.classList.contains('asc')) {
+        ascending = false;
+        indicator.classList.remove('asc');
+        indicator.classList.add('desc');
+    } else {
+        indicator.classList.remove('desc');
+        indicator.classList.add('asc');
+    }
+
+    // Sort rows
+    rows.sort((a, b) => {
+        const aText = a.cells[columnIndex].textContent.trim();
+        const bText = b.cells[columnIndex].textContent.trim();
+
+        // Handle numeric columns (line numbers)
+        if (columnIndex === 6) { // Line column
+            const aNum = parseInt(aText) || 0;
+            const bNum = parseInt(bText) || 0;
+            return ascending ? aNum - bNum : bNum - aNum;
+        }
+
+        // Handle text columns
+        const result = aText.localeCompare(bText);
+        return ascending ? result : -result;
+    });
+
+    // Re-append sorted rows
+    rows.forEach(row => tbody.appendChild(row));
+}
+
+/**
+ * Filter static analysis results
+ */
+function filterStaticResults() {
+    const severityFilter = document.getElementById('static-filter-severity')?.value || '';
+    const categoryFilter = document.getElementById('static-filter-category')?.value || '';
+    const objectFilter = document.getElementById('static-filter-object')?.value.toLowerCase() || '';
+
+    const tbody = document.getElementById('static-results-tbody');
+    if (!tbody) return;
+
+    const rows = tbody.querySelectorAll('tr');
+    let visibleCount = 0;
+    const totalCount = rows.length;
+
+    rows.forEach(row => {
+        const cells = row.querySelectorAll('td');
+        if (cells.length < 9) return;
+
+        const scriptName = cells[0].textContent.toLowerCase();
+        const objectName = cells[1].textContent.toLowerCase();
+        const severity = cells[2].textContent.toLowerCase();
+        const category = cells[3].textContent.toLowerCase();
+
+        let visible = true;
+
+        // Apply filters
+        if (severityFilter && !severity.includes(severityFilter)) {
+            visible = false;
+        }
+
+        if (categoryFilter && !category.includes(categoryFilter.replace('_', ' '))) {
+            visible = false;
+        }
+
+        if (objectFilter && !objectName.includes(objectFilter) && !scriptName.includes(objectFilter)) {
+            visible = false;
+        }
+
+        row.style.display = visible ? '' : 'none';
+        if (visible) visibleCount++;
+    });
+
+    updateStaticFilteredResultsCount(visibleCount, totalCount);
+}
+
+/**
+ * Clear static analysis filters
+ */
+function clearStaticFilters() {
+    document.getElementById('static-filter-severity').value = '';
+    document.getElementById('static-filter-category').value = '';
+    document.getElementById('static-filter-object').value = '';
+
+    filterStaticResults();
+    showNotification('Static analysis filters cleared', 'info');
+}
+
+/**
+ * Update the count of filtered static results
+ */
+function updateStaticFilteredResultsCount(visible, total) {
+    const countElement = document.getElementById('static-results-count');
+    if (countElement) {
+        if (visible === total) {
+            countElement.innerHTML = `📋 ${total} Issues Found`;
+        } else {
+            countElement.innerHTML = `📋 ${visible} of ${total} Issues (filtered)`;
+        }
+    }
+}
+
+/**
+ * Export static analysis results
+ */
+function exportStaticResults() {
+    if (!staticAnalysisResults || staticAnalysisResults.length === 0) {
+        showNotification('No static analysis results to export', 'warning');
+        return;
+    }
+
+    try {
+        // Prepare export data
+        const exportData = {
+            timestamp: new Date().toISOString(),
+            analysisType: 'Static Code Analysis',
+            totalScripts: staticAnalysisResults.length,
+            results: staticAnalysisResults.map(result => ({
+                scriptName: result.scriptName,
+                objectName: result.objectName,
+                objectType: result.objectType,
+                issues: result.issues,
+                metrics: result.metrics
+            }))
+        };
+
+        // Create and download JSON file
+        const dataStr = JSON.stringify(exportData, null, 2);
+        const dataBlob = new Blob([dataStr], { type: 'application/json' });
+        const url = URL.createObjectURL(dataBlob);
+
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `static-analysis-results-${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.json`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+
+        showNotification('Static analysis results exported successfully', 'success');
+    } catch (error) {
+        console.error('Export error:', error);
+        showNotification('Failed to export results: ' + error.message, 'error');
     }
 }
 
