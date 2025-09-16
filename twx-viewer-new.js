@@ -3095,11 +3095,9 @@ function generateStaticAnalysisTable(results) {
                 <td><code title="${escapeHtml(issue.rule)}">${escapeHtml(issue.rule)}</code></td>
                 <td title="${escapeHtml(issue.description)}">${escapeHtml(truncateText(issue.description, 60))}</td>
                 <td>${issue.line || '-'}</td>
-                <td><div class="static-code-line" title="Click to expand">${codeHtml}</div></td>
-                <td title="${escapeHtml(issue.suggestion || 'No suggestion available')}">${escapeHtml(truncateText(issue.suggestion || 'No suggestion', 40))}</td>
+                <td><div class="static-code-context">${codeHtml}</div></td>
                 <td class="actions-column">
-                    <button class="action-btn ignore" onclick="removeStaticResultRow('${rowId}', 'ignore')" title="Ignore this issue">Ignore</button>
-                    <button class="action-btn done" onclick="removeStaticResultRow('${rowId}', 'done')" title="Mark as resolved">Done</button>
+                    <button class="action-btn done" onclick="removeStaticResultRow('${rowId}', 'done')" title="Mark as resolved">DONE</button>
                 </td>
             `;
 
@@ -3151,12 +3149,16 @@ function updateCategoryFilterOptions(categories) {
  * Add code expansion handlers
  */
 function addCodeExpansionHandlers() {
-    document.querySelectorAll('.static-code-line').forEach(codeDiv => {
+    // Handle both old and new class names for compatibility
+    document.querySelectorAll('.static-code-context, .static-code-line').forEach(codeDiv => {
         codeDiv.addEventListener('click', function() {
-            if (this.style.maxHeight === 'none') {
+            // Toggle expanded state
+            if (this.classList.contains('expanded')) {
+                this.classList.remove('expanded');
                 this.style.maxHeight = '120px';
                 this.style.overflow = 'hidden';
             } else {
+                this.classList.add('expanded');
                 this.style.maxHeight = 'none';
                 this.style.overflow = 'visible';
             }
@@ -3271,7 +3273,7 @@ function removeStaticResultRow(rowId, action) {
         }
 
         // Show notification
-        const actionText = action === 'ignore' ? 'ignored' : 'marked as resolved';
+        const actionText = 'marked as resolved';
         showNotification(`Issue ${actionText}`, 'success');
 
         // Log the action for potential undo functionality
