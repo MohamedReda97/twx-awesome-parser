@@ -1064,3 +1064,13 @@ async function startServer() {
 }
 
 module.exports = { startServer, TWXWebServer };
+
+// Start the server if this file is run directly
+if (require.main === module) {
+  startServer().then(port => {
+    console.log(`Server started on port ${port}`);
+  }).catch(error => {
+    console.error('Failed to start server:', error);
+    process.exit(1);
+  });
+}

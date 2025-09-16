@@ -2884,6 +2884,7 @@ Search Result Styles */
     margin-top: 10px;
     font-size: 13px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    table-layout: fixed; /* Enable fixed layout for resizable columns */
 }
 
 .enhanced-table th {
@@ -2896,6 +2897,25 @@ Search Result Styles */
     position: sticky;
     top: 0;
     z-index: 10;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Resizable column handle */
+.enhanced-table th::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 4px;
+    height: 100%;
+    background: transparent;
+    cursor: col-resize;
+    z-index: 11;
+}
+
+.enhanced-table th:hover::after {
+    background: rgba(0, 123, 255, 0.3);
 }
 
 .enhanced-table th.sortable {
@@ -2951,6 +2971,54 @@ Search Result Styles */
 .code-column {
     width: 300px;
     max-width: 300px;
+}
+
+.actions-column {
+    width: 100px;
+    text-align: center;
+}
+
+/* Action buttons */
+.action-btn {
+    display: inline-block;
+    padding: 4px 8px;
+    margin: 0 2px;
+    border: none;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.action-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.action-btn.ignore {
+    background-color: #6c757d;
+    color: white;
+}
+
+.action-btn.ignore:hover {
+    background-color: #5a6268;
+}
+
+.action-btn.done {
+    background-color: #28a745;
+    color: white;
+}
+
+.action-btn.done:hover {
+    background-color: #218838;
+}
+
+.action-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.2);
 }
 
 /* Severity badges for static analysis */
@@ -3019,6 +3087,88 @@ Search Result Styles */
 .static-code-line:hover {
     background-color: #e9ecef;
     cursor: pointer;
+}
+
+/* Code Context Display */
+.code-context {
+    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+    font-size: 12px;
+    line-height: 1.4;
+    background-color: #f8f9fa;
+    border-radius: 4px;
+    padding: 8px;
+    border: 1px solid #e9ecef;
+    overflow-x: auto;
+    white-space: pre;
+}
+
+.code-line {
+    display: block;
+    padding: 1px 0;
+    margin: 0;
+    border-left: 3px solid transparent;
+    padding-left: 8px;
+}
+
+.code-line.current-line {
+    background-color: #fff3cd;
+    border-left-color: #ffc107;
+    font-weight: 600;
+    margin: 0 -8px;
+    padding-left: 16px;
+    padding-right: 8px;
+}
+
+.line-number {
+    display: inline-block;
+    width: 40px;
+    text-align: right;
+    color: #6c757d;
+    font-size: 11px;
+    margin-right: 8px;
+    user-select: none;
+}
+
+.current-line .line-number {
+    color: #856404;
+    font-weight: 600;
+}
+
+.line-content {
+    display: inline;
+    white-space: pre;
+}
+
+.current-line .line-content {
+    color: #856404;
+}
+
+.code-context-empty {
+    color: #6c757d;
+    font-style: italic;
+    text-align: center;
+    padding: 20px;
+}
+
+/* Syntax highlighting for common JavaScript patterns */
+.line-content {
+    /* Keywords */
+    --keyword-color: #0000ff;
+    --string-color: #008000;
+    --comment-color: #808080;
+    --number-color: #ff0000;
+    --operator-color: #000000;
+}
+
+/* Simple syntax highlighting using CSS (basic patterns) */
+.line-content:has-text("function") {
+    color: var(--keyword-color);
+}
+
+.line-content:has-text("var "),
+.line-content:has-text("let "),
+.line-content:has-text("const ") {
+    color: var(--keyword-color);
 }
 
 /* Category badges */

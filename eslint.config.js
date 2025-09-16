@@ -3,14 +3,20 @@ import sonarjs from 'eslint-plugin-sonarjs';
 import security from 'eslint-plugin-security';
 import promise from 'eslint-plugin-promise';
 import n from 'eslint-plugin-n';
+import unicorn from 'eslint-plugin-unicorn';
+import regexp from 'eslint-plugin-regexp';
 
 export default [
   js.configs.recommended,
-  sonarjs.configs.recommended,
-  security.configs.recommended,
-  promise.configs.recommended,
-  n.configs.recommended,
   {
+    plugins: {
+      sonarjs,
+      security,
+      promise,
+      n,
+      unicorn,
+      regexp
+    },
     languageOptions: {
       ecmaVersion: 2020,
       sourceType: 'script', // IBM BPM scripts are typically not modules
@@ -55,8 +61,8 @@ export default [
       'promise/avoid-new': 'off', // Allow new Promise() in BPM context
       
       // SonarJS complexity rules
-      'sonarjs/cognitive-complexity': ['error', 15],
-      'sonarjs/no-duplicate-string': ['error', 3],
+      'sonarjs/cognitive-complexity': ['warn', 15],
+      'sonarjs/no-duplicate-string': ['warn', { threshold: 5 }],
       'sonarjs/no-identical-functions': 'error',
       'sonarjs/no-small-switch': 'warn',
       'sonarjs/prefer-immediate-return': 'warn',

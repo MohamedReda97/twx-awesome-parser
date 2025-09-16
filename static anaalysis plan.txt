@@ -1,0 +1,395 @@
+Here's a comprehensive plan to use ESLint only after Prettier, focusing exclusively on critical errors:
+
+## Complete Plan: Prettier → ESLint for Critical Errors Only
+
+### 1. Workflow Architecture
+
+```javascript
+// analyze-workflow.js
+const prettier = require('prettier');
+const { ESLint } = require('eslint');
+const fs = require('fs').promises;
+
+async function analyzeBAWScripts(filePath) {
+  try {
+    // Step 1: Format with Prettier (no issues reported)
+    const originalCode = await fs.readFile(filePath, 'utf8');
+    const formattedCode = prettier.format(originalCode, {
+      parser: 'babel',
+      semi: true,
+      singleQuote: true,
+      tabWidth: 2
+    });
+    
+    // Step 2: Write formatted code to temp file
+    const tempPath = `${filePath}.formatted.tmp`;
+    await fs.writeFile(tempPath, formattedCode);
+    
+    // Step 3: Run ESLint ONLY on formatted code
+    const eslint = new ESLint({
+      overrideConfigFile: './critical-only.eslintrc.js'
+    });
+    
+    const results = await eslint.lintFiles([tempPath]);
+    
+    // Step 4: Clean up temp file
+    await fs.unlink(tempPath);
+    
+    // Step 5: Return only critical issues
+    return filterCriticalIssues(results[0].messages);
+    
+  } catch (error) {
+    console.error('Analysis failed:', error);
+    return [];
+  }
+}
+
+function filterCriticalIssues(messages) {
+  // Additional filtering to ensure ONLY critical issues
+  const criticalRules = [
+    'no-undef',
+    'no-dupe-keys',
+    'no-dupe-args',
+    'no-unreachable',
+    'no-invalid-regexp',
+    'no-unsafe-negation',
+    'no-eval',
+    'no-implied-eval',
+    'security/detect-eval-with-expression',
+    'security/detect-object-injection',
+    'security/detect-unsafe-regex'
+  ];
+  
+  return messages.filter(msg => 
+    criticalRules.includes(msg.ruleId) && 
+    msg.severity === 2 // Errors only
+  );
+}
+```
+
+### 2. Critical-Only ESLint Configuration
+
+```javascript
+// critical-only.eslintrc.js
+module.exports = {
+  root: true,
+  env: {
+    es6: true,
+    browser: true
+  },
+  parserOptions: {
+    ecmaVersion: 2020,
+    sourceType: 'script'
+  },
+  
+  // NO extends - start completely clean
+  extends: [],
+  
+  plugins: [
+    'security'  // Only security plugin for critical vulnerabilities
+  ],
+  
+  rules: {
+    // ONLY rules that indicate actual runtime errors or security issues
+    
+    // === RUNTIME ERRORS ===
+    'no-undef': 'error',              // Using undefined variables
+    'no-dupe-keys': 'error',          // Duplicate object keys
+    'no-dupe-args': 'error',          // Duplicate function arguments
+    'no-unreachable': 'error',        // Unreachable code after return/throw
+    'no-invalid-regexp': 'error',     // Invalid regular expressions
+    'no-unsafe-negation': 'error',    // Negating the left operand of relational operators
+    'for-direction': 'error',         // Infinite loops
+    'no-compare-neg-zero': 'error',   // Comparing against -0
+    'no-cond-assign': 'error',        // Assignment in conditional expressions
+    'no-constant-condition': 'error', // Constant conditions
+    'no-debugger': 'error',           // Debugger statements in production
+    'no-empty': 'error',              // Empty block statements
+    'no-ex-assign': 'error',          // Assigning to exception parameter
+    'no-func-assign': 'error',        // Reassigning functions
+    'no-inner-declarations': 'error', // Function declarations in nested blocks
+    'no-obj-calls': 'error',          // Calling global objects as functions
+    'no-sparse-arrays': 'error',      // Sparse arrays with holes
+    'valid-typeof': 'error',          // Invalid typeof comparison
+    
+    // === CRITICAL SECURITY ISSUES ===
+    'no-eval': 'error',               // Direct eval() usage
+    'no-implied-eval': 'error',       // Indirect eval usage
+    'no-new-func': 'error',           // Function constructor
+    'security/detect-eval-with-expression': 'error',
+    
+    // === TURN OFF EVERYTHING ELSE ===
+    // Style rules - ALL OFF (Prettier handles these)
+    'semi': 'off',
+    'quotes': 'off',
+    'indent': 'off',
+    'comma-dangle': 'off',
+    'space-before-blocks': 'off',
+    'keyword-spacing': 'off',
+    'object-curly-spacing': 'off',
+    'array-bracket-spacing': 'off',
+    'arrow-spacing': 'off',
+    'brace-style': 'off',
+    'comma-spacing': 'off',
+    'func-call-spacing': 'off',
+    'key-spacing': 'off',
+    'no-mixed-spaces-and-tabs': 'off',
+    'no-multiple-empty-lines': 'off',
+    'no-trailing-spaces': 'off',
+    'no-whitespace-before-property': 'off',
+    'padded-blocks': 'off',
+    'space-in-parens': 'off',
+    'space-infix-ops': 'off',
+    'space-unary-ops': 'off',
+    
+    // Best practices that aren't critical - ALL OFF
+    'curly': 'off',
+    'eqeqeq': 'off',
+    'no-var': 'off',
+    'prefer-const': 'off',
+    'prefer-arrow-callback': 'off',
+    'no-console': 'off',
+    'no-unused-vars': 'off',
+    'camelcase': 'off',
+    'consistent-return': 'off',
+    'default-case': 'off',
+    'dot-notation': 'off',
+    'no-else-return': 'off',
+    'no-empty-function': 'off',
+    'no-param-reassign': 'off',
+    'no-plusplus': 'off',
+    'no-shadow': 'off',
+    'no-use-before-define': 'off',
+    'prefer-template': 'off',
+    'radix': 'off'
+  },
+  
+  // IBM BAW globals
+  globals: {
+    tw: 'readonly',
+    system: 'readonly',
+    log: 'readonly'
+  }
+};
+```
+
+### 3. Minimal Package Installation
+
+```json
+// package.json
+{
+  "devDependencies": {
+    "prettier": "^2.8.8",
+    "eslint": "^8.50.0",
+    "eslint-plugin-security": "^1.7.1"
+  }
+}
+```
+
+### 4. Deduplication Strategy
+
+```javascript
+// deduplicate-issues.js
+class IssueDeduplicator {
+  constructor() {
+    this.seenIssues = new Set();
+  }
+  
+  addIssue(issue) {
+    // Create unique key for each issue
+    const key = `${issue.line}:${issue.column}:${issue.ruleId}`;
+    
+    if (!this.seenIssues.has(key)) {
+      this.seenIssues.add(key);
+      return true; // New issue
+    }
+    return false; // Duplicate
+  }
+  
+  processResults(eslintMessages) {
+    const uniqueIssues = [];
+    
+    for (const msg of eslintMessages) {
+      // Only process critical errors
+      if (msg.severity === 2 && this.addIssue(msg)) {
+        uniqueIssues.push({
+          line: msg.line,
+          column: msg.column,
+          rule: msg.ruleId,
+          message: msg.message,
+          type: this.categorizeIssue(msg.ruleId)
+        });
+      }
+    }
+    
+    return uniqueIssues;
+  }
+  
+  categorizeIssue(ruleId) {
+    if (ruleId.includes('security') || ruleId.includes('eval')) {
+      return 'SECURITY';
+    }
+    if (ruleId.includes('undef') || ruleId.includes('no-dupe')) {
+      return 'RUNTIME_ERROR';
+    }
+    return 'CRITICAL_ERROR';
+  }
+}
+```
+
+### 5. Complete Analysis Pipeline
+
+```javascript
+// baw-analyzer.js
+const prettier = require('prettier');
+const { ESLint } = require('eslint');
+const fs = require('fs').promises;
+const path = require('path');
+
+class BAWAnalyzer {
+  constructor() {
+    this.eslint = new ESLint({
+      overrideConfigFile: './critical-only.eslintrc.js',
+      useEslintrc: false // Ignore any other config files
+    });
+    
+    this.prettierConfig = {
+      parser: 'babel',
+      semi: true,
+      singleQuote: true,
+      tabWidth: 2,
+      printWidth: 120
+    };
+    
+    this.deduplicator = new IssueDeduplicator();
+  }
+  
+  async analyzeFile(filePath) {
+    console.log(`Analyzing: ${filePath}`);
+    
+    try {
+      // Step 1: Read original file
+      const originalCode = await fs.readFile(filePath, 'utf8');
+      
+      // Step 2: Format with Prettier (silent - no output)
+      let formattedCode;
+      try {
+        formattedCode = prettier.format(originalCode, this.prettierConfig);
+      } catch (prettierError) {
+        // Syntax errors prevent formatting
+        return [{
+          type: 'SYNTAX_ERROR',
+          message: 'Failed to parse JavaScript',
+          details: prettierError.message,
+          line: this.extractLineFromError(prettierError)
+        }];
+      }
+      
+      // Step 3: Create temp file with formatted code
+      const tempFile = path.join(
+        path.dirname(filePath),
+        `.${path.basename(filePath)}.tmp`
+      );
+      await fs.writeFile(tempFile, formattedCode);
+      
+      // Step 4: Run ESLint on formatted code
+      const results = await this.eslint.lintFiles([tempFile]);
+      
+      // Step 5: Clean up
+      await fs.unlink(tempFile);
+      
+      // Step 6: Process and deduplicate results
+      if (results[0] && results[0].messages.length > 0) {
+        return this.deduplicator.processResults(results[0].messages);
+      }
+      
+      return [];
+      
+    } catch (error) {
+      console.error('Analysis error:', error);
+      return [{
+        type: 'ANALYSIS_ERROR',
+        message: error.message
+      }];
+    }
+  }
+  
+  extractLineFromError(error) {
+    const match = error.message.match(/\((\d+):(\d+)\)/);
+    return match ? parseInt(match[1]) : 0;
+  }
+  
+  async analyzeDirectory(dirPath) {
+    const files = await this.getJavaScriptFiles(dirPath);
+    const allIssues = {};
+    
+    for (const file of files) {
+      const issues = await this.analyzeFile(file);
+      if (issues.length > 0) {
+        allIssues[file] = issues;
+      }
+    }
+    
+    return this.generateReport(allIssues);
+  }
+  
+  async getJavaScriptFiles(dirPath) {
+    const files = [];
+    const items = await fs.readdir(dirPath, { withFileTypes: true });
+    
+    for (const item of items) {
+      const fullPath = path.join(dirPath, item.name);
+      if (item.isDirectory()) {
+        files.push(...await this.getJavaScriptFiles(fullPath));
+      } else if (item.name.endsWith('.js')) {
+        files.push(fullPath);
+      }
+    }
+    
+    return files;
+  }
+  
+  generateReport(allIssues) {
+    const summary = {
+      totalFiles: Object.keys(allIssues).length,
+      criticalErrors: 0,
+      securityIssues: 0,
+      runtimeErrors: 0
+    };
+    
+    const criticalOnly = {};
+    
+    for (const [file, issues] of Object.entries(allIssues)) {
+      const critical = issues.filter(issue => 
+        issue.type === 'SECURITY' || 
+        issue.type === 'RUNTIME_ERROR' ||
+        issue.type === 'SYNTAX_ERROR'
+      );
+      
+      if (critical.length > 0) {
+        criticalOnly[file] = critical;
+        critical.forEach(issue => {
+          if (issue.type === 'SECURITY') summary.securityIssues++;
+          else if (issue.type === 'RUNTIME_ERROR') summary.runtimeErrors++;
+          else summary.criticalErrors++;
+        });
+      }
+    }
+    
+    return {
+      summary,
+      issues: criticalOnly
+    };
+  }
+}
+
+
+
+
+This approach ensures:
+- ✅ Prettier runs first (silent, no output)
+- ✅ ESLint analyzes already-formatted code
+- ✅ Only critical runtime/security issues are reported
+- ✅ No style/formatting issues whatsoever
+- ✅ No duplicate issues between tools
+- ✅ Clear categorization of issue severity

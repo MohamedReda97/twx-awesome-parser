@@ -3065,15 +3065,28 @@ function generateStaticAnalysisTable(results) {
 
             const row = document.createElement('tr');
 
-            // Format code context with more lines if available
+            // Use formatted HTML code context if available, otherwise fallback to plain text
             let codeDisplay = issue.code || '-';
-            if (issue.codeContext && Array.isArray(issue.codeContext)) {
+            let codeHtml = '';
+
+            if (issue.codeContextHtml) {
+                // Use the formatted HTML from the backend
+                codeHtml = issue.codeContextHtml;
+                codeDisplay = issue.code || '-'; // Keep simple text for title
+            } else if (issue.codeContext && Array.isArray(issue.codeContext)) {
+                // Fallback to plain text context
                 codeDisplay = issue.codeContext.join('\n');
+                codeHtml = `<div class="code-context-simple">${escapeHtml(codeDisplay)}</div>`;
             } else if (issue.code && issue.code.length > 50) {
                 // If code is long, format it better
                 codeDisplay = issue.code;
+                codeHtml = `<div class="code-context-simple">${escapeHtml(codeDisplay)}</div>`;
+            } else {
+                codeHtml = `<div class="code-context-simple">${escapeHtml(codeDisplay)}</div>`;
             }
 
+            const rowId = `static-row-${totalIssues}`;
+            row.id = rowId;
             row.innerHTML = `
                 <td title="${escapeHtml(scriptResult.scriptName)}">${escapeHtml(truncateText(scriptResult.scriptName, 25))}</td>
                 <td title="${escapeHtml(scriptResult.objectName)}">${escapeHtml(truncateText(scriptResult.objectName, 20))}</td>
@@ -3082,8 +3095,12 @@ function generateStaticAnalysisTable(results) {
                 <td><code title="${escapeHtml(issue.rule)}">${escapeHtml(issue.rule)}</code></td>
                 <td title="${escapeHtml(issue.description)}">${escapeHtml(truncateText(issue.description, 60))}</td>
                 <td>${issue.line || '-'}</td>
-                <td><div class="static-code-line" title="Click to expand">${escapeHtml(codeDisplay)}</div></td>
+                <td><div class="static-code-line" title="Click to expand">${codeHtml}</div></td>
                 <td title="${escapeHtml(issue.suggestion || 'No suggestion available')}">${escapeHtml(truncateText(issue.suggestion || 'No suggestion', 40))}</td>
+                <td class="actions-column">
+                    <button class="action-btn ignore" onclick="removeStaticResultRow('${rowId}', 'ignore')" title="Ignore this issue">Ignore</button>
+                    <button class="action-btn done" onclick="removeStaticResultRow('${rowId}', 'done')" title="Mark as resolved">Done</button>
+                </td>
             `;
 
             tbody.appendChild(row);
@@ -3098,6 +3115,9 @@ function generateStaticAnalysisTable(results) {
 
     // Add click handlers for code expansion
     addCodeExpansionHandlers();
+
+    // Initialize resizable columns
+    setTimeout(() => initializeResizableColumns(), 100);
 }
 
 /**
@@ -3152,6 +3172,115 @@ function clearStaticFilters() {
     document.getElementById('static-filter-category').value = '';
     document.getElementById('static-filter-object').value = '';
     filterStaticResults();
+}
+
+/**
+ * Initialize resizable columns for static analysis table
+ */
+function initializeResizableColumns() {
+    const table = document.getElementById('static-results-table');
+    if (!table) return;
+
+    const headers = table.querySelectorAll('th');
+    let isResizing = false;
+    let currentColumn = null;
+    let startX = 0;
+    let startWidth = 0;
+
+    headers.forEach((header, index) => {
+        // Skip the last column (actions) from being resizable
+        if (index === headers.length - 1) return;
+
+        header.addEventListener('mousedown', (e) => {
+            const rect = header.getBoundingClientRect();
+            const isRightEdge = e.clientX > rect.right - 8;
+
+            if (isRightEdge) {
+                isResizing = true;
+                currentColumn = header;
+                startX = e.clientX;
+                startWidth = header.offsetWidth;
+
+                document.body.style.cursor = 'col-resize';
+                e.preventDefault();
+            }
+        });
+    });
+
+    document.addEventListener('mousemove', (e) => {
+        if (!isResizing || !currentColumn) return;
+
+        const diff = e.clientX - startX;
+        const newWidth = Math.max(50, startWidth + diff); // Minimum width of 50px
+
+        currentColumn.style.width = newWidth + 'px';
+        e.preventDefault();
+    });
+
+    document.addEventListener('mouseup', () => {
+        if (isResizing) {
+            isResizing = false;
+            currentColumn = null;
+            document.body.style.cursor = 'default';
+        }
+    });
+
+    // Change cursor on hover over resize area
+    headers.forEach(header => {
+        header.addEventListener('mousemove', (e) => {
+            if (isResizing) return;
+
+            const rect = header.getBoundingClientRect();
+            const isRightEdge = e.clientX > rect.right - 8;
+
+            header.style.cursor = isRightEdge ? 'col-resize' : 'default';
+        });
+
+        header.addEventListener('mouseleave', () => {
+            if (!isResizing) {
+                header.style.cursor = 'default';
+            }
+        });
+    });
+}
+
+/**
+ * Remove a static analysis result row
+ */
+function removeStaticResultRow(rowId, action) {
+    const row = document.getElementById(rowId);
+    if (!row) {
+        console.warn(`Row with ID ${rowId} not found`);
+        return;
+    }
+
+    // Add fade-out animation
+    row.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+    row.style.opacity = '0';
+    row.style.transform = 'translateX(-20px)';
+
+    // Remove the row after animation
+    setTimeout(() => {
+        row.remove();
+
+        // Update the results count
+        const tbody = document.getElementById('static-results-tbody');
+        if (tbody) {
+            const remainingRows = tbody.querySelectorAll('tr').length;
+            updateStaticFilteredResultsCount(remainingRows, remainingRows);
+        }
+
+        // Show notification
+        const actionText = action === 'ignore' ? 'ignored' : 'marked as resolved';
+        showNotification(`Issue ${actionText}`, 'success');
+
+        // Log the action for potential undo functionality
+        console.log(`Static analysis issue ${actionText}:`, {
+            rowId,
+            action,
+            timestamp: new Date().toISOString()
+        });
+    }, 300);
 }
 
 /**
