@@ -137,6 +137,26 @@ class StaticAnalysisService {
             };
         }
 
+        // Skip CSS scripts entirely
+        if (this.isCSSScript(script)) {
+            return {
+                scriptId: script.id,
+                scriptName: script.name || 'Unknown Script',
+                objectName: script.source_object || 'Unknown Object',
+                objectType: script.source_type || 'Unknown Type',
+                issues: [{
+                    line: 1,
+                    column: 1,
+                    severity: 'info',
+                    category: 'content_type',
+                    rule: 'css-content-skipped',
+                    message: 'CSS content detected. JavaScript analysis skipped.',
+                    codeContext: this.getCodeContext(originalContent, 1)
+                }],
+                metrics: this.calculateMetrics(originalContent)
+            };
+        }
+
         let formattedContent = originalContent;
 
         // Only format if content appears to be JavaScript
@@ -164,7 +184,7 @@ class StaticAnalysisService {
                         line: this.extractLineFromError(prettierError),
                         column: this.extractColumnFromError(prettierError),
                         severity: 'error',
-                        category: 'Syntax Error',
+                        category: 'syntax',
                         rule: 'syntax-error',
                         message: 'Critical syntax error: ' + this.simplifyErrorMessage(prettierError.message),
                         codeContext: this.getCodeContext(originalContent, this.extractLineFromError(prettierError))
@@ -232,7 +252,25 @@ class StaticAnalysisService {
         }
 
         try {
-            const results = await this.eslint.lintText(script.content, {
+            // Extract variables declared in this script to avoid false positives
+            const scriptGlobals = this.extractScriptVariables(script.content);
+
+            // Create a custom ESLint instance with script-specific globals if needed
+            let eslintInstance = this.eslint;
+            if (Object.keys(scriptGlobals).length > 0) {
+                eslintInstance = new ESLint({
+                    overrideConfigFile: path.join(process.cwd(), '.eslintrc.cjs'),
+                    useEslintrc: true,
+                    fix: false,
+                    overrideConfig: {
+                        globals: {
+                            ...scriptGlobals
+                        }
+                    }
+                });
+            }
+
+            const results = await eslintInstance.lintText(script.content, {
                 filePath: `${script.id}.js`
             });
 
@@ -379,31 +417,33 @@ class StaticAnalysisService {
         const startLine = Math.max(0, lineNumber - contextLines - 1);
         const endLine = Math.min(lines.length, lineNumber + contextLines);
 
+        // Create simple plain text context
         const contextLinesArray = [];
-        let formattedHtml = '<div class="code-context">';
+        const contextHtmlLines = [];
 
         for (let i = startLine; i < endLine; i++) {
-            const isCurrentLine = i === lineNumber - 1;
             const displayLineNumber = i + 1;
             const lineContent = lines[i] || '';
 
-            // Create plain text version for contextLines array
+            // For contextLines array (legacy compatibility)
+            const isCurrentLine = i === lineNumber - 1;
             const prefix = isCurrentLine ? '>>> ' : '    ';
             contextLinesArray.push(`${displayLineNumber.toString().padStart(3, ' ')}: ${prefix}${lineContent}`);
 
-            // Create HTML version with highlighting
-            const lineClass = isCurrentLine ? 'code-line current-line' : 'code-line';
-            const escapedContent = this.escapeHtml(lineContent);
+            // For HTML display with line highlighting
+            const escapedLineContent = this.escapeHtml(lineContent);
+            const lineNumberPadded = displayLineNumber.toString().padStart(3, ' ');
 
-            formattedHtml += `
-                <div class="${lineClass}" data-line="${displayLineNumber}">
-                    <span class="line-number">${displayLineNumber}</span>
-                    <span class="line-content">${escapedContent}</span>
-                </div>
-            `;
+            if (isCurrentLine) {
+                // Highlight the error line
+                contextHtmlLines.push(`<div class="code-line error-line"><span class="line-number">${lineNumberPadded}:</span> <span class="line-content">${escapedLineContent}</span></div>`);
+            } else {
+                contextHtmlLines.push(`<div class="code-line"><span class="line-number">${lineNumberPadded}:</span> <span class="line-content">${escapedLineContent}</span></div>`);
+            }
         }
 
-        formattedHtml += '</div>';
+        // Create enhanced HTML with line-by-line highlighting
+        const formattedHtml = `<div class="code-context-enhanced">${contextHtmlLines.join('')}</div>`;
 
         return {
             currentLine: currentLine.trim(),
@@ -610,6 +650,103 @@ class StaticAnalysisService {
         }
 
         return 1;
+    }
+
+    /**
+     * Extract variable declarations from script content to avoid false positives
+     * @param {string} content - Script content
+     * @returns {Object} Object with variable names as keys and 'readonly' as values
+     */
+    extractScriptVariables(content) {
+        if (!content || typeof content !== 'string') {
+            return {};
+        }
+
+        const variables = {};
+        const lines = content.split('\n');
+
+        for (const line of lines) {
+            const trimmedLine = line.trim();
+
+            // Skip comments and empty lines
+            if (!trimmedLine || trimmedLine.startsWith('//') || trimmedLine.startsWith('/*')) {
+                continue;
+            }
+
+            // Match variable declarations: var, let, const
+            const varMatches = [
+                ...trimmedLine.matchAll(/\b(?:var|let|const)\s+([a-zA-Z_$][a-zA-Z0-9_$]*)/g)
+            ];
+
+            for (const match of varMatches) {
+                if (match[1]) {
+                    variables[match[1]] = 'readonly';
+                }
+            }
+
+            // Match function declarations
+            const funcMatches = [
+                ...trimmedLine.matchAll(/\bfunction\s+([a-zA-Z_$][a-zA-Z0-9_$]*)/g)
+            ];
+
+            for (const match of funcMatches) {
+                if (match[1]) {
+                    variables[match[1]] = 'readonly';
+                }
+            }
+
+            // Match assignment patterns that create variables (like _this = this)
+            const assignMatches = [
+                ...trimmedLine.matchAll(/\b([a-zA-Z_$][a-zA-Z0-9_$]*)\s*=\s*[^=]/g)
+            ];
+
+            for (const match of assignMatches) {
+                if (match[1] && !['if', 'for', 'while', 'switch', 'return'].includes(match[1])) {
+                    variables[match[1]] = 'readonly';
+                }
+            }
+        }
+
+        return variables;
+    }
+
+    /**
+     * Check if a script is CSS content that should be excluded from JavaScript analysis
+     * @param {Object} script - Script object
+     * @returns {boolean} True if script is CSS content
+     */
+    isCSSScript(script) {
+        if (!script) return false;
+
+        // Check script name for CSS indicators
+        const scriptName = (script.name || '').toLowerCase();
+        if (scriptName.includes('css') || scriptName.includes('style')) {
+            return true;
+        }
+
+        // Check script content for CSS patterns
+        const content = this.getScriptContent(script);
+        if (!content) return false;
+
+        const trimmedContent = content.trim();
+
+        // More comprehensive CSS detection patterns
+        const cssPatterns = [
+            /^\s*\/\*[\s\S]*?\*\/\s*\.[a-zA-Z-_][\w-]*\s*\{/,  // CSS comment followed by class
+            /^\s*\.[a-zA-Z-_][\w-]*\s*\{[\s\S]*?\}/,           // CSS class with complete block
+            /^\s*#[a-zA-Z-_][\w-]*\s*\{[\s\S]*?\}/,            // CSS ID with complete block
+            /^\s*@media\s/,                                     // CSS media queries
+            /^\s*@import\s/,                                    // CSS imports
+            /^\s*@keyframes\s/,                                 // CSS keyframes
+            /^\s*body\s*\{/,                                    // CSS body selector
+            /^\s*html\s*\{/,                                    // CSS html selector
+            /^\s*\*\s*\{/,                                      // CSS universal selector
+            /^\s*[a-zA-Z-_][\w-]*\s*\{[\s\S]*?color\s*:/,      // CSS with color property
+            /^\s*[a-zA-Z-_][\w-]*\s*\{[\s\S]*?background\s*:/, // CSS with background property
+            /^\s*[a-zA-Z-_][\w-]*\s*\{[\s\S]*?font-\w+\s*:/,   // CSS with font properties
+        ];
+
+        return cssPatterns.some(pattern => pattern.test(trimmedContent));
     }
 
     /**
