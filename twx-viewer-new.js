@@ -3053,6 +3053,7 @@ function generateStaticAnalysisTable(results) {
 
     let totalIssues = 0;
     const categories = new Set();
+    const seenIssues = new Set(); // Track unique issues to prevent duplicates
 
     results.forEach(scriptResult => {
         if (!scriptResult.issues || scriptResult.issues.length === 0) {
@@ -3060,6 +3061,16 @@ function generateStaticAnalysisTable(results) {
         }
 
         scriptResult.issues.forEach(issue => {
+            // Create a unique key for deduplication using description as well for better uniqueness
+            const issueKey = `${scriptResult.scriptId || scriptResult.scriptName}-${issue.line}-${issue.column || 0}-${issue.rule}-${issue.description}`;
+
+            // Skip if we've already seen this exact issue
+            if (seenIssues.has(issueKey)) {
+                console.log('Skipping duplicate issue:', issueKey);
+                return;
+            }
+            seenIssues.add(issueKey);
+
             totalIssues++;
             categories.add(issue.category || 'general');
 
@@ -3085,14 +3096,28 @@ function generateStaticAnalysisTable(results) {
                 codeHtml = `<div class="code-context-simple">${escapeHtml(codeDisplay)}</div>`;
             }
 
+            // Create hierarchical classification display
+            const categoryDisplay = (issue.category || 'general').replace('_', ' ').toUpperCase();
+            const hierarchicalHtml = `
+                <div class="hierarchical-classification">
+                    <div class="classification-level-1">
+                        <span class="severity-${issue.severity}">${issue.severity.toUpperCase()}</span>
+                    </div>
+                    <div class="classification-level-2">
+                        <span class="category-badge category-${issue.category || 'general'}">${categoryDisplay}</span>
+                    </div>
+                    <div class="classification-level-3">
+                        <code class="rule-code">${escapeHtml(issue.rule)}</code>
+                    </div>
+                </div>
+            `;
+
             const rowId = `static-row-${totalIssues}`;
             row.id = rowId;
             row.innerHTML = `
                 <td title="${escapeHtml(scriptResult.scriptName)}">${escapeHtml(truncateText(scriptResult.scriptName, 25))}</td>
                 <td title="${escapeHtml(scriptResult.objectName)}">${escapeHtml(truncateText(scriptResult.objectName, 20))}</td>
-                <td><span class="severity-${issue.severity}">${issue.severity.toUpperCase()}</span></td>
-                <td><span class="category-badge category-${issue.category || 'general'}">${(issue.category || 'general').replace('_', ' ').toUpperCase()}</span></td>
-                <td><code title="${escapeHtml(issue.rule)}">${escapeHtml(issue.rule)}</code></td>
+                <td class="hierarchical-cell">${hierarchicalHtml}</td>
                 <td title="${escapeHtml(issue.description)}">${escapeHtml(truncateText(issue.description, 60))}</td>
                 <td>${issue.line || '-'}</td>
                 <td><div class="static-code-context">${codeHtml}</div></td>
@@ -3151,18 +3176,25 @@ function updateCategoryFilterOptions(categories) {
 function addCodeExpansionHandlers() {
     // Handle both old and new class names for compatibility
     document.querySelectorAll('.static-code-context, .static-code-line').forEach(codeDiv => {
-        codeDiv.addEventListener('click', function() {
+        // Remove any existing click handlers
+        const newCodeDiv = codeDiv.cloneNode(true);
+        codeDiv.parentNode.replaceChild(newCodeDiv, codeDiv);
+
+        newCodeDiv.addEventListener('click', function(e) {
+            e.stopPropagation();
+
             // Toggle expanded state
             if (this.classList.contains('expanded')) {
                 this.classList.remove('expanded');
-                this.style.maxHeight = '120px';
-                this.style.overflow = 'hidden';
+                this.title = 'Click to expand';
             } else {
                 this.classList.add('expanded');
-                this.style.maxHeight = 'none';
-                this.style.overflow = 'visible';
+                this.title = 'Click to collapse';
             }
         });
+
+        // Set initial title
+        newCodeDiv.title = 'Click to expand';
     });
 }
 
@@ -3318,8 +3350,8 @@ function sortStaticTable(columnIndex) {
         const aText = a.cells[columnIndex].textContent.trim();
         const bText = b.cells[columnIndex].textContent.trim();
 
-        // Handle numeric columns (line numbers)
-        if (columnIndex === 6) { // Line column
+        // Handle numeric columns (line numbers) - now at index 4
+        if (columnIndex === 4) { // Line column
             const aNum = parseInt(aText) || 0;
             const bNum = parseInt(bText) || 0;
             return ascending ? aNum - bNum : bNum - aNum;
@@ -3351,21 +3383,20 @@ function filterStaticResults() {
 
     rows.forEach(row => {
         const cells = row.querySelectorAll('td');
-        if (cells.length < 9) return;
+        if (cells.length < 7) return; // Updated for new column count
 
         const scriptName = cells[0].textContent.toLowerCase();
         const objectName = cells[1].textContent.toLowerCase();
-        const severity = cells[2].textContent.toLowerCase();
-        const category = cells[3].textContent.toLowerCase();
+        const hierarchicalCell = cells[2].textContent.toLowerCase(); // Contains severity, category, and rule
 
         let visible = true;
 
         // Apply filters
-        if (severityFilter && !severity.includes(severityFilter)) {
+        if (severityFilter && !hierarchicalCell.includes(severityFilter)) {
             visible = false;
         }
 
-        if (categoryFilter && !category.includes(categoryFilter.replace('_', ' '))) {
+        if (categoryFilter && !hierarchicalCell.includes(categoryFilter.replace('_', ' '))) {
             visible = false;
         }
 

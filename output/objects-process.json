@@ -1,6 +1,6 @@
 {
   "typeName": "Process",
-  "count": 93,
+  "count": 94,
   "objects": [
     {
       "id": "1.cc6bc8c3-b0c3-4c4a-842d-7f14091d2285",
@@ -3298,6 +3298,47 @@
           {
             "name": "Catch Errors",
             "script": "if (tw.local.error != null && !!tw.local.error.errorText) {\r\r\n\ttw.local.errorMSG = tw.local.error.errorText;\r\r\n}else if ( tw.system.error != null) {\r\r\n\ttw.local.errorMSG = String(tw.system.error.getAttribute(\"type\")) +\",\"+ String(tw.system.error.getElementByTagName(\"localizedMessage\").item(0).getText());\r\r\n\ttw.local.error = new tw.object.AjaxError();\r\r\n}else{\r\r\n\ttw.local.error = new tw.object.AjaxError();\r\r\n}\r\r\n\r\r\ntw.local.error.errorText = \"Error Occured<br> Service Name : \"+tw.system.serviceFlow.name+\"<br> Error Message : \"+tw.local.errorMSG;\r\r\nlog.error(\"IDC PROCESS with ID \"+tw.local.instanceID+\" An Error Occured in Service Name : \"+tw.system.serviceFlow.name+\" with Error Message : \"+tw.local.errorMSG);"
+          }
+        ]
+      },
+      "subType": "12",
+      "hasDetails": true,
+      "source": "application"
+    },
+    {
+      "id": "1.53aaab79-1a40-402f-9569-0e565b41d36c",
+      "versionId": "ffb30837-abf3-481b-852f-ba20d92ba7ef",
+      "name": "Get CBE Test",
+      "type": "process",
+      "typeName": "Process",
+      "details": {
+        "processType": "12",
+        "variables": {
+          "input": [
+            {
+              "name": "data",
+              "type": "1",
+              "hasDefault": false,
+              "description": {
+                "isNull": "true"
+              }
+            },
+            {
+              "name": "results",
+              "type": "2",
+              "hasDefault": false,
+              "description": {
+                "isNull": "true"
+              }
+            }
+          ],
+          "output": [],
+          "private": []
+        },
+        "scripts": [
+          {
+            "name": "Script Task",
+            "script": "tw.local.results = new tw.object.listOf.NameValuePair();\r\r\n\r\r\n// static data for goods codes (value) and description (name)\r\r\ntw.local.results[0] = new tw.object.NameValuePair();\r\r\ntw.local.results[0].value = \"10001\";\r\r\ntw.local.results[0].name = \"Steel Rods\";\r\r\n\r\r\ntw.local.results[1] = new tw.object.NameValuePair();\r\r\ntw.local.results[1].value = \"10002\";\r\r\ntw.local.results[1].name = \"Aluminum Sheets\";\r\r\n\r\r\ntw.local.results[2] = new tw.object.NameValuePair();\r\r\ntw.local.results[2].value = \"10003\";\r\r\ntw.local.results[2].name = \"Copper Wires\";\r\r\n\r\r\ntw.local.results[3] = new tw.object.NameValuePair();\r\r\ntw.local.results[3].value = \"10004\";\r\r\ntw.local.results[3].name = \"Plastic Pipes\";\r\r\n\r\r\ntw.local.results[4] = new tw.object.NameValuePair();\r\r\ntw.local.results[4].value = \"10005\";\r\r\ntw.local.results[4].name = \"Cement Bags\";\r\r\n\r\r\ntw.local.results[5] = new tw.object.NameValuePair();\r\r\ntw.local.results[5].value = \"10006\";\r\r\ntw.local.results[5].name = \"Glass Panels\";\r\r\n\r\r\ntw.local.results[6] = new tw.object.NameValuePair();\r\r\ntw.local.results[6].value = \"10007\";\r\r\ntw.local.results[6].name = \"Ceramic Tiles\";\r\r\n\r\r\ntw.local.results[7] = new tw.object.NameValuePair();\r\r\ntw.local.results[7].value = \"10008\";\r\r\ntw.local.results[7].name = \"Electrical Cables\";\r\r\n\r\r\ntw.local.results[8] = new tw.object.NameValuePair();\r\r\ntw.local.results[8].value = \"10009\";\r\r\ntw.local.results[8].name = \"PVC Windows\";\r\r\n\r\r\ntw.local.results[9] = new tw.object.NameValuePair();\r\r\ntw.local.results[9].value = \"10010\";\r\r\ntw.local.results[9].name = \"Paint Buckets\";\r\r\n\r\r\ntw.local.results[10] = new tw.object.NameValuePair();\r\r\ntw.local.results[10].value = \"10011\";\r\r\ntw.local.results[10].name = \"Iron Nails\";\r\r\n\r\r\ntw.local.results[11] = new tw.object.NameValuePair();\r\r\ntw.local.results[11].value = \"10012\";\r\r\ntw.local.results[11].name = \"Wooden Beams\";\r\r\n\r\r\ntw.local.results[12] = new tw.object.NameValuePair();\r\r\ntw.local.results[12].value = \"10013\";\r\r\ntw.local.results[12].name = \"Bricks\";\r\r\n\r\r\ntw.local.results[13] = new tw.object.NameValuePair();\r\r\ntw.local.results[13].value = \"10014\";\r\r\ntw.local.results[13].name = \"Roof Shingles\";\r\r\n\r\r\ntw.local.results[14] = new tw.object.NameValuePair();\r\r\ntw.local.results[14].value = \"10015\";\r\r\ntw.local.results[14].name = \"Insulation Foam\";\r\r\n\r\r\ntw.local.results[15] = new tw.object.NameValuePair();\r\r\ntw.local.results[15].value = \"10016\";\r\r\ntw.local.results[15].name = \"Concrete Mix\";\r\r\n\r\r\ntw.local.results[16] = new tw.object.NameValuePair();\r\r\ntw.local.results[16].value = \"10017\";\r\r\ntw.local.results[16].name = \"Steel Beams\";\r\r\n\r\r\ntw.local.results[17] = new tw.object.NameValuePair();\r\r\ntw.local.results[17].value = \"10018\";\r\r\ntw.local.results[17].name = \"Sand Bags\";\r\r\n\r\r\ntw.local.results[18] = new tw.object.NameValuePair();\r\r\ntw.local.results[18].value = \"10019\";\r\r\ntw.local.results[18].name = \"Gravel Sacks\";\r\r\n\r\r\ntw.local.results[19] = new tw.object.NameValuePair();\r\r\ntw.local.results[19].value = \"10020\";\r\r\ntw.local.results[19].name = \"Light Fixtures\";"
           }
         ]
       },

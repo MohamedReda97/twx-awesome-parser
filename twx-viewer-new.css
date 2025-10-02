@@ -2967,6 +2967,7 @@ Search Result Styles */
     padding: 10px 8px;
     vertical-align: top;
     line-height: 1.4;
+    overflow: visible;
 }
 
 .enhanced-table tbody tr:nth-child(even) {
@@ -2984,13 +2985,84 @@ Search Result Styles */
 
 /* Column-specific styling */
 .code-column {
-    width: 300px;
-    max-width: 300px;
+    width: 450px;
+    max-width: 600px;
+    min-width: 400px;
+    overflow: visible !important;
+}
+
+.hierarchical-column {
+    width: 200px;
+    min-width: 180px;
 }
 
 .actions-column {
     width: 100px;
     text-align: center;
+}
+
+/* Ensure code context cells don't truncate */
+.enhanced-table td.code-column,
+.enhanced-table .code-column {
+    overflow: visible !important;
+    text-overflow: clip !important;
+    white-space: normal !important;
+}
+
+/* Hierarchical Classification Styling */
+.hierarchical-classification {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 4px 0;
+}
+
+.classification-level-1,
+.classification-level-2,
+.classification-level-3 {
+    display: flex;
+    align-items: center;
+}
+
+.classification-level-2 {
+    padding-left: 12px;
+    position: relative;
+}
+
+.classification-level-2::before {
+    content: '└─';
+    position: absolute;
+    left: 0;
+    color: #adb5bd;
+    font-size: 10px;
+}
+
+.classification-level-3 {
+    padding-left: 24px;
+    position: relative;
+}
+
+.classification-level-3::before {
+    content: '└─';
+    position: absolute;
+    left: 12px;
+    color: #adb5bd;
+    font-size: 10px;
+}
+
+.rule-code {
+    font-size: 11px;
+    background-color: #f8f9fa;
+    padding: 2px 6px;
+    border-radius: 3px;
+    border: 1px solid #dee2e6;
+    color: #495057;
+    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+}
+
+.hierarchical-cell {
+    vertical-align: top;
+    padding: 8px !important;
 }
 
 /* Action buttons */
@@ -3089,22 +3161,41 @@ Search Result Styles */
 .static-code-context {
     font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
     background-color: #f8f9fa;
-    padding: 12px;
+    padding: 8px;
     border-radius: 6px;
-    font-size: 13px;
+    font-size: 12px;
     border-left: 4px solid #007bff;
-    white-space: pre-wrap;
-    word-wrap: break-word;
-    line-height: 1.5;
+    white-space: pre;
+    overflow-x: auto;
+    overflow-y: visible;
+    line-height: 1.6;
     color: #495057;
     border: 1px solid #e9ecef;
     max-width: 100%;
-    overflow: visible;
+    width: 100%;
     display: block;
+    max-height: 200px;
+    transition: max-height 0.3s ease, background-color 0.2s ease;
+    cursor: pointer;
+    text-overflow: clip;
+    word-wrap: normal;
 }
 
 .static-code-context:hover {
     background-color: #e9ecef;
+}
+
+.static-code-context.expanded {
+    max-height: none;
+    background-color: #fff;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+/* Ensure all child elements don't truncate */
+.static-code-context * {
+    text-overflow: clip !important;
+    overflow: visible !important;
+    white-space: pre !important;
 }
 
 /* Legacy support for old class name */
@@ -3166,44 +3257,59 @@ Search Result Styles */
 .code-context-enhanced {
     font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
     font-size: 12px;
-    line-height: 1.4;
+    line-height: 1.6;
     background-color: #f8f9fa;
     border-radius: 4px;
     border: 1px solid #dee2e6;
     color: #495057;
     max-width: 100%;
+    width: 100%;
     display: block;
     margin: 0;
     overflow-x: auto;
     overflow-y: visible;
+    padding: 0;
+    text-overflow: clip;
 }
 
 .code-context-enhanced .code-line {
-    padding: 2px 10px;
+    padding: 3px 10px;
     white-space: pre;
-    word-wrap: break-word;
-    overflow-wrap: break-word;
+    display: block;
+    min-height: 20px;
+    overflow: visible;
+    text-overflow: clip;
 }
 
 .code-context-enhanced .code-line.error-line {
     background-color: #fff5f5;
     border-left: 3px solid #dc3545;
     font-weight: 500;
+    padding-left: 7px;
 }
 
 .code-context-enhanced .line-number {
     color: #6c757d;
-    margin-right: 8px;
+    margin-right: 12px;
     user-select: none;
+    display: inline-block;
+    min-width: 35px;
+    text-align: right;
+}
+
+.code-context-enhanced .line-content {
+    display: inline;
+    white-space: pre;
+    overflow: visible;
+    text-overflow: clip;
+    max-width: none;
+    word-wrap: normal;
+    color: #495057;
 }
 
 .code-context-enhanced .error-line .line-number {
     color: #dc3545;
     font-weight: 600;
-}
-
-.code-context-enhanced .line-content {
-    color: #495057;
 }
 
 .code-line {
@@ -3256,9 +3362,9 @@ Search Result Styles */
 
 /* Table column sizing for better layout */
 .results-table .code-column {
-    width: 300px;
-    max-width: 300px;
-    min-width: 250px;
+    width: 450px;
+    max-width: 600px;
+    min-width: 400px;
 }
 
 .results-table .actions-column {
