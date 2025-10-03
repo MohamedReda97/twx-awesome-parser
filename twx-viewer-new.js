@@ -3051,84 +3051,143 @@ function generateStaticAnalysisTable(results) {
 
     tbody.innerHTML = '';
 
+    console.log('=== Generating Static Analysis Table ===');
+    console.log('Total script results:', results.length);
+
     let totalIssues = 0;
     const categories = new Set();
-    const seenIssues = new Set(); // Track unique issues to prevent duplicates
+    let duplicateCount = 0;
+    let unknownCount = 0;
 
-    results.forEach(scriptResult => {
+    // NEW APPROACH: Collect all issues first, then deduplicate using a different strategy
+    const allIssues = [];
+
+    results.forEach((scriptResult, scriptIndex) => {
         if (!scriptResult.issues || scriptResult.issues.length === 0) {
             return; // Skip scripts with no issues
         }
 
-        scriptResult.issues.forEach(issue => {
-            // Create a unique key for deduplication using description as well for better uniqueness
-            const issueKey = `${scriptResult.scriptId || scriptResult.scriptName}-${issue.line}-${issue.column || 0}-${issue.rule}-${issue.description}`;
-
-            // Skip if we've already seen this exact issue
-            if (seenIssues.has(issueKey)) {
-                console.log('Skipping duplicate issue:', issueKey);
-                return;
-            }
-            seenIssues.add(issueKey);
-
-            totalIssues++;
-            categories.add(issue.category || 'general');
-
-            const row = document.createElement('tr');
-
-            // Use formatted HTML code context if available, otherwise fallback to plain text
-            let codeDisplay = issue.code || '-';
-            let codeHtml = '';
-
-            if (issue.codeContextHtml) {
-                // Use the formatted HTML from the backend
-                codeHtml = issue.codeContextHtml;
-                codeDisplay = issue.code || '-'; // Keep simple text for title
-            } else if (issue.codeContext && Array.isArray(issue.codeContext)) {
-                // Fallback to plain text context
-                codeDisplay = issue.codeContext.join('\n');
-                codeHtml = `<div class="code-context-simple">${escapeHtml(codeDisplay)}</div>`;
-            } else if (issue.code && issue.code.length > 50) {
-                // If code is long, format it better
-                codeDisplay = issue.code;
-                codeHtml = `<div class="code-context-simple">${escapeHtml(codeDisplay)}</div>`;
-            } else {
-                codeHtml = `<div class="code-context-simple">${escapeHtml(codeDisplay)}</div>`;
+        scriptResult.issues.forEach((issue, issueIndex) => {
+            // Filter out UNKNOWN category or rule (Issue 3)
+            if (issue.category === 'UNKNOWN' || issue.category === 'unknown' ||
+                issue.rule === 'UNKNOWN' || issue.rule === 'unknown') {
+                unknownCount++;
+                console.log(`Filtering out UNKNOWN issue at line ${issue.line}: category=${issue.category}, rule=${issue.rule}`);
+                return; // Skip UNKNOWN issues
             }
 
-            // Create hierarchical classification display
-            const categoryDisplay = (issue.category || 'general').replace('_', ' ').toUpperCase();
-            const hierarchicalHtml = `
-                <div class="hierarchical-classification">
-                    <div class="classification-level-1">
-                        <span class="severity-${issue.severity}">${issue.severity.toUpperCase()}</span>
-                    </div>
-                    <div class="classification-level-2">
-                        <span class="category-badge category-${issue.category || 'general'}">${categoryDisplay}</span>
-                    </div>
-                    <div class="classification-level-3">
-                        <code class="rule-code">${escapeHtml(issue.rule)}</code>
-                    </div>
-                </div>
-            `;
-
-            const rowId = `static-row-${totalIssues}`;
-            row.id = rowId;
-            row.innerHTML = `
-                <td title="${escapeHtml(scriptResult.scriptName)}">${escapeHtml(truncateText(scriptResult.scriptName, 25))}</td>
-                <td title="${escapeHtml(scriptResult.objectName)}">${escapeHtml(truncateText(scriptResult.objectName, 20))}</td>
-                <td class="hierarchical-cell">${hierarchicalHtml}</td>
-                <td title="${escapeHtml(issue.description)}">${escapeHtml(truncateText(issue.description, 60))}</td>
-                <td>${issue.line || '-'}</td>
-                <td><div class="static-code-context">${codeHtml}</div></td>
-                <td class="actions-column">
-                    <button class="action-btn done" onclick="removeStaticResultRow('${rowId}', 'done')" title="Mark as resolved">DONE</button>
-                </td>
-            `;
-
-            tbody.appendChild(row);
+            // Store issue with metadata
+            allIssues.push({
+                scriptResult: scriptResult,
+                issue: issue,
+                scriptIndex: scriptIndex,
+                issueIndex: issueIndex
+            });
         });
     });
+
+    console.log(`Total issues collected: ${allIssues.length}`);
+    console.log(`UNKNOWN issues filtered: ${unknownCount}`);
+
+    // NEW DEDUPLICATION STRATEGY: Use JSON stringification of key properties
+    const uniqueIssues = [];
+    const seenKeys = new Set();
+
+    allIssues.forEach((item, idx) => {
+        const { scriptResult, issue } = item;
+
+        // Create a comprehensive unique key using multiple properties
+        const keyObject = {
+            script: scriptResult.scriptId || scriptResult.scriptName,
+            line: issue.line,
+            column: issue.column || 0,
+            rule: issue.rule,
+            description: issue.description,
+            severity: issue.severity
+        };
+
+        const issueKey = JSON.stringify(keyObject);
+
+        if (seenKeys.has(issueKey)) {
+            duplicateCount++;
+            console.log(`Duplicate #${duplicateCount} found at index ${idx}: ${issue.rule} at line ${issue.line} in ${scriptResult.scriptName}`);
+        } else {
+            seenKeys.add(issueKey);
+            uniqueIssues.push(item);
+        }
+    });
+
+    console.log(`Unique issues after deduplication: ${uniqueIssues.length}`);
+    console.log(`Duplicates removed: ${duplicateCount}`);
+
+    // Now render only the unique issues
+    uniqueIssues.forEach((item, displayIndex) => {
+        const { scriptResult, issue } = item;
+
+        totalIssues++;
+        categories.add(issue.category || 'general');
+
+        const row = document.createElement('tr');
+
+        // Use formatted HTML code context if available, otherwise fallback to plain text
+        let codeDisplay = issue.code || '-';
+        let codeHtml = '';
+
+        if (issue.codeContextHtml) {
+            // Use the formatted HTML from the backend
+            codeHtml = issue.codeContextHtml;
+            codeDisplay = issue.code || '-'; // Keep simple text for title
+        } else if (issue.codeContext && Array.isArray(issue.codeContext)) {
+            // Fallback to plain text context
+            codeDisplay = issue.codeContext.join('\n');
+            codeHtml = `<div class="code-context-simple">${escapeHtml(codeDisplay)}</div>`;
+        } else if (issue.code && issue.code.length > 50) {
+            // If code is long, format it better
+            codeDisplay = issue.code;
+            codeHtml = `<div class="code-context-simple">${escapeHtml(codeDisplay)}</div>`;
+        } else {
+            codeHtml = `<div class="code-context-simple">${escapeHtml(codeDisplay)}</div>`;
+        }
+
+        // Create hierarchical classification display
+        const categoryDisplay = (issue.category || 'general').replace('_', ' ').toUpperCase();
+        const hierarchicalHtml = `
+            <div class="hierarchical-classification">
+                <div class="classification-level-1">
+                    <span class="severity-${issue.severity}">${issue.severity.toUpperCase()}</span>
+                </div>
+                <div class="classification-level-2">
+                    <span class="category-badge category-${issue.category || 'general'}">${categoryDisplay}</span>
+                </div>
+                <div class="classification-level-3">
+                    <code class="rule-code">${escapeHtml(issue.rule)}</code>
+                </div>
+            </div>
+        `;
+
+        const rowId = `static-row-${displayIndex + 1}`;
+        row.id = rowId;
+        row.innerHTML = `
+            <td title="${escapeHtml(scriptResult.scriptName)}">${escapeHtml(truncateText(scriptResult.scriptName, 25))}</td>
+            <td title="${escapeHtml(scriptResult.objectName)}">${escapeHtml(truncateText(scriptResult.objectName, 20))}</td>
+            <td class="hierarchical-cell">${hierarchicalHtml}</td>
+            <td title="${escapeHtml(issue.description)}">${escapeHtml(truncateText(issue.description, 60))}</td>
+            <td>${issue.line || '-'}</td>
+            <td><div class="static-code-context">${codeHtml}</div></td>
+            <td class="actions-column">
+                <button class="action-btn done" onclick="removeStaticResultRow('${rowId}', 'done')" title="Mark as resolved">DONE</button>
+            </td>
+        `;
+
+        tbody.appendChild(row);
+    });
+
+    // Log summary
+    console.log(`\n=== Table Generation Complete ===`);
+    console.log(`Total unique issues displayed: ${totalIssues}`);
+    console.log(`Duplicates filtered out: ${duplicateCount}`);
+    console.log(`UNKNOWN issues filtered out: ${unknownCount}`);
+    console.log(`Categories found: ${categories.size}`);
 
     // Update category filter options
     updateCategoryFilterOptions(Array.from(categories));

@@ -174,21 +174,33 @@ class StaticAnalysisService {
                     printWidth: 120
                 });
             } catch (prettierError) {
-                // If Prettier fails, try with original content for ESLint
-                console.warn('Prettier formatting failed, using original content:', prettierError.message);
+                // If Prettier fails, use original content for ESLint
+                // This is expected for code with syntax errors or non-standard JavaScript
+                console.log(`ℹ️ Prettier formatting skipped for ${script.name}: ${prettierError.message.substring(0, 100)}`);
                 formattedContent = originalContent;
 
-                // Only report syntax errors if they're truly critical
+                // Only report syntax errors if they're truly critical AND not in comments
                 if (this.isCriticalSyntaxError(prettierError)) {
-                    issues.push({
-                        line: this.extractLineFromError(prettierError),
-                        column: this.extractColumnFromError(prettierError),
-                        severity: 'error',
-                        category: 'syntax',
-                        rule: 'syntax-error',
-                        message: 'Critical syntax error: ' + this.simplifyErrorMessage(prettierError.message),
-                        codeContext: this.getCodeContext(originalContent, this.extractLineFromError(prettierError))
-                    });
+                    const errorLine = this.extractLineFromError(prettierError);
+                    const lines = originalContent.split('\n');
+                    const errorLineContent = lines[errorLine - 1] || '';
+
+                    // Don't report errors in commented lines
+                    const trimmedErrorLine = errorLineContent.trim();
+                    if (!trimmedErrorLine.startsWith('//') && !trimmedErrorLine.startsWith('/*') && !trimmedErrorLine.startsWith('*')) {
+                        issues.push({
+                            line: errorLine,
+                            column: this.extractColumnFromError(prettierError),
+                            severity: 'error',
+                            category: 'syntax',
+                            rule: 'syntax-error',
+                            description: 'Critical syntax error: ' + this.simplifyErrorMessage(prettierError.message),
+                            code: errorLineContent.trim(),
+                            codeContext: this.getCodeContext(originalContent, errorLine),
+                            codeContextHtml: this.getCodeContext(originalContent, errorLine).formattedHtml,
+                            suggestion: 'Fix the syntax error in the code'
+                        });
+                    }
                 }
             }
         }
@@ -196,6 +208,7 @@ class StaticAnalysisService {
         // Only run JavaScript-specific analysis on JavaScript content
         if (this.isJavaScriptContent(originalContent)) {
 
+            console.log(`\n=== Analyzing Script: ${script.name} (ID: ${script.id}) ===`);
 
             // Step 2: Run ESLint analysis on formatted code (critical errors only)
             const scriptForESLint = {
@@ -204,11 +217,16 @@ class StaticAnalysisService {
                 content: formattedContent
             };
             const eslintResults = await this.runESLintAnalysis(scriptForESLint);
+            console.log(`ESLint found ${eslintResults.length} valid issues (after filtering)`);
             issues.push(...eslintResults);
 
             // Step 3: Run custom analysis for nested loops and conditions
             const customResults = this.runCustomAnalysis(scriptForESLint);
+            console.log(`Custom analysis found ${customResults.length} issues`);
+
             issues.push(...customResults);
+
+            console.log(`Total issues for this script: ${issues.length}`);
         } else {
 
             // For non-JavaScript content, add a note
@@ -275,13 +293,33 @@ class StaticAnalysisService {
             });
 
             const issues = [];
+            const lines = script.content.split('\n');
+            let skippedUnknown = 0;
+
             for (const result of results) {
                 for (const message of result.messages) {
+                    // Skip issues with no ruleId (parsing errors that ESLint can't categorize)
+                    if (!message.ruleId) {
+                        skippedUnknown++;
+                        console.log(`Skipping UNKNOWN ESLint issue at line ${message.line}: ${message.message.substring(0, 50)}`);
+                        continue;
+                    }
+
+                    // Skip issues in commented lines
+                    const lineContent = lines[message.line - 1] || '';
+                    const trimmedLine = lineContent.trim();
+
+                    // Skip if line is a comment
+                    if (trimmedLine.startsWith('//') || trimmedLine.startsWith('/*') || trimmedLine.startsWith('*')) {
+                        console.log(`Skipping ESLint issue in commented line ${message.line}: ${message.ruleId}`);
+                        continue;
+                    }
+
                     const codeContext = this.getCodeContext(script.content, message.line);
                     issues.push({
                         severity: this.mapESLintSeverity(message.severity),
                         category: this.categorizeESLintRule(message.ruleId),
-                        rule: message.ruleId || 'unknown',
+                        rule: message.ruleId,
                         description: message.message,
                         line: message.line,
                         column: message.column,
@@ -291,6 +329,10 @@ class StaticAnalysisService {
                         suggestion: this.getESLintSuggestion(message.ruleId, message.message)
                     });
                 }
+            }
+
+            if (skippedUnknown > 0) {
+                console.log(`Total UNKNOWN issues skipped in ${script.name}: ${skippedUnknown}`);
             }
 
             return issues;
@@ -479,61 +521,80 @@ class StaticAnalysisService {
 
         const issues = [];
         const lines = script.content.split('\n');
+        const seenIssues = new Set(); // Deduplicate within custom analysis
 
-        // Track nested loops
-        let loopDepth = 0;
-        const loopStack = [];
-
-        // Track if conditions in loops
-        const ifInLoopIssues = [];
+        // Track nested loops with proper brace counting
+        let braceDepth = 0;
+        const loopStack = []; // Stack of { line, braceDepth, type }
 
         for (let i = 0; i < lines.length; i++) {
             const line = lines[i];
             const lineNumber = i + 1;
             const trimmedLine = line.trim();
 
+            // Skip commented lines
+            if (trimmedLine.startsWith('//') || trimmedLine.startsWith('/*') || trimmedLine.startsWith('*')) {
+                continue;
+            }
+
+            // Update brace depth
+            const openBraces = (line.match(/{/g) || []).length;
+            const closeBraces = (line.match(/}/g) || []).length;
+
+            // Remove completed loops from stack based on brace depth
+            while (loopStack.length > 0 && braceDepth <= loopStack[loopStack.length - 1].braceDepth) {
+                loopStack.pop();
+            }
+
+            braceDepth += openBraces - closeBraces;
+
             // Detect loop starts
             const loopRegex = /\b(for|while|do)\s*\(/;
             if (loopRegex.test(trimmedLine)) {
-                loopDepth++;
-                loopStack.push({ line: lineNumber, type: 'loop' });
+                const currentLoopDepth = loopStack.length + 1;
 
-                // Check for nested loops
-                if (loopDepth > 1) {
-                    const codeContext = this.getCodeContext(script.content, lineNumber);
-                    issues.push({
-                        severity: 'warning',
-                        category: 'performance',
-                        rule: 'custom-nested-loops',
-                        description: 'Nested loops detected. Consider refactoring for better performance.',
-                        line: lineNumber,
-                        column: 1,
-                        code: codeContext.currentLine,
-                        codeContext: codeContext.contextLines,
-                        codeContextHtml: codeContext.formattedHtml,
-                        suggestion: 'Consider using more efficient algorithms, breaking loops early, or refactoring into separate functions.'
-                    });
-                }
-            }
+                // Push this loop onto the stack
+                loopStack.push({
+                    line: lineNumber,
+                    braceDepth: braceDepth,
+                    type: 'loop'
+                });
 
-            // Detect loop ends (simplified - looks for closing braces)
-            if (trimmedLine.includes('}') && loopStack.length > 0) {
-                // This is a simplified approach - in a real parser we'd track braces properly
-                const openBraces = (line.match(/{/g) || []).length;
-                const closeBraces = (line.match(/}/g) || []).length;
-                if (closeBraces > openBraces && loopDepth > 0) {
-                    loopDepth = Math.max(0, loopDepth - 1);
-                    loopStack.pop();
+                // Check for nested loops (depth > 1)
+                if (currentLoopDepth > 1) {
+                    const issueKey = `nested-loop-${lineNumber}`;
+
+                    if (!seenIssues.has(issueKey)) {
+                        seenIssues.add(issueKey);
+                        const codeContext = this.getCodeContext(script.content, lineNumber);
+                        issues.push({
+                            severity: 'warning',
+                            category: 'performance',
+                            rule: 'custom-nested-loops',
+                            description: 'Nested loops detected. Consider refactoring for better performance.',
+                            line: lineNumber,
+                            column: 1,
+                            code: codeContext.currentLine,
+                            codeContext: codeContext.contextLines,
+                            codeContextHtml: codeContext.formattedHtml,
+                            suggestion: 'Consider using more efficient algorithms, breaking loops early, or refactoring into separate functions.'
+                        });
+                    }
                 }
             }
 
             // Detect if conditions inside loops without break/continue
-            if (loopDepth > 0 && /\bif\s*\(/.test(trimmedLine)) {
+            if (loopStack.length > 0 && /\bif\s*\(/.test(trimmedLine)) {
                 // Check if this if statement has break or continue in the next few lines
                 let hasBreakOrContinue = false;
                 const lookAheadLines = 5; // Check next 5 lines for break/continue
 
                 for (let j = i; j < Math.min(i + lookAheadLines, lines.length); j++) {
+                    const lookAheadLine = lines[j].trim();
+                    // Skip commented lines in lookahead
+                    if (lookAheadLine.startsWith('//') || lookAheadLine.startsWith('/*') || lookAheadLine.startsWith('*')) {
+                        continue;
+                    }
                     if (/\b(break|continue)\b/.test(lines[j])) {
                         hasBreakOrContinue = true;
                         break;
@@ -541,19 +602,24 @@ class StaticAnalysisService {
                 }
 
                 if (!hasBreakOrContinue) {
-                    const codeContext = this.getCodeContext(script.content, lineNumber);
-                    issues.push({
-                        severity: 'warning',
-                        category: 'performance',
-                        rule: 'custom-if-in-loop-no-break',
-                        description: 'If condition inside loop without break or continue may cause unnecessary iterations.',
-                        line: lineNumber,
-                        column: 1,
-                        code: codeContext.currentLine,
-                        codeContext: codeContext.contextLines,
-                        codeContextHtml: codeContext.formattedHtml,
-                        suggestion: 'Consider adding break/continue statements or refactoring the logic to reduce loop iterations.'
-                    });
+                    const issueKey = `if-in-loop-${lineNumber}`;
+
+                    if (!seenIssues.has(issueKey)) {
+                        seenIssues.add(issueKey);
+                        const codeContext = this.getCodeContext(script.content, lineNumber);
+                        issues.push({
+                            severity: 'warning',
+                            category: 'performance',
+                            rule: 'custom-if-in-loop-no-break',
+                            description: 'If condition inside loop without break or continue may cause unnecessary iterations.',
+                            line: lineNumber,
+                            column: 1,
+                            code: codeContext.currentLine,
+                            codeContext: codeContext.contextLines,
+                            codeContextHtml: codeContext.formattedHtml,
+                            suggestion: 'Consider adding break/continue statements or refactoring the logic to reduce loop iterations.'
+                        });
+                    }
                 }
             }
         }
