@@ -16,6 +16,9 @@ module.exports = {
   globals: {
     // IBM BPM/TeamWorks globals
     tw: 'readonly',
+    bpmext: 'readonly',
+    page: 'readonly',
+    TWDate: 'readonly',
     console: 'readonly',
     // Common browser globals that might be used
     window: 'readonly',
@@ -104,9 +107,12 @@ module.exports = {
     'radix': 'off'
   },
 
-  // IBM BAW globals
+  // IBM BAW globals (duplicate section - keeping for compatibility)
   globals: {
     tw: 'readonly',
+    bpmext: 'readonly',
+    page: 'readonly',
+    TWDate: 'readonly',
     system: 'readonly',
     log: 'readonly',
     console: 'readonly',

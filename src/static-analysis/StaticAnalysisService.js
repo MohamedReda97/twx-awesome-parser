@@ -151,23 +151,26 @@ class StaticAnalysisService {
             };
         }
 
-        // Skip CSS scripts entirely
+        // Skip CSS scripts and specific script types entirely
         if (this.isCSSScript(script)) {
+            const scriptName = script.name || 'Unknown Script';
+
+            console.log(`⏭️ Skipping script from analysis results: ${scriptName}`);
+
+            // Return result with NO issues so it doesn't appear in the results table
             return {
                 scriptId: script.id,
-                scriptName: script.name || 'Unknown Script',
+                scriptName: scriptName,
                 objectName: script.source_object || 'Unknown Object',
                 objectType: script.source_type || 'Unknown Type',
-                issues: [{
-                    line: 1,
-                    column: 1,
-                    severity: 'info',
-                    category: 'content_type',
-                    rule: 'css-content-skipped',
-                    message: 'CSS content detected. JavaScript analysis skipped.',
-                    codeContext: this.getCodeContext(originalContent, 1)
-                }],
-                metrics: this.calculateMetrics(originalContent)
+                issues: [], // Empty array - no issues to report
+                metrics: this.calculateMetrics(originalContent),
+                skipped: true, // Mark as skipped for statistics
+                skipReason: scriptName.startsWith('Coachflow Script Pattern')
+                    ? 'Coachflow Pattern'
+                    : (scriptName === 'Inline CSS' || scriptName.toLowerCase().includes('css'))
+                    ? 'CSS Content'
+                    : 'Non-JavaScript Content'
             };
         }
 
@@ -603,26 +606,26 @@ class StaticAnalysisService {
                 continue;
             }
 
-            // Update brace depth
+            // Count braces on this line
             const openBraces = (line.match(/{/g) || []).length;
             const closeBraces = (line.match(/}/g) || []).length;
 
-            // Remove completed loops from stack based on brace depth
-            while (loopStack.length > 0 && braceDepth <= loopStack[loopStack.length - 1].braceDepth) {
+            // Remove completed loops from stack BEFORE processing this line
+            // A loop is complete when we close back to its starting depth
+            while (loopStack.length > 0 && braceDepth < loopStack[loopStack.length - 1].braceDepth) {
                 loopStack.pop();
             }
-
-            braceDepth += openBraces - closeBraces;
 
             // Detect loop starts
             const loopRegex = /\b(for|while|do)\s*\(/;
             if (loopRegex.test(trimmedLine)) {
                 const currentLoopDepth = loopStack.length + 1;
 
-                // Push this loop onto the stack
+                // Push this loop onto the stack with the CURRENT brace depth
+                // The loop body will be at a deeper level
                 loopStack.push({
                     line: lineNumber,
-                    braceDepth: braceDepth,
+                    braceDepth: braceDepth, // Store current depth, not future depth
                     type: 'loop'
                 });
 
@@ -648,6 +651,9 @@ class StaticAnalysisService {
                     }
                 }
             }
+
+            // Update brace depth AFTER processing the line
+            braceDepth += openBraces - closeBraces;
 
             // Detect if conditions inside loops without break/continue
             if (loopStack.length > 0 && /\bif\s*\(/.test(trimmedLine)) {
@@ -843,16 +849,31 @@ class StaticAnalysisService {
     }
 
     /**
-     * Check if a script is CSS content that should be excluded from JavaScript analysis
+     * Check if a script should be excluded from JavaScript analysis
+     * Includes CSS content and specific script types/names
      * @param {Object} script - Script object
-     * @returns {boolean} True if script is CSS content
+     * @returns {boolean} True if script should be skipped
      */
     isCSSScript(script) {
         if (!script) return false;
 
-        // Check script name for CSS indicators
-        const scriptName = (script.name || '').toLowerCase();
-        if (scriptName.includes('css') || scriptName.includes('style')) {
+        const scriptName = script.name || '';
+        const scriptType = script.scriptType || script.type || '';
+
+        // Check script name for specific patterns to skip
+        // "Inline CSS" can be in name or scriptType
+        // "Coachflow Script Pattern 3" is in the name
+        if (scriptName === 'Inline CSS' || scriptType === 'Inline CSS') {
+            return true;
+        }
+
+        if (scriptName.startsWith('Coachflow Script Pattern')) {
+            return true;
+        }
+
+        // Check script name for CSS indicators (lowercase check)
+        const scriptNameLower = scriptName.toLowerCase();
+        if (scriptNameLower.includes('css') || scriptNameLower.includes('style')) {
             return true;
         }
 
