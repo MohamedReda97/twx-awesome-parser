@@ -312,7 +312,7 @@ class StaticAnalysisService {
             let skippedUnknown = 0;
             let skippedNonCritical = 0;
 
-            // Define critical rules that should be reported
+            // Define critical rules that should be reported as ERRORS
             const criticalRules = [
                 // Runtime errors
                 'no-undef',
@@ -340,6 +340,15 @@ class StaticAnalysisService {
                 'security/detect-eval-with-expression'
             ];
 
+            // Define warning rules that should be reported as WARNINGS
+            const warningRules = [
+                'no-unused-vars',
+                'no-unmodified-loop-condition',
+                'no-unreachable-loop',
+                'sonarjs/no-identical-expressions',
+                'sonarjs/no-identical-functions'
+            ];
+
             for (const result of results) {
                 for (const message of result.messages) {
                     // Skip issues with no ruleId (parsing errors that ESLint can't categorize)
@@ -349,8 +358,11 @@ class StaticAnalysisService {
                         continue;
                     }
 
-                    // CRITICAL FILTER: Only report errors (severity 2) from critical rules
-                    if (message.severity !== 2 || !criticalRules.includes(message.ruleId)) {
+                    // FILTER: Report errors from critical rules OR warnings from warning rules
+                    const isCriticalError = message.severity === 2 && criticalRules.includes(message.ruleId);
+                    const isWarning = message.severity === 1 && warningRules.includes(message.ruleId);
+
+                    if (!isCriticalError && !isWarning) {
                         skippedNonCritical++;
                         continue;
                     }
@@ -458,6 +470,18 @@ class StaticAnalysisService {
      */
     categorizeESLintRule(ruleId) {
         if (!ruleId) return 'CRITICAL_ERROR';
+
+        // Code quality warnings
+        const codeQualityRules = [
+            'no-unused-vars',
+            'no-unmodified-loop-condition',
+            'no-unreachable-loop',
+            'sonarjs/no-identical-expressions',
+            'sonarjs/no-identical-functions'
+        ];
+        if (codeQualityRules.includes(ruleId)) {
+            return 'code_quality';
+        }
 
         // Security issues
         if (ruleId.includes('security') || ruleId.includes('eval')) {
@@ -629,8 +653,9 @@ class StaticAnalysisService {
                     type: 'loop'
                 });
 
-                // Check for nested loops (depth > 1)
-                if (currentLoopDepth > 1) {
+                // Check for deeply nested loops (depth >= 3)
+                // Only report 3rd level and higher to avoid noise
+                if (currentLoopDepth >= 3) {
                     const issueKey = `nested-loop-${lineNumber}`;
 
                     if (!seenIssues.has(issueKey)) {
@@ -640,7 +665,7 @@ class StaticAnalysisService {
                             severity: 'warning',
                             category: 'performance',
                             rule: 'custom-nested-loops',
-                            description: 'Nested loops detected. Consider refactoring for better performance.',
+                            description: `Deeply nested loops detected (depth: ${currentLoopDepth}). Consider refactoring for better performance.`,
                             line: lineNumber,
                             column: 1,
                             code: codeContext.currentLine,
@@ -1019,10 +1044,17 @@ class StaticAnalysisService {
             'no-inner-declarations': 'Move function declaration to outer scope',
             'no-obj-calls': 'Do not call global objects as functions',
             'no-sparse-arrays': 'Remove holes in array or use explicit undefined',
-            'valid-typeof': 'Use valid typeof comparison values'
+            'valid-typeof': 'Use valid typeof comparison values',
+
+            // Code quality warnings
+            'no-unused-vars': 'Remove unused variable or use it in your code',
+            'no-unmodified-loop-condition': 'Modify the loop condition inside the loop or use a different approach',
+            'no-unreachable-loop': 'Add break/continue logic or remove the loop if it only runs once',
+            'sonarjs/no-identical-expressions': 'Remove duplicate expressions or fix the logic',
+            'sonarjs/no-identical-functions': 'Extract common logic into a shared function to reduce duplication'
         };
 
-        return suggestions[ruleId] || 'Fix this critical error to prevent runtime issues';
+        return suggestions[ruleId] || 'Review and fix this issue to improve code quality';
     }
 
     /**

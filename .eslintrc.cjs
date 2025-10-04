@@ -7,7 +7,8 @@ module.exports = {
   },
   extends: [], // Start completely clean - no extends
   plugins: [
-    'security'  // Only security plugin for critical vulnerabilities
+    'security',  // Security plugin for critical vulnerabilities
+    'sonarjs'    // SonarJS plugin for code quality warnings
   ],
   parserOptions: {
     ecmaVersion: 2020,
@@ -61,6 +62,13 @@ module.exports = {
     'no-new-func': 'error',           // Function constructor
     'security/detect-eval-with-expression': 'error',
 
+    // === WARNINGS FOR CODE QUALITY ===
+    'no-unused-vars': 'warn',                           // Unused variables
+    'no-unmodified-loop-condition': 'warn',             // Loop conditions that are never modified
+    'no-unreachable-loop': 'warn',                      // Loops that can only iterate once
+    'sonarjs/no-identical-expressions': 'warn',         // Identical expressions on both sides of operators
+    'sonarjs/no-identical-functions': 'warn',           // Identical functions
+
     // === TURN OFF EVERYTHING ELSE ===
     // Style rules - ALL OFF (Prettier handles these)
     'semi': 'off',
@@ -92,7 +100,6 @@ module.exports = {
     'prefer-const': 'off',
     'prefer-arrow-callback': 'off',
     'no-console': 'off',
-    'no-unused-vars': 'off',
     'camelcase': 'off',
     'consistent-return': 'off',
     'default-case': 'off',
