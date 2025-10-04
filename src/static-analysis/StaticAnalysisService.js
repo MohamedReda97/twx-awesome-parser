@@ -2,40 +2,51 @@ const { ESLint } = require('eslint');
 const prettier = require('prettier');
 const fs = require('fs');
 const path = require('path');
+const IssueDeduplicator = require('./IssueDeduplicator');
 
 /**
  * Static Analysis Service for JavaScript code review
- * Uses ESLint, Prettier, and other static analysis tools
+ * Implements Prettier → ESLint workflow with critical-only error reporting
+ * Following the static analysis plan: format first, then analyze formatted code
  */
 class StaticAnalysisService {
     constructor() {
         this.eslint = null;
         this.prettierConfig = null;
         this.initialized = false;
+        this.deduplicator = new IssueDeduplicator();
 
         // Don't call initializeTools here - it's async
     }
 
     /**
      * Initialize ESLint and Prettier
+     * ESLint is configured to use critical-only rules from .eslintrc.cjs
+     * Prettier is configured to format code before ESLint analysis
      */
     async initializeTools() {
         try {
             // Force ESLint to use legacy config system
             process.env.ESLINT_USE_FLAT_CONFIG = 'false';
 
-            // Initialize ESLint with our configuration
+            // Initialize ESLint with critical-only configuration
             this.eslint = new ESLint({
                 overrideConfigFile: path.join(process.cwd(), '.eslintrc.cjs'),
-                useEslintrc: true,
+                useEslintrc: false, // Ignore any other config files
                 fix: false // We don't want to modify the original code
             });
 
-            // Load Prettier configuration
-            this.prettierConfig = await prettier.resolveConfig(process.cwd()) || {};
+            // Load Prettier configuration with defaults matching the plan
+            this.prettierConfig = await prettier.resolveConfig(process.cwd()) || {
+                parser: 'babel',
+                semi: true,
+                singleQuote: true,
+                tabWidth: 2,
+                printWidth: 120
+            };
 
             this.initialized = true;
-            console.log('Static analysis tools initialized successfully');
+            console.log('✅ Static analysis tools initialized (Prettier → ESLint critical-only workflow)');
         } catch (error) {
             console.error('Error initializing static analysis tools:', error);
             throw error;
@@ -51,6 +62,9 @@ class StaticAnalysisService {
         if (!this.eslint) {
             await this.initializeTools();
         }
+
+        // Reset deduplicator for new analysis batch
+        this.deduplicator.reset();
 
         const results = [];
         const statistics = {
@@ -165,14 +179,11 @@ class StaticAnalysisService {
                 // Step 1: Clean content before formatting
                 const cleanedContent = this.cleanJavaScriptContent(originalContent);
 
-                // Step 2: Format with Prettier (silent - no issues reported)
-                formattedContent = await prettier.format(cleanedContent, {
-                    parser: 'babel',
-                    semi: true,
-                    singleQuote: true,
-                    tabWidth: 2,
-                    printWidth: 120
-                });
+                // Step 2: Format with Prettier (SILENT - no issues reported)
+                // This is the first step in our Prettier → ESLint workflow
+                formattedContent = await prettier.format(cleanedContent, this.prettierConfig);
+
+                // Prettier succeeded - no output, just formatted code for ESLint
             } catch (prettierError) {
                 // If Prettier fails, use original content for ESLint
                 // This is expected for code with syntax errors or non-standard JavaScript
@@ -255,9 +266,10 @@ class StaticAnalysisService {
     }
 
     /**
-     * Run ESLint analysis on a script
+     * Run ESLint analysis on a script (formatted code only)
+     * Only reports CRITICAL errors as defined in .eslintrc.cjs
      * @param {Object} script - Script object
-     * @returns {Promise<Array>} Array of issues found
+     * @returns {Promise<Array>} Array of critical issues found
      */
     async runESLintAnalysis(script) {
         if (!script.content || typeof script.content !== 'string' || !script.content.trim()) {
@@ -278,7 +290,7 @@ class StaticAnalysisService {
             if (Object.keys(scriptGlobals).length > 0) {
                 eslintInstance = new ESLint({
                     overrideConfigFile: path.join(process.cwd(), '.eslintrc.cjs'),
-                    useEslintrc: true,
+                    useEslintrc: false, // Ignore any other config files
                     fix: false,
                     overrideConfig: {
                         globals: {
@@ -295,6 +307,35 @@ class StaticAnalysisService {
             const issues = [];
             const lines = script.content.split('\n');
             let skippedUnknown = 0;
+            let skippedNonCritical = 0;
+
+            // Define critical rules that should be reported
+            const criticalRules = [
+                // Runtime errors
+                'no-undef',
+                'no-dupe-keys',
+                'no-dupe-args',
+                'no-unreachable',
+                'no-invalid-regexp',
+                'no-unsafe-negation',
+                'for-direction',
+                'no-compare-neg-zero',
+                'no-cond-assign',
+                'no-constant-condition',
+                'no-debugger',
+                'no-empty',
+                'no-ex-assign',
+                'no-func-assign',
+                'no-inner-declarations',
+                'no-obj-calls',
+                'no-sparse-arrays',
+                'valid-typeof',
+                // Security issues
+                'no-eval',
+                'no-implied-eval',
+                'no-new-func',
+                'security/detect-eval-with-expression'
+            ];
 
             for (const result of results) {
                 for (const message of result.messages) {
@@ -302,6 +343,12 @@ class StaticAnalysisService {
                     if (!message.ruleId) {
                         skippedUnknown++;
                         console.log(`Skipping UNKNOWN ESLint issue at line ${message.line}: ${message.message.substring(0, 50)}`);
+                        continue;
+                    }
+
+                    // CRITICAL FILTER: Only report errors (severity 2) from critical rules
+                    if (message.severity !== 2 || !criticalRules.includes(message.ruleId)) {
+                        skippedNonCritical++;
                         continue;
                     }
 
@@ -333,6 +380,9 @@ class StaticAnalysisService {
 
             if (skippedUnknown > 0) {
                 console.log(`Total UNKNOWN issues skipped in ${script.name}: ${skippedUnknown}`);
+            }
+            if (skippedNonCritical > 0) {
+                console.log(`Total NON-CRITICAL issues skipped in ${script.name}: ${skippedNonCritical}`);
             }
 
             return issues;
@@ -399,27 +449,43 @@ class StaticAnalysisService {
 
     /**
      * Categorize ESLint rules into logical groups
+     * Matches the categorization from the static analysis plan
      * @param {string} ruleId - ESLint rule ID
      * @returns {string} Category name
      */
     categorizeESLintRule(ruleId) {
-        if (!ruleId) return 'unknown';
+        if (!ruleId) return 'CRITICAL_ERROR';
 
-        if (ruleId.startsWith('security/')) return 'security';
-        if (ruleId.startsWith('promise/')) return 'async';
-        if (ruleId.startsWith('sonarjs/')) return 'complexity';
-        if (ruleId.startsWith('n/')) return 'node';
-        
-        // Common categories
-        const syntaxRules = ['no-undef', 'no-unused-vars', 'no-redeclare', 'no-use-before-define'];
-        const securityRules = ['no-eval', 'no-implied-eval', 'no-new-func', 'no-script-url'];
-        const bestPracticeRules = ['no-console', 'no-alert', 'no-shadow'];
+        // Security issues
+        if (ruleId.includes('security') || ruleId.includes('eval')) {
+            return 'security';
+        }
 
-        if (syntaxRules.includes(ruleId)) return 'syntax';
-        if (securityRules.includes(ruleId)) return 'security';
-        if (bestPracticeRules.includes(ruleId)) return 'best_practice';
+        // Runtime errors
+        if (ruleId.includes('undef') || ruleId.includes('no-dupe')) {
+            return 'runtime_error';
+        }
 
-        return 'general';
+        // Other critical runtime errors
+        const runtimeErrorRules = [
+            'no-unreachable', 'no-invalid-regexp', 'no-unsafe-negation',
+            'for-direction', 'no-compare-neg-zero', 'no-cond-assign',
+            'no-constant-condition', 'no-debugger', 'no-empty',
+            'no-ex-assign', 'no-func-assign', 'no-inner-declarations',
+            'no-obj-calls', 'no-sparse-arrays', 'valid-typeof'
+        ];
+
+        if (runtimeErrorRules.includes(ruleId)) {
+            return 'runtime_error';
+        }
+
+        // Security rules
+        const securityRules = ['no-eval', 'no-implied-eval', 'no-new-func'];
+        if (securityRules.includes(ruleId)) {
+            return 'security';
+        }
+
+        return 'critical_error';
     }
 
     /**
@@ -908,17 +974,61 @@ class StaticAnalysisService {
      */
     getESLintSuggestion(ruleId, message) {
         const suggestions = {
+            // Security issues
             'no-eval': 'Use JSON.parse() or safer alternatives instead of eval()',
-            'no-console': 'Use IBM BPM logging mechanisms instead of console.log()',
-            'no-alert': 'Use IBM BPM notification APIs instead of alert()',
-            'no-undef': 'Declare the variable or add it to globals configuration',
-            'no-unused-vars': 'Remove unused variables or prefix with underscore',
+            'no-implied-eval': 'Avoid setTimeout/setInterval with string arguments',
+            'no-new-func': 'Avoid using Function constructor for security',
             'security/detect-eval-with-expression': 'Avoid dynamic code evaluation for security',
-            'promise/catch-or-return': 'Add .catch() handler or return the promise',
-            'sonarjs/cognitive-complexity': 'Break down complex functions into smaller ones'
+
+            // Runtime errors
+            'no-undef': 'Declare the variable or add it to globals configuration',
+            'no-dupe-keys': 'Remove duplicate object keys',
+            'no-dupe-args': 'Remove duplicate function arguments',
+            'no-unreachable': 'Remove unreachable code after return/throw',
+            'no-invalid-regexp': 'Fix the regular expression syntax',
+            'no-unsafe-negation': 'Use parentheses to clarify negation intent',
+            'for-direction': 'Fix loop direction to avoid infinite loop',
+            'no-compare-neg-zero': 'Use Object.is(x, -0) to compare with -0',
+            'no-cond-assign': 'Use comparison (===) instead of assignment (=) in condition',
+            'no-constant-condition': 'Remove or fix constant condition',
+            'no-debugger': 'Remove debugger statement before production',
+            'no-empty': 'Add code to empty block or remove it',
+            'no-ex-assign': 'Do not reassign exception parameter',
+            'no-func-assign': 'Do not reassign function declarations',
+            'no-inner-declarations': 'Move function declaration to outer scope',
+            'no-obj-calls': 'Do not call global objects as functions',
+            'no-sparse-arrays': 'Remove holes in array or use explicit undefined',
+            'valid-typeof': 'Use valid typeof comparison values'
         };
 
-        return suggestions[ruleId] || 'Follow ESLint best practices for this rule';
+        return suggestions[ruleId] || 'Fix this critical error to prevent runtime issues';
+    }
+
+    /**
+     * Filter messages to only include critical issues
+     * Implements the filterCriticalIssues logic from the static analysis plan
+     * @param {Array} messages - ESLint messages
+     * @returns {Array} Filtered critical issues only
+     */
+    filterCriticalIssues(messages) {
+        const criticalRules = [
+            'no-undef',
+            'no-dupe-keys',
+            'no-dupe-args',
+            'no-unreachable',
+            'no-invalid-regexp',
+            'no-unsafe-negation',
+            'no-eval',
+            'no-implied-eval',
+            'security/detect-eval-with-expression',
+            'security/detect-object-injection',
+            'security/detect-unsafe-regex'
+        ];
+
+        return messages.filter(msg =>
+            criticalRules.includes(msg.ruleId) &&
+            msg.severity === 2 // Errors only
+        );
     }
 }
 
