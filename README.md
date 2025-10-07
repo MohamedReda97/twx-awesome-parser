@@ -1,162 +1,185 @@
 # TWX Parser
 
-A comprehensive tool for parsing and analyzing IBM BPM Process Applications and Toolkits. The TWX Parser extracts, parses, and visualizes TWX (TeamWorks eXchange) files to help developers understand dependencies, object structures, and process definitions.
+A comprehensive tool for parsing, analyzing, and visualizing IBM BPM (Business Process Manager) Process Applications and Toolkits. The TWX Parser extracts and analyzes TWX (TeamWorks eXchange) files, providing powerful static code analysis and visualization capabilities.
 
-## 🎯 Purpose
+## 🎯 Overview
 
-Analyzing IBM BPM Process Applications and Toolkits can be challenging when dealing with complex analysis scenarios. For example, if you have a toolkit shared by multiple applications, it's difficult to know which toolkit assets each application is actually using. This lack of visibility makes change management processes difficult and time-consuming.
+The TWX Parser helps developers understand and analyze IBM BPM applications by:
 
-The TWX Parser solves this by:
-- **Extracting** comprehensive data from TWX files
-- **Parsing** business objects, processes, and dependencies
-- **Visualizing** relationships and structures through a web interface
-- **Searching** across all objects and metadata
-- **Generating** detailed JSON reports for further analysis
+- **📦 Parsing TWX Files**: Extract and parse IBM BPM Process Applications and Toolkits
+- **🔍 Static Code Analysis**: Analyze JavaScript code with ESLint and Prettier integration
+- **📊 Visualization**: Interactive web interface to explore objects, dependencies, and structures
+- **🔎 Search**: Powerful search across all objects and metadata
+- **📈 Reports**: Generate detailed JSON reports for further analysis
+- **⚡ Performance Analysis**: Detect nested loops, code quality issues, and potential bugs
 
-## Getting Started
+## ✨ Key Features
 
-### Installing
+### Static Code Analysis
+- **ESLint Integration**: 27 critical rules covering runtime errors, security, and code quality
+- **Prettier Formatting**: Automatic code formatting before analysis
+- **Performance Warnings**: Detects deeply nested loops (3+ levels) and potential performance issues
+- **Code Quality Checks**: Identifies unused variables, unreachable code, and duplicate functions
+- **IBM BPM Specific**: Recognizes IBM BPM system objects (`tw`, `bpmext`, `page`, `TWDate`)
+- **Smart Filtering**: Automatically skips CSS and Coachflow scripts
+- **Deduplication**: Prevents duplicate issue reporting from multiple script sources
 
-Use `npm` or `yarn` to install this library
+### Web Interface
+- **Interactive Viewer**: Browse and explore TWX objects with a modern UI
+- **Object Details**: View comprehensive details for each object type
+- **Script Analysis**: Analyze JavaScript code directly from the interface
+- **Export Results**: Export analysis results to JSON or CSV
+- **Real-time Progress**: Track analysis progress with live updates
 
-```
-npm install twx-parse
+## 🚀 Getting Started
 
-yarn install twx-parse
-```
+### Installation
 
-### Quick Examples
-
-To get started using the library you can use the only public method provided:
-
-```javascript
-const twxParse = require('twx-parse')
-
-...
-
-// retrieve the workspace providing credentials. if the workspace does not
-// exist, a new one will be created
-const workspace = await twxParse.getWorkspace(workspaceName, password)
-
-// add a new file to be processed
-await workspace.addFile(filePath)
-
-// retrieve all the snapshots (applications or toolkits)
-const snapshots = await workspace.getSnapshots()
-console.log(snapshots)
-/* Output:
-[{
-  workspace: 'name1',
-  snapshotId: '2064.1080ded6-d153-4654-947c-2d16fce170ed',
-  appId: '2066.1b351583-e5cb-43b7-baee-340a63130ea7',
-  branchId: '2063.0798815e-0346-4ef4-8946-ab4301c9f340',
-  appShortName: '8.6.0.0',
-  snapshotName: 'System Data',
-  appName: 'TWSYS',
-  branchName: 'Main',
-  isToolkit: true,
-  isObjectsProcessed: true
-}, {
-  workspace: 'name1',
-  snapshotId: '2064.c7680890-5385-3f24-bbc9-20da937ac8c4',
-  appId: '2066.aa12f1cb-4661-3bd0-a351-45649d179885',
-  branchId: '2063.7e0d6e21-f74c-3542-9f77-1472b63c22f1',
-  appShortName: 'SYSRC',
-  snapshotName: '8.6.0.0',
-  appName: 'Responsive Coaches',
-  branchName: 'Main',
-  isToolkit: true,
-  isObjectsProcessed: true
-},
-...
-]
-*/
-
-// retrieve all the objects (present in both applications or toolkits)
-const objects = await workspace.getObjects()
-console.log(objects)
-/* Output:
-[{
-  workspace: 'name1',
-  objectVersionId: 'bbe4cee0-85f5-3955-b9c8-7ebdc9e2d8f3',
-  objectId: '1.c2d00e9e-9c34-3e08-9258-101bd61b964d',
-  name: 'Default Responsive Human Service',
-  type: '1',
-  subtype: '10'
-}, {
-  workspace: 'name1',
-  objectVersionId: '68222369-2914-4824-afa4-71bb4bdcbce7',
-  objectId: '12.d8fa7561-8636-40a9-bd70-f45128bb7e54',
-  name: 'BPMBOSaveFailedError',
-  type: '12',
-  subtype: null
-},
-...
-]
-*/
+```bash
+npm install
 ```
 
-## API
+### Quick Start
 
-For the full API, please visit [this page](api.md)
+1. **Start the Viewer**:
+   ```bash
+   npm run viewer
+   ```
+   This will start the web server and open the viewer in your browser.
 
-## Developing
+2. **Load a TWX File**:
+   - Click "Choose File" and select your TWX file
+   - Click "Parse TWX" to extract and parse the file
 
-PR as welcome to this project. If you have a new feature that you would like to see in the library, please open an issue for discussion before the PR.
+3. **Run Static Analysis**:
+   - Navigate to the "Static Review" tab
+   - Select object types to analyze (Coach Views, CSHS, Services)
+   - Click "Start Static Analysis"
+   - View results in the interactive table
 
-### Running Tests
+### Command Line Usage
 
-To run the full test suite, simply run
+```bash
+# Start the viewer
+npm run viewer
 
-```
-npm test
-```
-
-To check for code style, run
-
-```
+# Run linting
 npm run lint
+
+# Type checking
+npm run type-check
+
+# Build executable
+npm run build
 ```
 
-### Generating Documentation
+## 📋 Static Analysis Rules
 
-Documentation for the project is done with `jsdoc`. If you update any code that requires documentation update, please do so and update the `api.md` file using the command
+### Critical Errors (22 rules)
+- **Runtime Errors**: `no-undef`, `no-unreachable`, `no-constant-condition`, etc.
+- **Security Issues**: `no-eval`, `no-implied-eval`, `security/detect-eval-with-expression`, etc.
+- **Logic Errors**: `no-dupe-keys`, `no-duplicate-case`, `no-empty-pattern`, etc.
+
+### Code Quality Warnings (5 rules)
+- `no-unused-vars`: Detect unused variables
+- `no-unmodified-loop-condition`: Identify infinite loops
+- `no-unreachable-loop`: Find loops that only execute once
+- `sonarjs/no-identical-expressions`: Detect duplicate expressions
+- `sonarjs/no-identical-functions`: Find duplicate functions
+
+### Performance Warnings
+- **Nested Loops**: Warns on 3+ level nested loops
+- **If-in-Loop**: Detects conditional statements in loops without break/continue
+
+## 🏗️ Project Structure
 
 ```
-npm run docs
+twx-awesome-parser/
+├── src/
+│   ├── classes/          # Core parsing classes
+│   ├── parser/           # TWX file parsers
+│   ├── search/           # Search functionality
+│   ├── server/           # Web server
+│   ├── static-analysis/  # Static code analysis
+│   └── utils/            # Utility functions
+├── output/               # Parsed TWX data (JSON)
+├── twx-viewer-new.html   # Web interface
+├── twx-viewer-new.js     # Web interface logic
+├── twx-viewer-new.css    # Web interface styles
+├── .eslintrc.cjs         # ESLint configuration
+├── package.json          # Project dependencies
+└── README.md             # This file
 ```
 
-### Versioning
+## 🔧 Configuration
 
-This project follows the [Semantic Versioning 2.0.0](https://semver.org/) guide. Version numbering is handled by the package `semantic-release`. Therefore, never update the `version` field in the `package.json` file.
+### ESLint Configuration
+The project uses a custom ESLint configuration (`.eslintrc.cjs`) optimized for IBM BPM JavaScript code:
+- Prettier integration for consistent formatting
+- IBM BPM system globals (`tw`, `bpmext`, `page`, `TWDate`)
+- Critical-only error reporting
+- Code quality warnings
 
-### Commit Messages
+### Supported Object Types
+- **Coach Views** (64): UI components with client-side scripts
+- **CSHS** (1): Client-Side Human Services with script tasks
+- **Services** (1): Server-side services and web services
+- **Business Objects** (12): Data structures
+- **Processes**: BPD definitions and flows
 
-This project follows the [Angular Commit Message Guidelines](https://github.com/angular/angular.js/blob/master/DEVELOPERS.md#commits). To help creating compliant commit messages, please use the `npm run commit` command and follow the instructions.
+## 📊 Analysis Results
 
-## Roadmap
+The static analysis provides:
+- **Issue Count**: Total issues by severity (Critical, Warning, Info)
+- **Script Statistics**: Number of scripts analyzed, issues per script
+- **Category Breakdown**: Issues grouped by category (runtime, security, performance, code_quality)
+- **Detailed Reports**: Line numbers, descriptions, and suggestions for each issue
+- **Export Options**: JSON and CSV export for further processing
 
-To be defined...
+## 🛠️ Development
 
-## Licence
+### Prerequisites
+- Node.js >= 14.0.0
+- npm or yarn
 
-The code in this project is licensed under MIT license.
+### Scripts
+```bash
+npm start          # Start the application
+npm run viewer     # Start the web viewer
+npm run lint       # Run ESLint
+npm run type-check # Run TypeScript type checking
+npm run check      # Run both lint and type-check
+npm run build      # Build executable with pkg
+```
 
-## Contributors ✨
+### Adding New Rules
+To add new ESLint rules, edit `.eslintrc.cjs`:
+```javascript
+rules: {
+  'your-new-rule': 'error',  // or 'warn'
+}
+```
 
-Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/docs/en/emoji-key)):
+## 📝 License
 
-<!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
-<!-- prettier-ignore-start -->
-<!-- markdownlint-disable -->
-<table>
-  <tr>
-    <td align="center"><a href="https://github.com/tigermarques"><img src="https://avatars0.githubusercontent.com/u/15315098?v=4" width="100px;" alt="João Marques"/><br /><sub><b>João Marques</b></sub></a><br /><a href="https://github.com/tigermarques/twx-parse/commits?author=tigermarques" title="Code">💻</a> <a href="https://github.com/tigermarques/twx-parse/commits?author=tigermarques" title="Documentation">📖</a> <a href="#example-tigermarques" title="Examples">💡</a> <a href="#projectManagement-tigermarques" title="Project Management">📆</a> <a href="https://github.com/tigermarques/twx-parse/commits?author=tigermarques" title="Tests">⚠️</a></td>
-  </tr>
-</table>
+This project is licensed under the MIT License.
 
-<!-- markdownlint-enable -->
-<!-- prettier-ignore-end -->
-<!-- ALL-CONTRIBUTORS-LIST:END -->
+## 🤝 Contributing
 
-This project follows the [all-contributors](https://github.com/all-contributors/all-contributors) specification. Contributions of any kind welcome!
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+## 📧 Support
+
+For issues, questions, or suggestions, please open an issue on GitHub.
+
+## 🙏 Acknowledgments
+
+- Built for IBM BPM/BAW developers
+- Uses ESLint, Prettier, and SonarJS for code analysis
+- Powered by Node.js and modern web technologies

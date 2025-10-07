@@ -6,14 +6,9 @@ const url = require('url');
 // Import existing functionality
 const { searchXMLFiles } = require('../search/xml-search');
 
-// AI Review Services
-const AIScriptReviewService = require('../ai-review/AIScriptReviewService');
-const ScriptCollectionService = require('../ai-review/ScriptCollectionService');
-const AIProviderService = require('../ai-review/AIProviderService');
-const AnalysisResultsStorage = require('../ai-review/AnalysisResultsStorage');
-
 // Static Analysis Services
 const StaticAnalysisService = require('../static-analysis/StaticAnalysisService');
+const ScriptCollectionService = require('../static-analysis/ScriptCollectionService');
 
 /**
  * Web server for TWX Parser UI
@@ -22,12 +17,6 @@ class TWXWebServer {
   constructor() {
     this.server = null;
     this.port = 0;
-
-    // Initialize AI services
-    this.aiReviewService = new AIScriptReviewService();
-    this.scriptCollectionService = new ScriptCollectionService();
-    this.analysisStorage = new AnalysisResultsStorage();
-    this.aiProviderService = null; // Will be initialized when config is loaded
   }
 
   /**
@@ -47,9 +36,6 @@ class TWXWebServer {
         
         this.port = this.server.address().port;
         console.log(`Web server started on port ${this.port}`);
-
-        // Initialize AI services
-        this.initializeAIServices();
 
         resolve(this.port);
       });
@@ -115,38 +101,11 @@ class TWXWebServer {
       case '/api/parse':
         await this.handleParseTWX(req, res);
         break;
-      case '/api/ai-config':
-        await this.handleAIConfigAPI(req, res);
-        break;
-      case '/api/ai-test-connection':
-        await this.handleAITestConnection(req, res);
-        break;
-      case '/api/ai-get-prompt-template':
-        await this.handleGetPromptTemplate(req, res);
-        break;
-      case '/api/ai-save-prompt-template':
-        await this.handleSavePromptTemplate(req, res);
-        break;
-      case '/api/ai-collect-scripts':
-        await this.handleAICollectScripts(req, res);
-        break;
-      case '/api/ai-analyze-scripts':
-        await this.handleAIAnalyzeScripts(req, res);
-        break;
       case '/api/static-collect-scripts':
         await this.handleStaticCollectScripts(req, res);
         break;
       case '/api/static-analyze-scripts':
         await this.handleStaticAnalyzeScripts(req, res);
-        break;
-      case '/api/ai-export-results':
-        await this.handleAIExportResults(req, res);
-        break;
-      case '/api/ai-analyze-scripts-stream':
-        await this.handleAIAnalyzeScriptsStream(req, res, query);
-        break;
-      case '/api/ai-analyze-scripts-progressive':
-        await this.handleAIAnalyzeScriptsProgressive(req, res);
         break;
       default:
         this.send404(res);
@@ -687,96 +646,6 @@ class TWXWebServer {
   }
 
   /**
-   * Initialize AI services
-   */
-  async initializeAIServices() {
-    try {
-      await this.aiReviewService.initialize();
-      await this.analysisStorage.initialize();
-      console.log('AI services initialized successfully');
-    } catch (error) {
-      console.warn('AI services initialization failed:', error.message);
-    }
-  }
-
-  /**
-   * Handle AI configuration API
-   */
-  async handleAIConfigAPI(req, res) {
-    if (req.method === 'GET') {
-      // Get current configuration
-      const config = this.aiReviewService.getConfiguration();
-      this.sendJSON(res, config);
-    } else if (req.method === 'POST') {
-      // Update configuration
-      try {
-        const body = await this.parseRequestBody(req);
-        const config = JSON.parse(body);
-
-        await this.aiReviewService.updateConfiguration(config);
-
-        // Reinitialize provider service with new config
-        this.aiProviderService = new AIProviderService(config);
-
-        this.sendJSON(res, { success: true, message: 'Configuration updated' });
-      } catch (error) {
-        this.send500(res, 'Failed to update AI configuration: ' + error.message);
-      }
-    }
-  }
-
-  /**
-   * Handle AI connection test API
-   */
-  async handleAITestConnection(req, res) {
-    try {
-      const body = await this.parseRequestBody(req);
-      const config = JSON.parse(body);
-
-      // Create temporary provider service for testing
-      const testProviderService = new AIProviderService(config);
-      const result = await testProviderService.testConnection();
-
-      this.sendJSON(res, result);
-    } catch (error) {
-      this.sendJSON(res, { success: false, message: error.message });
-    }
-  }
-
-  /**
-   * Handle get prompt template API
-   */
-  async handleGetPromptTemplate(req, res) {
-    try {
-      const aiService = new AIScriptReviewService();
-      const template = await aiService.getPromptTemplate();
-
-      this.sendJSON(res, { template });
-    } catch (error) {
-      console.error('Get prompt template error:', error);
-      this.sendJSON(res, { success: false, error: error.message });
-    }
-  }
-
-  /**
-   * Handle save prompt template API
-   */
-  async handleSavePromptTemplate(req, res) {
-    try {
-      const body = await this.parseRequestBody(req);
-      const { template } = JSON.parse(body);
-
-      const aiService = new AIScriptReviewService();
-      await aiService.savePromptTemplate(template);
-
-      this.sendJSON(res, { success: true });
-    } catch (error) {
-      console.error('Save prompt template error:', error);
-      this.sendJSON(res, { success: false, error: error.message });
-    }
-  }
-
-  /**
    * Handle static script collection API
    */
   async handleStaticCollectScripts(req, res) {
@@ -839,195 +708,6 @@ class TWXWebServer {
     }
   }
 
-  /**
-   * Handle AI script analysis API
-   */
-  async handleAIAnalyzeScripts(req, res) {
-    try {
-      const body = await this.parseRequestBody(req);
-      const { scripts } = JSON.parse(body);
-
-      console.log(`🤖 Starting AI analysis for ${scripts.length} scripts`);
-
-      if (!this.aiProviderService) {
-        const config = this.aiReviewService.getConfiguration();
-        this.aiProviderService = new AIProviderService(config);
-        console.log(`🔧 Initialized AI provider: ${config.provider}`);
-      }
-
-      // Progress callback for logging
-      const progressCallback = (progress) => {
-        console.log(`📊 Progress: ${progress.current}/${progress.total} - ${progress.message}`);
-      };
-
-      const results = await this.aiProviderService.analyzeScripts(scripts, progressCallback);
-
-      console.log(`✅ AI analysis completed: ${results.analysis_results?.length || 0} results`);
-
-      // Save results
-      const config = this.aiReviewService.getConfiguration();
-      await this.analysisStorage.saveAnalysisResults(results.analysis_results, {
-        provider: config.provider,
-        model: config.providers[config.provider]?.model,
-        config: config
-      });
-
-      this.sendJSON(res, results);
-    } catch (error) {
-      console.error('❌ AI analysis failed:', error);
-      this.send500(res, 'AI analysis failed: ' + error.message);
-    }
-  }
-
-  /**
-   * Handle AI results export API
-   */
-  async handleAIExportResults(req, res) {
-    try {
-      const body = await this.parseRequestBody(req);
-      const { results, format } = JSON.parse(body);
-
-      const exportPath = await this.analysisStorage.exportResults(results, format);
-      const filename = path.basename(exportPath);
-
-      this.sendJSON(res, { success: true, filename, path: exportPath });
-    } catch (error) {
-      this.send500(res, 'Export failed: ' + error.message);
-    }
-  }
-
-  /**
-   * Handle AI script analysis with Server-Sent Events for progress tracking
-   */
-  async handleAIAnalyzeScriptsStream(req, res, query) {
-    try {
-      const scripts = JSON.parse(decodeURIComponent(query.scripts));
-
-      // Set up Server-Sent Events
-      res.writeHead(200, {
-        'Content-Type': 'text/event-stream',
-        'Cache-Control': 'no-cache',
-        'Connection': 'keep-alive',
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Headers': 'Cache-Control'
-      });
-
-      // Send initial message
-      res.write(`data: ${JSON.stringify({ type: 'start', message: 'Starting analysis...' })}\n\n`);
-
-      if (!this.aiProviderService) {
-        const config = this.aiReviewService.getConfiguration();
-        this.aiProviderService = new AIProviderService(config);
-      }
-
-      // Progress callback
-      const progressCallback = (progress) => {
-        res.write(`data: ${JSON.stringify({
-          type: 'progress',
-          current: progress.current,
-          total: progress.total,
-          processed: progress.processed,
-          totalScripts: progress.totalScripts,
-          message: progress.message
-        })}\n\n`);
-      };
-
-      // Perform analysis
-      const results = await this.aiProviderService.analyzeScripts(scripts, progressCallback);
-
-      // Save results
-      const config = this.aiReviewService.getConfiguration();
-      await this.analysisStorage.saveAnalysisResults(results.analysis_results, {
-        provider: config.provider,
-        model: config.providers[config.provider]?.model,
-        config: config
-      });
-
-      // Send completion message
-      res.write(`data: ${JSON.stringify({
-        type: 'complete',
-        results: results.analysis_results,
-        message: 'Analysis completed successfully'
-      })}\n\n`);
-
-      res.end();
-    } catch (error) {
-      console.error('AI analysis stream error:', error);
-      res.write(`data: ${JSON.stringify({
-        type: 'error',
-        message: error.message
-      })}\n\n`);
-      res.end();
-    }
-  }
-
-  /**
-   * Handle AI script analysis with progressive results
-   */
-  async handleAIAnalyzeScriptsProgressive(req, res) {
-    try {
-      const body = await this.parseRequestBody(req);
-      const { scripts } = JSON.parse(body);
-
-      console.log(`🤖 Starting progressive AI analysis for ${scripts.length} scripts`);
-
-      // Set up streaming response
-      res.writeHead(200, {
-        'Content-Type': 'text/plain',
-        'Cache-Control': 'no-cache',
-        'Connection': 'keep-alive',
-        'Access-Control-Allow-Origin': '*'
-      });
-
-      if (!this.aiProviderService) {
-        const config = this.aiReviewService.getConfiguration();
-        this.aiProviderService = new AIProviderService(config);
-      }
-
-      // Progress callback
-      const progressCallback = (progress) => {
-        res.write(`data: ${JSON.stringify({
-          type: 'progress',
-          ...progress
-        })}\n\n`);
-      };
-
-      // Batch complete callback for progressive results
-      const batchCompleteCallback = (batchInfo) => {
-        res.write(`data: ${JSON.stringify({
-          type: 'batch_complete',
-          ...batchInfo
-        })}\n\n`);
-      };
-
-      // Perform analysis with progressive callbacks
-      const results = await this.aiProviderService.analyzeScripts(scripts, progressCallback, batchCompleteCallback);
-
-      // Save results
-      const config = this.aiReviewService.getConfiguration();
-      await this.analysisStorage.saveAnalysisResults(results.analysis_results, {
-        provider: config.provider,
-        model: config.providers[config.provider]?.model,
-        config: config
-      });
-
-      // Send completion message
-      res.write(`data: ${JSON.stringify({
-        type: 'complete',
-        results: results.analysis_results,
-        message: 'Analysis completed successfully'
-      })}\n\n`);
-
-      res.end();
-    } catch (error) {
-      console.error('❌ Progressive AI analysis failed:', error);
-      res.write(`data: ${JSON.stringify({
-        type: 'error',
-        message: error.message
-      })}\n\n`);
-      res.end();
-    }
-  }
 
   /**
    * Parse request body
