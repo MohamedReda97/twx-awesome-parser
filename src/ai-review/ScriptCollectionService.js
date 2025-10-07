@@ -7,6 +7,7 @@ class ScriptCollectionService {
     constructor() {
         this.collectedScripts = [];
         this.scriptIndex = 0;
+        this.seenScriptContents = new Map(); // Track script content hashes to prevent duplicates
     }
 
     /**
@@ -17,6 +18,7 @@ class ScriptCollectionService {
     collectAllScripts(objects) {
         this.collectedScripts = [];
         this.scriptIndex = 0;
+        this.seenScriptContents.clear(); // Reset deduplication map
 
         if (!objects || !Array.isArray(objects)) {
             console.log('❌ No objects provided or not an array:', typeof objects, objects?.length);
@@ -30,7 +32,8 @@ class ScriptCollectionService {
             this.collectScriptsFromObject(obj);
         });
 
-        console.log(`✅ Collected ${this.collectedScripts.length} scripts for AI analysis`);
+        console.log(`✅ Collected ${this.collectedScripts.length} unique scripts for AI analysis`);
+        console.log(`🔍 Duplicates prevented: ${this.seenScriptContents.size - this.collectedScripts.length}`);
         return this.collectedScripts;
     }
 
@@ -200,6 +203,27 @@ class ScriptCollectionService {
             return;
         }
 
+        // Clean and validate content first
+        scriptData.content = this.cleanScriptContent(scriptData.content);
+
+        // Only process if content is substantial (more than just whitespace/comments)
+        if (!this.isSubstantialScript(scriptData.content)) {
+            return;
+        }
+
+        // Create a content hash for deduplication
+        // Normalize content by removing all whitespace and comments for comparison
+        const normalizedContent = this.normalizeContentForComparison(scriptData.content);
+        const contentHash = this.hashString(normalizedContent);
+
+        // Check if we've already seen this exact script content
+        if (this.seenScriptContents.has(contentHash)) {
+            const existingScript = this.seenScriptContents.get(contentHash);
+            console.log(`    ⚠️ Duplicate script detected! Skipping "${scriptData.name}"`);
+            console.log(`       Already collected as: "${existingScript.name}" from ${existingScript.source_object}`);
+            return; // Skip this duplicate
+        }
+
         // Generate unique ID
         scriptData.id = `script_${++this.scriptIndex}`;
 
@@ -211,13 +235,13 @@ class ScriptCollectionService {
             scriptData.object_source = this.currentObjectMetadata.object_source;
         }
 
-        // Clean and validate content
-        scriptData.content = this.cleanScriptContent(scriptData.content);
-
-        // Only add if content is substantial (more than just whitespace/comments)
-        if (this.isSubstantialScript(scriptData.content)) {
-            this.collectedScripts.push(scriptData);
-        }
+        // Add to collection and mark content as seen
+        this.collectedScripts.push(scriptData);
+        this.seenScriptContents.set(contentHash, {
+            name: scriptData.name,
+            source_object: scriptData.source_object,
+            id: scriptData.id
+        });
     }
 
     /**
@@ -364,6 +388,42 @@ class ScriptCollectionService {
         }
 
         return filtered;
+    }
+
+    /**
+     * Normalize script content for comparison (remove whitespace and comments)
+     * @param {string} content - Script content
+     * @returns {string} Normalized content
+     */
+    normalizeContentForComparison(content) {
+        if (!content) return '';
+
+        return content
+            // Remove single-line comments
+            .replace(/\/\/.*$/gm, '')
+            // Remove multi-line comments
+            .replace(/\/\*[\s\S]*?\*\//g, '')
+            // Remove all whitespace (spaces, tabs, newlines)
+            .replace(/\s+/g, '')
+            // Convert to lowercase for case-insensitive comparison
+            .toLowerCase();
+    }
+
+    /**
+     * Create a simple hash from a string
+     * @param {string} str - String to hash
+     * @returns {string} Hash string
+     */
+    hashString(str) {
+        if (!str) return '0';
+
+        let hash = 0;
+        for (let i = 0; i < str.length; i++) {
+            const char = str.charCodeAt(i);
+            hash = ((hash << 5) - hash) + char;
+            hash = hash & hash; // Convert to 32-bit integer
+        }
+        return hash.toString(36); // Convert to base-36 string
     }
 
     /**
