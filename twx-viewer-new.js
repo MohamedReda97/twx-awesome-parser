@@ -2222,6 +2222,7 @@ function generateStaticAnalysisTable(results) {
 
     let totalIssues = 0;
     const categories = new Set();
+    const rules = new Set();
     let duplicateCount = 0;
     let unknownCount = 0;
 
@@ -2292,6 +2293,7 @@ function generateStaticAnalysisTable(results) {
 
         totalIssues++;
         categories.add(issue.category || 'general');
+        rules.add(issue.rule);
 
         const row = document.createElement('tr');
 
@@ -2354,9 +2356,11 @@ function generateStaticAnalysisTable(results) {
     console.log(`Duplicates filtered out: ${duplicateCount}`);
     console.log(`UNKNOWN issues filtered out: ${unknownCount}`);
     console.log(`Categories found: ${categories.size}`);
+    console.log(`Rules found: ${rules.size}`);
 
-    // Update category filter options
+    // Update filter options
     updateCategoryFilterOptions(Array.from(categories));
+    updateRuleFilterOptions(Array.from(rules));
 
     // Update results count
     updateStaticFilteredResultsCount(totalIssues, totalIssues);
@@ -2396,6 +2400,61 @@ function updateCategoryFilterOptions(categories) {
 }
 
 /**
+ * Update rule filter options
+ */
+function updateRuleFilterOptions(rules) {
+    const ruleFilter = document.getElementById('static-filter-rule');
+    if (!ruleFilter) return;
+
+    // Clear existing options except "All Rules"
+    ruleFilter.innerHTML = '<option value="">All Rules</option>';
+
+    // Add rule options (sorted alphabetically)
+    rules.sort().forEach(rule => {
+        const option = document.createElement('option');
+        option.value = rule;
+        option.textContent = rule;
+        ruleFilter.appendChild(option);
+    });
+}
+
+/**
+ * Update rule filter options based on currently visible rows
+ */
+function updateRuleFilterOptionsFromVisibleRows() {
+    const tbody = document.getElementById('static-results-tbody');
+    if (!tbody) return;
+
+    const rows = tbody.querySelectorAll('tr');
+    const visibleRules = new Set();
+
+    rows.forEach(row => {
+        // Only collect rules from visible rows
+        if (row.style.display !== 'none') {
+            const hierarchicalCell = row.querySelector('.hierarchical-cell');
+            if (hierarchicalCell) {
+                const ruleCode = hierarchicalCell.querySelector('.rule-code');
+                if (ruleCode) {
+                    visibleRules.add(ruleCode.textContent.trim());
+                }
+            }
+        }
+    });
+
+    // Get current selected rule
+    const ruleFilter = document.getElementById('static-filter-rule');
+    const currentSelection = ruleFilter?.value || '';
+
+    // Update the dropdown
+    updateRuleFilterOptions(Array.from(visibleRules));
+
+    // Restore selection if it still exists in the new list
+    if (currentSelection && visibleRules.has(currentSelection)) {
+        ruleFilter.value = currentSelection;
+    }
+}
+
+/**
  * Add code expansion handlers
  */
 function addCodeExpansionHandlers() {
@@ -2429,6 +2488,7 @@ function addCodeExpansionHandlers() {
 function clearStaticFilters() {
     document.getElementById('static-filter-severity').value = '';
     document.getElementById('static-filter-category').value = '';
+    document.getElementById('static-filter-rule').value = '';
     document.getElementById('static-filter-object').value = '';
     filterStaticResults();
 }
@@ -2597,6 +2657,7 @@ function sortStaticTable(columnIndex) {
 function filterStaticResults() {
     const severityFilter = document.getElementById('static-filter-severity')?.value || '';
     const categoryFilter = document.getElementById('static-filter-category')?.value || '';
+    const ruleFilter = document.getElementById('static-filter-rule')?.value || '';
     const objectFilter = document.getElementById('static-filter-object')?.value.toLowerCase() || '';
 
     const tbody = document.getElementById('static-results-tbody');
@@ -2612,17 +2673,27 @@ function filterStaticResults() {
 
         const scriptName = cells[0].textContent.toLowerCase();
         const objectName = cells[1].textContent.toLowerCase();
-        const hierarchicalCell = cells[2].textContent.toLowerCase(); // Contains severity, category, and rule
+        const hierarchicalCell = cells[2]; // The cell containing severity, category, and rule
+        const hierarchicalText = hierarchicalCell.textContent.toLowerCase();
 
         let visible = true;
 
         // Apply filters
-        if (severityFilter && !hierarchicalCell.includes(severityFilter)) {
+        if (severityFilter && !hierarchicalText.includes(severityFilter)) {
             visible = false;
         }
 
-        if (categoryFilter && !hierarchicalCell.includes(categoryFilter.replace('_', ' '))) {
+        if (categoryFilter && !hierarchicalText.includes(categoryFilter.replace('_', ' '))) {
             visible = false;
+        }
+
+        // Rule filter - check the actual rule code element
+        if (ruleFilter) {
+            const ruleCode = hierarchicalCell.querySelector('.rule-code');
+            const ruleText = ruleCode ? ruleCode.textContent.trim() : '';
+            if (ruleText !== ruleFilter) {
+                visible = false;
+            }
         }
 
         if (objectFilter && !objectName.includes(objectFilter) && !scriptName.includes(objectFilter)) {
@@ -2634,6 +2705,12 @@ function filterStaticResults() {
     });
 
     updateStaticFilteredResultsCount(visibleCount, totalCount);
+
+    // Update rule dropdown based on currently visible rows (after severity/category filtering)
+    // Only update if rule filter is not active (to avoid clearing the selection)
+    if (!ruleFilter) {
+        updateRuleFilterOptionsFromVisibleRows();
+    }
 }
 
 /**
@@ -2642,6 +2719,7 @@ function filterStaticResults() {
 function clearStaticFilters() {
     document.getElementById('static-filter-severity').value = '';
     document.getElementById('static-filter-category').value = '';
+    document.getElementById('static-filter-rule').value = '';
     document.getElementById('static-filter-object').value = '';
 
     filterStaticResults();
