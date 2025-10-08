@@ -55,26 +55,40 @@ class TWXParserApp {
    */
   async startWebUI() {
     console.log('🚀 Starting TWX Parser Web UI...');
-    
+
     try {
       // Import and start the web server
       const { startServer } = require('./src/server/web-server');
       const port = await startServer();
-      
+
       console.log(`✅ Server running at http://localhost:${port}`);
       console.log('🌐 Opening browser...');
-      
+
       // Auto-open browser
       this.openBrowser(`http://localhost:${port}`);
-      
+
       // Handle graceful shutdown
       this.setupGracefulShutdown();
-      
+
       // Keep the process running
       console.log('💡 Press Ctrl+C to stop the server');
-      
+      console.log('');
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      console.log('Server is running. Do NOT close this window!');
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+
+      // Keep process alive indefinitely
+      await new Promise(() => {}); // Never resolves, keeps process running
+
     } catch (error) {
       console.error('❌ Failed to start web UI:', error.message);
+      console.error('');
+      console.error('Error details:', error);
+      console.error('');
+      console.error('Press any key to exit...');
+
+      // Wait for user input before exiting
+      await this.waitForKeyPress();
       throw error;
     }
   }
@@ -182,6 +196,26 @@ class TWXParserApp {
   }
 
   /**
+   * Wait for user to press a key
+   */
+  async waitForKeyPress() {
+    return new Promise((resolve) => {
+      if (process.stdin.isTTY) {
+        process.stdin.setRawMode(true);
+        process.stdin.resume();
+        process.stdin.once('data', () => {
+          process.stdin.setRawMode(false);
+          process.stdin.pause();
+          resolve();
+        });
+      } else {
+        // If not a TTY, just wait a bit
+        setTimeout(resolve, 5000);
+      }
+    });
+  }
+
+  /**
    * Show help information
    */
   showHelp() {
@@ -189,15 +223,15 @@ class TWXParserApp {
 TWX Parser Application
 
 USAGE:
-  app.exe                           Start web UI (default)
-  app.exe --ui                      Start web UI explicitly
-  app.exe parse <file-or-directory> Parse TWX file or directory via CLI
-  app.exe --help                    Show this help
+  twx-parser.exe                    Start web UI (default)
+  twx-parser.exe --ui               Start web UI explicitly
+  twx-parser.exe parse <file>       Parse TWX file or directory via CLI
+  twx-parser.exe --help             Show this help
 
 EXAMPLES:
-  app.exe                           # Start web interface
-  app.exe parse example.twx         # Parse TWX file
-  app.exe parse ./extracted-twx/    # Parse extracted directory
+  twx-parser.exe                    # Start web interface
+  twx-parser.exe parse example.twx  # Parse TWX file
+  twx-parser.exe parse ./extracted/ # Parse extracted directory
 
 WEB UI:
   The web interface provides a visual tool for browsing and analyzing
@@ -214,8 +248,25 @@ CLI MODE:
 if (require.main === module) {
   console.log('Starting TWX Parser App...');
   const app = new TWXParserApp();
-  app.run().catch(error => {
-    console.error('Fatal error:', error);
+  app.run().catch(async (error) => {
+    console.error('');
+    console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.error('❌ FATAL ERROR');
+    console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.error('');
+    console.error('Error:', error.message);
+    console.error('');
+    if (error.stack) {
+      console.error('Stack trace:');
+      console.error(error.stack);
+    }
+    console.error('');
+    console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.error('Press any key to exit...');
+    console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+
+    // Wait for key press before exiting
+    await app.waitForKeyPress();
     process.exit(1);
   });
 }
