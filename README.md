@@ -1,6 +1,7 @@
 # TWX Parser
 
-A comprehensive tool for parsing, analyzing, and visualizing IBM BPM (Business Process Manager) Process Applications and Toolkits. The TWX Parser extracts and analyzes TWX (TeamWorks eXchange) files, providing powerful static code analysis and visualization capabilities.
+A comprehensive tool for parsing, analyzing, and visualizing IBM BPM (Business Process Manager) Process Applications and Toolkits. 
+The TWX Parser extracts and analyzes TWX (TeamWorks eXchange) files, providing powerful static code analysis and visualization capabilities.
 
 ## 🎯 Overview
 
@@ -159,11 +160,6 @@ rules: {
   'your-new-rule': 'error',  // or 'warn'
 }
 ```
-
-## 📝 License
-
-This project is licensed under the MIT License.
-
 ## 🤝 Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
