@@ -275,6 +275,9 @@ class JSONParser {
 
     fs.writeFileSync(filePath, JSON.stringify(data, null, 2))
 
+    // ponytail: also write to root so the static file server can serve it at /dependencies.json
+    fs.writeFileSync('dependencies.json', JSON.stringify(data, null, 2))
+
     console.log(`Generated dependencies file: ${filePath} (${dependencies.length} deps)`)
     return filePath
   }
