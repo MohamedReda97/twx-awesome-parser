@@ -126,6 +126,8 @@ async function loadAllData() {
   try { state.summaryData = await fetchJSON('output/twx-summary.json'); } catch (_) {}
   // Load metadata
   try { state.metadata = await fetchJSON('output/metadata.json'); } catch (_) {}
+  // Load dependencies (root-level for static serving)
+  try { state.dependencies = await fetchJSON('dependencies.json'); } catch (_) {}
 }
 
 async function performServerSearch(term) {
