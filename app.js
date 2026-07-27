@@ -59,7 +59,8 @@ class TWXParserApp {
     try {
       // Import and start the web server
       const { startServer } = require('./src/server/web-server');
-      const port = await startServer();
+      this.server = await startServer();
+      const port = this.server.port;
       
       console.log(`✅ Server running at http://localhost:${port}`);
       console.log('🌐 Opening browser...');
@@ -153,7 +154,7 @@ class TWXParserApp {
     const shutdown = () => {
       console.log('\n🛑 Shutting down TWX Parser...');
       if (this.server) {
-        this.server.close(() => {
+        this.server.stop(() => {
           console.log('✅ Server closed');
           process.exit(0);
         });

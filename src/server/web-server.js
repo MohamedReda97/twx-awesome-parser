@@ -601,19 +601,22 @@ class TWXWebServer {
   /**
    * Stop the server
    */
-  stop() {
+  stop(callback) {
     if (this.server) {
-      this.server.close();
+      this.server.close(callback);
+    } else if (callback) {
+      callback();
     }
   }
 }
 
 /**
- * Start the server and return the port
+ * Start the server and return the TWXWebServer instance
  */
 async function startServer() {
   const webServer = new TWXWebServer();
-  return await webServer.startServer();
+  await webServer.startServer();
+  return webServer;
 }
 
 module.exports = { startServer, TWXWebServer };
