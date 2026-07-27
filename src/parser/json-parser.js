@@ -34,12 +34,6 @@ class JSONParser {
       // Extract data from TWX file
       const extractedData = await this.extractor.extractTWX(twxFilePath)
       
-      // Phase 2: Resolve cross-references for business objects
-      const businessObjects = extractedData.objects.filter(obj => obj.type === 'twClass');
-      if (businessObjects.length > 0) {
-        console.log(`🔗 Phase 2: Resolving cross-references for ${businessObjects.length} business objects...`);
-        this.extractor.resolveBusinessObjectCrossReferences(businessObjects);
-      }
       
       // Generate output files
       const results = await this.generateOutputFiles(extractedData)
