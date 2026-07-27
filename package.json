@@ -10,7 +10,7 @@
     "viewer": "node start-viewer.js",
     "test": "echo \"No tests specified\" && exit 0",
     "lint": "eslint .",
-    "build": "pkg . --out-path dist --targets node18-win-x64"
+    "build": "node -e \"require('fs').rmSync('output', { recursive: true, force: true }); require('fs').mkdirSync('output');\" && pkg . --out-path dist --targets node18-win-x64"
   },
   "repository": {
     "type": "git",
@@ -43,8 +43,7 @@
     "assets": [
       "twx-viewer-new.html",
       "twx-viewer-new.css",
-      "twx-viewer-new.js",
-      "output/*.json"
+      "twx-viewer-new.js"
     ]
   }
 }
