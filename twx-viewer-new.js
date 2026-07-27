@@ -33,6 +33,7 @@ const I = {
   settings: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>',
   cloud: '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></svg>',
   empty: '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>',
+  box: '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/></svg>',
   chevron: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>',
 };
 
@@ -101,36 +102,30 @@ async function parseFile(file) {
 }
 
 async function loadAllData() {
-  try {
-    // Try /api/objects
-    const r = await fetch('/api/objects');
-    if (r.ok) {
-      const apiData = await r.json();
-      if (Object.keys(apiData).length > 0) { state.currentObjects = apiData; }
-    }
-  } catch (_) {}
-  // Fall back to static files
-  if (Object.keys(state.currentObjects).length === 0) {
-    const combinedFiles = TYPES.map(t => `combined-objects-${t}.json`);
-    for (const f of combinedFiles) {
-      try {
-        const data = await fetchJSON(f);
-        const key = f.replace('combined-objects-', '').replace('.json', '');
-        state.currentObjects[key] = data;
-      } catch (_) {}
-    }
+  // Prefer combined files (app + toolkit) from output/ directory
+  for (const t of TYPES) {
+    try { state.currentObjects[t] = await fetchJSON(`output/combined-objects-${t}.json`); } catch (_) {}
   }
+  // Fall back to /api/objects (app-only)
+  if (Object.keys(state.currentObjects).length === 0) {
+    try {
+      const r = await fetch('/api/objects');
+      if (r.ok) {
+        const apiData = await r.json();
+        if (Object.keys(apiData).length > 0) { state.currentObjects = apiData; }
+      }
+    } catch (_) {}
+  }
+  // Last resort: individual object files
   if (Object.keys(state.currentObjects).length === 0) {
     for (const t of TYPES) {
       try { state.currentObjects[t] = await fetchJSON(`objects-${t}.json`); } catch (_) {}
     }
   }
   // Load summary
-  try { state.summaryData = await fetchJSON('twx-summary.json'); } catch (_) {}
+  try { state.summaryData = await fetchJSON('output/twx-summary.json'); } catch (_) {}
   // Load metadata
-  try { state.metadata = await fetchJSON('metadata.json'); } catch (_) {}
-  // Load dependencies
-  try { state.dependencies = (await fetchJSON('dependencies.json')).dependencies || []; } catch (_) {}
+  try { state.metadata = await fetchJSON('output/metadata.json'); } catch (_) {}
 }
 
 async function performServerSearch(term) {
@@ -385,7 +380,7 @@ function viewToolkits() {
     });
   }
   const toolkits = Object.values(tkMap);
-  if (toolkits.length === 0) return viewEmptyState('No toolkits found in this TWX file.');
+  if (toolkits.length === 0) return viewEmptyState('This TWX file has no embedded toolkits. Toolkits are separate TWX packages that this app depends on. Upload a toolkit TWX to see it here.', I.box);
   return `<div class="card">
     <div class="card-header"><span class="card-title">Toolkits</span><span style="color:var(--text-secondary);font-size:12px">${toolkits.length} found</span></div>
     <table><thead><tr><th>Toolkit</th><th style="width:100px">Version</th><th class="num" style="width:80px">Objects</th><th style="width:60px"></th></tr></thead>
