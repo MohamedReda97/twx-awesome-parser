@@ -13,6 +13,7 @@ const state = {
   toolkitToggle: false,
   searchResults: [],
   searchTerm: '',
+  searchLoading: false,
   summaryData: null,
   metadata: null,
   parsedFile: null,
@@ -216,9 +217,14 @@ function renderSidebar() {
 
 // ── Render: Topbar ────────────────────────────────────────────
 function renderTopbar() {
-  $('topbar-title').textContent = state.parsedFile ? state.parsedFile.name : 'TWX Parser';
-  $('topbar-subtitle').textContent = state.parsedFile ? `${state.parsedFile.count} objects parsed` : 'Upload a .twx file to begin';
-  $('quick-search').disabled = !state.parsedFile;
+  const parsed = state.parsedFile;
+  $('topbar-title').innerHTML = parsed
+    ? esc(parsed.name)
+    : '<button class="btn btn-primary" id="topbar-upload-btn" style="height:28px;font-size:13px">Upload .twx</button>';
+  $('topbar-subtitle').textContent = parsed
+    ? `${parsed.count} objects parsed`
+    : 'Upload a .twx file to begin';
+  $('quick-search').disabled = !parsed;
 }
 
 // ── Render: Content ───────────────────────────────────────────
@@ -390,14 +396,19 @@ function viewSearch() {
   return `
     <div class="search-tab-input-area">
       <input type="text" class="search-tab-input" id="search-input" placeholder="Enter search term (e.g., variable name, function name)…" value="${esc(state.searchTerm)}">
-      <button class="btn btn-primary btn-large" id="search-btn">Search</button>
-      <button class="btn btn-secondary btn-large" id="search-clear">Clear</button>
+      <button class="btn btn-primary btn-large" id="search-btn" ${state.searchLoading?'disabled':''}>${state.searchLoading?'Searching…':'Search'}</button>
+      <button class="btn btn-secondary btn-large" id="search-clear" ${state.searchLoading?'disabled':''}>Clear</button>
     </div>
     <div id="search-results-area">
-      ${state.searchResults.length > 0 ? viewSearchResults() : 
-        (state.searchTerm && state.searchSearched ? viewEmptyState(`No results found for "${esc(state.searchTerm)}".`, I.empty) :
-         viewEmptyState('Type a term above to search across all objects.', I.empty))}
+      ${state.searchLoading ? searchSkeletons() :
+        (state.searchResults.length > 0 ? viewSearchResults() : 
+         (state.searchTerm && state.searchSearched ? viewEmptyState(`No results found for "${esc(state.searchTerm)}".`, I.empty) :
+          viewEmptyState('Type a term above to search across all objects.', I.empty)))}
     </div>`;
+}
+
+function searchSkeletons() {
+  return Array(5).fill('<div class="card" style="padding:16px;margin-bottom:8px"><div class="skeleton skeleton-bar" style="width:40%;height:14px"></div><div class="skeleton skeleton-bar" style="width:80%;height:12px"></div><div class="skeleton skeleton-bar" style="width:60%;height:12px"></div></div>').join('');
 }
 
 function viewSearchResults() {
@@ -743,6 +754,11 @@ function setupGlobalListeners() {
     }
   });
 
+  // Topbar upload button (dynamic)
+  document.addEventListener('click', e => {
+    if (e.target.closest('#topbar-upload-btn')) { triggerFileUpload(); return; }
+  });
+
   // Keyboard: Esc closes drawer
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && state.drawerOpen) closeDrawer(); });
 
@@ -767,6 +783,7 @@ async function doSearch() {
   state.searchTerm = term;
   state.searchSearched = true;
   state.searchResults = [];
+  state.searchLoading = true;
   renderContent();
   try {
     let results = await performServerSearch(term);
@@ -775,6 +792,7 @@ async function doSearch() {
   } catch (_) {
     state.searchResults = performClientSearch(term);
   }
+  state.searchLoading = false;
   renderContent();
 }
 
