@@ -19,6 +19,7 @@ const state = {
   parsedFile: null,
   isParsing: false,
   quickFilter: '',
+  searchSearched: false,
 };
 
 // ── Icons (inline SVG 16px line) ──────────────────────────────
