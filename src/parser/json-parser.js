@@ -2,6 +2,7 @@ const fs = require('fs')
 const path = require('path')
 const TWXExtractor = require('./twx-extractor')
 const { groupByType } = require('../utils/type-mappings')
+const { objectTypeFileName, combinedObjectTypeFileName } = require('../utils/file-names')
 
 /**
  * JSON-based TWX parser that outputs structured JSON files
@@ -183,7 +184,7 @@ class JSONParser {
     const filesGenerated = []
     
     for (const [typeName, typeObjects] of Object.entries(groupedObjects)) {
-      const fileName = `objects-${typeName.toLowerCase().replace(/\s+/g, '-')}.json`
+      const fileName = objectTypeFileName(typeName)
       const filePath = path.join(this.outputDir, fileName)
 
       const typeData = {
@@ -297,7 +298,7 @@ class JSONParser {
       const appObjects = typeObjects.filter(obj => obj.source === 'application')
       const toolkitObjects = typeObjects.filter(obj => obj.source === 'toolkit')
       
-      const fileName = `combined-objects-${typeName.toLowerCase().replace(/\s+/g, '-')}.json`
+      const fileName = combinedObjectTypeFileName(typeName)
       const filePath = path.join(this.outputDir, fileName)
 
       const typeData = {

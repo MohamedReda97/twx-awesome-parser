@@ -1,6 +1,7 @@
 const fs = require('fs')
 const path = require('path')
 const JSONParser = require('../parser/json-parser')
+const { objectTypeFileName } = require('../utils/file-names')
 
 /**
  * JSON-based workspace that replaces the database-dependent Workspace class
@@ -137,7 +138,7 @@ class JSONWorkspace {
     
     // Try to load detailed information from type-specific file
     try {
-      const typeFileName = `objects-${typeName.toLowerCase().replace(/\s+/g, '-')}.json`
+      const typeFileName = objectTypeFileName(typeName)
       const typeFilePath = path.join(this.outputDir, typeFileName)
       
       if (fs.existsSync(typeFilePath)) {
