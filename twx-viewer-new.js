@@ -1,1684 +1,789 @@
-/**
- * TWX Viewer - New Collapsible UI
- * Handles object browsing, search, and detailed views
- */
+/* ── TWX Viewer — Production UI ────────────────────────────── */
+'use strict';
 
-// Global state
-let currentObjects = {};
-let selectedObjectType = null;
-let selectedObject = null;
-let searchResults = [];
-let selectedTWXFile = null;
-let showToolkitObjects = false; // New state for toolkit toggle
+// ── State ──────────────────────────────────────────────────────
+const state = {
+  activeTab: 'summary',
+  drawerOpen: false,
+  drawerObject: null,
+  drawerSubTab: 'info',
+  currentObjects: {},
+  selectedType: null,
+  selectedTypeData: null,
+  toolkitToggle: false,
+  searchResults: [],
+  searchTerm: '',
+  summaryData: null,
+  metadata: null,
+  parsedFile: null,
+  isParsing: false,
+  quickFilter: '',
+};
 
-/**
- * Initialize the application
- */
-document.addEventListener('DOMContentLoaded', function () {
-    console.log('TWX Viewer New UI loading...');
-    loadObjectData();
-    updateStatus('Ready - Select a TWX file to begin');
-});
+// ── Icons (inline SVG 16px line) ──────────────────────────────
+const I = {
+  summary: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>',
+  byType: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>',
+  toolkits: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>',
+  search: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>',
+  deps: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>',
+  settings: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>',
+  cloud: '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></svg>',
+  empty: '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>',
+  chevron: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>',
+};
 
-/**
- * Select TWX file for parsing
- */
-function selectTWXFile() {
-    const fileInput = document.getElementById('twx-file-input');
-    fileInput.click();
+// ── Utils ──────────────────────────────────────────────────────
+const $ = id => document.getElementById(id);
+const esc = text => { const d = document.createElement('div'); d.textContent = text; return d.innerHTML; };
+const escRe = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const TYPES = ['coach-view','cshs','managed-asset','participant','process','business-process-definition','business-object'];
 
-    fileInput.onchange = function (event) {
-        const file = event.target.files[0];
-        if (file) {
-            if (file.name.toLowerCase().endsWith('.twx')) {
-                selectedTWXFile = file;
-                document.getElementById('selected-file-name').textContent = `Selected: ${file.name}`;
-                document.getElementById('parse-button').disabled = false;
-                document.getElementById('clear-file-button').style.display = 'inline-block';
-                updateStatus(`Selected file: ${file.name}`);
-            } else {
-                alert('Please select a valid TWX file (.twx extension)');
-                clearSelectedFile();
-            }
-        }
-    };
+const DISPLAY_NAMES = {
+  'process': 'Services', 'coach-view': 'Coach Views', 'cshs': 'CSHS',
+  'business-process-definition': 'Business Process Definitions', 'participant': 'Participants',
+  'managed-asset': 'Managed Assets', 'business-object': 'Business Objects',
+};
+function getDisplayName(type) { return DISPLAY_NAMES[type] || (type ? type.charAt(0).toUpperCase() + type.slice(1) : 'Unknown'); }
+
+function findObjectById(id) {
+  for (const [type, data] of Object.entries(state.currentObjects)) {
+    if (data && data.objects) { const o = data.objects.find(obj => obj.id === id); if (o) return { type, object: o }; }
+  }
+  return null;
 }
 
-/**
- * Clear selected file
- */
-function clearSelectedFile() {
-    selectedTWXFile = null;
-    document.getElementById('selected-file-name').textContent = '';
-    document.getElementById('parse-button').disabled = true;
-    document.getElementById('clear-file-button').style.display = 'none';
-    document.getElementById('twx-file-input').value = '';
-    hideParsingStatus();
-    updateStatus('Ready - Select a TWX file to begin');
-}
-
-/**
- * Parse the selected TWX file
- */
-async function parseTWXFile() {
-    if (!selectedTWXFile) {
-        alert('Please select a TWX file first');
-        return;
-    }
-
-    try {
-        showParsingStatus('Uploading and parsing TWX file...', 'processing');
-        updateProgressBar(10);
-
-        // Create FormData to upload file
-        const formData = new FormData();
-        formData.append('twxFile', selectedTWXFile);
-
-        updateProgressBar(30);
-
-        // Send file to server for parsing
-        const response = await fetch('/api/parse', {
-            method: 'POST',
-            body: formData
-        });
-
-        updateProgressBar(60);
-
-        if (!response.ok) {
-            throw new Error(`Parse failed: ${response.status} ${response.statusText}`);
-        }
-
-        const result = await response.json();
-        updateProgressBar(80);
-
-        // Success - reload the object data
-        showParsingStatus(`Parsing completed! Found ${result.objectCount || 0} objects.`, 'success');
-        updateProgressBar(100);
-
-        // Reload the UI with new data
-        setTimeout(() => {
-            loadObjectData();
-            hideParsingStatus();
-        }, 2000);
-
-    } catch (error) {
-        console.error('Parse error:', error);
-        showParsingStatus(`Error: ${error.message}`, 'error');
-        updateProgressBar(0);
-    }
-}
-
-/**
- * Show parsing status with message and type
- */
-function showParsingStatus(message, type = 'processing') {
-    const statusDiv = document.getElementById('parsing-status');
-    const messageDiv = document.getElementById('status-message');
-
-    statusDiv.style.display = 'block';
-    statusDiv.className = `parsing-status status-${type}`;
-    messageDiv.textContent = message;
-
-    if (type === 'processing') {
-        document.getElementById('progress-bar').style.display = 'block';
-    } else {
-        document.getElementById('progress-bar').style.display = 'none';
-    }
-}
-
-/**
- * Hide parsing status
- */
-function hideParsingStatus() {
-    document.getElementById('parsing-status').style.display = 'none';
-    updateProgressBar(0);
-}
-
-/**
- * Update progress bar
- */
-function updateProgressBar(percent) {
-    const progressFill = document.getElementById('progress-fill');
-    progressFill.style.width = `${Math.min(100, Math.max(0, percent))}%`;
-}
-
-/**
- * Toggle collapsible panels
- */
-function togglePanel(panelId) {
-    const panel = document.getElementById(panelId);
-    const toggleIcon = document.getElementById(panelId.replace('-panel', '-toggle'));
-
-    if (panel.classList.contains('collapsed')) {
-        panel.classList.remove('collapsed');
-        toggleIcon.classList.remove('collapsed');
-        toggleIcon.textContent = '▼';
-    } else {
-        panel.classList.add('collapsed');
-        toggleIcon.classList.add('collapsed');
-        toggleIcon.textContent = '▶';
-    }
-}
-
-/**
- * Load object data from API
- */
-async function loadObjectData() {
-    try {
-        updateStatus('Loading object data...');
-
-        // For testing purposes, load from static files
-        // Comment this section and uncomment the API section when server is available
-        const files = [
-            'combined-objects-coach-view.json',
-            'combined-objects-cshs.json',
-            'combined-objects-managed-asset.json',
-            'combined-objects-participant.json',
-            'combined-objects-process.json',
-            'combined-objects-business-process-definition.json',
-            'combined-objects-business-object.json'
-        ];
-
-        // 🆕 Try to load combined files first (app + toolkit objects)
-        currentObjects = {};
-        let hasCombinedFiles = false;
-
-        for (const file of files) {
-            try {
-                const response = await fetch(`./output/${file}`);
-                if (response.ok) {
-                    const data = await response.json();
-                    const key = file.replace('combined-objects-', '').replace('.json', '');
-                    currentObjects[key] = data;
-                    hasCombinedFiles = true;
-                    console.log(`✅ Loaded combined file: ${file} (${data.applicationCount || 0} app + ${data.toolkitCount || 0} toolkit objects)`);
-                }
-            } catch (err) {
-                console.log(`Could not load combined file ${file}:`, err.message);
-            }
-        }
-
-        // 🆕 Fallback to original files if combined files not available
-        if (!hasCombinedFiles) {
-            console.log('📄 Combined files not available, loading original object files...');
-
-            const originalFiles = [
-                'objects-coach-view.json',
-                'objects-cshs.json',
-                'objects-managed-asset.json',
-                'objects-participant.json',
-                'objects-process.json',
-                'objects-business-process-definition.json',
-                'objects-business-object.json'
-            ];
-
-            for (const file of originalFiles) {
-                try {
-                    const response = await fetch(`./output/${file}`);
-                    if (response.ok) {
-                        const data = await response.json();
-                        const key = file.replace('objects-', '').replace('.json', '');
-                        currentObjects[key] = data;
-                        console.log(`✅ Loaded original file: ${file} (${data.objects?.length || 0} objects)`);
-                    }
-                } catch (err) {
-                    console.log(`Could not load ${file}:`, err.message);
-                }
-            }
-        }
-
-        /* 
-        // API version (use when server is running)
-        const response = await fetch('/api/objects');
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        currentObjects = await response.json();
-        */
-
-        displayObjectTypes();
-        updateObjectCount();
-
-        // 🆕 Load and display enhanced statistics
-        await loadAndDisplayStatistics();
-
-        // Debug: Log toolkit objects found
-        console.log('🔍 Debug: Checking for toolkit objects in loaded data...');
-        Object.keys(currentObjects).forEach(objectType => {
-            const objectData = currentObjects[objectType];
-            if (objectData && objectData.objects) {
-                const toolkitObjs = objectData.objects.filter(obj => obj.source === 'toolkit');
-                const appObjs = objectData.objects.filter(obj => obj.source === 'application');
-                console.log(`${objectType}: ${appObjs.length} app objects, ${toolkitObjs.length} toolkit objects`);
-
-                if (toolkitObjs.length > 0) {
-                    console.log(`  Sample toolkit objects:`, toolkitObjs.slice(0, 3).map(obj => ({
-                        name: obj.name,
-                        source: obj.source,
-                        toolkitInfo: obj.toolkitInfo?.shortName
-                    })));
-                }
-            }
-        });
-
-        updateStatus('Object data loaded');
-
-    } catch (error) {
-        console.error('Error loading object data:', error);
-        updateStatus('Error loading data');
-
-        // Show error in the loading area
-        const loadingEl = document.getElementById('object-types-loading');
-        if (loadingEl) {
-            loadingEl.textContent = 'Error loading object data. Please ensure the parser has been run.';
-            loadingEl.style.color = '#dc3545';
-        }
-    }
-}
-
-/**
- * Display object types in the UI
- */
-function displayObjectTypes() {
-    const container = document.getElementById('object-types-list');
-    const loading = document.getElementById('object-types-loading');
-
-    // Hide loading indicator
-    if (loading) loading.style.display = 'none';
-
-    // Clear existing content
-    container.innerHTML = '';
-
-    // Define the allowed object types to display
-    const allowedTypes = [
-        'coach-view',
-        'cshs',
-        'managed-asset',
-        'participant',
-        'process',
-        'business-process-definition',
-        'business-object'
-    ];
-
-    // Filter and create type cards only for allowed types
-    Object.keys(currentObjects)
-        .filter(type => allowedTypes.includes(type))
-        .forEach(type => {
-            const objectData = currentObjects[type];
-
-            // Calculate counts based on toolkit toggle
-            let appCount = 0;
-            let toolkitCount = 0;
-            let displayCount = 0;
-
-            if (objectData.objects) {
-                appCount = objectData.objects.filter(obj => obj.source === 'application').length;
-                toolkitCount = objectData.objects.filter(obj => obj.source === 'toolkit').length;
-            }
-
-            // Use explicit counts from combined files if available
-            if (objectData.applicationCount !== undefined) {
-                appCount = objectData.applicationCount;
-            }
-            if (objectData.toolkitCount !== undefined) {
-                toolkitCount = objectData.toolkitCount;
-            }
-
-            // Calculate display count based on toggle
-            if (showToolkitObjects) {
-                displayCount = appCount + toolkitCount;
-            } else {
-                displayCount = appCount;
-            }
-
-            const card = document.createElement('div');
-            card.className = 'object-type-card';
-            card.onclick = () => selectObjectType(type);
-
-            // Enhanced card with app/toolkit breakdown
-            card.innerHTML = `
-                <div class="object-type-header">
-                    <span class="object-type-name">${getDisplayName(type)}</span>
-                    <div class="object-count-breakdown">
-                        ${showToolkitObjects ?
-                    `${appCount > 0 ? `<span class="app-count" title="Application Objects">${appCount}</span>` : ''}
-                             ${toolkitCount > 0 ? `<span class="toolkit-count" title="Toolkit Objects">+${toolkitCount}</span>` : ''}` :
-                    `<span class="app-count" title="Application Objects Only">${appCount}</span>`
-                }
-                        <span class="total-count">${displayCount}</span>
-                    </div>
-                </div>
-            `;
-
-            container.appendChild(card);
-        });
-}
-
-/**
- * Select an object type and display its objects
- */
-function selectObjectType(type) {
-    selectedObjectType = type;
-
-    // Update UI selection
-    document.querySelectorAll('.object-type-card').forEach(card => {
-        card.classList.remove('selected');
-    });
-    event.target.closest('.object-type-card').classList.add('selected');
-
-    // Show and populate objects list
-    displayObjectsList(type);
-    showPanel('objects-list-panel');
-
-    // Update panel title
-    const title = document.getElementById('objects-list-title');
-    const count = currentObjects[type].objects ? currentObjects[type].objects.length : 0;
-    title.textContent = `📋 ${getDisplayName(type)} (${count})`;
-
-    updateStatus(`Selected ${getDisplayName(type)} - ${count} objects`);
-}
-
-/**
- * Toggle toolkit objects visibility
- */
-function toggleToolkitObjects() {
-    showToolkitObjects = document.getElementById('show-toolkit-objects').checked;
-    console.log('Toolkit objects toggle:', showToolkitObjects);
-
-    // Refresh the current view if an object type is selected
-    if (selectedObjectType) {
-        displayObjectsList(selectedObjectType);
-
-        // Update the count in the panel title
-        const filteredObjects = getFilteredObjects(currentObjects[selectedObjectType].objects);
-        const title = document.getElementById('objects-list-title');
-        title.textContent = `📋 ${getDisplayName(selectedObjectType)} (${filteredObjects.length})`;
-    }
-
-    // Update object type cards to show filtered counts
-    displayObjectTypes();
-}
-
-/**
- * Get filtered objects based on toolkit toggle
- */
 function getFilteredObjects(objects) {
-    if (!objects) return [];
-
-    if (showToolkitObjects) {
-        // Show all objects (app + toolkit)
-        return objects;
-    } else {
-        // Show only application objects
-        return objects.filter(obj => obj.source !== 'toolkit');
-    }
+  if (!objects) return [];
+  return state.toolkitToggle ? objects : objects.filter(o => o.source !== 'toolkit');
 }
 
-/**
- * Display objects of selected type
- */
-function displayObjectsList(type) {
-    const container = document.getElementById('objects-list');
-
-    // Check if container exists
-    if (!container) {
-        console.error('Objects list container not found');
-        return;
-    }
-
-    const objectData = currentObjects[type];
-
-    container.innerHTML = '';
-
-    if (!objectData || !objectData.objects || objectData.objects.length === 0) {
-        container.innerHTML = '<div class="loading">No objects found</div>';
-        return;
-    }
-
-    // Filter objects based on toolkit toggle
-    const filteredObjects = getFilteredObjects(objectData.objects);
-
-    if (filteredObjects.length === 0) {
-        container.innerHTML = '<div class="loading">No objects found (try toggling toolkit objects)</div>';
-        return;
-    }
-
-    // Create grid container for object items
-    const gridContainer = document.createElement('div');
-    gridContainer.className = 'object-list-container';
-    container.appendChild(gridContainer);
-
-    filteredObjects.forEach(object => {
-        const item = document.createElement('div');
-        item.className = `object-item ${object.source || 'application'}`;
-        item.onclick = () => selectObject(object);
-
-        // Minimal design - focus on important details
-        let importantDetails = '';
-
-        // Show script count for objects with scripts
-        if (object.details?.scripts?.length > 0) {
-            importantDetails += `<span class="detail-badge scripts">📜 ${object.details.scripts.length} scripts</span>`;
-        }
-
-        // Show variable count for CSHS/Services
-        if (object.details?.variables) {
-            const totalVars = (object.details.variables.input?.length || 0) +
-                (object.details.variables.output?.length || 0) +
-                (object.details.variables.private?.length || 0);
-            if (totalVars > 0) {
-                importantDetails += `<span class="detail-badge variables">🔧 ${totalVars} vars</span>`;
-            }
-        }
-
-        // Show element count for CSHS
-        if (object.details?.elements) {
-            const totalElements = Object.values(object.details.elements).reduce((sum, arr) => sum + (arr?.length || 0), 0);
-            if (totalElements > 0) {
-                importantDetails += `<span class="detail-badge elements">⚙️ ${totalElements} elements</span>`;
-            }
-        }
-
-        // Show property count for business objects
-        if (object.details?.schema?.properties?.length > 0) {
-            importantDetails += `<span class="detail-badge properties">📋 ${object.details.schema.properties.length} props</span>`;
-        }
-
-        // Source indicator
-        let sourceIndicator = '';
-        if (object.source === 'toolkit' && object.toolkitInfo) {
-            sourceIndicator = `<span class="source-badge toolkit">${object.toolkitInfo.shortName}</span>`;
-        } else if (object.source === 'application') {
-            sourceIndicator = '<span class="source-badge app">APP</span>';
-        }
-
-        item.innerHTML = `
-            <div class="object-header-minimal">
-                <div class="object-name-minimal">${object.name || 'Unnamed'}</div>
-                ${sourceIndicator}
-            </div>
-            ${importantDetails ? `<div class="object-details-minimal">${importantDetails}</div>` : ''}
-        `;
-
-        gridContainer.appendChild(item);
-    });
+function getTypeCounts(objectData) {
+  if (!objectData || !objectData.objects) return { app: 0, toolkit: 0, total: 0 };
+  let app = 0, tk = 0;
+  objectData.objects.forEach(o => { if (o.source === 'toolkit') tk++; else app++; });
+  if (objectData.applicationCount !== undefined) app = objectData.applicationCount;
+  if (objectData.toolkitCount !== undefined) tk = objectData.toolkitCount;
+  return { app, toolkit: tk, total: state.toolkitToggle ? (app + tk) : app };
 }
 
-/**
- * Select an object and display its details
- */
-function selectObject(object) {
-    selectedObject = object;
-
-    // Update UI selection
-    document.querySelectorAll('.object-item').forEach(item => {
-        item.classList.remove('selected');
-    });
-    event.target.closest('.object-item').classList.add('selected');
-
-    // Show and populate object details
-    displayObjectDetails(object);
-    showPanel('object-details-panel');
-
-    // Update panel title
-    const title = document.getElementById('object-details-title');
-    title.textContent = `📄 ${object.name || 'Unnamed Object'}`;
-
-    updateStatus(`Viewing ${object.name || 'object'} details`);
+// ── API ────────────────────────────────────────────────────────
+async function fetchJSON(url) {
+  const r = await fetch(url);
+  if (!r.ok) throw new Error(`HTTP ${r.status}`);
+  return r.json();
 }
 
-/**
- * Display detailed information for selected object
- */
-function displayObjectDetails(object) {
-    const container = document.getElementById('object-details');
-    container.innerHTML = '';
+async function parseFile(file) {
+  state.isParsing = true;
+  const pb = $('progress-bar'), pf = $('progress-fill');
+  pb.classList.add('visible', 'indeterminate'); pb.classList.remove('error');
+  try {
+    const fd = new FormData(); fd.append('twxFile', file);
+    const r = await fetch('/api/parse', { method: 'POST', body: fd });
+    if (!r.ok) { const e = await r.json().catch(() => ({})); throw new Error(e.error || `Parse failed: ${r.status}`); }
+    const result = await r.json();
+    pb.classList.remove('indeterminate'); pf.style.width = '100%';
+    state.parsedFile = { name: result.fileName || file.name, count: result.objectCount };
+    setTimeout(() => { pb.classList.remove('visible'); pf.style.width = '0%'; }, 800);
+    await loadAllData();
+    renderAll();
+  } catch (err) {
+    pb.classList.remove('indeterminate'); pb.classList.add('error');
+    pf.style.width = '100%';
+    state.parseError = err.message;
+    setTimeout(() => { pb.classList.remove('visible', 'error'); pf.style.width = '0%'; }, 3000);
+    renderAll();
+  } finally { state.isParsing = false; }
+}
 
-    // Basic Information
-    const basicInfo = createDetailSection('Basic Information', generateBasicInfo(object));
-    container.appendChild(basicInfo);
-
-    // Type-specific details
-    if (object.details) {
-        if (object.details.variables) {
-            const variablesSection = createDetailSection('Variables', generateVariablesDisplay(object.details.variables, selectedObjectType));
-            container.appendChild(variablesSection);
-        }
-
-        if (object.details.scripts && object.details.scripts.length > 0) {
-            const scriptsSection = createDetailSection('Scripts', generateScriptsDisplay(object.details.scripts));
-            container.appendChild(scriptsSection);
-        }
-
-        if (object.details.inlineScripts && object.details.inlineScripts.length > 0) {
-            const inlineScriptsSection = createDetailSection('Inline Scripts', generateInlineScriptsDisplay(object.details.inlineScripts));
-            container.appendChild(inlineScriptsSection);
-        }
-
-        if (object.details.loadJsFunction) {
-            const jsSection = createDetailSection('Load JS Function', `<div class="code-block">${object.details.loadJsFunction}</div>`);
-            container.appendChild(jsSection);
-        }
-
-        if (object.details.elements) {
-            const elementsSection = createDetailSection('Process Elements', generateElementsDisplay(object.details.elements));
-            container.appendChild(elementsSection);
-        }
-
-        if (object.details.schema) {
-            const schemaSection = createDetailSection('Business Object Schema', generateBusinessObjectSchemaDisplay(object.details.schema));
-            container.appendChild(schemaSection);
-        }
+async function loadAllData() {
+  try {
+    // Try /api/objects
+    const r = await fetch('/api/objects');
+    if (r.ok) {
+      const apiData = await r.json();
+      if (Object.keys(apiData).length > 0) { state.currentObjects = apiData; }
     }
+  } catch (_) {}
+  // Fall back to static files
+  if (Object.keys(state.currentObjects).length === 0) {
+    const combinedFiles = TYPES.map(t => `combined-objects-${t}.json`);
+    for (const f of combinedFiles) {
+      try {
+        const data = await fetchJSON(f);
+        const key = f.replace('combined-objects-', '').replace('.json', '');
+        state.currentObjects[key] = data;
+      } catch (_) {}
+    }
+  }
+  if (Object.keys(state.currentObjects).length === 0) {
+    for (const t of TYPES) {
+      try { state.currentObjects[t] = await fetchJSON(`objects-${t}.json`); } catch (_) {}
+    }
+  }
+  // Load summary
+  try { state.summaryData = await fetchJSON('twx-summary.json'); } catch (_) {}
+  // Load metadata
+  try { state.metadata = await fetchJSON('metadata.json'); } catch (_) {}
 }
 
-/**
- * Create a collapsible detail section
- */
-function createDetailSection(title, content) {
-    const section = document.createElement('div');
-    section.className = 'detail-section';
+async function performServerSearch(term) {
+  const r = await fetch(`/api/search?q=${encodeURIComponent(term)}`);
+  if (!r.ok) throw new Error(`Search failed: ${r.status}`);
+  return r.json();
+}
 
-    const sectionId = 'detail-' + title.toLowerCase().replace(/\s+/g, '-');
+function performClientSearch(term) {
+  const results = [];
+  const lower = term.toLowerCase();
+  for (const [type, data] of Object.entries(state.currentObjects)) {
+    if (!data || !data.objects) continue;
+    for (const obj of data.objects) {
+      if (!state.toolkitToggle && obj.source === 'toolkit') continue;
+      const matches = [];
+      if (obj.name && obj.name.toLowerCase().includes(lower)) matches.push({ field: 'name', snippet: obj.name });
+      if (obj.details) {
+        ['scripts', 'inlineScripts'].forEach(k => {
+          (obj.details[k] || []).forEach(s => {
+            const text = s.script || s.scriptBlock || '';
+            if (text.toLowerCase().includes(lower)) matches.push({ field: k === 'scripts' ? 'script' : 'inlineScript', value: s.name, snippet: snippet(text, term) });
+          });
+        });
+        if (obj.details.variables) {
+          ['input', 'output', 'private'].forEach(vt => {
+            (obj.details.variables[vt] || []).forEach(v => {
+              if (v.name && v.name.toLowerCase().includes(lower)) matches.push({ field: 'variable', value: `${vt}: ${v.name}`, snippet: v.name });
+            });
+          });
+        }
+        if (obj.details.schema && obj.details.schema.properties) {
+          obj.details.schema.properties.forEach(p => {
+            if (p.name && p.name.toLowerCase().includes(lower)) matches.push({ field: 'property', value: p.name, snippet: `${p.name} (${p.type})` });
+          });
+        }
+        if (obj.details.loadJsFunction && obj.details.loadJsFunction.toLowerCase().includes(lower)) {
+          matches.push({ field: 'loadJsFunction', snippet: snippet(obj.details.loadJsFunction, term) });
+        }
+      }
+      if (obj.id && obj.id.toLowerCase().includes(lower)) matches.push({ field: 'id', snippet: obj.id });
+      if (matches.length > 0) {
+        results.push({ objectId: obj.id, objectName: obj.name, objectType: obj.type || type, typeName: obj.typeName || type, source: obj.source || 'application', toolkitInfo: obj.toolkitInfo, matches, matchCount: matches.length, preview: matches[0].snippet });
+      }
+    }
+  }
+  return results;
+}
 
-    section.innerHTML = `
-        <div class="detail-section-header" onclick="toggleDetailSection('${sectionId}')">
-            <span class="detail-section-title">${title}</span>
+function snippet(text, term) {
+  if (!text || !term) return '';
+  const idx = text.toLowerCase().indexOf(term.toLowerCase());
+  if (idx === -1) return text.substring(0, 100) + '...';
+  const s = Math.max(0, idx - 50), e = Math.min(text.length, idx + term.length + 50);
+  let snip = text.substring(s, e);
+  if (s > 0) snip = '...' + snip;
+  if (e < text.length) snip += '...';
+  return snip;
+}
+
+function highlightTerm(text, term) {
+  if (!term) return esc(text);
+  return esc(text).replace(new RegExp(`(${escRe(term)})`, 'gi'), '<span class="highlight">$1</span>');
+}
+
+// ── Render: Sidebar ───────────────────────────────────────────
+function renderSidebar() {
+  const nav = $('sidebar-nav');
+  const tabs = [
+    { section: 'BROWSE', items: [
+      { id: 'summary', label: 'Summary', icon: I.summary },
+      { id: 'byType', label: 'By Type', icon: I.byType },
+      { id: 'toolkits', label: 'Toolkits', icon: I.toolkits },
+    ]},
+    { section: 'ANALYZE', items: [
+      { id: 'search', label: 'Search', icon: I.search },
+      { id: 'deps', label: 'Dependencies', icon: I.deps },
+    ]},
+    { section: 'APP', items: [
+      { id: 'settings', label: 'Settings', icon: I.settings },
+    ]},
+  ];
+  nav.innerHTML = tabs.map(g => `
+    <div class="nav-section-label">${g.section}</div>
+    ${g.items.map(t => `<button class="nav-item${state.activeTab===t.id?' active':''}" data-tab="${t.id}">${t.icon}<span>${t.label}</span></button>`).join('')}
+  `).join('');
+}
+
+// ── Render: Topbar ────────────────────────────────────────────
+function renderTopbar() {
+  $('topbar-title').textContent = state.parsedFile ? state.parsedFile.name : 'TWX Parser';
+  $('topbar-subtitle').textContent = state.parsedFile ? `${state.parsedFile.count} objects parsed` : 'Upload a .twx file to begin';
+  $('quick-search').disabled = !state.parsedFile;
+}
+
+// ── Render: Content ───────────────────────────────────────────
+function hasData() { return Object.keys(state.currentObjects).length > 0; }
+
+function renderContent() {
+  const el = $('content');
+  if (!hasData() && state.activeTab !== 'search' && state.activeTab !== 'deps' && state.activeTab !== 'settings') {
+    el.innerHTML = viewGlobalEmpty(); return;
+  }
+  switch (state.activeTab) {
+    case 'summary': el.innerHTML = viewSummary(); break;
+    case 'byType': el.innerHTML = viewByType(); setupByTypeListeners(); break;
+    case 'toolkits': el.innerHTML = viewToolkits(); break;
+    case 'search': el.innerHTML = viewSearch(); break;
+    case 'deps': el.innerHTML = viewDeps(); break;
+    case 'settings': el.innerHTML = viewSettings(); break;
+    default: el.innerHTML = viewEmptyState('Select a tab from the sidebar.');
+  }
+}
+
+function viewGlobalEmpty() {
+  return `<div class="upload-zone" style="max-width:400px;margin:60px auto;">
+    ${I.cloud}
+    <div class="empty-state-heading">No TWX file loaded</div>
+    <div class="empty-state-caption">Upload a .twx file to browse its objects</div>
+    <button class="btn btn-primary btn-large" id="upload-btn-main" ${state.isParsing?'disabled':''}>${state.isParsing?'Parsing…':'Upload .twx'}</button>
+    ${state.parseError ? `<div class="error-message" style="margin-top:12px;justify-content:center;">Parse failed: ${esc(state.parseError)} <a class="link" id="retry-upload">Retry</a></div>` : ''}
+  </div>`;
+}
+
+function viewEmptyState(msg, icon) {
+  return `<div class="empty-state">${icon || I.empty}<p class="empty-state-caption">${msg || 'Nothing to show here yet.'}</p></div>`;
+}
+
+// ── Summary Tab ────────────────────────────────────────────────
+function viewSummary() {
+  if (!hasData()) return viewEmptyState('No data available. Parse a .twx file to begin.');
+  if (!state.summaryData && Object.keys(state.currentObjects).length === 0) {
+    return `<div class="kpi-grid">${Array(4).fill('<div class="kpi-card skeleton skeleton-card"></div>').join('')}</div>`;
+  }
+  const stats = state.summaryData ? state.summaryData.statistics || state.summaryData : {};
+  const kpis = [
+    { label: 'Total Objects', value: stats.totalObjects || countAllObjects().total, delta: 'Across all types' },
+    { label: 'Application Objects', value: stats.applicationObjects || countAllObjects().app, delta: 'Application scope' },
+    { label: 'Toolkit Objects', value: stats.toolkitObjects || countAllObjects().toolkit, delta: 'From toolkits' },
+    { label: 'Object Types', value: stats.objectTypes || TYPES.filter(t => state.currentObjects[t]).length, delta: `${stats.toolkits || countToolkits() || 0} toolkits` },
+  ];
+  const recentObjects = getRecentObjects(8);
+  return `
+    <div class="kpi-grid">${kpis.map(k => `<div class="kpi-card"><div class="kpi-label">${k.label}</div><div class="kpi-value">${k.value}</div><div class="kpi-delta">${k.delta}</div></div>`).join('')}</div>
+    <div class="card">
+      <div class="card-header"><span class="card-title">Recent Objects</span><a class="link" data-nav="byType">View all →</a></div>
+      <table><thead><tr><th>Name</th><th>Type</th><th>Source</th><th>ID</th><th class="num">Version</th></tr></thead>
+      <tbody>${recentObjects.map(o => `<tr class="clickable-row" data-obj-id="${esc(o.id)}" data-obj-type="${esc(o.type)}"><td class="col-name">${esc(o.name||'Unnamed')}</td><td class="col-type">${esc(o.typeName||getDisplayName(o.type))}</td><td>${sourceBadge(o)}</td><td class="col-id">${esc((o.id||'').substring(0,40))}</td><td class="col-num">${esc(o.versionId||'')}</td></tr>`).join('')}</tbody></table>
+    </div>`;
+}
+
+function countAllObjects() {
+  let total = 0, app = 0, tk = 0;
+  for (const d of Object.values(state.currentObjects)) {
+    if (!d || !d.objects) continue;
+    d.objects.forEach(o => { total++; if (o.source === 'toolkit') tk++; else app++; });
+  }
+  return { total, app, toolkit: tk };
+}
+
+function countToolkits() {
+  const set = new Set();
+  for (const d of Object.values(state.currentObjects)) {
+    if (!d || !d.objects) continue;
+    d.objects.forEach(o => { if (o.toolkitInfo && o.toolkitInfo.shortName) set.add(o.toolkitInfo.shortName); });
+  }
+  return set.size;
+}
+
+function getRecentObjects(n) {
+  const all = [];
+  for (const d of Object.values(state.currentObjects)) {
+    if (!d || !d.objects) continue;
+    all.push(...d.objects.map(o => ({ ...o, type: o.type || d.type })));
+  }
+  return all.slice(0, n);
+}
+
+function sourceBadge(o) {
+  if (o.source === 'toolkit' && o.toolkitInfo) return `<span class="source-badge toolkit">${esc(o.toolkitInfo.shortName)}</span>`;
+  return `<span class="source-badge app">APP</span>`;
+}
+
+// ── By Type Tab ───────────────────────────────────────────────
+function viewByType() {
+  if (!hasData()) return viewEmptyState('No object types found. Parse a .twx file to see types.');
+  const types = TYPES.filter(t => state.currentObjects[t]);
+  return `
+    <div class="by-type-layout">
+      <div class="type-list-pane">
+        <div class="type-list-header">
+          <span class="type-list-header-title">Types</span>
+          <label class="toolkit-toggle-label" id="toolkit-toggle">
+            <span class="toggle-switch${state.toolkitToggle?' on':''}"></span>
+            Include toolkits
+          </label>
         </div>
-        <div class="detail-content" id="${sectionId}">
-            ${content}
-        </div>
-    `;
-
-    return section;
+        ${types.map(t => {
+          const counts = getTypeCounts(state.currentObjects[t]);
+          return `<div class="type-row${state.selectedType===t?' active':''}" data-type="${t}">
+            <span class="type-row-name">${getDisplayName(t)}</span>
+            <span class="type-row-count">${state.toolkitToggle && counts.app > 0 && counts.toolkit > 0
+              ? `${counts.app} <span class="badge-sm badge-app">APP</span> <span class="badge-sm badge-tk">+${counts.toolkit}</span>`
+              : counts.total}</span>
+          </div>`;
+        }).join('')}
+      </div>
+      <div class="object-list-pane" id="object-list-pane">
+        ${state.selectedType ? viewObjectList(state.selectedType) : viewEmptyState('Select a type to view objects.')}
+      </div>
+    </div>`;
 }
 
-/**
- * Toggle detail sections
- */
-function toggleDetailSection(sectionId) {
-    const content = document.getElementById(sectionId);
-    content.classList.toggle('collapsed');
+function viewObjectList(type) {
+  const data = state.currentObjects[type];
+  if (!data || !data.objects) return viewEmptyState('No objects of this type.');
+  const objects = getFilteredObjects(data.objects);
+  if (objects.length === 0) return viewEmptyState('No objects of this type. <a class="link" id="enable-toolkits-link">Try including toolkit objects</a>');
+  const filtered = state.quickFilter ? objects.filter(o => (o.name||'').toLowerCase().includes(state.quickFilter.toLowerCase()) || (o.id||'').toLowerCase().includes(state.quickFilter.toLowerCase())) : objects;
+  if (filtered.length === 0) return viewEmptyState(`No objects match "${esc(state.quickFilter)}".`);
+  return `<div class="card">
+    <div class="card-header"><span class="card-title">${getDisplayName(type)}</span><span style="color:var(--text-secondary);font-size:12px">${filtered.length} objects</span></div>
+    <table><thead><tr><th>Name</th><th style="width:80px">Source</th><th>ID</th></tr></thead>
+    <tbody>${filtered.map(o => `<tr class="clickable-row${state.drawerObject && state.drawerObject.id === o.id?' selected':''}" data-obj-json="${esc(JSON.stringify({id:o.id, type:type}))}"><td class="col-name">${esc(o.name||'Unnamed')}</td><td>${sourceBadge(o)}</td><td class="col-id">${esc((o.id||'').substring(0,45))}</td></tr>`).join('')}</tbody></table>
+  </div>`;
 }
 
-/**
- * Toggle script sections (for inline scripts and regular scripts)
- */
-function toggleScriptSection(sectionId) {
-    const content = document.getElementById(sectionId);
-    const toggle = document.getElementById(sectionId + '-toggle');
+function setupByTypeListeners() {
+  $('toolkit-toggle').onclick = () => { state.toolkitToggle = !state.toolkitToggle; renderAll(); };
+}
 
-    if (content.classList.contains('collapsed')) {
-        content.classList.remove('collapsed');
-        if (toggle) toggle.textContent = '▼';
+// ── Toolkits Tab ──────────────────────────────────────────────
+function viewToolkits() {
+  if (!hasData()) return viewEmptyState('No data available. Parse a .twx file to see toolkits.');
+  const tkMap = {};
+  for (const d of Object.values(state.currentObjects)) {
+    if (!d || !d.objects) continue;
+    d.objects.forEach(o => {
+      if (o.source === 'toolkit' && o.toolkitInfo) {
+        const key = o.toolkitInfo.shortName || o.toolkitInfo.name || 'Unknown';
+        if (!tkMap[key]) tkMap[key] = { ...o.toolkitInfo, count: 0 };
+        tkMap[key].count++;
+      }
+    });
+  }
+  const toolkits = Object.values(tkMap);
+  if (toolkits.length === 0) return viewEmptyState('No toolkits found in this TWX file.');
+  return `<div class="card">
+    <div class="card-header"><span class="card-title">Toolkits</span><span style="color:var(--text-secondary);font-size:12px">${toolkits.length} found</span></div>
+    <table><thead><tr><th>Toolkit</th><th style="width:100px">Version</th><th class="num" style="width:80px">Objects</th><th style="width:60px"></th></tr></thead>
+    <tbody>${toolkits.map(t => `<tr>
+      <td class="col-name" title="${esc(t.name||'')}">${esc(t.shortName||t.name||'Unknown')}</td>
+      <td class="col-id">${esc(t.version||'')}</td>
+      <td class="col-num">${t.count}</td>
+      <td><a class="link" data-filter-toolkit="${esc(t.shortName)}">Open →</a></td>
+    </tr>`).join('')}</tbody></table>
+  </div>`;
+}
+
+// ── Search Tab ─────────────────────────────────────────────────
+function viewSearch() {
+  return `
+    <div class="search-tab-input-area">
+      <input type="text" class="search-tab-input" id="search-input" placeholder="Enter search term (e.g., variable name, function name)…" value="${esc(state.searchTerm)}">
+      <button class="btn btn-primary btn-large" id="search-btn">Search</button>
+      <button class="btn btn-secondary btn-large" id="search-clear">Clear</button>
+    </div>
+    <div id="search-results-area">
+      ${state.searchResults.length > 0 ? viewSearchResults() : 
+        (state.searchTerm && state.searchSearched ? viewEmptyState(`No results found for "${esc(state.searchTerm)}".`, I.empty) :
+         viewEmptyState('Type a term above to search across all objects.', I.empty))}
+    </div>`;
+}
+
+function viewSearchResults() {
+  return `<div style="margin-bottom:12px;font-size:13px;color:var(--text-secondary)">Found <strong>${state.searchResults.length}</strong> results for "<strong>${esc(state.searchTerm)}</strong>"</div>
+    ${state.searchResults.map(r => `<div class="search-result-card" data-search-obj-id="${esc(r.objectId)}">
+      <div class="search-result-header">
+        <span class="search-result-name">${esc(r.objectName||'Unnamed')}</span>
+        ${sourceBadge(r)}
+        <span class="badge-sm badge-app">${esc(r.typeName||getDisplayName(r.objectType))}</span>
+        <span class="search-result-count">${r.matchCount} match${r.matchCount!==1?'es':''}</span>
+      </div>
+      <div class="search-result-snippet">${highlightTerm(r.preview, state.searchTerm)}</div>
+    </div>`).join('')}`;
+}
+
+// ── Dependencies / Settings stubs ──────────────────────────────
+function viewDeps() { return viewEmptyState('Dependency graph will appear once objects are analyzed.', I.deps); }
+function viewSettings() {
+  return `<div class="settings-group">
+    <div class="settings-group-title">Preferences</div>
+    <div class="setting-row"><div><div class="setting-label">Theme</div><div class="setting-desc">Currently only light mode is available.</div></div><span style="font-size:12px;color:var(--text-secondary)">Light</span></div>
+    <div class="setting-row"><div><div class="setting-label">Toolkit objects</div><div class="setting-desc">Show toolkit objects by default.</div></div>
+    <label class="toolkit-toggle-label"><span class="toggle-switch${state.toolkitToggle?' on':''}" id="settings-toolkit-toggle"></span></label></div>
+  </div>
+  <div class="error-message" style="justify-content:center;"><span>Settings are stored locally per session.</span></div>`;
+}
+
+// ── Drawer ─────────────────────────────────────────────────────
+function openDrawer(object, subTab) {
+  state.drawerObject = object;
+  state.drawerOpen = true;
+  state.drawerSubTab = subTab || 'info';
+  $('drawer-overlay').classList.add('open');
+  $('drawer').classList.add('open');
+  renderDrawer();
+  document.body.style.overflow = 'hidden';
+}
+
+function closeDrawer() {
+  state.drawerOpen = false;
+  $('drawer-overlay').classList.remove('open');
+  $('drawer').classList.remove('open');
+  document.body.style.overflow = '';
+  renderAll();
+}
+
+function renderDrawer() {
+  const obj = state.drawerObject;
+  if (!obj) return;
+  $('drawer-name').textContent = obj.name || 'Unnamed Object';
+  $('drawer-meta').innerHTML = `<span class="badge-sm badge-app">${esc(obj.typeName||getDisplayName(obj.type))}</span> · <span class="col-id">${esc((obj.id||'').substring(0, 45))}</span> · ${esc(obj.versionId||'')}`;
+  renderDrawerSubNav(obj);
+  renderDrawerBody(obj);
+}
+
+function renderDrawerSubNav(obj) {
+  const tabs = [{ id: 'info', label: 'Info' }];
+  if (obj.details) {
+    if (obj.details.variables) tabs.push({ id: 'variables', label: 'Variables' });
+    if ((obj.details.scripts && obj.details.scripts.length > 0) || (obj.details.inlineScripts && obj.details.inlineScripts.length > 0) || obj.details.loadJsFunction) tabs.push({ id: 'scripts', label: 'Scripts' });
+    if (obj.details.elements) tabs.push({ id: 'elements', label: 'Elements' });
+    if (obj.details.schema) tabs.push({ id: 'schema', label: 'Schema' });
+  }
+  $('drawer-subnav').innerHTML = tabs.map(t => `<button class="drawer-subnav-btn${state.drawerSubTab===t.id?' active':''}" data-subtab="${t.id}">${t.label}</button>`).join('');
+}
+
+function renderDrawerBody(obj) {
+  const el = $('drawer-body');
+  switch (state.drawerSubTab) {
+    case 'info': el.innerHTML = drawInfo(obj); break;
+    case 'variables': el.innerHTML = drawVariables(obj); break;
+    case 'scripts': el.innerHTML = drawScripts(obj); break;
+    case 'elements': el.innerHTML = drawElements(obj); break;
+    case 'schema': el.innerHTML = drawSchema(obj); break;
+    default: el.innerHTML = '';
+  }
+}
+
+// ── Drawer: Info ──────────────────────────────────────────────
+function drawInfo(obj) {
+  let rows = [
+    ['Name', obj.name || 'N/A'],
+    ['ID', obj.id || 'N/A', true],
+    ['Version ID', obj.versionId || 'N/A', true],
+    ['Type', getDisplayName(obj.type || '') || obj.typeName || 'N/A'],
+  ];
+  if (obj.subType) rows.push(['Sub Type', obj.subType]);
+  if (obj.details) {
+    if (obj.details.displayName) rows.push(['Display Name', obj.details.displayName]);
+    if (obj.details.description) rows.push(['Description', obj.details.description]);
+  }
+  rows.push(['Source', obj.source === 'toolkit' ? 'TOOLKIT' : 'APP']);
+  if (obj.source === 'toolkit' && obj.toolkitInfo) {
+    rows.push(['Toolkit Name', obj.toolkitInfo.name], ['Toolkit Short Name', obj.toolkitInfo.shortName], ['Toolkit ID', obj.toolkitInfo.id], ['Toolkit File', obj.toolkitInfo.fileName]);
+    if (obj.toolkitInfo.isSystem) rows.push(['System Toolkit', 'Yes']);
+  }
+  return `<table class="info-table">${rows.map(([k,v,mono]) => `<tr><td>${esc(k)}</td><td${mono?' style="font-family:var(--font-mono);font-size:12px"':''}>${esc(v)}</td></tr>`).join('')}</table>`;
+}
+
+// ── Drawer: Variables ─────────────────────────────────────────
+function drawVariables(obj) {
+  if (!obj.details || !obj.details.variables) return viewEmptyMsg('No variables defined.');
+  const v = obj.details.variables;
+  const type = obj.type || '';
+  const useBox = type === 'cshs' || type === 'process';
+  let html = '';
+  const sections = [
+    { key: 'input', label: 'Input Variables' },
+    { key: 'output', label: 'Output Variables' },
+    { key: 'private', label: 'Private Variables' },
+  ];
+  for (const s of sections) {
+    const vars = v[s.key];
+    if (!vars || vars.length === 0) continue;
+    html += `<div class="detail-section"><div class="detail-section-title">${s.label}</div>`;
+    if (useBox) {
+      html += `<div class="var-boxes">${vars.map(vr => `<div class="var-box"><span class="var-box-dot${vr.hasDefault?' has-default':''}"></span><span class="var-box-name">${esc(vr.name||'unnamed')}</span></div>`).join('')}</div>`;
     } else {
-        content.classList.add('collapsed');
-        if (toggle) toggle.textContent = '▶';
+      html += `<table class="variables-table"><thead><tr><th>Name</th><th>Type</th><th>Default</th></tr></thead><tbody>${vars.map(vr => `<tr><td style="font-weight:500">${esc(vr.name||'unnamed')}</td><td>${esc(vr.type||'')}</td><td>${vr.hasDefault?'✓':'—'}</td></tr>`).join('')}</tbody></table>`;
     }
-}
-
-/**
- * Generate basic information display
- */
-function generateBasicInfo(object) {
-    let basicInfo = `
-        <table class="variables-table">
-            <tr><th>Property</th><th>Value</th></tr>
-            <tr><td>Name</td><td>${object.name || 'N/A'}</td></tr>
-            <tr><td>ID</td><td>${object.id}</td></tr>
-            <tr><td>Version ID</td><td>${object.versionId || 'N/A'}</td></tr>
-            <tr><td>Type</td><td>${object.typeName || object.type}</td></tr>
-            ${object.subType ? `<tr><td>Sub Type</td><td>${object.subType}</td></tr>` : ''}
-            ${object.details?.displayName ? `<tr><td>Display Name</td><td>${object.details.displayName}</td></tr>` : ''}
-            ${object.details?.description ? `<tr><td>Description</td><td>${object.details.description}</td></tr>` : ''}
-    `;
-
-    // 🆕 Add source information
-    if (object.source) {
-        basicInfo += `<tr><td>Source</td><td><span class="${object.source === 'toolkit' ? 'toolkit-indicator' : 'app-indicator'}">${object.source.toUpperCase()}</span></td></tr>`;
-    }
-
-    // 🆕 Add toolkit details if applicable
-    if (object.source === 'toolkit' && object.toolkitInfo) {
-        basicInfo += `
-            <tr><td>Toolkit Name</td><td>${object.toolkitInfo.name}</td></tr>
-            <tr><td>Toolkit Short Name</td><td>${object.toolkitInfo.shortName}</td></tr>
-            <tr><td>Toolkit ID</td><td>${object.toolkitInfo.id}</td></tr>
-            <tr><td>Toolkit File</td><td>${object.toolkitInfo.fileName}</td></tr>
-            ${object.toolkitInfo.isSystem ? '<tr><td>System Toolkit</td><td>Yes</td></tr>' : ''}
-        `;
-    }
-
-    basicInfo += '</table>';
-
-    return basicInfo;
-}
-
-/**
- * Generate variables display
- */
-function generateVariablesDisplay(variables, objectType) {
-    // Use box layout for CSHS and Services (process) types
-    if (objectType === 'cshs' || objectType === 'process') {
-        return generateVariablesBoxDisplay(variables);
-    }
-
-    // Use table layout for other types
-    let html = '';
-
-    if (variables.input && variables.input.length > 0) {
-        html += '<h4>Input Variables</h4>';
-        html += generateVariablesTable(variables.input);
-    }
-
-    if (variables.output && variables.output.length > 0) {
-        html += '<h4>Output Variables</h4>';
-        html += generateVariablesTable(variables.output);
-    }
-
-    if (variables.private && variables.private.length > 0) {
-        html += '<h4>Private Variables</h4>';
-        html += generateVariablesTable(variables.private);
-    }
-
-    return html || '<p>No variables found</p>';
-}
-
-/**
- * Generate variables box display for CSHS and Services
- */
-function generateVariablesBoxDisplay(variables) {
-    let html = '<div class="variables-boxes">';
-
-    if (variables.input && variables.input.length > 0) {
-        html += generateVariableTypeSection('Input Variables', variables.input, 'input');
-    }
-
-    if (variables.output && variables.output.length > 0) {
-        html += generateVariableTypeSection('Output Variables', variables.output, 'output');
-    }
-
-    if (variables.private && variables.private.length > 0) {
-        html += generateVariableTypeSection('Private Variables', variables.private, 'private');
-    }
-
     html += '</div>';
-    return html || '<p>No variables found</p>';
+  }
+  return html || viewEmptyMsg('No variables defined.');
 }
 
-/**
- * Generate a variable type section with boxes
- */
-function generateVariableTypeSection(title, variables, direction) {
-    let html = `
-        <div class="variable-type-section">
-            <div class="variable-type-title">${title}</div>
-            <div class="variable-boxes-container">
-    `;
-
-    variables.forEach(variable => {
-        html += generateVariableBox(variable, direction);
-    });
-
-    html += '</div></div>';
-    return html;
+// ── Drawer: Scripts ────────────────────────────────────────────
+function drawScripts(obj) {
+  if (!obj.details) return viewEmptyMsg('No scripts found.');
+  let html = '';
+  const scripts = obj.details.scripts || [];
+  scripts.forEach((s, i) => { html += scriptBlock(`script-${i}`, s.name || `Script ${i+1}`, 'JS', s.script); });
+  const inline = obj.details.inlineScripts || [];
+  inline.forEach((s, i) => {
+    html += scriptBlock(`inline-${i}`, s.name || `Inline ${i+1}`, s.scriptType || 'JS', s.script || s.scriptBlock);
+    if (s.preScript && s.preScript.trim()) html += `<div class="sub-code"><div class="sub-code-label">Pre Script</div><div class="code-block">${esc(s.preScript)}</div></div>`;
+    if (s.postScript && s.postScript.trim()) html += `<div class="sub-code"><div class="sub-code-label">Post Script</div><div class="code-block">${esc(s.postScript)}</div></div>`;
+  });
+  if (obj.details.loadJsFunction) {
+    html += scriptBlock('loadJs', 'Load JS Function', 'JS', obj.details.loadJsFunction);
+  }
+  return html || viewEmptyMsg('No scripts found.');
 }
 
-/**
- * Generate a single variable box
- */
-function generateVariableBox(variable, direction) {
-    const hasDefault = variable.hasDefault || false;
-    const variableName = variable.name || 'unnamed';
+function scriptBlock(id, name, type, code) {
+  if (!code) return '';
+  const escaped = esc(code).replace(/\r\r\n/g, '\n').replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+  return `<div class="script-block">
+    <div class="script-block-header" data-script-id="${id}"><span class="script-block-name">${esc(name)}</span><span class="script-block-type">${esc(type)}</span><span class="script-block-chevron">${I.chevron}</span></div>
+    <div class="script-block-body"><div class="code-block">${escaped}</div></div>
+  </div>`;
+}
 
-    return `
-        <div class="variable-box" title="${variable.description || 'No description'}">
-            <div class="default-indicator ${hasDefault ? 'has-default' : ''}"></div>
-            <span class="variable-name">${variableName}</span>
+// ── Drawer: Elements ──────────────────────────────────────────
+function drawElements(obj) {
+  if (!obj.details || !obj.details.elements) return viewEmptyMsg('No process elements found.');
+  const e = obj.details.elements;
+  let html = '';
+  const sections = [
+    { key: 'scriptTasks', label: 'Script Tasks' },
+    { key: 'formTasks', label: 'Form Tasks' },
+    { key: 'callActivities', label: 'Call Activities' },
+  ];
+  for (const s of sections) {
+    const items = e[s.key];
+    if (!items || items.length === 0) continue;
+    html += `<div class="detail-section"><div class="detail-section-title">${s.label}</div>`;
+    items.forEach((el, i) => {
+      const elId = `${s.key}-${i}`;
+      html += `<div class="script-block">
+        <div class="script-block-header" data-script-id="${elId}"><span class="script-block-name">${esc(el.name||'Unnamed')}</span><span class="script-block-type">${s.label}</span><span class="element-row-id">${esc(el.id||'')}</span><span class="script-block-chevron">${I.chevron}</span></div>
+        <div class="script-block-body">
+          ${el.script ? `<div class="sub-code"><div class="sub-code-label">Main Script</div><div class="code-block">${esc(el.script)}</div></div>` : ''}
+          ${el.preScript ? `<div class="sub-code"><div class="sub-code-label">Pre Script</div><div class="code-block">${esc(el.preScript)}</div></div>` : ''}
+          ${el.postScript ? `<div class="sub-code"><div class="sub-code-label">Post Script</div><div class="code-block">${esc(el.postScript)}</div></div>` : ''}
         </div>
-    `;
-}
-
-/**
- * Generate scripts display
- */
-function generateScriptsDisplay(scripts) {
-    let html = '';
-
-    scripts.forEach((script, index) => {
-        html += `
-            <div class="script-detail-section">
-                <div class="script-detail-header" onclick="toggleScriptSection('script-${index}')">
-                    <span class="script-detail-title">📜 ${escapeHtml(script.name || `Script ${index + 1}`)}</span>
-                    <span class="script-toggle" id="script-${index}-toggle">▼</span>
-                </div>
-                <div class="script-detail-content" id="script-${index}">
-                    <div class="code-block">${escapeHtml(script.script)}</div>
-                </div>
-            </div>
-        `;
+      </div>`;
     });
-
-    return html;
-}
-
-/**
- * Generate inline scripts display
- */
-function generateInlineScriptsDisplay(scripts) {
-    let html = '';
-
-    scripts.forEach((script, index) => {
-        // Handle different script structures (CSHS vs other types)
-        let scriptContent = script.script || script.scriptBlock || 'No script content';
-
-        // Normalize line endings and handle formatting
-        if (scriptContent && scriptContent !== 'No script content') {
-            scriptContent = scriptContent
-                .replace(/\r\r\n/g, '\n')  // Convert \r\r\n to \n
-                .replace(/\r\n/g, '\n')    // Convert \r\n to \n
-                .replace(/\r/g, '\n');     // Convert standalone \r to \n
-        }
-
-        const scriptName = script.name || `Inline Script ${index + 1}`;
-        const scriptType = script.scriptType || 'JS';
-
-        // Create expandable script sections like the regular scripts
-        html += `
-            <div class="script-detail-section">
-                <div class="script-detail-header" onclick="toggleScriptSection('inline-script-${index}')">
-                    <span class="script-detail-title">📜 ${escapeHtml(scriptName)} (${scriptType})</span>
-                    <span class="script-toggle" id="inline-script-${index}-toggle">▼</span>
-                </div>
-                <div class="script-detail-content" id="inline-script-${index}">
-                    <div class="code-block">${escapeHtml(scriptContent)}</div>
-                    ${script.preScript && script.preScript.trim() ? `<div class="script-section"><h5>Pre Script:</h5><div class="code-block">${escapeHtml(script.preScript.replace(/\r\r\n/g, '\n').replace(/\r\n/g, '\n').replace(/\r/g, '\n'))}</div></div>` : ''}
-                    ${script.postScript && script.postScript.trim() ? `<div class="script-section"><h5>Post Script:</h5><div class="code-block">${escapeHtml(script.postScript.replace(/\r\r\n/g, '\n').replace(/\r\n/g, '\n').replace(/\r/g, '\n'))}</div></div>` : ''}
-                </div>
-            </div>
-        `;
-    });
-
-    return html;
-}
-
-/**
- * Generate process elements display
- */
-function generateElementsDisplay(elements) {
-    let html = '';
-
-    if (elements.scriptTasks && elements.scriptTasks.length > 0) {
-        html += '<h4>Script Tasks</h4>';
-        elements.scriptTasks.forEach((task, index) => {
-            html += generateElementScriptDisplay(task, `script-task-${index}`, 'Script Task');
-        });
-    }
-
-    if (elements.formTasks && elements.formTasks.length > 0) {
-        html += '<h4>Form Tasks</h4>';
-        elements.formTasks.forEach((task, index) => {
-            html += generateElementScriptDisplay(task, `form-task-${index}`, 'Form Task');
-        });
-    }
-
-    if (elements.callActivities && elements.callActivities.length > 0) {
-        html += '<h4>Call Activities</h4>';
-        elements.callActivities.forEach((activity, index) => {
-            html += generateElementScriptDisplay(activity, `call-activity-${index}`, 'Call Activity');
-        });
-    }
-
-    return html || '<p>No process elements found</p>';
-}
-
-/**
- * Generate expandable script display for process elements
- */
-function generateElementScriptDisplay(element, elementId, elementType) {
-    const hasScripts = (element.preScript && element.preScript.trim()) ||
-        (element.postScript && element.postScript.trim()) ||
-        (element.script && element.script.trim());
-
-    if (!hasScripts) {
-        // No scripts - show as simple item
-        return `
-            <div class="object-item">
-                <div class="object-name">${element.name || 'Unnamed'}</div>
-                <div class="object-meta">ID: ${element.id} | Type: ${elementType}</div>
-            </div>
-        `;
-    }
-
-    // Has scripts - show as expandable
-    return `
-        <div class="script-detail-section">
-            <div class="script-detail-header" onclick="toggleScriptSection('${elementId}')">
-                <span class="script-detail-title">⚙️ ${escapeHtml(element.name || 'Unnamed')} (${elementType})</span>
-                <span class="script-toggle" id="${elementId}-toggle">▼</span>
-            </div>
-            <div class="script-detail-content" id="${elementId}">
-                <div class="element-info">
-                    <p><strong>ID:</strong> ${element.id}</p>
-                    <p><strong>Type:</strong> ${elementType}</p>
-                </div>
-                ${element.script && element.script.trim() ? `
-                    <div class="script-section">
-                        <h5>Main Script:</h5>
-                        <div class="code-block">${escapeHtml(element.script.replace(/\r\r\n/g, '\n').replace(/\r\n/g, '\n').replace(/\r/g, '\n'))}</div>
-                    </div>
-                ` : ''}
-                ${element.preScript && element.preScript.trim() ? `
-                    <div class="script-section">
-                        <h5>Pre Script:</h5>
-                        <div class="code-block">${escapeHtml(element.preScript.replace(/\r\r\n/g, '\n').replace(/\r\n/g, '\n').replace(/\r/g, '\n'))}</div>
-                    </div>
-                ` : ''}
-                ${element.postScript && element.postScript.trim() ? `
-                    <div class="script-section">
-                        <h5>Post Script:</h5>
-                        <div class="code-block">${escapeHtml(element.postScript.replace(/\r\r\n/g, '\n').replace(/\r\n/g, '\n').replace(/\r/g, '\n'))}</div>
-                    </div>
-                ` : ''}
-            </div>
-        </div>
-    `;
-}
-
-/**
- * Show a panel
- */
-function showPanel(panelId) {
-    const panel = document.getElementById(panelId);
-    panel.style.display = 'block';
-
-    // Expand the panel if it's collapsed
-    const contentId = panelId.replace('-panel', '-content');
-    const content = document.getElementById(contentId);
-    if (content && content.classList.contains('collapsed')) {
-        togglePanel(contentId);
-    }
-}
-
-/**
- * Handle search input keyup
- */
-function handleSearchKeyup(event) {
-    if (event.key === 'Enter') {
-        performSearch();
-    }
-}
-
-/**
- * Test function to verify toolkit objects are loaded and searchable
- */
-function testToolkitSearch() {
-    console.log('🧪 Testing toolkit search functionality...');
-    console.log(`🔧 Toolkit toggle enabled: ${showToolkitObjects}`);
-
-    let totalToolkitObjects = 0;
-    let sampleToolkitObjects = [];
-
-    Object.keys(currentObjects).forEach(objectType => {
-        const objectData = currentObjects[objectType];
-        if (objectData && objectData.objects) {
-            const toolkitObjs = objectData.objects.filter(obj => obj.source === 'toolkit');
-            totalToolkitObjects += toolkitObjs.length;
-
-            if (toolkitObjs.length > 0) {
-                sampleToolkitObjects.push(...toolkitObjs.slice(0, 2).map(obj => ({
-                    name: obj.name,
-                    type: objectType,
-                    toolkit: obj.toolkitInfo?.shortName || 'Unknown'
-                })));
-            }
-        }
-    });
-
-    console.log(`📊 Total toolkit objects found: ${totalToolkitObjects}`);
-    console.log(`📋 Sample toolkit objects:`, sampleToolkitObjects);
-
-    if (totalToolkitObjects > 0 && sampleToolkitObjects.length > 0) {
-        console.log(`✅ Toolkit objects are loaded and should be searchable when toggle is ON`);
-
-        // Test search with a sample toolkit object name
-        const sampleName = sampleToolkitObjects[0].name;
-        console.log(`🔍 Testing search with toolkit object name: "${sampleName}"`);
-
-        if (showToolkitObjects) {
-            const testResults = performClientSideSearch(sampleName);
-            console.log(`📋 Test search results: ${testResults.length} found`);
-            return testResults;
-        } else {
-            console.log(`⚠️ Toolkit toggle is OFF - enable it to search toolkit objects`);
-        }
-    } else {
-        console.log(`❌ No toolkit objects found - check if TWX file contains toolkits`);
-    }
-
-    return [];
-}
-
-/**
- * Clear search results
- */
-function clearSearch() {
-    document.getElementById('search-input').value = '';
-    document.getElementById('search-results').style.display = 'none';
-    searchResults = [];
-    updateStatus('Search cleared');
-}
-
-/**
- * Perform deep search
- */
-async function performSearch() {
-    const searchTerm = document.getElementById('search-input').value.trim();
-
-    if (!searchTerm) {
-        alert('Please enter a search term');
-        return;
-    }
-
-    updateStatus('Searching...');
-
-    // Always use client-side search to ensure toolkit objects are included
-    try {
-        searchResults = performClientSideSearch(searchTerm);
-        displaySearchResults(searchTerm);
-        updateStatus(`Found ${searchResults.length} results for "${searchTerm}"`);
-    } catch (error) {
-        console.error('Search error:', error);
-        updateStatus('Search failed');
-        alert('Search failed: ' + error.message);
-    }
-}
-
-/**
- * Perform client-side search across all loaded objects
- */
-function performClientSideSearch(searchTerm) {
-    const results = [];
-    const lowerSearchTerm = searchTerm.toLowerCase();
-
-    console.log(`🔍 Starting search for: "${searchTerm}"`);
-    console.log(`🔧 Toolkit objects enabled: ${showToolkitObjects}`);
-
-    let totalObjects = 0;
-    let toolkitObjects = 0;
-    let appObjects = 0;
-    let searchedObjects = 0;
-
-    // Search through all object types
-    Object.keys(currentObjects).forEach(objectType => {
-        const objectData = currentObjects[objectType];
-        if (!objectData || !objectData.objects) {
-            console.log(`⚠️ No objects found for type: ${objectType}`);
-            return;
-        }
-
-        console.log(`📂 Searching in ${objectType}: ${objectData.objects.length} objects`);
-
-        objectData.objects.forEach(obj => {
-            totalObjects++;
-
-            if (obj.source === 'toolkit') {
-                toolkitObjects++;
-            } else {
-                appObjects++;
-            }
-
-            // Skip toolkit objects if toolkit toggle is off
-            if (!showToolkitObjects && obj.source === 'toolkit') {
-                console.log(`⏭️ Skipping toolkit object: ${obj.name} (toggle off)`);
-                return;
-            }
-
-            searchedObjects++;
-
-            const matches = [];
-
-            // Search in object name
-            if (obj.name && obj.name.toLowerCase().includes(lowerSearchTerm)) {
-                matches.push({
-                    field: 'name',
-                    value: obj.name,
-                    snippet: obj.name
-                });
-            }
-
-            // Search in scripts
-            if (obj.details?.scripts) {
-                obj.details.scripts.forEach(script => {
-                    if (script.script && script.script.toLowerCase().includes(lowerSearchTerm)) {
-                        matches.push({
-                            field: 'script',
-                            value: script.name,
-                            snippet: createSnippet(script.script, searchTerm)
-                        });
-                    }
-                });
-            }
-
-            // Search in inline scripts
-            if (obj.details?.inlineScripts) {
-                obj.details.inlineScripts.forEach(script => {
-                    if (script.scriptBlock && script.scriptBlock.toLowerCase().includes(lowerSearchTerm)) {
-                        matches.push({
-                            field: 'inlineScript',
-                            value: script.name,
-                            snippet: createSnippet(script.scriptBlock, searchTerm)
-                        });
-                    }
-                });
-            }
-
-            // Search in variables
-            if (obj.details?.variables) {
-                ['input', 'output', 'private'].forEach(varType => {
-                    if (obj.details.variables[varType]) {
-                        obj.details.variables[varType].forEach(variable => {
-                            if (variable.name && variable.name.toLowerCase().includes(lowerSearchTerm)) {
-                                matches.push({
-                                    field: 'variable',
-                                    value: `${varType}: ${variable.name}`,
-                                    snippet: variable.name
-                                });
-                            }
-                        });
-                    }
-                });
-            }
-
-            // Search in business object properties
-            if (obj.details?.schema?.properties) {
-                obj.details.schema.properties.forEach(property => {
-                    if (property.name && property.name.toLowerCase().includes(lowerSearchTerm)) {
-                        matches.push({
-                            field: 'property',
-                            value: property.name,
-                            snippet: `${property.name} (${property.type})`
-                        });
-                    }
-                });
-            }
-
-            // Search in load JS function
-            if (obj.details?.loadJsFunction && obj.details.loadJsFunction.toLowerCase().includes(lowerSearchTerm)) {
-                matches.push({
-                    field: 'loadJsFunction',
-                    value: 'Load JS Function',
-                    snippet: createSnippet(obj.details.loadJsFunction, searchTerm)
-                });
-            }
-
-            // If we found matches, add this object to results
-            if (matches.length > 0) {
-                results.push({
-                    objectId: obj.id,
-                    objectName: obj.name,
-                    objectType: obj.type,
-                    typeName: obj.typeName || objectType,
-                    source: obj.source || 'application',
-                    toolkitInfo: obj.toolkitInfo,
-                    matches: matches,
-                    matchCount: matches.length,
-                    preview: matches[0].snippet
-                });
-            }
-        });
-    });
-
-    console.log(`📊 Search completed:`);
-    console.log(`  - Total objects scanned: ${totalObjects}`);
-    console.log(`  - Objects actually searched: ${searchedObjects}`);
-    console.log(`  - Application objects: ${appObjects}`);
-    console.log(`  - Toolkit objects: ${toolkitObjects}`);
-    console.log(`  - Results found: ${results.length}`);
-
-    // Debug: Show some sample toolkit objects if any exist
-    if (toolkitObjects > 0) {
-        console.log(`🔧 Sample toolkit objects found:`);
-        Object.keys(currentObjects).forEach(objectType => {
-            const objectData = currentObjects[objectType];
-            if (objectData && objectData.objects) {
-                const toolkitSamples = objectData.objects.filter(obj => obj.source === 'toolkit').slice(0, 3);
-                if (toolkitSamples.length > 0) {
-                    console.log(`  ${objectType}:`, toolkitSamples.map(obj => `${obj.name} (${obj.toolkitInfo?.shortName || 'Unknown'})`));
-                }
-            }
-        });
-    }
-
-    // Debug: Show sample results if any found
-    if (results.length > 0) {
-        console.log(`📋 Sample search results:`);
-        results.slice(0, 3).forEach(result => {
-            console.log(`  - ${result.objectName} (${result.source}) - ${result.matchCount} matches`);
-        });
-    }
-
-    return results;
-}
-
-/**
- * Create a snippet around the found text
- */
-function createSnippet(text, searchTerm) {
-    if (!text || !searchTerm) return '';
-
-    const lowerText = text.toLowerCase();
-    const lowerSearchTerm = searchTerm.toLowerCase();
-    const index = lowerText.indexOf(lowerSearchTerm);
-
-    if (index === -1) return text.substring(0, 100) + '...';
-
-    const start = Math.max(0, index - 50);
-    const end = Math.min(text.length, index + searchTerm.length + 50);
-
-    let snippet = text.substring(start, end);
-    if (start > 0) snippet = '...' + snippet;
-    if (end < text.length) snippet = snippet + '...';
-
-    return snippet;
-}
-
-/**
- * Display search results
- */
-function displaySearchResults(searchTerm) {
-    const resultsContainer = document.getElementById('search-results');
-    const infoContainer = document.getElementById('search-info');
-    const listContainer = document.getElementById('search-results-list');
-
-    // Show results section
-    resultsContainer.style.display = 'block';
-
-    // Update info
-    infoContainer.innerHTML = `Found <strong>${searchResults.length}</strong> results for "<strong>${searchTerm}</strong>"`;
-
-    // Clear and populate results list
-    listContainer.innerHTML = '';
-
-    if (searchResults.length === 0) {
-        listContainer.innerHTML = '<div class="loading">No results found</div>';
-        return;
-    }
-
-    searchResults.forEach((result, index) => {
-        const item = document.createElement('div');
-        item.className = 'search-result-item';
-        item.onclick = () => showSearchResultDetails(result);
-
-        // Extract object info
-        const objectName = result.objectName || 'Unknown Object';
-        const rawObjectType = result.objectType || 'Unknown Type';
-
-        // Apply display name transformation for consistency
-        let objectType = rawObjectType;
-
-        // Check if this is a CSHS object (process with subType 10)
-        if (rawObjectType === 'process' || rawObjectType === 'Process') {
-            // Try to find the actual object to check its subType
-            const foundObject = findObjectInCurrentData(result.objectId);
-            if (foundObject && (foundObject.subType === '10' ||
-                (foundObject.details && foundObject.details.processType === '10'))) {
-                objectType = 'CSHS';
-            } else {
-                objectType = 'Services';
-            }
-        }
-
-        const preview = result.preview || (result.matches && result.matches.length > 0 ? result.matches[0].snippet : 'No preview available');
-        const matchCount = result.matchCount || (result.matches ? result.matches.length : 0);
-
-        // Create match count indicator
-        const matchIndicator = matchCount > 1 ? ` (${matchCount} matches)` : '';
-
-        // Add source indicator for toolkit objects
-        let sourceIndicator = '';
-        if (result.source === 'toolkit' && result.toolkitInfo) {
-            sourceIndicator = `<span class="search-source-badge toolkit">${result.toolkitInfo.shortName}</span>`;
-        } else if (result.source === 'application') {
-            sourceIndicator = '<span class="search-source-badge app">APP</span>';
-        }
-
-        item.innerHTML = `
-            <div class="search-result-header">
-                <span class="search-result-title">${escapeHtml(objectName)}${matchIndicator}</span>
-                <div class="search-result-badges">
-                    ${sourceIndicator}
-                    <span class="search-result-type">${escapeHtml(objectType)}</span>
-                </div>
-            </div>
-            <div class="search-result-preview">${highlightSearchTerm(preview, searchTerm)}</div>
-        `;
-
-        listContainer.appendChild(item);
-    });
-}
-
-/**
- * Highlight search term in text
- */
-function highlightSearchTerm(text, searchTerm) {
-    if (!text || !searchTerm) return text;
-
-    const regex = new RegExp(`(${escapeRegex(searchTerm)})`, 'gi');
-    return escapeHtml(text).replace(regex, '<span class="highlight">$1</span>');
-}
-
-/**
- * Show detailed view of search result
- */
-function showSearchResultDetails(result) {
-    // Try to find the actual object in the parsed data
-    const objectId = result.objectId;
-    let foundObject = null;
-    let foundType = null;
-
-    // Search through all object types to find the matching object
-    for (const [type, typeData] of Object.entries(currentObjects)) {
-        if (typeData && typeData.objects) {
-            const object = typeData.objects.find(obj => obj.id === objectId);
-            if (object) {
-                foundObject = object;
-                foundType = type;
-                break;
-            }
-        }
-    }
-
-    if (foundObject) {
-        // Select the object type first if not already selected
-        if (selectedObjectType !== foundType) {
-            selectObjectType(foundType);
-        }
-
-        // Display the object details
-        selectedObject = foundObject;
-        displayObjectDetails(foundObject);
-        showPanel('object-details-panel');
-
-        // Update panel title
-        const title = document.getElementById('object-details-title');
-        title.textContent = `📄 ${foundObject.name || 'Unnamed Object'}`;
-
-        updateStatus(`Viewing search result: ${foundObject.name || 'object'} details`);
-
-        // Highlight the object in the list if it's currently displayed
-        setTimeout(() => {
-            document.querySelectorAll('.object-item').forEach(item => {
-                item.classList.remove('selected');
-            });
-            // Find and highlight the matching object item
-            const objectItems = document.querySelectorAll('.object-item');
-            objectItems.forEach(item => {
-                const itemText = item.textContent;
-                if (itemText.includes(foundObject.id) || (foundObject.name && itemText.includes(foundObject.name))) {
-                    item.classList.add('selected');
-                    item.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                }
-            });
-        }, 100);
-    } else {
-        updateStatus(`Could not find object details for: ${result.objectName}`);
-    }
-}
-
-/**
- * Clear search results
- */
-function clearSearch() {
-    document.getElementById('search-input').value = '';
-    document.getElementById('search-results').style.display = 'none';
-    searchResults = [];
-    updateStatus('Search cleared');
-}
-
-/**
- * Utility functions
- */
-function updateStatus(message) {
-    document.getElementById('status-text').textContent = message;
-}
-
-function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-}
-
-function escapeRegex(string) {
-    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-}
-
-function updateObjectCount() {
-    const total = Object.values(currentObjects).reduce((sum, data) => {
-        return sum + (data.objects ? data.objects.length : 0);
-    }, 0);
-
-    // 🆕 Calculate app/toolkit breakdown
-    let appTotal = 0;
-    let toolkitTotal = 0;
-
-    Object.values(currentObjects).forEach(data => {
-        if (data.objects) {
-            appTotal += data.objects.filter(obj => obj.source === 'application').length;
-            toolkitTotal += data.objects.filter(obj => obj.source === 'toolkit').length;
-        }
-
-        // Use explicit counts from combined files if available
-        if (data.applicationCount !== undefined) {
-            appTotal += data.applicationCount;
-        }
-        if (data.toolkitCount !== undefined) {
-            toolkitTotal += data.toolkitCount;
-        }
-    });
-
-    // 🆕 Enhanced object count display
-    const objectCountElement = document.getElementById('object-count');
-    if (toolkitTotal > 0) {
-        objectCountElement.innerHTML = `
-            <span class="total-count">${total} objects total</span>
-            <span style="margin-left: 10px; font-size: 0.9em;">
-                (<span class="app-count" style="display: inline-block; margin-right: 5px;">${appTotal} app</span>
-                <span class="toolkit-count" style="display: inline-block;">+${toolkitTotal} toolkit</span>)
-            </span>
-        `;
-    } else {
-        objectCountElement.textContent = `${total} objects total`;
-    }
-}
-
-function getDisplayName(type) {
-    const names = {
-        'process': 'Services',  // Changed from 'Processes' to 'Services'
-        'coach-view': 'Coach Views',
-        'cshs': 'CSHS',
-        'business-process-definition': 'Business Process Definitions',
-        'participant': 'Participants',
-        'managed-asset': 'Managed Assets',
-        'business-object': 'Business Objects'
-    };
-
-    return names[type] || type.charAt(0).toUpperCase() + type.slice(1);
-}
-
-function getTypeDescription(type) {
-    const descriptions = {
-        'process': 'Business processes, services, and workflows',
-        'coachView': 'User interface components and custom controls',
-        'cshs': 'Client-side human services and user interfaces',
-        'business-process-definition': 'Process definitions and templates',
-        'business-object': 'Data structures and business entities',
-        'participant': 'Process participants and roles',
-        'environment-variables': 'Configuration variables and settings',
-        'managed-asset': 'Shared assets and resources',
-        'resource-bundle': 'Localization and text resources'
-    };
-
-    return descriptions[type] || 'Application objects and components';
-}
-
-/**
- * Find an object in the current parsed data by ID
- */
-function findObjectInCurrentData(objectId) {
-    if (!objectId || !currentObjects) return null;
-
-    for (const [type, typeData] of Object.entries(currentObjects)) {
-        if (typeData && typeData.objects) {
-            const object = typeData.objects.find(obj => obj.id === objectId);
-            if (object) {
-                return object;
-            }
-        }
-    }
-    return null;
-}
-
-/**
- * Generate business object schema summary for list display
- */
-function generateBusinessObjectSummary(schema) {
-    if (!schema || !schema.properties) {
-        return '';
-    }
-
-    const totalProperties = schema.properties.length;
-    const systemTypes = schema.properties.filter(p => p.isSystemType).length;
-    const customTypes = totalProperties - systemTypes;
-    const crossReferences = schema.properties.filter(p => p.resolvedType && !p.isSystemType).length;
-    const circularRefs = schema.properties.filter(p => p.circularReference).length;
-
-    let indicators = [];
-    if (customTypes > 0) {
-        indicators.push(`<span class="schema-indicator custom-types" title="Custom Types">${customTypes} custom</span>`);
-    }
-    if (crossReferences > 0) {
-        indicators.push(`<span class="schema-indicator cross-refs" title="Cross References">${crossReferences} refs</span>`);
-    }
-    if (circularRefs > 0) {
-        indicators.push(`<span class="schema-indicator circular-refs" title="Circular References">${circularRefs} circular</span>`);
-    }
-
-    return `
-        <div class="business-object-summary">
-            <div class="schema-stats">
-                <span class="property-count">${totalProperties} properties</span>
-                ${indicators.join('')}
-            </div>
-            <div class="schema-namespace" title="Namespace">${schema.namespace || 'No namespace'}</div>
-        </div>
-    `;
-}
-
-/**
- * Generate business object schema display
- */
-function generateBusinessObjectSchemaDisplay(schema) {
-    if (!schema || !schema.properties) {
-        return '<p class="no-data">No schema information available</p>';
-    }
-
-    let html = '';
-
-    // Schema summary
-    html += `
-        <div class="schema-summary">
-            <div class="schema-info">
-                <span class="schema-stat"><strong>Total Properties:</strong> ${schema.properties.length}</span>
-                <span class="schema-stat"><strong>System Types:</strong> ${schema.systemTypesCount || 0}</span>
-                <span class="schema-stat"><strong>Custom Types:</strong> ${schema.customTypesCount || 0}</span>
-                ${schema.namespace ? `<span class="schema-stat"><strong>Namespace:</strong> ${escapeHtml(schema.namespace)}</span>` : ''}
-            </div>
-        </div>
-    `;
-
-    if (schema.error) {
-        html += `<div class="error-message">⚠️ Schema Error: ${escapeHtml(schema.error)}</div>`;
-    }
-
-    // Properties list
-    if (schema.properties.length > 0) {
-        html += '<div class="properties-container">';
-        html += '<h4>Properties</h4>';
-
-        schema.properties.forEach((property, index) => {
-            html += generatePropertyDisplay(property, 0);
-        });
-
-        html += '</div>';
-    } else {
-        html += '<p class="no-data">No properties defined</p>';
-    }
-
-    return html;
-}
-
-/**
- * Generate display for a single property with nested resolution
- */
-function generatePropertyDisplay(property, depth = 0) {
-    const indent = '  '.repeat(depth);
-    const typeClass = property.isSystemType ? 'system-type' : 'custom-type';
-    const requiredBadge = property.required ? '<span class="required-badge">Required</span>' : '';
-    const arrayBadge = property.isArray ? '<span class="array-badge">Array</span>' : '';
-    const defaultBadge = property.hasDefault ? '<span class="default-badge">Has Default</span>' : '';
-    const circularBadge = property.circularReference ? '<span class="circular-badge">Circular</span>' : '';
-    const unresolvedBadge = property.unresolvedReference ? '<span class="unresolved-badge">Unresolved</span>' : '';
-
-    let html = `
-        <div class="property-item" style="margin-left: ${depth * 20}px;">
-            <div class="property-header">
-                <span class="property-name">${escapeHtml(property.name)}</span>
-                <span class="property-type ${typeClass}">${escapeHtml(property.type)}</span>
-                ${requiredBadge}
-                ${arrayBadge}
-                ${defaultBadge}
-                ${circularBadge}
-                ${unresolvedBadge}
-            </div>
-    `;
-
-    // Add resolved type information if available
-    if (property.resolvedType && property.resolvedType.resolved) {
-        html += `
-            <div class="resolved-type-container">
-                <div class="resolved-type-header">
-                    <span class="resolved-type-toggle" onclick="toggleResolvedType('${property.name}_${depth}')">
-                        ▶ ${escapeHtml(property.resolvedType.name)} (${property.resolvedType.properties.length} properties)
-                    </span>
-                </div>
-                <div class="resolved-type-content" id="resolved_${property.name}_${depth}" style="display: none;">
-        `;
-
-        if (property.resolvedType.properties && property.resolvedType.properties.length > 0) {
-            property.resolvedType.properties.forEach(nestedProperty => {
-                html += generatePropertyDisplay(nestedProperty, depth + 1);
-            });
-        } else {
-            html += '<p class="no-data">No properties in resolved type</p>';
-        }
-
-        html += `
-                </div>
-            </div>
-        `;
-    } else if (property.circularReference && property.resolvedType) {
-        // Show circular reference but with basic type information
-        html += `
-            <div class="resolved-type-section">
-                <div class="resolved-type-header" onclick="toggleResolvedType('${property.name}_${depth}')">
-                    <span class="resolved-type-title">
-                        ▶ ${escapeHtml(property.resolvedType.name)} <span class="circular-ref-label">(Circular Reference)</span>
-                    </span>
-                </div>
-                <div class="resolved-type-content" id="resolved_${property.name}_${depth}" style="display: none;">
-                    <div class="circular-reference-info">
-                        <p><strong>Type:</strong> ${escapeHtml(property.resolvedType.name)}</p>
-                        <p><strong>Namespace:</strong> ${escapeHtml(property.resolvedType.namespace || 'No namespace')}</p>
-                        <p><strong>Object ID:</strong> ${escapeHtml(property.referencedObjectId || 'Unknown')}</p>
-                        <p class="circular-note"><em>This type references back to itself or an ancestor type, creating a circular dependency. The full structure is not expanded to prevent infinite recursion.</em></p>
-                    </div>
-                </div>
-            </div>
-        `;
-    } else if (property.unresolvedReference) {
-        html += `
-            <div class="unresolved-reference-note">
-                <em>Type definition not found in current workspace</em>
-            </div>
-        `;
-    }
-
     html += '</div>';
-    return html;
+  }
+  return html || viewEmptyMsg('No process elements found.');
 }
 
-/**
- * Toggle resolved type visibility
- */
-function toggleResolvedType(elementId) {
-    const element = document.getElementById(`resolved_${elementId}`);
-    const toggle = document.querySelector(`[onclick="toggleResolvedType('${elementId}')"]`);
-
-    if (element.style.display === 'none') {
-        element.style.display = 'block';
-        toggle.textContent = toggle.textContent.replace('▶', '▼');
-    } else {
-        element.style.display = 'none';
-        toggle.textContent = toggle.textContent.replace('▼', '▶');
-    }
+// ── Drawer: Schema ────────────────────────────────────────────
+function drawSchema(obj) {
+  if (!obj.details || !obj.details.schema) return viewEmptyMsg('No schema information available.');
+  const s = obj.details.schema;
+  let html = '';
+  const total = s.properties ? s.properties.length : 0;
+  html += `<div class="schema-summary-bar">
+    <div class="schema-stat-pill"><span>Total:</span><span>${total}</span></div>
+    <div class="schema-stat-pill"><span>System:</span><span>${s.systemTypesCount||0}</span></div>
+    <div class="schema-stat-pill"><span>Custom:</span><span>${s.customTypesCount||0}</span></div>
+    ${s.namespace ? `<div class="schema-stat-pill"><span>Namespace:</span><span style="font-family:var(--font-mono)">${esc(s.namespace)}</span></div>` : ''}
+  </div>`;
+  if (s.error) html += `<div class="schema-error-banner">Schema error: ${esc(s.error)}</div>`;
+  if (s.properties && s.properties.length > 0) {
+    html += s.properties.map((p, i) => propertyRow(p, i, 0)).join('');
+  } else {
+    html += viewEmptyMsg('No properties defined.');
+  }
+  return html;
 }
 
-/**
- * Load and display enhanced statistics
- */
-async function loadAndDisplayStatistics() {
-    try {
-        // Try to load the enhanced summary file
-        const response = await fetch('./output/twx-summary.json');
-        if (response.ok) {
-            const summaryData = await response.json();
-            displayEnhancedStatistics(summaryData.statistics);
+function propertyRow(p, idx, depth) {
+  const typeCls = p.isSystemType ? 'system' : 'custom';
+  let badges = '';
+  if (p.required) badges += '<span class="badge badge-required">Required</span>';
+  if (p.isArray) badges += '<span class="badge badge-array">Array</span>';
+  if (p.hasDefault) badges += '<span class="badge badge-default">Default</span>';
+  if (p.circularReference) badges += '<span class="badge badge-circular">Circular</span>';
+  if (p.unresolvedReference) badges += '<span class="badge badge-unresolved">Unresolved</span>';
+
+  let extra = '';
+  const nestedId = `prop-${depth}-${idx}`;
+  if (p.resolvedType && p.resolvedType.resolved && p.resolvedType.properties && p.resolvedType.properties.length > 0) {
+    extra = `<span class="resolved-toggle" data-toggle="${nestedId}">▶ ${esc(p.resolvedType.name)} (${p.resolvedType.properties.length} properties)</span>
+      <div class="property-nested" id="${nestedId}" style="display:none">${p.resolvedType.properties.map((np, ni) => propertyRow(np, ni, depth + 1)).join('')}</div>`;
+  } else if (p.circularReference && p.resolvedType) {
+    extra = `<span class="resolved-toggle" data-toggle="${nestedId}">▶ ${esc(p.resolvedType.name)}</span>
+      <div class="property-nested" id="${nestedId}" style="display:none"><div class="circular-note">This type references back to itself or an ancestor.</div></div>`;
+  } else if (p.unresolvedReference) {
+    extra = `<div class="circular-note" style="font-style:normal;background:var(--error-bg);">Type definition not found in current workspace.</div>`;
+  }
+
+  return `<div class="property-row" style="margin-left:${depth*20}px">
+    <div class="property-row-main"><span class="property-row-name">${esc(p.name)}</span><span class="property-type-badge ${typeCls}">${esc(p.type)}</span>${badges}${extra}</div>
+  </div>`;
+}
+
+// ── Drawer helpers ────────────────────────────────────────────
+function viewEmptyMsg(msg) { return `<div class="empty-state" style="padding:40px 24px"><p class="empty-state-caption">${msg}</p></div>`; }
+
+// ── Event delegation ──────────────────────────────────────────
+function setupGlobalListeners() {
+  // Sidebar clicks
+  $('sidebar-nav').addEventListener('click', e => {
+    const btn = e.target.closest('.nav-item');
+    if (btn) { state.activeTab = btn.dataset.tab; state.selectedType = null; state.drawerOpen = false; closeDrawerSilent(); renderAll(); }
+  });
+
+  // Topbar upload (click title area)
+  $('topbar-title').addEventListener('click', () => { if (!state.parsedFile) triggerFileUpload(); });
+
+  // Topbar settings -> switch to settings tab
+  $('topbar-settings-btn').addEventListener('click', () => { state.activeTab = 'settings'; renderAll(); });
+
+  // Quick filter
+  let filterTimeout;
+  $('quick-search').addEventListener('input', e => {
+    clearTimeout(filterTimeout);
+    filterTimeout = setTimeout(() => { state.quickFilter = e.target.value; if (state.activeTab === 'byType') renderAll(); }, 300);
+  });
+
+  // Content clicks (delegation)
+  $('content').addEventListener('click', e => {
+    // Navigation links
+    const navLink = e.target.closest('[data-nav]');
+    if (navLink) { state.activeTab = navLink.dataset.nav; renderAll(); return; }
+
+    // Upload button in global empty state
+    if (e.target.closest('#upload-btn-main')) { triggerFileUpload(); return; }
+    if (e.target.closest('#retry-upload')) { state.parseError = null; triggerFileUpload(); return; }
+
+    // Object clicks (recent objects table)
+    const objRow = e.target.closest('[data-obj-id]');
+    if (objRow) { const id = objRow.dataset.objId; const obj = findObjectById(id); if (obj) openDrawer(obj.object); return; }
+
+    // Object clicks from By Type table
+    const objJson = e.target.closest('[data-obj-json]');
+    if (objJson) {
+      try {
+        const ref = JSON.parse(objJson.dataset.objJson);
+        const data = state.currentObjects[ref.type];
+        if (data && data.objects) {
+          const obj = data.objects.find(o => o.id === ref.id);
+          if (obj) openDrawer({ ...obj, type: ref.type }, state.drawerSubTab);
         }
-    } catch (error) {
-        console.log('Could not load enhanced statistics:', error.message);
-    }
-}
-
-/**
- * Display enhanced statistics with app/toolkit breakdown
- */
-function displayEnhancedStatistics(stats) {
-    // Create or update statistics section
-    let statsSection = document.getElementById('enhanced-statistics');
-    if (!statsSection) {
-        statsSection = document.createElement('div');
-        statsSection.id = 'enhanced-statistics';
-        statsSection.className = 'statistics-section';
-
-        // Insert before the object types section
-        const objectTypesSection = document.querySelector('.object-browser');
-        if (objectTypesSection) {
-            objectTypesSection.parentNode.insertBefore(statsSection, objectTypesSection);
-        }
+      } catch (_) {}
+      return;
     }
 
-    statsSection.innerHTML = `
-        <div class="collapsible-panel">
-            <div class="panel-header" onclick="togglePanel('statistics-panel')">
-                <span class="panel-title">📊 Object Statistics</span>
-                <span class="panel-toggle" id="statistics-toggle">▼</span>
-            </div>
-            <div class="panel-content" id="statistics-panel">
-                <div class="statistics-grid">
-                    <div class="stat-card total-objects">
-                        <div class="stat-value">${stats.totalObjects || 0}</div>
-                        <div class="stat-label">Total Objects</div>
-                    </div>
-                    <div class="stat-card app-objects">
-                        <div class="stat-value">${stats.applicationObjects || 0}</div>
-                        <div class="stat-label">Application Objects</div>
-                    </div>
-                    <div class="stat-card toolkit-objects">
-                        <div class="stat-value">${stats.toolkitObjects || 0}</div>
-                        <div class="stat-label">Toolkit Objects</div>
-                    </div>
-                    <div class="stat-card toolkits">
-                        <div class="stat-value">${stats.toolkits || 0}</div>
-                        <div class="stat-label">Toolkits</div>
-                    </div>
-                </div>
-                <div class="statistics-details">
-                    <p><strong>Object Types:</strong> ${stats.objectTypes || 0}</p>
-                    <p><strong>Extracted:</strong> ${stats.extractedAt ? new Date(stats.extractedAt).toLocaleString() : 'Unknown'}</p>
-                    <p><strong>Source:</strong> ${stats.sourceFile || 'Unknown'}</p>
-                </div>
-            </div>
-        </div>
-    `;
+    // Search result clicks
+    const sRow = e.target.closest('[data-search-obj-id]');
+    if (sRow) { const id = sRow.dataset.searchObjId; const found = findObjectById(id); if (found) openDrawer(found.object, 'scripts'); return; }
+
+    // Type row clicks
+    const tRow = e.target.closest('[data-type]');
+    if (tRow) { state.selectedType = tRow.dataset.type; state.selectedTypeData = state.currentObjects[state.selectedType]; renderAll(); return; }
+
+    // Toolkit filter link
+    const tkLink = e.target.closest('[data-filter-toolkit]');
+    if (tkLink) { state.quickFilter = tkLink.dataset.filterToolkit; state.activeTab = 'byType'; renderAll(); return; }
+
+    // Enable toolkits link
+    if (e.target.closest('#enable-toolkits-link')) { $('toolkit-toggle').click(); return; }
+  });
+
+  // Search tab events
+  $('content').addEventListener('click', e => {
+    if (e.target.closest('#search-btn')) { doSearch(); return; }
+    if (e.target.closest('#search-clear')) { state.searchTerm = ''; state.searchResults = []; state.searchSearched = false; renderAll(); return; }
+  });
+  $('content').addEventListener('keydown', e => {
+    if (e.key === 'Enter' && e.target.id === 'search-input') { doSearch(); return; }
+  });
+
+  // Drawer events
+  $('drawer-close').addEventListener('click', closeDrawer);
+  $('drawer-overlay').addEventListener('click', closeDrawer);
+  $('drawer-subnav').addEventListener('click', e => {
+    const btn = e.target.closest('.drawer-subnav-btn');
+    if (btn) { state.drawerSubTab = btn.dataset.subtab; renderDrawer(); }
+  });
+  // Drawer body: script toggle + resolved type toggle
+  $('drawer-body').addEventListener('click', e => {
+    const hdr = e.target.closest('.script-block-header');
+    if (hdr) {
+      const id = hdr.dataset.scriptId;
+      const block = hdr.parentElement.querySelector('.script-block-body');
+      const chev = hdr.querySelector('.script-block-chevron');
+      if (block) { block.classList.toggle('open'); chev.classList.toggle('open'); }
+      return;
+    }
+    const toggle = e.target.closest('[data-toggle]');
+    if (toggle) {
+      const target = document.getElementById(toggle.dataset.toggle);
+      if (target) {
+        const isVisible = target.style.display !== 'none';
+        target.style.display = isVisible ? 'none' : 'block';
+        toggle.textContent = toggle.textContent.replace(isVisible ? '▼' : '▶', isVisible ? '▶' : '▼');
+      }
+      return;
+    }
+  });
+
+  // File input
+  $('twx-file-input').addEventListener('change', e => {
+    const file = e.target.files[0];
+    if (file) {
+      if (!file.name.toLowerCase().endsWith('.twx')) { state.parseError = 'Please select a valid .twx file'; renderAll(); return; }
+      state.parseError = null;
+      parseFile(file);
+    }
+  });
+
+  // Keyboard: Esc closes drawer
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && state.drawerOpen) closeDrawer(); });
+
+  // Settings toolkit toggle
+  $('content').addEventListener('click', e => {
+    if (e.target.closest('#settings-toolkit-toggle')) { state.toolkitToggle = !state.toolkitToggle; renderAll(); }
+  });
 }
+
+function triggerFileUpload() { if (!state.isParsing) $('twx-file-input').click(); }
+
+function closeDrawerSilent() {
+  state.drawerOpen = false;
+  $('drawer-overlay').classList.remove('open');
+  $('drawer').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+async function doSearch() {
+  const term = $('search-input').value.trim();
+  if (!term) return;
+  state.searchTerm = term;
+  state.searchSearched = true;
+  state.searchResults = [];
+  renderContent();
+  try {
+    let results = await performServerSearch(term);
+    if (!results || results.length === 0) results = performClientSearch(term);
+    state.searchResults = results || [];
+  } catch (_) {
+    state.searchResults = performClientSearch(term);
+  }
+  renderContent();
+}
+
+function renderAll() { renderSidebar(); renderTopbar(); renderContent(); }
+
+// ── Boot ───────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', async () => {
+  setupGlobalListeners();
+  renderAll();
+  try { await loadAllData(); } catch (_) {}
+  renderAll();
+});
