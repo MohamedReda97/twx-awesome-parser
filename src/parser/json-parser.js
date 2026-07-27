@@ -81,12 +81,16 @@ class JSONParser {
       const combinedTypeFiles = await this.generateCombinedObjectsByTypeFiles(extractedData.allObjects)
       filesGenerated.push(...combinedTypeFiles)
     }
-    
-    // 5. Generate metadata file
+
+    // 🆕 5. Generate dependencies file
+    const depsFile = await this.generateDependenciesFile(extractedData.dependencies || [])
+    filesGenerated.push(depsFile)
+
+    // 6. Generate metadata file
     const metadataFile = await this.generateMetadataFile(extractedData)
     filesGenerated.push(metadataFile)
     
-    // 6. Generate enhanced toolkits file if any
+    // 7. Generate enhanced toolkits file if any
     if (extractedData.toolkits && extractedData.toolkits.length > 0) {
       const toolkitsFile = await this.generateToolkitsFile(extractedData.toolkits)
       filesGenerated.push(toolkitsFile)
@@ -253,6 +257,25 @@ class JSONParser {
     fs.writeFileSync(filePath, JSON.stringify(data, null, 2))
     
     console.log(`Generated toolkits file: ${filePath}`)
+    return filePath
+  }
+
+  /**
+   * Generate dependencies file
+   * @param {Array} dependencies - Array of dependency objects
+   * @returns {Promise<string>} Generated file path
+   */
+  async generateDependenciesFile(dependencies) {
+    const filePath = path.join(this.outputDir, 'dependencies.json')
+
+    const data = {
+      count: dependencies.length,
+      dependencies: dependencies
+    }
+
+    fs.writeFileSync(filePath, JSON.stringify(data, null, 2))
+
+    console.log(`Generated dependencies file: ${filePath} (${dependencies.length} deps)`)
     return filePath
   }
 

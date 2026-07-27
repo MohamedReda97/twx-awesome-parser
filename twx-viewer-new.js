@@ -16,6 +16,7 @@ const state = {
   searchLoading: false,
   summaryData: null,
   metadata: null,
+  dependencies: [],
   parsedFile: null,
   isParsing: false,
   quickFilter: '',
@@ -128,6 +129,8 @@ async function loadAllData() {
   try { state.summaryData = await fetchJSON('twx-summary.json'); } catch (_) {}
   // Load metadata
   try { state.metadata = await fetchJSON('metadata.json'); } catch (_) {}
+  // Load dependencies
+  try { state.dependencies = (await fetchJSON('dependencies.json')).dependencies || []; } catch (_) {}
 }
 
 async function performServerSearch(term) {
@@ -353,8 +356,11 @@ function viewObjectList(type) {
   if (objects.length === 0) return viewEmptyState('No objects of this type. <a class="link" id="enable-toolkits-link">Try including toolkit objects</a>');
   const filtered = state.quickFilter ? objects.filter(o => (o.name||'').toLowerCase().includes(state.quickFilter.toLowerCase()) || (o.id||'').toLowerCase().includes(state.quickFilter.toLowerCase())) : objects;
   if (filtered.length === 0) return viewEmptyState(`No objects match "${esc(state.quickFilter)}".`);
-  return `<div class="card">
-    <div class="card-header"><span class="card-title">${getDisplayName(type)}</span><span style="color:var(--text-secondary);font-size:12px">${filtered.length} objects</span></div>
+  return `<div class="type-header">
+    <span class="type-header-chip">${getDisplayName(type)}</span>
+    <span class="type-header-count">${filtered.length} objects</span>
+  </div>
+  <div class="card">
     <table><thead><tr><th>Name</th><th style="width:80px">Source</th><th>ID</th></tr></thead>
     <tbody>${filtered.map(o => `<tr class="clickable-row${state.drawerObject && state.drawerObject.id === o.id?' selected':''}" data-obj-json="${esc(JSON.stringify({id:o.id, type:type}))}"><td class="col-name">${esc(o.name||'Unnamed')}</td><td>${sourceBadge(o)}</td><td class="col-id">${esc((o.id||'').substring(0,45))}</td></tr>`).join('')}</tbody></table>
   </div>`;
@@ -425,8 +431,21 @@ function viewSearchResults() {
     </div>`).join('')}`;
 }
 
-// ── Dependencies / Settings stubs ──────────────────────────────
-function viewDeps() { return viewEmptyState('Dependency graph will appear once objects are analyzed.', I.deps); }
+// ── Dependencies Tab ──────────────────────────────────────────
+function viewDeps() {
+  const deps = state.dependencies || [];
+  if (deps.length === 0) return viewEmptyState('No toolkit dependencies in this TWX file.', I.deps);
+  return `<div class="card">
+    <div class="card-header"><span class="card-title">Dependencies</span><span style="color:var(--text-secondary);font-size:12px">${deps.length} found</span></div>
+    <table><thead><tr><th>Name</th><th>Short Name</th><th>Version</th><th style="width:60px"></th></tr></thead>
+    <tbody>${deps.map(d => `<tr>
+      <td class="col-name" title="${esc(d.id||'')}">${esc(d.name||'Unknown')}</td>
+      <td class="col-id">${esc(d.shortName||'')}</td>
+      <td class="col-id">${esc(d.version||'')}</td>
+      <td><a class="link" data-dep-id="${esc(d.shortName||d.name)}">View toolkit →</a></td>
+    </tr>`).join('')}</tbody></table>
+  </div>`;
+}
 function viewSettings() {
   return `<div class="settings-group">
     <div class="settings-group-title">Preferences</div>
@@ -702,6 +721,10 @@ function setupGlobalListeners() {
     // Toolkit filter link
     const tkLink = e.target.closest('[data-filter-toolkit]');
     if (tkLink) { state.quickFilter = tkLink.dataset.filterToolkit; state.activeTab = 'byType'; renderAll(); return; }
+
+    // Dependency view-toolkit link
+    const depLink = e.target.closest('[data-dep-id]');
+    if (depLink) { state.quickFilter = depLink.dataset.depId; state.activeTab = 'byType'; renderAll(); return; }
 
     // Enable toolkits link
     if (e.target.closest('#enable-toolkits-link')) { $('toolkit-toggle').click(); return; }

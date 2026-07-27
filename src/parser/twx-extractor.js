@@ -33,6 +33,7 @@ class TWXExtractor {
 			const zip = new ADMZip(data);
 
 			const packageData = await this.packageParser.extractPackageMetadata(zip);
+			const dependencies = packageData.dependencies || [];
 			const objects = await this.objectExtractor.extractObjects(zip, packageData.objectList);
 			const toolkits = await this.toolkitExtractor.extractToolkits(zip);
 
@@ -58,6 +59,7 @@ class TWXExtractor {
 
 			return {
 				metadata: packageData.metadata,
+				dependencies: dependencies,
 				objects: taggedObjects,
 				toolkits: toolkits,
 				allObjects: allObjects,

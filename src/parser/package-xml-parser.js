@@ -101,7 +101,23 @@ class PackageXmlParser {
 			});
 		}
 
-		return { metadata, objectList };
+		// ponytail: extract toolkit dependencies (v1 – per-object deps are v2)
+		const dependencies = [];
+		if (pkg.dependencies && pkg.dependencies.dependency) {
+			const deps = Array.isArray(pkg.dependencies.dependency)
+				? pkg.dependencies.dependency
+				: [pkg.dependencies.dependency];
+			deps.forEach((dep) => {
+				dependencies.push({
+					id: dep.id,
+					name: dep.project ? dep.project.name : null,
+					shortName: dep.project ? dep.project.shortName : null,
+					version: dep.snapshot ? dep.snapshot.name : null,
+				});
+			});
+		}
+
+		return { metadata, objectList, dependencies };
 	}
 }
 
