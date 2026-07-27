@@ -1,126 +1,66 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TWX Parser - Object Browser</title>
-    <link rel="stylesheet" href="twx-viewer-new.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TWX Parser</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="twx-viewer-new.css">
 </head>
 <body>
-    <div class="container">
-        <!-- Header -->
-        <header class="header">
-            <h1>🔍 TWX Parser</h1>
-            <p class="subtitle">Browse and analyze IBM BPM TWX files</p>
-        </header>
+  <!-- Progress bar (above everything) -->
+  <div class="progress-bar" id="progress-bar">
+    <div class="progress-fill" id="progress-fill"></div>
+  </div>
 
-        <!-- File Selection Section -->
-        <section class="file-selection">
-            <div class="collapsible-panel">
-                <div class="panel-header" onclick="togglePanel('file-selection-panel')">
-                    <span class="panel-title">📁 Select TWX File</span>
-                    <span class="panel-toggle" id="file-selection-toggle">▼</span>
-                </div>
-                <div class="panel-content" id="file-selection-panel">
-                    <div class="file-input-section">
-                        <input type="file" id="twx-file-input" accept=".twx" style="display: none;">
-                        <button onclick="selectTWXFile()" class="select-file-btn">📂 Choose TWX File</button>
-                        <span id="selected-file-name" class="selected-file-info"></span>
-                    </div>
-                    <div class="file-actions">
-                        <button onclick="parseTWXFile()" id="parse-button" class="parse-btn" disabled>🔄 Parse File</button>
-                        <button onclick="clearSelectedFile()" id="clear-file-button" class="clear-file-btn" style="display: none;">❌ Clear</button>
-                    </div>
-                    <div class="parsing-status" id="parsing-status" style="display: none;">
-                        <div class="status-message" id="status-message"></div>
-                        <div class="progress-bar" id="progress-bar" style="display: none;">
-                            <div class="progress-fill" id="progress-fill"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Main Content Area -->
-        <main class="main-content">
-            <!-- Deep Search Section -->
-            <section class="deep-search">
-                <div class="collapsible-panel">
-                    <div class="panel-header" onclick="togglePanel('search-panel')">
-                        <span class="panel-title">🔍 Deep Search</span>
-                        <span class="panel-toggle" id="search-toggle">▼</span>
-                    </div>
-                    <div class="panel-content" id="search-panel">
-                        <div class="search-controls">
-                            <input 
-                                type="text" 
-                                id="search-input" 
-                                placeholder="Enter search term (e.g., variable name, function name, text content...)"
-                                onkeyup="handleSearchKeyup(event)"
-                            >
-                            <button onclick="performSearch()" id="search-button">Search</button>
-                            <button onclick="clearSearch()" id="clear-search-button">Clear</button>
-                        </div>
-                        
-                        <div class="search-results" id="search-results" style="display: none;">
-                            <div class="search-info" id="search-info"></div>
-                            <div class="search-results-list" id="search-results-list"></div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Object Browser Section -->
-            <section class="object-browser">
-                <div class="collapsible-panel">
-                    <div class="panel-header" onclick="togglePanel('object-types-panel')">
-                        <span class="panel-title">📂 Object Types</span>
-                        <div class="panel-controls">
-                            <label class="toolkit-toggle">
-                                <input type="checkbox" id="show-toolkit-objects" onchange="toggleToolkitObjects()">
-                                <span class="toggle-slider"></span>
-                                <span class="toggle-label">Show Toolkits</span>
-                            </label>
-                            <span class="panel-toggle" id="object-types-toggle">▼</span>
-                        </div>
-                    </div>
-                    <div class="panel-content" id="object-types-panel">
-                        <div class="loading" id="object-types-loading">Loading object types...</div>
-                        <div class="object-types-list" id="object-types-list"></div>
-                    </div>
-                </div>
-
-                <!-- Selected Type Objects List -->
-                <div class="collapsible-panel" id="objects-list-panel" style="display: none;">
-                    <div class="panel-header" onclick="togglePanel('objects-list-content')">
-                        <span class="panel-title" id="objects-list-title">📋 Objects</span>
-                        <span class="panel-toggle" id="objects-list-toggle">▼</span>
-                    </div>
-                    <div class="panel-content" id="objects-list-content">
-                        <div class="objects-list" id="objects-list"></div>
-                    </div>
-                </div>
-
-                <!-- Object Details Panel -->
-                <div class="collapsible-panel" id="object-details-panel" style="display: none;">
-                    <div class="panel-header" onclick="togglePanel('object-details-content')">
-                        <span class="panel-title" id="object-details-title">📄 Object Details</span>
-                        <span class="panel-toggle" id="object-details-toggle">▼</span>
-                    </div>
-                    <div class="panel-content" id="object-details-content">
-                        <div class="object-details" id="object-details"></div>
-                    </div>
-                </div>
-            </section>
-        </main>
-
-        <!-- Status Bar -->
-        <footer class="status-bar">
-            <span id="status-text">Ready</span>
-            <span id="object-count"></span>
-        </footer>
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <span class="wordmark">T·W·X</span>
     </div>
+    <nav class="sidebar-nav" id="sidebar-nav"></nav>
+  </aside>
 
-    <script src="twx-viewer-new.js"></script>
+  <!-- Main area -->
+  <div class="main-area">
+    <header class="topbar">
+      <div class="topbar-left">
+        <span class="topbar-title" id="topbar-title">TWX Parser</span>
+        <span class="topbar-subtitle" id="topbar-subtitle">Upload a .twx file to begin</span>
+      </div>
+      <div class="topbar-right">
+        <input type="text" class="search-input" id="quick-search" placeholder="Search objects…" disabled aria-label="Filter objects">
+        <button class="icon-btn" id="topbar-settings-btn" aria-label="Settings">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        </button>
+      </div>
+    </header>
+    <main class="content" id="content"></main>
+  </div>
+
+  <!-- Hidden file input -->
+  <input type="file" id="twx-file-input" accept=".twx" style="display:none">
+
+  <!-- Drawer overlay -->
+  <div class="drawer-overlay" id="drawer-overlay"></div>
+
+  <!-- Right-pane drawer -->
+  <div class="drawer" id="drawer">
+    <div class="drawer-header">
+      <div class="drawer-header-info">
+        <div class="drawer-header-name" id="drawer-name"></div>
+        <div class="drawer-header-meta" id="drawer-meta"></div>
+      </div>
+      <button class="drawer-close" id="drawer-close" aria-label="Close">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="drawer-subnav" id="drawer-subnav"></div>
+    <div class="drawer-body" id="drawer-body"></div>
+  </div>
+
+  <script src="twx-viewer-new.js"></script>
 </body>
 </html>
