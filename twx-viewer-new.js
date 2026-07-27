@@ -430,7 +430,8 @@ function viewSearchResults() {
 
 // ── Dependencies Tab ──────────────────────────────────────────
 function viewDeps() {
-  const deps = state.dependencies || [];
+  const depsRaw = state.dependencies;
+  const deps = Array.isArray(depsRaw) ? depsRaw : (depsRaw?.dependencies || []);
   if (deps.length === 0) return viewEmptyState('No toolkit dependencies in this TWX file.', I.deps);
   return `<div class="card">
     <div class="card-header"><span class="card-title">Dependencies</span><span style="color:var(--text-secondary);font-size:12px">${deps.length} found</span></div>
