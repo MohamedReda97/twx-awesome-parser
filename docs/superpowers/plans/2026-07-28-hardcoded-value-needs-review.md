@@ -28,7 +28,7 @@
 - Consumes: `TWXAnalyzer._needsReview(ast, unit, findings)` and `TWXAnalyzer._add(findings, ruleId, unit, position, message, evidence)`.
 - Produces: analysis findings with `ruleId === 'hardcoded-value'` and `status === 'needs-review'`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Add a small analyzer invocation that checks `"Y"`, `"NO"`, and `"ERR"` are reported as `hardcoded-value`, that every matching finding is `needs-review`, and that `"Approved"`, `"lower"`, and `"LONG"` are ignored.
 
@@ -47,13 +47,13 @@ assert.ok(businessConstants.every(finding => finding.status === 'needs-review'))
 assert.equal(hardcodedFindings("var a = 'Approved'; var b = 'lower'; var c = 'LONG';").length, 0)
 ```
 
-- [ ] **Step 2: Run the test to verify it fails**
+- [x] **Step 2: Run the test to verify it fails**
 
 Run: `node test-analyzer-v2.js`
 
 Expected: FAIL because no `hardcoded-value` findings exist.
 
-- [ ] **Step 3: Write the minimal implementation**
+- [x] **Step 3: Write the minimal implementation**
 
 Add this rule entry:
 
@@ -69,13 +69,13 @@ Literal: node => {
 }
 ```
 
-- [ ] **Step 4: Run verification**
+- [x] **Step 4: Run verification**
 
 Run: `npm test`
 
 Expected: PASS with `analyzer v2 checks passed`.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```powershell
 git add -- src/parser/analyzer.js test-analyzer-v2.js docs/superpowers/plans/2026-07-28-hardcoded-value-needs-review.md

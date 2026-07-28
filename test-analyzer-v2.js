@@ -101,6 +101,18 @@ const ruleIds = source => new TWXAnalyzer([{
   subType: '12',
   details: { elements: { scriptTasks: [{ id: 'boundary', name: 'Boundary', script: source }] } }
 }]).analyze().findings.map(finding => finding.ruleId)
+const hardcodedFindings = source => new TWXAnalyzer([{
+  id: 'hardcoded-service',
+  name: 'Hardcoded service',
+  type: 'process',
+  subType: '12',
+  details: { elements: { scriptTasks: [{ id: 'hardcoded-task', name: 'Hardcoded task', script: source }] } }
+}]).analyze().findings.filter(finding => finding.ruleId === 'hardcoded-value')
+
+const businessConstants = hardcodedFindings("var a = 'Y'; var b = 'NO'; var c = 'ERR';")
+assert.equal(businessConstants.length, 3, 'one-to-three-character uppercase strings must be review findings')
+assert.ok(businessConstants.every(finding => finding.status === 'needs-review'), 'hardcoded business constants must not be confirmed warnings')
+assert.equal(hardcodedFindings("var a = 'Approved'; var b = 'lower'; var c = 'LONG';").length, 0, 'ordinary, lowercase, and long strings must be ignored')
 
 assert.equal(result.schemaVersion, 2, 'analyzer must emit schema v2')
 assert.equal(result.status, 'partial', 'invalid scripts must make the report partial')

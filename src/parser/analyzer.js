@@ -32,7 +32,8 @@ const RULES = {
   'parse-int-missing-radix': ['confirmed', 'warning', 'parseInt without an explicit radix', 'Pass an explicit radix, normally 10, as the second parseInt argument.'],
   'empty-catch': ['needs-review', null, 'Empty catch block', 'Handle, log, or explicitly document the ignored error.'],
   'dynamic-sql': ['needs-review', null, 'Dynamic SQL construction', 'Use parameterized queries and verify that every dynamic value is safe.'],
-  'embedded-secret': ['needs-review', null, 'Possible embedded secret', 'Move the credential-like value to a secure configuration source.']
+  'embedded-secret': ['needs-review', null, 'Possible embedded secret', 'Move the credential-like value to a secure configuration source.'],
+  'hardcoded-value': ['needs-review', null, 'Hardcoded business constant', 'Consider replacing the literal with an enum or configuration value if it represents a shared business state.']
 }
 
 function appType (object) {
@@ -326,6 +327,9 @@ class TWXAnalyzer {
       VariableDeclarator: node => {
         if (node.init?.type === 'BinaryExpression' && /(sql|query)/i.test(node.id?.name || '')) add('dynamic-sql', node, 'A SQL-looking value is assembled through concatenation.', ['The variable name suggests SQL/query text and its value is composed dynamically.'])
         if (node.init?.type === 'Literal' && typeof node.init.value === 'string' && /password|passwd|secret|token|api[_-]?key/i.test(node.id?.name || '') && node.init.value.length >= 6) add('embedded-secret', node, 'A credential-like value is embedded in source.', ['A credential-like variable name has a string literal value.'])
+      },
+      Literal: node => {
+        if (typeof node.value === 'string' && /^[A-Z]{1,3}$/.test(node.value)) add('hardcoded-value', node, `The string literal "${node.value}" may be a hardcoded business constant.`, ['The literal contains one to three uppercase letters.'])
       },
       CallExpression: node => {
         const method = node.callee.type === 'MemberExpression' ? propertyName(node.callee.property) : null
