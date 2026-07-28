@@ -699,7 +699,7 @@ function renderFindingCard(f) {
     : '';
   const status = f.status === 'needs-review' ? 'Needs review' : f.severity === 'critical' ? 'Critical' : 'Warning';
   return `<article class="analyzer-finding ${esc(f.severity || 'review')}">
-    <div class="analyzer-finding-header"><span class="analyzer-finding-status">${status}</span><span>${esc(f.ruleName || f.ruleId || '')}</span>${location.line ? `<small>Line ${location.line}</small>` : ''}</div>
+    <div class="analyzer-finding-header"><span class="analyzer-finding-status">${status}</span><span>${esc(f.ruleName || f.ruleId || '')}</span><small>${esc(f.objectName || 'Unnamed')} › ${esc(f.elementName || 'Unnamed')}${location.line ? ` · Line ${location.line}${location.column ? `, Column ${location.column}` : ''}` : ''}</small></div>
     <p>${esc(f.message || '')}</p>
     ${snippet}
     ${f.evidence?.length ? `<ul class="analyzer-evidence">${f.evidence.map(item => `<li>${esc(item)}</li>`).join('')}</ul>` : ''}

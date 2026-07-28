@@ -1,7 +1,14 @@
 const fs = require("fs");
 const path = require("path");
 const { Parser: Xml2jsParser, processors: { stripPrefix } } = require("xml2js");
+const { XMLParser } = require("fast-xml-parser");
 const BusinessObjectSchemaParser = require("./business-object-schema-parser");
+
+const embeddedBpmnParser = new XMLParser({
+	ignoreAttributes: false,
+	attributeNamePrefix: "",
+	removeNSPrefix: true,
+});
 
 /**
  * Extract per-object XML files from a TWX archive or extracted directory.
@@ -479,6 +486,7 @@ class ObjectExtractor {
 				details.scripts.push({
 					name: itemName,
 					script: scriptContent,
+					scriptFormat: twComponent.scriptFormat || "",
 				});
 			}
 		}
@@ -497,6 +505,7 @@ class ObjectExtractor {
 							name: st.name || "Unnamed",
 							id: st.id || "",
 							script: script ? this.cleanJavaScript(script) : "",
+							scriptFormat: st.scriptFormat || "",
 							preAssignment: ext?.preAssignmentScript || null,
 							postAssignment: ext?.postAssignmentScript || null,
 						});
@@ -542,8 +551,15 @@ class ObjectExtractor {
 	}
 
 	extractBPDDetails(bpdElement, baseObject, objectList) {
+		const toArray = (v) => (!v ? [] : Array.isArray(v) ? v : [v]);
+		const scriptFormats = new Map();
 		const details = {
 			...baseObject.details,
+			variables: {
+				input: [...toArray(baseObject.details?.variables?.input)],
+				output: [...toArray(baseObject.details?.variables?.output)],
+				private: [...toArray(baseObject.details?.variables?.private)],
+			},
 			elements: {
 				scriptTasks: [],
 				callActivities: [],
@@ -552,7 +568,22 @@ class ObjectExtractor {
 			},
 		};
 
-		const toArray = (v) => (!v ? [] : Array.isArray(v) ? v : [v]);
+		try {
+			const process = embeddedBpmnParser.parse(bpdElement.bpmn2Data || "")?.definitions?.process;
+			const declared = new Set(details.variables.private.map(variable => variable.name));
+			for (const item of toArray(process)) {
+				for (const task of toArray(item?.scriptTask)) {
+					if (task?.id && task.scriptFormat) scriptFormats.set(task.id, task.scriptFormat);
+				}
+				for (const variable of toArray(item?.dataObject)) {
+					if (!variable?.name || declared.has(variable.name)) continue;
+					declared.add(variable.name);
+					details.variables.private.push({ name: variable.name, type: variable.itemSubjectRef || "", hasDefault: false });
+				}
+			}
+		} catch (error) {
+			console.warn(`Error extracting BPD variables for ${baseObject.name}:`, error.message);
+		}
 
 		// ponytail: simple linear scan, fine for small object lists
 		const objectMap = {};
@@ -611,11 +642,12 @@ class ObjectExtractor {
 								if (impl.script) {
 									script = typeof impl.script === "string" ? impl.script : (impl.script._ || impl.script["#text"] || "");
 								}
-								details.elements.scriptTasks.push({
-									name,
-									id,
-									script: script ? this.cleanJavaScript(script) : "",
-									lane: laneName,
+							details.elements.scriptTasks.push({
+								name,
+								id,
+								script: script ? this.cleanJavaScript(script) : "",
+								scriptFormat: scriptFormats.get(id) || "",
+								lane: laneName,
 									preAssignment,
 									postAssignment,
 								});

@@ -3,7 +3,46 @@ const fs = require('fs')
 const os = require('os')
 const path = require('path')
 const TWXAnalyzer = require('./src/parser/analyzer')
+const ObjectExtractor = require('./src/parser/object-extractor')
 const { JSONParser } = require('./src/parser/json-parser')
+
+const extractor = new ObjectExtractor()
+const extractedService = { details: {} }
+extractor.extractServiceDetails({
+  bpmn2Model: {
+    definitions: {
+      process: {
+        scriptTask: {
+          id: 'template-task',
+          name: 'Template task',
+          scriptFormat: 'text/plain',
+          script: 'tw.local.query\rselect * from <#=tw.env.LKP_DB_Schema#>.<#=tw.local.data#>'
+        }
+      }
+    }
+  }
+}, extractedService)
+assert.equal(extractedService.details.elements.scriptTasks[0].scriptFormat, 'text/plain', 'service extraction must preserve the BAW script format')
+
+const extractedBpd = { id: 'extracted-bpd', name: 'Extracted BPD', type: 'bpd', details: {} }
+extractor.extractBPDDetails({
+  bpmn2Data: '<definitions><process><dataObject id="v1" name="declaredOnBpd" itemSubjectRef="String" /><scriptTask id="bpd-template" scriptFormat="text/plain" /></process></definitions>',
+  BusinessProcessDiagram: {
+    pool: {
+      lane: {
+        flowObject: {
+          id: 'bpd-template',
+          name: 'BPD template',
+          componentType: 'Activity',
+          component: { implementationType: '3', implementation: { script: 'tw.local.message\r<html dir="ltl" lang="en">' } }
+        }
+      }
+    }
+  }
+}, extractedBpd, [])
+assert.ok(extractedBpd.details.variables.private.some(variable => variable.name === 'declaredOnBpd'), 'BPD data objects must be extracted as declared variables')
+assert.equal(extractedBpd.details.elements.scriptTasks[0].scriptFormat, 'text/plain', 'BPD extraction must preserve the embedded BPMN script format')
+assert.equal(new TWXAnalyzer([extractedBpd]).analyze().coverage.eligibleAppElements, 0, 'text/plain BPD tasks must be excluded from JavaScript coverage')
 
 const app = {
   id: 'app-service',
@@ -67,10 +106,10 @@ assert.equal(result.schemaVersion, 2, 'analyzer must emit schema v2')
 assert.equal(result.status, 'partial', 'invalid scripts must make the report partial')
 assert.equal(result.meta.targetBawVersion, '24', 'BAW version must be inferred from metadata')
 assert.equal(result.meta.toolkitsUsedAsContext, 1, 'toolkits must be counted as context')
-assert.equal(result.coverage.eligibleAppElements, 3, 'different extractor identities must remain separate')
-assert.equal(result.coverage.analyzedAppElements, 2, 'only strict-parsed app scripts count as analyzed')
+assert.equal(result.coverage.eligibleAppElements, 2, 'duplicate extractor representations must count once')
+assert.equal(result.coverage.analyzedAppElements, 1, 'only strict-parsed app scripts count as analyzed')
 assert.equal(result.coverage.skippedAppElements, 1, 'invalid app scripts must be recorded as skipped')
-assert.equal(result.byAppType.Service.elements, 3, 'only app server-side script units belong in coverage')
+assert.equal(result.byAppType.Service.elements, 2, 'only unique app server-side script units belong in coverage')
 assert.ok(rules.has('javascript-syntax-error'))
 assert.ok(rules.has('undefined-identifier'))
 assert.ok(rules.has('division-by-zero'))
@@ -98,6 +137,55 @@ assert.ok(ruleIds('var result = 10 / 0;').includes('division-by-zero'), 'literal
 assert.ok(ruleIds('function run () { return 10 / 0; }').includes('division-by-zero'), 'literal zero in a nested function is definite')
 assert.ok(!ruleIds('var nullValue = null; nullValue?.property;').includes('null-or-undefined-access'), 'optional chaining guards a null receiver')
 assert.equal(ruleIds('missing();').length, 1)
+assert.ok(!ruleIds(`
+  alert('x');
+  resetDataSyncronizationVariables();
+  initializeDataSyncronizationVariables();
+  require('x');
+  window.value;
+  page.value;
+`).includes('undefined-identifier'), 'BAW system-provided names must not be reported as undefined')
+assert.ok(ruleIds('debugger;').includes('debugger-statement'), 'active debugger statements must be warnings')
+assert.ok(ruleIds("var value = '10'; parseInt(value);").includes('parse-int-missing-radix'), 'parseInt without a radix must be a warning')
+assert.ok(!ruleIds("var value = '10'; parseInt(value, 10);").includes('parse-int-missing-radix'), 'parseInt with an explicit radix must not be reported')
+assert.ok(!ruleIds("function run (parseInt) { parseInt('10'); }").includes('parse-int-missing-radix'), 'a parseInt parameter must not be treated as the global function')
+assert.ok(!ruleIds("var parseInt = function (value) { return value; }; parseInt('10');").includes('parse-int-missing-radix'), 'a local parseInt variable must not be treated as the global function')
+
+const textTemplateResult = new TWXAnalyzer([{
+  id: 'template-service',
+  name: 'Template service',
+  type: 'process',
+  subType: '12',
+  details: {
+    elements: {
+      scriptTasks: [{
+        id: 'template-task',
+        name: 'Template task',
+        scriptFormat: 'text/plain',
+        script: 'tw.local.query\rselect * from <#=tw.env.LKP_DB_Schema#>.<#=tw.local.data#>\r<html dir="ltl" lang="en">'
+      }]
+    }
+  }
+}]).analyze()
+assert.equal(textTemplateResult.coverage.eligibleAppElements, 0, 'text/plain BAW templates must be excluded from JavaScript coverage')
+assert.deepEqual(textTemplateResult.findings, [], 'text/plain BAW templates must not produce JavaScript findings')
+
+for (const [label, separator] of [['LF', '\n'], ['CRLF', '\r\n'], ['CR', '\r'], ['line separator', '\u2028'], ['paragraph separator', '\u2029']]) {
+  const locationResult = new TWXAnalyzer([{
+    id: `location-${label}`,
+    name: `${label} service`,
+    type: 'process',
+    subType: '12',
+    details: {
+      variables: { private: [{ name: 'declared' }] },
+      elements: { scriptTasks: [{ id: `location-${label}`, name: `${label} task`, script: `tw.local.declared;${separator}tw.local.missing;` }] }
+    }
+  }]).analyze()
+  const warning = locationResult.findings.find(finding => finding.ruleId === 'undeclared-process-variable')
+  assert.equal(warning.location.line, 2, `${label} scripts must report the correct line`)
+  assert.equal(warning.location.column, 10, `${label} scripts must report the correct column`)
+  assert.equal(warning.location.snippet, 'tw.local.missing;', `${label} scripts must report only the affected line`)
+}
 
 const identicalScripts = {
   ...app,
@@ -120,7 +208,7 @@ assert.ok(ruleIds('while (true) { inner: { break inner; } }').includes('loop-wit
 const dedupedScripts = {
   ...app,
   details: {
-    elements: { scriptTasks: [{ id: 'service-Main script', name: 'Main script', script: 'missing();' }] },
+    elements: { scriptTasks: [{ id: 'real-task-id', name: 'Main script', script: 'missing();' }] },
     scripts: [{ name: 'Main script', script: 'missing();' }]
   }
 }

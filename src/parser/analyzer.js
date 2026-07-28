@@ -16,7 +16,8 @@ const KNOWN_GLOBALS = new Set([
   'TWWorkSchedule', 'TWTimerInstance', 'BPMRESTRequest', 'BPMRESTResponse', 'TWObject', 'TWMap',
   'XMLDocument', 'XMLElement', 'XMLNodeList', 'XMLNodelist', 'Serializer', 'Map', 'Record', 'IndexedMap',
   'JSONObject', 'SLAViolationRecord', 'TWUserLocalePreferences', 'Step', 'ConditionalActivity', 'Integer',
-  'Decimal', 'Time', 'URL', 'ANY', 'console', 'Set', 'Promise'
+  'Decimal', 'Time', 'URL', 'ANY', 'console', 'Set', 'Promise', 'alert', 'resetDataSyncronizationVariables',
+  'initializeDataSyncronizationVariables', 'require', 'window', 'page'
 ])
 
 const RULES = {
@@ -27,6 +28,8 @@ const RULES = {
   'unsafe-dynamic-execution': ['confirmed', 'critical', 'Unsafe dynamic execution', 'Do not pass process input directly to eval; use a fixed implementation instead.'],
   'undeclared-process-variable': ['confirmed', 'warning', 'Undeclared process variable', 'Declare the process variable or correct the tw.local member name.'],
   'loop-with-no-demonstrable-exit': ['confirmed', 'warning', 'Loop with no demonstrable exit', 'Add a reachable break, return, throw, or a terminating condition.'],
+  'debugger-statement': ['confirmed', 'warning', 'Active debugger statement', 'Remove the debugger statement before deploying this script.'],
+  'parse-int-missing-radix': ['confirmed', 'warning', 'parseInt without an explicit radix', 'Pass an explicit radix, normally 10, as the second parseInt argument.'],
   'empty-catch': ['needs-review', null, 'Empty catch block', 'Handle, log, or explicitly document the ignored error.'],
   'dynamic-sql': ['needs-review', null, 'Dynamic SQL construction', 'Use parameterized queries and verify that every dynamic value is safe.'],
   'embedded-secret': ['needs-review', null, 'Possible embedded secret', 'Move the credential-like value to a secure configuration source.']
@@ -44,11 +47,17 @@ function asArray (value) {
 }
 
 function lineAt (source, position) {
-  const before = source.slice(0, position)
-  const line = before.split(/\r?\n/).length
-  const start = before.lastIndexOf('\n') + 1
-  const end = source.indexOf('\n', position)
-  return { line, column: position - start + 1, snippet: source.slice(start, end === -1 ? source.length : end).trim() }
+  const lineBreak = /\r\n|[\n\r\u2028\u2029]/g
+  let line = 1
+  let start = 0
+  let match
+  while ((match = lineBreak.exec(source)) && match.index < position) {
+    line++
+    start = match.index + match[0].length
+  }
+  const remaining = source.slice(position).search(/\r\n|[\n\r\u2028\u2029]/)
+  const end = remaining === -1 ? source.length : position + remaining
+  return { line, column: position - start + 1, snippet: source.slice(start, end).trim() }
 }
 
 function targetVersion (options) {
@@ -160,8 +169,9 @@ class TWXAnalyzer {
   _inventory (context) {
     const units = []
     const seen = new Set()
-    const add = (object, elementType, elementName, elementId, scriptRole, source) => {
+    const add = (object, elementType, elementName, elementId, scriptRole, source, scriptFormat = '') => {
       if (!source || !String(source).trim()) return
+      if (String(scriptFormat).toLowerCase() === 'text/plain') return
       const key = `${object.id || object.name}\u0000${elementId || elementName || 'script'}\u0000${source}`
       if (seen.has(key)) return
       seen.add(key)
@@ -171,7 +181,7 @@ class TWXAnalyzer {
       if (!appType(object)) continue
       const elements = object.details?.elements || {}
       for (const item of asArray(elements.scriptTasks)) {
-        add(object, 'scriptTask', item.name, item.id, 'script-task', item.script)
+        add(object, 'scriptTask', item.name, item.id, 'script-task', item.script, item.scriptFormat)
         add(object, 'scriptTask', item.name, `${item.id || item.name}-pre`, 'pre-assignment', item.preAssignment)
         add(object, 'scriptTask', item.name, `${item.id || item.name}-post`, 'post-assignment', item.postAssignment)
       }
@@ -181,7 +191,11 @@ class TWXAnalyzer {
           add(object, type.slice(0, -1), item.name, `${item.id || item.name}-post`, 'post-assignment', item.postAssignment)
         }
       }
-      for (const item of asArray(object.details?.scripts)) add(object, 'serviceScript', item.name, `service-${item.name || 'script'}`, 'implementation', item.script)
+      const representedScripts = new Set(asArray(elements.scriptTasks).map(item => `${item.name || 'Unnamed'}\u0000${String(item.script || '')}`))
+      for (const item of asArray(object.details?.scripts)) {
+        if (representedScripts.has(`${item.name || 'Unnamed'}\u0000${String(item.script || '')}`)) continue
+        add(object, 'serviceScript', item.name, `service-${item.name || 'script'}`, 'implementation', item.script, item.scriptFormat)
+      }
     }
     return units
   }
@@ -196,22 +210,27 @@ class TWXAnalyzer {
       return
     }
 
-    this._undefinedIdentifiers(ast, unit, context, findings)
+    const unresolved = this._undefinedIdentifiers(ast, unit, context, findings)
     this._undeclaredProcessVariables(ast, unit, findings)
     this._constantFindings(ast, unit, findings)
     this._unsafeEval(ast, unit, findings)
     this._loops(ast, unit, findings)
+    this._correctness(ast, unit, findings, unresolved)
     this._needsReview(ast, unit, findings)
   }
 
   _undefinedIdentifiers (ast, unit, context, findings) {
+    const unresolved = new Set()
     let scope
-    try { scope = analyzeScope(ast, { ecmaVersion: 2020, sourceType: 'script', optimistic: true, ignoreEval: true }).globalScope } catch (_) { return }
+    try { scope = analyzeScope(ast, { ecmaVersion: 2020, sourceType: 'script', optimistic: true, ignoreEval: true }).globalScope } catch (_) { return unresolved }
     for (const reference of scope.through || []) {
       const name = reference.identifier?.name
-      if (!name || KNOWN_GLOBALS.has(name) || unit.declaredVariables.has(name) || context.appNames.has(name) || context.toolkitNames.has(name)) continue
+      if (!name) continue
+      unresolved.add(reference.identifier.start)
+      if (KNOWN_GLOBALS.has(name) || unit.declaredVariables.has(name) || context.appNames.has(name) || context.toolkitNames.has(name)) continue
       this._add(findings, 'undefined-identifier', unit, reference.identifier.start, `${name} is referenced but is not declared.`, [`No local declaration or application/toolkit context matches ${name}.`])
     }
+    return unresolved
   }
 
   _undeclaredProcessVariables (ast, unit, findings) {
@@ -287,6 +306,15 @@ class TWXAnalyzer {
       },
       ForStatement: node => {
         if (!node.test && !hasLoopExit(node)) this._add(findings, 'loop-with-no-demonstrable-exit', unit, node.start, 'This unconditional loop has no local break, return, or throw.', ['The loop has no test and its body has no supported exit.'])
+      }
+    })
+  }
+
+  _correctness (ast, unit, findings, unresolved) {
+    walk.simple(ast, {
+      DebuggerStatement: node => this._add(findings, 'debugger-statement', unit, node.start, 'This script contains an active debugger statement.', ['The JavaScript AST contains an active DebuggerStatement.']),
+      CallExpression: node => {
+        if (node.callee.type === 'Identifier' && node.callee.name === 'parseInt' && unresolved.has(node.callee.start) && node.arguments.length < 2) this._add(findings, 'parse-int-missing-radix', unit, node.start, 'parseInt is called without an explicit radix.', ['The result can vary for prefixed or legacy-formatted numeric strings.'])
       }
     })
   }
