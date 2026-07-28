@@ -385,25 +385,36 @@ function viewByType() {
     </div>`;
 }
 
-function viewObjectList(type) {
-  const data = state.currentObjects[type];
-  if (!data || !data.objects) return viewEmptyState('No objects of this type.');
-  const objects = getFilteredObjects(data.objects);
-  if (objects.length === 0) return viewEmptyState('No objects of this type. <a class="link" id="enable-toolkits-link">Try including toolkit objects</a>');
-  const filtered = state.quickFilter ? objects.filter(o => (o.name||'').toLowerCase().includes(state.quickFilter.toLowerCase()) || (o.id||'').toLowerCase().includes(state.quickFilter.toLowerCase())) : objects;
-  if (filtered.length === 0) return viewEmptyState(`No objects match "${esc(state.quickFilter)}".`);
-  return `<div class="type-header">
-    <span class="type-header-chip">${getDisplayName(type)}</span>
-    <span class="type-header-count">${filtered.length} objects</span>
-  </div>
-  <div class="card">
-    <table><thead><tr><th>Name</th><th style="width:80px">Source</th><th>ID</th></tr></thead>
-    <tbody>${filtered.map(o => `<tr class="clickable-row${state.drawerObject && state.drawerObject.id === o.id?' selected':''}" data-obj-json="${esc(JSON.stringify({id:o.id, type:type}))}"><td class="col-name">${esc(o.name||'Unnamed')}</td><td>${sourceBadge(o)}</td><td class="col-id">${esc((o.id||'').substring(0,45))}</td></tr>`).join('')}</tbody></table>
-  </div>`;
-}
-
-function setupByTypeListeners() {
-  $('toolkit-toggle').onclick = () => { state.toolkitToggle = !state.toolkitToggle; renderAll(); };
+function renderSection3(obj, type) {
+  const tabs = [];
+  tabs.push({ id: 'info', label: 'Info' });
+  if (obj.details) {
+    if (obj.details.variables) tabs.push({ id: 'variables', label: 'Variables' });
+    if ((obj.details.scripts && obj.details.scripts.length > 0) || (obj.details.inlineScripts && obj.details.inlineScripts.length > 0) || obj.details.loadJsFunction) tabs.push({ id: 'scripts', label: 'Scripts' });
+    if (obj.details.elements) tabs.push({ id: 'elements', label: 'Elements' });
+    if (obj.details.schema) tabs.push({ id: 'schema', label: 'Schema' });
+  }
+  let bodyHtml = '';
+  switch (state.byTypeSection3SubTab) {
+    case 'info': bodyHtml = drawInfo(obj); break;
+    case 'variables': bodyHtml = drawVariables(obj); break;
+    case 'scripts': bodyHtml = drawScripts(obj); break;
+    case 'elements': bodyHtml = drawElements(obj); break;
+    case 'schema': bodyHtml = drawSchema(obj); break;
+    default: bodyHtml = viewEmptyMsg('Select a tab above.');
+  }
+  return `
+    <div class="section-3-header">
+      <div class="section-3-header-info">
+        <span class="section-3-name">${esc(obj.name||'Unnamed')}</span>
+        <span class="badge-sm badge-app">${esc(obj.typeName||getDisplayName(type))}</span>
+      </div>
+      <button class="section-3-close" data-action="close-section-3" aria-label="Close">&times;</button>
+    </div>
+    <div class="section-3-subnav">
+      ${tabs.map(t => `<button class="section-3-subnav-btn${state.byTypeSection3SubTab===t.id?' active':''}" data-section3-subtab="${t.id}">${t.label}</button>`).join('')}
+    </div>
+    <div class="section-3-body">${bodyHtml}</div>`;
 }
 
 // ── Toolkits Tab ──────────────────────────────────────────────
@@ -504,11 +515,11 @@ function renderSection3Details(obj) {
   const subTab = state.toolkitsSection3SubTab || 'info';
   return `
     <div class="section-3-header">
-      <div class="section-3-header-name">${esc(obj.name || 'Unnamed Object')}</div>
-      <div class="section-3-header-meta">
-        <span class="badge-sm badge-app">${esc(obj.typeName || getDisplayName(obj.type))}</span> ·
-        <span class="col-id">${esc((obj.id || '').substring(0, 45))}</span> ·
-        ${esc(obj.versionId || '')}
+      <div class="section-3-header-info">
+        <span class="section-3-name">${esc(obj.name || 'Unnamed Object')}</span>
+        <span class="badge-sm badge-app">${esc(obj.typeName || getDisplayName(obj.type))}</span>
+        <span class="col-id">${esc((obj.id || '').substring(0, 45))}</span>
+        <span class="section-3-meta-line">${esc(obj.versionId || '')}</span>
       </div>
     </div>
     <div class="section-3-subnav">
@@ -813,6 +824,8 @@ function setupGlobalListeners() {
     if (btn) {
       state.activeTab = btn.dataset.tab;
       state.selectedType = null;
+      state.byTypeExpanded = null;
+      state.byTypeSelectedItem = null;
       state.drawerOpen = false;
       closeDrawerSilent();
       // ponytail: reset toolkits breadcrumb state on tab switch
@@ -847,6 +860,65 @@ function setupGlobalListeners() {
     // Upload button in global empty state
     if (e.target.closest('#upload-btn-main')) { triggerFileUpload(); return; }
     if (e.target.closest('#retry-upload')) { state.parseError = null; triggerFileUpload(); return; }
+
+    // ── By Type: script block toggles (in Section 3 body) ──────
+    const scrHdr = e.target.closest('.script-block-header');
+    if (scrHdr) {
+      const block = scrHdr.parentElement.querySelector('.script-block-body');
+      const chev = scrHdr.querySelector('.script-block-chevron');
+      if (block) { block.classList.toggle('open'); chev.classList.toggle('open'); }
+      return;
+    }
+    // ── By Type: property type toggle ─────────────────────────
+    const propToggle = e.target.closest('[data-toggle]');
+    if (propToggle) {
+      const target = document.getElementById(propToggle.dataset.toggle);
+      if (target) {
+        const isVisible = target.style.display !== 'none';
+        target.style.display = isVisible ? 'none' : 'block';
+        propToggle.textContent = propToggle.textContent.replace(isVisible ? '▼' : '▶', isVisible ? '▶' : '▼');
+      }
+      return;
+    }
+
+    // ── By Type: accordion type header click ──────────────────
+    const accHdr = e.target.closest('.type-accordion-header');
+    if (accHdr) {
+      state.byTypeExpanded = state.byTypeExpanded === accHdr.dataset.type ? null : accHdr.dataset.type;
+      renderAll();
+      return;
+    }
+
+    // ── By Type: accordion item click ─────────────────────────
+    const accItem = e.target.closest('.accordion-item-row');
+    if (accItem && accItem.dataset.objId) {
+      const objType = accItem.dataset.objType;
+      const data = state.currentObjects[objType];
+      if (data && data.objects) {
+        const obj = data.objects.find(o => o.id === accItem.dataset.objId);
+        if (obj) {
+          state.byTypeSelectedItem = { type: objType, object: { ...obj, type: objType } };
+          state.byTypeSection3SubTab = 'info';
+          renderAll();
+        }
+      }
+      return;
+    }
+
+    // ── By Type: Section 3 close button ──────────────────────
+    if (e.target.closest('[data-action="close-section-3"]')) {
+      state.byTypeSelectedItem = null;
+      renderAll();
+      return;
+    }
+
+    // ── By Type: Section 3 sub-tab click ─────────────────────
+    const s3tab = e.target.closest('[data-section3-subtab]');
+    if (s3tab) {
+      state.byTypeSection3SubTab = s3tab.dataset.section3Subtab;
+      renderAll();
+      return;
+    }
 
     // Object clicks (recent objects table)
     const objRow = e.target.closest('[data-obj-id]');
