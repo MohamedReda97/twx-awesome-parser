@@ -24,6 +24,7 @@ const state = {
   isParsing: false,
   quickFilter: '',
   searchSearched: false,
+  searchIncludeToolkits: false,
   // Toolkits tab breadcrumb state
   toolkitsLevel: 0,
   toolkitsSelectedToolkit: null,
@@ -153,7 +154,7 @@ function performClientSearch(term) {
   for (const [type, data] of Object.entries(state.currentObjects)) {
     if (!data || !data.objects) continue;
     for (const obj of data.objects) {
-      if (!state.toolkitToggle && obj.source === 'toolkit') continue;
+      if (!state.searchIncludeToolkits && obj.source === 'toolkit') continue;
       const matches = [];
       if (obj.name && obj.name.toLowerCase().includes(lower)) matches.push({ field: 'name', snippet: obj.name });
       if (obj.details) {
@@ -560,6 +561,12 @@ function renderSection3Body(obj) {
 // ── Search Tab ─────────────────────────────────────────────────
 function viewSearch() {
   return `
+    <div class="search-toggle-row">
+      <label class="toolkit-toggle-label" id="search-toolkit-toggle-label">
+        <span class="toggle-switch${state.searchIncludeToolkits?' on':''}" id="search-toolkit-toggle"></span>
+        Include toolkits in search
+      </label>
+    </div>
     <div class="search-tab-input-area">
       <input type="text" class="search-tab-input" id="search-input" placeholder="Enter search term (e.g., variable name, function name)…" value="${esc(state.searchTerm)}">
       <button class="btn btn-primary btn-large" id="search-btn" ${state.searchLoading?'disabled':''}>${state.searchLoading?'Searching…':'Search'}</button>
@@ -904,7 +911,9 @@ function setupGlobalListeners() {
         if (obj) {
           state.byTypeSelectedItem = { type: objType, object: { ...obj, type: objType } };
           state.byTypeSection3SubTab = 'info';
+          const savedScrollTop = $('content').scrollTop;
           renderAll();
+          $('content').scrollTop = savedScrollTop;
         }
       }
       return;
@@ -998,6 +1007,7 @@ function setupGlobalListeners() {
 
   // Search tab events
   $('content').addEventListener('click', e => {
+    if (e.target.closest('#search-toolkit-toggle')) { state.searchIncludeToolkits = !state.searchIncludeToolkits; renderContent(); return; }
     if (e.target.closest('#search-btn')) { doSearch(); return; }
     if (e.target.closest('#search-clear')) { state.searchTerm = ''; state.searchResults = []; state.searchSearched = false; renderAll(); return; }
   });
@@ -1078,6 +1088,13 @@ async function doSearch() {
   try {
     let results = await performServerSearch(term);
     if (!results || results.length === 0) results = performClientSearch(term);
+    // ponytail: filter server results by source; lookup from state is O(n) per result, optimize with a prebuilt map if result count grows
+    if (results && !state.searchIncludeToolkits) {
+      results = results.filter(r => {
+        const found = findObjectById(r.objectId);
+        return !(found && found.object.source === 'toolkit');
+      });
+    }
     state.searchResults = results || [];
   } catch (_) {
     state.searchResults = performClientSearch(term);
