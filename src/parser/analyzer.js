@@ -3,6 +3,7 @@ const { parse: acornLoose } = require("acorn-loose");
 const walk = require("acorn-walk");
 const { analyze: eslintAnalyze } = require("eslint-scope");
 const { ScopeManager } = require("eslint-scope");
+const { getTypeName } = require("../utils/type-mappings");
 
 // === Root globals (register with eslint-scope) ===
 const KNOWN_GLOBALS = new Set([
@@ -124,6 +125,16 @@ const KNOWN_GLOBALS = new Set([
   "module",
   "exports",
 
+  // ES6 builtins
+  "Set",
+  "Promise",
+  "Symbol",
+  "WeakMap",
+  "WeakSet",
+
+  // Heritage coach system object
+  "page",
+
   // Browser globals (used in BPM coach/client-side scripts)
   "window",
   "document",
@@ -217,17 +228,9 @@ const RULES = {
     severity: "critical",
     name: "Division by zero",
   },
-  "aggressive-log": {
-    severity: "warning",
-    name: "Aggressive logging in production",
-  },
   "hardcoded-value": {
     severity: "warning",
     name: "Hardcoded business constant",
-  },
-  "long-script": {
-    severity: "warning",
-    name: "Script exceeds 100 lines",
   },
 };
 
@@ -240,6 +243,7 @@ class TWXAnalyzer {
     const findings = [];
     for (const obj of this.objects) {
       if (!obj.details || !obj.details.elements) continue;
+      if (obj.name && /instance view/i.test(obj.name)) continue;
       this._analyzeObject(obj, findings);
     }
     return {
@@ -295,9 +299,6 @@ class TWXAnalyzer {
     // Skip non-JS content (SQL, template strings, etc.)
     if (!this._isLikelyJS(script)) return;
 
-    // Rule: long-script
-    this._checkLongScript(script, obj, elementType, elementName, elementId, findings);
-
     // Parse the script — if acorn strict parse fails, skip scope-based rules
     const strictAst = this._parseScriptStrict(script);
     const ast = strictAst || this._parseScript(script);
@@ -313,9 +314,6 @@ class TWXAnalyzer {
 
     // Rule: division-by-zero
     this._checkDivisionByZero(ast, script, obj, elementType, elementName, elementId, findings);
-
-    // Rule: aggressive-log
-    this._checkAggressiveLogs(ast, script, obj, elementType, elementName, elementId, findings);
 
     // Rule: hardcoded-value
     this._checkHardcodedValues(ast, script, obj, elementType, elementName, elementId, findings);
@@ -384,11 +382,18 @@ class TWXAnalyzer {
   }
 
   _makeFinding(ruleId, obj, elementType, elementName, elementId, message, script, index) {
+    // Same CSHS grouping as _byType / groupByType
+    let objectType;
+    if (obj.type === "process" && (obj.subType === "10" || (obj.details && obj.details.processType === "10"))) {
+      objectType = "CSHS";
+    } else {
+      objectType = getTypeName(obj.type);
+    }
     return {
       id: `${obj.id}-${elementId}-${ruleId}`,
       objectId: obj.id,
       objectName: obj.name,
-      objectType: obj.typeName || obj.type || "Unknown",
+      objectType,
       elementType,
       elementName,
       elementId,
@@ -568,76 +573,6 @@ class TWXAnalyzer {
     }
   }
 
-  // === Rule: aggressive-log ===
-  _checkAggressiveLogs(ast, script, obj, elementType, elementName, elementId, findings) {
-    try {
-      walk.simple(ast, {
-        CallExpression: (node) => {
-          const callee = node.callee;
-          if (!callee) return;
-
-          let match = false;
-          let matchName = "";
-
-          // console.log/debug/info/warn/error
-          if (
-            callee.type === "MemberExpression" &&
-            callee.object &&
-            callee.object.type === "Identifier" &&
-            callee.object.name === "console" &&
-            callee.property &&
-            callee.property.type === "Identifier"
-          ) {
-            const methods = ["log", "debug", "info", "warn", "error"];
-            if (methods.includes(callee.property.name)) {
-              match = true;
-              matchName = `console.${callee.property.name}()`;
-            }
-          }
-
-          // log.info/debug/warn (BPM logger)
-          if (
-            callee.type === "MemberExpression" &&
-            callee.object &&
-            callee.object.type === "Identifier" &&
-            callee.object.name === "log" &&
-            callee.property &&
-            callee.property.type === "Identifier"
-          ) {
-            const methods = ["info", "debug", "warn", "error", "log"];
-            if (methods.includes(callee.property.name)) {
-              match = true;
-              matchName = `log.${callee.property.name}()`;
-            }
-          }
-
-          // alert()
-          if (callee.type === "Identifier" && callee.name === "alert") {
-            match = true;
-            matchName = "alert()";
-          }
-
-          if (match) {
-            findings.push(
-              this._makeFinding(
-                "aggressive-log",
-                obj,
-                elementType,
-                elementName,
-                elementId,
-                `Production script contains ${matchName} call`,
-                script,
-                node.start
-              )
-            );
-          }
-        },
-      });
-    } catch (e) {
-      // ignore
-    }
-  }
-
   // === Rule: hardcoded-value ===
   _checkHardcodedValues(ast, script, obj, elementType, elementName, elementId, findings) {
     try {
@@ -664,25 +599,6 @@ class TWXAnalyzer {
       });
     } catch (e) {
       // ignore
-    }
-  }
-
-  // === Rule: long-script ===
-  _checkLongScript(script, obj, elementType, elementName, elementId, findings) {
-    const lineCount = (script.match(/\n/g) || []).length + 1;
-    if (lineCount > 100) {
-      findings.push(
-        this._makeFinding(
-          "long-script",
-          obj,
-          elementType,
-          elementName,
-          elementId,
-          `Script is ${lineCount} lines long (threshold: 100)`,
-          script,
-          0
-        )
-      );
     }
   }
 
@@ -714,14 +630,19 @@ class TWXAnalyzer {
   _byType(findings) {
     const typeMap = {};
 
-    // Count elements per type
+    // Count elements per type — same grouping as src/utils/type-mappings.js#groupByType
     for (const obj of this.objects) {
-      const typeName = obj.typeName || obj.type || "Unknown";
+      let typeName;
+      if (obj.type === "process" && (obj.subType === "10" || (obj.details && obj.details.processType === "10"))) {
+        typeName = "CSHS";
+      } else {
+        typeName = getTypeName(obj.type);
+      }
       if (!typeMap[typeName]) typeMap[typeName] = { elements: 0, critical: 0, warnings: 0 };
       typeMap[typeName].elements++;
     }
 
-    // Count findings per type
+    // Count findings per type (objectType already grouped via _makeFinding)
     for (const f of findings) {
       const typeName = f.objectType || "Unknown";
       if (!typeMap[typeName]) typeMap[typeName] = { elements: 0, critical: 0, warnings: 0 };
