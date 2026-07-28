@@ -37,7 +37,7 @@ class ObjectExtractor {
 				if (objectEntry) {
 					const objectXml = objectEntry.getData().toString("utf8");
 					const objectData = await this.parser.parseStringPromise(objectXml);
-					const extractedObject = this.extractObjectDetails(objectData, objMeta);
+					const extractedObject = this.extractObjectDetails(objectData, objMeta, objectList);
 					objects.push(extractedObject);
 				} else {
 					objects.push({
@@ -88,7 +88,7 @@ class ObjectExtractor {
 					const objectXml = fs.readFileSync(objectFilePath, "utf8");
 					const objectData = await this.parser.parseStringPromise(objectXml);
 
-					const extractedObject = this.extractObjectDetails(objectData, objMeta);
+					const extractedObject = this.extractObjectDetails(objectData, objMeta, objectList);
 					objects.push(extractedObject);
 				} else {
 					objects.push({
@@ -122,7 +122,7 @@ class ObjectExtractor {
 	//  Object detail dispatch & type-specific extractors
 	// ---------------------------------------------------------------------------
 
-	extractObjectDetails(objectData, objMeta) {
+	extractObjectDetails(objectData, objMeta, objectList) {
 		const baseObject = {
 			id: objMeta.id,
 			versionId: objMeta.versionId,
@@ -150,6 +150,10 @@ class ObjectExtractor {
 			} else if (objMeta.type === "twClass") {
 				const twClassData = objectData.teamworks && objectData.teamworks.twClass ? objectData.teamworks.twClass : rootElement;
 				this.extractBusinessObjectDetails(twClassData, baseObject);
+			} else if (objMeta.type === "bpd") {
+				const bpdData = objectData.teamworks && objectData.teamworks.bpd ? objectData.teamworks.bpd : rootElement;
+				this.extractBPDDetails(bpdData, baseObject, objectList);
+				baseObject.hasDetails = true;
 			}
 		}
 
@@ -293,25 +297,31 @@ class ObjectExtractor {
 
 	parseCoachflowElements(coachflow, details) {
 		try {
-			const userTaskImpl = coachflow["ns16:definitions"]?.["ns16:globalUserTask"]?.["ns16:extensionElements"]?.["ns2:userTaskImplementation"];
+			const userTaskImpl = coachflow["ns16:definitions"]?.["ns16:globalUserTask"]?.["ns16:extensionElements"]?.["ns3:userTaskImplementation"];
 
 			if (!userTaskImpl) {
 				console.warn("No userTaskImplementation found in coachflow");
 				return;
 			}
 
+			// Global pre/post assignment scripts at userTaskImplementation level (fallback for elements without their own)
+			const globalExt = userTaskImpl["ns16:extensionElements"];
+			const globalPre = globalExt?.["ns3:preAssignmentScript"] ? this.cleanJavaScript(globalExt["ns3:preAssignmentScript"]) : null;
+			const globalPost = globalExt?.["ns3:postAssignmentScript"] ? this.cleanJavaScript(globalExt["ns3:postAssignmentScript"]) : null;
+
 			if (userTaskImpl["ns16:scriptTask"]) {
 				const scriptTasks = Array.isArray(userTaskImpl["ns16:scriptTask"]) ? userTaskImpl["ns16:scriptTask"] : [userTaskImpl["ns16:scriptTask"]];
 
 				for (const scriptTask of scriptTasks) {
+					const ext = scriptTask["ns16:extensionElements"];
+					const pre = ext?.["ns3:preAssignmentScript"] ? this.cleanJavaScript(ext["ns3:preAssignmentScript"]) : globalPre;
+					const post = ext?.["ns3:postAssignmentScript"] ? this.cleanJavaScript(ext["ns3:postAssignmentScript"]) : globalPost;
 					details.elements.scriptTasks.push({
 						name: scriptTask.name || "Unnamed",
 						id: scriptTask.id,
 						script: scriptTask["ns16:script"] ? this.cleanJavaScript(scriptTask["ns16:script"]) : "",
-						hasPreScript: false,
-						hasPostScript: false,
-						preScript: "",
-						postScript: "",
+						preAssignment: pre,
+						postAssignment: post,
 					});
 				}
 			}
@@ -323,25 +333,22 @@ class ObjectExtractor {
 					details.elements.exclusiveGateways.push({
 						name: gateway.name || "Unnamed",
 						id: gateway.id,
-						hasPreScript: false,
-						hasPostScript: false,
-						preScript: "",
-						postScript: "",
 					});
 				}
 			}
 
-			if (userTaskImpl["ns2:formTask"]) {
-				const formTasks = Array.isArray(userTaskImpl["ns2:formTask"]) ? userTaskImpl["ns2:formTask"] : [userTaskImpl["ns2:formTask"]];
+			if (userTaskImpl["ns3:formTask"]) {
+				const formTasks = Array.isArray(userTaskImpl["ns3:formTask"]) ? userTaskImpl["ns3:formTask"] : [userTaskImpl["ns3:formTask"]];
 
 				for (const formTask of formTasks) {
+					const ext = formTask["ns16:extensionElements"];
+					const pre = ext?.["ns3:preAssignmentScript"] ? this.cleanJavaScript(ext["ns3:preAssignmentScript"]) : null;
+					const post = ext?.["ns3:postAssignmentScript"] ? this.cleanJavaScript(ext["ns3:postAssignmentScript"]) : null;
 					details.elements.formTasks.push({
 						name: formTask.name || "Unnamed",
 						id: formTask.id,
-						hasPreScript: false,
-						hasPostScript: false,
-						preScript: "",
-						postScript: "",
+						preAssignment: pre,
+						postAssignment: post,
 					});
 				}
 			}
@@ -350,13 +357,14 @@ class ObjectExtractor {
 				const callActivities = Array.isArray(userTaskImpl["ns16:callActivity"]) ? userTaskImpl["ns16:callActivity"] : [userTaskImpl["ns16:callActivity"]];
 
 				for (const callActivity of callActivities) {
+					const ext = callActivity["ns16:extensionElements"];
+					const pre = ext?.["ns3:preAssignmentScript"] ? this.cleanJavaScript(ext["ns3:preAssignmentScript"]) : null;
+					const post = ext?.["ns3:postAssignmentScript"] ? this.cleanJavaScript(ext["ns3:postAssignmentScript"]) : null;
 					details.elements.callActivities.push({
 						name: callActivity.name || "Unnamed",
 						id: callActivity.id,
-						hasPreScript: false,
-						hasPostScript: false,
-						preScript: "",
-						postScript: "",
+						preAssignment: pre,
+						postAssignment: post,
 					});
 				}
 			}
@@ -474,6 +482,30 @@ class ObjectExtractor {
 			}
 		}
 
+		// Extract scriptTasks from bpmn2Model
+		try {
+			const bpmn = processElement.bpmn2Model || processElement.bpmn2Data;
+			if (bpmn) {
+				const process = bpmn["ns16:definitions"]?.["ns16:process"];
+				if (process) {
+					const scriptTasks = toArray(process["ns16:scriptTask"]);
+					for (const st of scriptTasks) {
+						const script = st["ns16:script"] || "";
+						const ext = st["ns16:extensionElements"];
+						details.elements.scriptTasks.push({
+							name: st.name || "Unnamed",
+							id: st.id || "",
+							script: script ? this.cleanJavaScript(script) : "",
+							preAssignment: ext?.["ns3:preAssignmentScript"] || null,
+							postAssignment: ext?.["ns3:postAssignmentScript"] || null,
+						});
+					}
+				}
+			}
+		} catch (error) {
+			console.warn("Error parsing service bpmn2Model elements:", error);
+		}
+
 		baseObject.details = details;
 	}
 
@@ -506,6 +538,104 @@ class ObjectExtractor {
 			console.warn(`Error extracting business object details for ${baseObject.name}:`, error.message);
 			baseObject.details.error = error.message;
 		}
+	}
+
+	extractBPDDetails(bpdElement, baseObject, objectList) {
+		const details = {
+			...baseObject.details,
+			elements: {
+				scriptTasks: [],
+				callActivities: [],
+				exclusiveGateways: [],
+				events: [],
+			},
+		};
+
+		const toArray = (v) => (!v ? [] : Array.isArray(v) ? v : [v]);
+
+		// ponytail: simple linear scan, fine for small object lists
+		const objectMap = {};
+		if (objectList) {
+			for (const obj of objectList) {
+				if (obj.id) objectMap[obj.id] = obj.name;
+				if (obj.versionId) objectMap[obj.versionId] = obj.name;
+			}
+		}
+
+		try {
+			const bpd = bpdElement.BusinessProcessDiagram || bpdElement;
+			const pools = toArray(bpd.pool);
+
+			for (const pool of pools) {
+				const lanes = toArray(pool.lane);
+				for (const lane of lanes) {
+					const laneName = lane.name || "";
+					const flowObjects = toArray(lane.flowObject);
+
+					for (const fo of flowObjects) {
+						const compType = fo.componentType;
+						const component = fo.component;
+						if (!component) continue;
+
+						const name = fo.name || "Unnamed";
+						const id = fo.id || "";
+						const assignments = toArray(fo.assignment);
+						let preAssignment = null;
+						let postAssignment = null;
+						for (const a of assignments) {
+							if (String(a.assignTime) === "1") preAssignment = a.from || null;
+							else if (String(a.assignTime) === "2") postAssignment = a.from || null;
+						}
+
+						if (compType === "Activity") {
+							const implType = String(component.implementationType);
+							const impl = component.implementation || {};
+
+							if (implType === "1") {
+								// Call activity
+								const rawTargetId = impl.attachedActivityId || "";
+								const cleanId = rawTargetId.replace(/^\//, "");
+								details.elements.callActivities.push({
+									name,
+									id,
+									callsTarget: objectMap[cleanId] || "",
+									callsTargetId: cleanId,
+									lane: laneName,
+									preAssignment,
+									postAssignment,
+								});
+							} else if (implType === "3" || implType === "4") {
+								// Script task (3) or general task (4)
+								let script = "";
+								if (impl.script) {
+									script = typeof impl.script === "string" ? impl.script : (impl.script._ || impl.script["#text"] || "");
+								}
+								details.elements.scriptTasks.push({
+									name,
+									id,
+									script: script ? this.cleanJavaScript(script) : "",
+									lane: laneName,
+									preAssignment,
+									postAssignment,
+								});
+							}
+						} else if (compType === "Gateway" && String(component.gatewayType) === "1") {
+							details.elements.exclusiveGateways.push({ name, id });
+						} else if (compType === "Event") {
+							const evtType = String(component.eventType);
+							let eventType = "intermediate";
+							if (evtType === "1") eventType = "start";
+							else if (evtType === "2") eventType = "end";
+							details.elements.events.push({ name, id, eventType });
+						}
+					}
+				}
+			}
+		} catch (error) {
+			console.warn(`Error extracting BPD details for ${baseObject.name}:`, error.message);
+		}
+
+		baseObject.details = details;
 	}
 
 	registerBusinessObjectType(typeName, typeId, schema, namespace) {
