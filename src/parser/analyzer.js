@@ -3,7 +3,6 @@ const { parse: acornLoose } = require("acorn-loose");
 const walk = require("acorn-walk");
 const { analyze: eslintAnalyze } = require("eslint-scope");
 const { ScopeManager } = require("eslint-scope");
-const { getTypeName } = require("../utils/type-mappings");
 
 // === Root globals (register with eslint-scope) ===
 const KNOWN_GLOBALS = new Set([
@@ -382,12 +381,18 @@ class TWXAnalyzer {
   }
 
   _makeFinding(ruleId, obj, elementType, elementName, elementId, message, script, index) {
-    // Same CSHS grouping as _byType / groupByType
+    //5-key grouping: CSHS / Service / BPD / Coach View / Other
     let objectType;
     if (obj.type === "process" && (obj.subType === "10" || (obj.details && obj.details.processType === "10"))) {
       objectType = "CSHS";
+    } else if (obj.type === "process") {
+      objectType = "Service";
+    } else if (obj.type === "bpd") {
+      objectType = "BPD";
+    } else if (obj.type === "coachView") {
+      objectType = "Coach View";
     } else {
-      objectType = getTypeName(obj.type);
+      objectType = "Other";
     }
     return {
       id: `${obj.id}-${elementId}-${ruleId}`,
@@ -628,24 +633,36 @@ class TWXAnalyzer {
   }
 
   _byType(findings) {
-    const typeMap = {};
+    const typeMap = {
+      "CSHS":       { elements: 0, critical: 0, warnings: 0 },
+      "Service":    { elements: 0, critical: 0, warnings: 0 },
+      "BPD":        { elements: 0, critical: 0, warnings: 0 },
+      "Coach View": { elements: 0, critical: 0, warnings: 0 },
+      "Other":      { elements: 0, critical: 0, warnings: 0 },
+    };
 
-    // Count elements per type — same grouping as src/utils/type-mappings.js#groupByType
+    // Count elements per type
     for (const obj of this.objects) {
+      if (obj.name && /instance view/i.test(obj.name)) continue;
+
       let typeName;
       if (obj.type === "process" && (obj.subType === "10" || (obj.details && obj.details.processType === "10"))) {
         typeName = "CSHS";
+      } else if (obj.type === "process") {
+        typeName = "Service";
+      } else if (obj.type === "bpd") {
+        typeName = "BPD";
+      } else if (obj.type === "coachView") {
+        typeName = "Coach View";
       } else {
-        typeName = getTypeName(obj.type);
+        typeName = "Other";
       }
-      if (!typeMap[typeName]) typeMap[typeName] = { elements: 0, critical: 0, warnings: 0 };
       typeMap[typeName].elements++;
     }
 
-    // Count findings per type (objectType already grouped via _makeFinding)
+    // Count findings per type (objectType already set by _makeFinding)
     for (const f of findings) {
-      const typeName = f.objectType || "Unknown";
-      if (!typeMap[typeName]) typeMap[typeName] = { elements: 0, critical: 0, warnings: 0 };
+      const typeName = typeMap[f.objectType] ? f.objectType : "Other";
       if (f.severity === "critical") typeMap[typeName].critical++;
       if (f.severity === "warning") typeMap[typeName].warnings++;
     }
