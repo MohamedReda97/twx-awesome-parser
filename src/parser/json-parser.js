@@ -107,6 +107,8 @@ class JSONParser {
       const analysis = analyzer.analyze()
       const analysisPath = path.join(this.outputDir, 'analysis.json')
       fs.writeFileSync(analysisPath, JSON.stringify(analysis, null, 2))
+      // ponytail: also write to root so the static file server can serve it at /analysis.json
+      fs.writeFileSync('analysis.json', JSON.stringify(analysis, null, 2))
       filesGenerated.push(analysisPath)
       console.log(`Generated analysis file: ${analysisPath} (${analysis.findings.length} findings)`)
     } catch (err) {
