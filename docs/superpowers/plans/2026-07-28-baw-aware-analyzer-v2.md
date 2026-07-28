@@ -86,4 +86,3 @@ Implement only evidence-backed rules from the current extract model:
 2. Inspect `git diff --check` and `git status --short`; keep changes limited to the implementation files and plan.
 3. Read and follow `superpowers:verification-before-completion` and `superpowers:finishing-a-development-branch` before claiming completion.
 4. Commit the completed implementation on `codex/analyzer-v2` with a concise message.
-
