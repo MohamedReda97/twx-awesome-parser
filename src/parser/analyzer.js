@@ -1,5 +1,4 @@
 const acorn = require('acorn')
-const { parse: parseLoose } = require('acorn-loose')
 const walk = require('acorn-walk')
 const { analyze: analyzeScope } = require('eslint-scope')
 const crypto = require('crypto')
@@ -11,9 +10,13 @@ const KNOWN_GLOBALS = new Set([
   'URIError', 'NaN', 'Infinity', 'undefined', 'parseInt', 'parseFloat', 'isNaN', 'isFinite',
   'decodeURI', 'decodeURIComponent', 'encodeURI', 'encodeURIComponent', 'eval', 'JSON', 'Packages',
   'java', 'javax', 'com', 'org', 'importPackage', 'importClass', 'JavaImporter', 'TWDate', 'TWSearch',
-  'TWProcessInstance', 'TWProcess', 'TWProcessApp', 'TWTask', 'TWUser', 'TWRole', 'TWTeam',
-  'TWDocument', 'TWManagedFile', 'TWObject', 'TWMap', 'XMLDocument', 'XMLElement', 'Serializer',
-  'Map', 'Record', 'IndexedMap', 'console', 'Set', 'Promise'
+  'TWSearchColumn', 'TWSearchCondition', 'TWSearchOrdering', 'TWProcessInstance', 'TWProcess', 'TWProcessApp',
+  'TWProcessAppSnapshot', 'TWTask', 'TWUser', 'TWRole', 'TWParticipantGroup', 'TWTeam', 'TWDocument',
+  'TWManagedFile', 'TWLink', 'TWEvent', 'TWHolidaySchedule', 'TWTimeSchedule', 'TWTimePeriod',
+  'TWWorkSchedule', 'TWTimerInstance', 'BPMRESTRequest', 'BPMRESTResponse', 'TWObject', 'TWMap',
+  'XMLDocument', 'XMLElement', 'XMLNodeList', 'XMLNodelist', 'Serializer', 'Map', 'Record', 'IndexedMap',
+  'JSONObject', 'SLAViolationRecord', 'TWUserLocalePreferences', 'Step', 'ConditionalActivity', 'Integer',
+  'Decimal', 'Time', 'URL', 'ANY', 'console', 'Set', 'Promise'
 ])
 
 const RULES = {
@@ -86,8 +89,10 @@ function hasLoopExit (loop) {
     if (exit) return
     if ((node.type === 'ReturnStatement' || node.type === 'ThrowStatement') && !ancestors.some(ancestor => /Function/.test(ancestor.type))) exit = true
     if (node.type === 'BreakStatement') {
-      const nestedLoop = ancestors.slice(1, -1).some(ancestor => ancestor !== loop && isLoop(ancestor))
-      if (!nestedLoop) exit = true
+      const nestedLoop = ancestors.slice(0, -1).some(ancestor => isLoop(ancestor))
+      const switchBreak = ancestors.slice(0, -1).some(ancestor => ancestor.type === 'SwitchStatement')
+      const labelInsideLoop = node.label && ancestors.slice(0, -1).some(ancestor => ancestor.type === 'LabeledStatement' && ancestor.label?.name === node.label.name)
+      if ((node.label && !labelInsideLoop) || (!node.label && !nestedLoop && !switchBreak)) exit = true
     }
   })
   return exit
@@ -157,7 +162,7 @@ class TWXAnalyzer {
     const seen = new Set()
     const add = (object, elementType, elementName, elementId, scriptRole, source) => {
       if (!source || !String(source).trim()) return
-      const key = `${object.id || object.name}\u0000${source}`
+      const key = `${object.id || object.name}\u0000${elementId || elementName || 'script'}\u0000${source}`
       if (seen.has(key)) return
       seen.add(key)
       units.push({ object, objectType: appType(object), elementType, elementName: elementName || 'Unnamed', elementId: elementId || elementName || 'script', scriptRole, source: String(source), declaredVariables: context.declaredVariables.get(object.id) || new Set() })
@@ -188,16 +193,13 @@ class TWXAnalyzer {
     } catch (error) {
       this._add(findings, 'javascript-syntax-error', unit, error.pos || 0, `JavaScript cannot be parsed: ${error.message}`, ['Strict Acorn parsing failed.'])
       skipped.push({ objectId: unit.object.id, elementId: unit.elementId, reason: 'javascript-syntax-error' })
-      try { parseLoose(unit.source, { ecmaVersion: 2020, locations: true }) } catch (_) {}
       return
     }
 
     this._undefinedIdentifiers(ast, unit, context, findings)
     this._undeclaredProcessVariables(ast, unit, findings)
-    const values = this._constantValues(ast)
-    this._divisionByZero(ast, values, unit, findings)
-    this._nullAccess(ast, values, unit, findings)
-    this._unsafeEval(ast, values, unit, findings)
+    this._constantFindings(ast, unit, findings)
+    this._unsafeEval(ast, unit, findings)
     this._loops(ast, unit, findings)
     this._needsReview(ast, unit, findings)
   }
@@ -222,54 +224,70 @@ class TWXAnalyzer {
     })
   }
 
-  _constantValues (ast) {
+  _constantFindings (ast, unit, findings) {
     const values = new Map()
     const remember = (left, right) => {
       const key = expressionKey(left)
       if (!key) return
+      if (!right) {
+        values.delete(key)
+        return
+      }
       if (isLiteral(right, 0)) values.set(key, 0)
       else if (isLiteral(right, null) || (right.type === 'Identifier' && right.name === 'undefined')) values.set(key, null)
+      else values.delete(key)
     }
     walk.simple(ast, {
-      VariableDeclarator: node => remember(node.id, node.init),
-      AssignmentExpression: node => { if (node.operator === '=') remember(node.left, node.right) }
-    })
-    return values
-  }
-
-  _divisionByZero (ast, values, unit, findings) {
-    walk.simple(ast, {
-      BinaryExpression: node => {
-        if (node.operator !== '/') return
-        const key = expressionKey(node.right)
-        if (isLiteral(node.right, 0) || values.get(key) === 0) this._add(findings, 'division-by-zero', unit, node.right.start, 'This division uses a value proven to be zero.', ['The divisor is a zero literal or a direct local zero assignment.'])
+      BinaryExpression: expression => {
+        if (expression.operator === '/' && isLiteral(expression.right, 0)) this._add(findings, 'division-by-zero', unit, expression.right.start, 'This division uses a zero literal.', ['The divisor is a zero literal.'])
+      },
+      MemberExpression: expression => {
+        if (!expression.optional && isLiteral(expression.object, null)) this._add(findings, 'null-or-undefined-access', unit, expression.object.start, 'This property access uses a null literal.', ['The receiver is a null literal.'])
       }
     })
-  }
-
-  _nullAccess (ast, values, unit, findings) {
-    walk.simple(ast, {
-      MemberExpression: node => {
-        const key = expressionKey(node.object)
-        if (isLiteral(node.object, null) || values.get(key) === null) this._add(findings, 'null-or-undefined-access', unit, node.object.start, 'This property access uses a value proven to be null or undefined.', ['The receiver is a null/undefined literal or a direct local null assignment.'])
+    const inspect = node => walk.simple(node, {
+      BinaryExpression: expression => {
+        if (expression.operator !== '/') return
+        const key = expressionKey(expression.right)
+        if (values.get(key) === 0) this._add(findings, 'division-by-zero', unit, expression.right.start, 'This division uses a value proven to be zero.', ['The divisor is a direct straight-line zero assignment.'])
+      },
+      MemberExpression: expression => {
+        const key = expressionKey(expression.object)
+        if (!expression.optional && values.get(key) === null) this._add(findings, 'null-or-undefined-access', unit, expression.object.start, 'This property access uses a value proven to be null or undefined.', ['The receiver is a direct straight-line null assignment.'])
       }
     })
+    for (const statement of ast.body || []) {
+      if (statement.type === 'VariableDeclaration') {
+        for (const declaration of statement.declarations) remember(declaration.id, declaration.init)
+      } else if (statement.type === 'ExpressionStatement') {
+        inspect(statement.expression)
+        if (statement.expression.type === 'AssignmentExpression' && statement.expression.operator === '=') remember(statement.expression.left, statement.expression.right)
+      } else if (statement.type === 'ReturnStatement' || statement.type === 'ThrowStatement') {
+        if (statement.argument) inspect(statement.argument)
+      } else {
+        values.clear()
+      }
+    }
   }
 
-  _unsafeEval (ast, values, unit, findings) {
+  _unsafeEval (ast, unit, findings) {
     walk.simple(ast, {
       CallExpression: node => {
         if (node.callee.type !== 'Identifier' || node.callee.name !== 'eval') return
         const key = expressionKey(node.arguments[0])
-        if (key?.startsWith('tw.local.') || (key && typeof values.get(key) === 'string' && values.get(key).startsWith('tw.local.'))) this._add(findings, 'unsafe-dynamic-execution', unit, node.start, 'eval receives a direct application process value.', ['Direct tw.local input reaches eval without validation.'])
+        if (key?.startsWith('tw.local.')) this._add(findings, 'unsafe-dynamic-execution', unit, node.start, 'eval receives a direct application process value.', ['Direct tw.local input reaches eval without validation.'])
       }
     })
   }
 
   _loops (ast, unit, findings) {
-    walk.simple(ast, {
-      WhileStatement: node => { if (isLiteral(node.test, true) && !hasLoopExit(node)) this._add(findings, 'loop-with-no-demonstrable-exit', unit, node.start, 'This unconditional loop has no local break, return, or throw.', ['The loop condition is true and its body has no supported exit.']) },
-      ForStatement: node => { if (!node.test && !hasLoopExit(node)) this._add(findings, 'loop-with-no-demonstrable-exit', unit, node.start, 'This unconditional loop has no local break, return, or throw.', ['The loop has no test and its body has no supported exit.']) }
+    walk.ancestor(ast, {
+      WhileStatement: node => {
+        if (isLiteral(node.test, true) && !hasLoopExit(node)) this._add(findings, 'loop-with-no-demonstrable-exit', unit, node.start, 'This unconditional loop has no local break, return, or throw.', ['The loop condition is true and its body has no supported exit.'])
+      },
+      ForStatement: node => {
+        if (!node.test && !hasLoopExit(node)) this._add(findings, 'loop-with-no-demonstrable-exit', unit, node.start, 'This unconditional loop has no local break, return, or throw.', ['The loop has no test and its body has no supported exit.'])
+      }
     })
   }
 

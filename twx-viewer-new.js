@@ -672,7 +672,7 @@ function viewAnalyzer() {
   let html = `<section class="analyzer-report">
     <header class="analyzer-report-header">
       <div><div class="analyzer-eyebrow">Server-side analysis</div><h2>${esc(fileName)}</h2><p>${a.status === 'partial' ? 'Partial report — some application scripts could not be fully analyzed.' : a.status === 'failed' ? 'Analysis failed — see the report status below.' : 'Actionable issues in application-owned server-side scripts.'}</p></div>
-      <div class="analyzer-context"><span>App scripts only</span><span>BAW ${esc(a.meta?.targetBawVersion || 'unknown')} · ${esc(a.meta?.targetVersionSource || 'unknown')}</span><span>${a.meta?.toolkitsUsedAsContext || 0} toolkit${(a.meta?.toolkitsUsedAsContext || 0) === 1 ? '' : 's'} as context</span></div>
+      <div class="analyzer-context"><span>App scripts only</span><span>BAW ${esc(a.meta?.targetBawVersion || 'unknown')} · ${esc(a.meta?.targetVersionSource || 'unknown')}</span><span>${a.meta?.toolkitsUsedAsContext || 0} toolkit${(a.meta?.toolkitsUsedAsContext || 0) === 1 ? '' : 's'} as context</span><span>Generated ${esc(a.meta?.generatedAt || 'unknown time')}</span></div>
     </header>
     <div class="analyzer-coverage"><strong>${analyzed}/${totalElements}</strong> application elements analyzed${coverage.skippedAppElements ? ` · ${coverage.skippedAppElements} skipped` : ''}</div>
     <div class="analyzer-overview">
@@ -686,7 +686,7 @@ function viewAnalyzer() {
       ${critical.length ? `<section><h3>Confirmed critical <span>${critical.length}</span></h3>${criticalHtml}</section>` : ''}
       ${warnings.length ? `<section><h3>Confirmed warnings <span>${warnings.length}</span></h3>${ruleHtml(warnings, 'warning')}</section>` : ''}
       ${needsReview.length ? `<section><h3>Needs review <span>${needsReview.length}</span></h3>${ruleHtml(needsReview, 'review')}</section>` : ''}
-      ${findings.length ? '' : viewEmptyState('No confirmed issues or review candidates were found in the application scripts.', '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>')}
+      ${findings.length || a.status === 'failed' ? '' : viewEmptyState('No confirmed issues or review candidates were found in the application scripts.', '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>')}
     </div>
   </section>`;
   return html;
