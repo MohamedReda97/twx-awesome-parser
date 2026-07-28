@@ -158,9 +158,24 @@ class ObjectExtractor {
 
 	extractCoachViewDetails(coachViewElement, baseObject) {
 		const details = baseObject.details;
+		const scripts = {};
 
-		if (coachViewElement.loadJsFunction && coachViewElement.loadJsFunction !== null && typeof coachViewElement.loadJsFunction === "string" && !coachViewElement.loadJsFunction.includes('isNull="true"')) {
-			details.loadJsFunction = this.cleanJavaScript(coachViewElement.loadJsFunction);
+		// All 6 JS function types
+		const jsFunctionFields = [
+			"loadJsFunction",
+			"unloadJsFunction",
+			"viewJsFunction",
+			"changeJsFunction",
+			"collaborationJsFunction",
+			"validateJsFunction",
+		];
+		for (const field of jsFunctionFields) {
+			const val = coachViewElement[field];
+			if (val && val !== null && typeof val === "string" && !val.includes('isNull="true"')) {
+				scripts[field] = this.cleanJavaScript(val);
+			} else {
+				scripts[field] = null;
+			}
 		}
 
 		if (coachViewElement.bindingType) {
@@ -182,20 +197,23 @@ class ObjectExtractor {
 
 		if (coachViewElement.inlineScript) {
 			const inlineScripts = Array.isArray(coachViewElement.inlineScript) ? coachViewElement.inlineScript : [coachViewElement.inlineScript];
-			details.inlineScripts = inlineScripts
+			scripts.inlineScripts = inlineScripts
 				.map((script) => ({
-					name: script.$ ? script.$.name : script.name || "Unnamed Script",
-					scriptType: script.scriptType || "JS",
-					scriptBlock: script.scriptBlock ? this.cleanJavaScript(script.scriptBlock) : "",
+					context: script.$ ? script.$.name : script.name || "Unnamed Script",
+					script: script.scriptBlock ? this.cleanJavaScript(script.scriptBlock) : "",
 				}))
-				.filter((script) => script.scriptBlock);
+				.filter((script) => script.script);
+		} else {
+			scripts.inlineScripts = [];
 		}
+
+		details.scripts = scripts;
 
 		if (coachViewElement.layout) {
 			details.layout = Array.isArray(coachViewElement.layout) ? coachViewElement.layout[0] : coachViewElement.layout;
 		}
 
-		baseObject.hasDetails = !!(details.loadJsFunction || details.bindingType || details.configOptions || details.inlineScripts || details.layout);
+		baseObject.hasDetails = !!(scripts.loadJsFunction || scripts.unloadJsFunction || scripts.viewJsFunction || scripts.changeJsFunction || scripts.collaborationJsFunction || scripts.validateJsFunction || (scripts.inlineScripts && scripts.inlineScripts.length) || details.bindingType || details.configOptions || details.layout);
 	}
 
 	extractProcessDetails(processElement, baseObject) {
@@ -213,7 +231,7 @@ class ObjectExtractor {
 		if (baseObject.subType === "10") {
 			this.extractCSHSDetails(processElement, baseObject);
 			baseObject.hasDetails = true;
-		} else if (baseObject.subType === "12") {
+		} else if (baseObject.subType === "12" || baseObject.subType === "13") {
 			this.extractServiceDetails(processElement, baseObject);
 			baseObject.hasDetails = true;
 		}
@@ -356,6 +374,9 @@ class ObjectExtractor {
 				private: [],
 			},
 			scripts: [],
+			elements: {
+				scriptTasks: [],
+			},
 		};
 
 		const toArray = (value) => {
