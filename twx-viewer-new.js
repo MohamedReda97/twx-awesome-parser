@@ -638,101 +638,73 @@ function viewAnalyzer() {
 
   const a = state.analysisData;
   const s = a.summary || {};
-  const byType = a.byType || {};
+  const byType = a.byAppType || a.byType || {};
+  const coverage = a.coverage || {};
   const findings = a.findings || [];
+  const confirmed = findings.filter(f => f.status !== 'needs-review');
+  const critical = confirmed.filter(f => f.severity === 'critical');
+  const warnings = confirmed.filter(f => f.severity === 'warning');
+  const needsReview = findings.filter(f => f.status === 'needs-review');
+  const fileName = a.meta?.sourceFile || state.parsedFile?.name || 'Currently loaded TWX';
+  const totalElements = coverage.eligibleAppElements ?? s.totalElements ?? Object.values(byType).reduce((n, d) => n + (d.elements || 0), 0);
+  const analyzed = coverage.analyzedAppElements ?? totalElements;
+  const groupBy = (items, key) => items.reduce((groups, item) => {
+    const value = key(item);
+    (groups[value] ||= []).push(item);
+    return groups;
+  }, {});
+  const criticalGroups = groupBy(critical, f => `${f.objectId || f.objectName}|${f.elementId || f.elementName}`);
+  const ruleGroups = items => groupBy(items, f => f.ruleName || f.ruleId || 'Other finding');
+  const summaryCard = (tone, value, label, detail) => `<div class="analyzer-overview-card ${tone}"><strong>${value}</strong><span>${label}</span><small>${detail}</small></div>`;
+  const group = (title, items, tone, label) => {
+    const elements = new Set(items.map(f => `${f.objectId}|${f.elementId}`)).size;
+    return `<details class="analyzer-group ${tone}">
+      <summary><span class="analyzer-group-title">${title}</span><span class="analyzer-group-meta">${items.length} ${label}${items.length === 1 ? '' : 's'} · ${elements} element${elements === 1 ? '' : 's'}</span></summary>
+      <div class="analyzer-group-body">${items.map(renderFindingCard).join('')}</div>
+    </details>`;
+  };
+  const criticalHtml = Object.values(criticalGroups).map(items => {
+    const f = items[0];
+    return group(`${esc(f.objectName || 'Unnamed')} <span>${esc(f.objectType || '')}</span> <b>›</b> ${esc(f.elementName || 'Unnamed')} <span>${esc(f.elementType || '')}</span>`, items, 'critical', 'finding');
+  }).join('');
+  const ruleHtml = (items, tone) => Object.entries(ruleGroups(items)).map(([name, groupItems]) => group(esc(name), groupItems, tone, 'finding')).join('');
 
-  const fileName = state.parsedFile?.name || 'Currently loaded TWX';
-  const totalElements = s.totalElements ?? Object.values(byType).reduce((n, d) => n + (d.elements || 0), 0);
-
-  if (findings.length === 0) return `
-    <div class="analyzer-header">
-      <div class="analyzer-file-name">📄 ${esc(fileName)}</div>
-      <div class="analyzer-file-meta">${totalElements} elements analyzed</div>
+  let html = `<section class="analyzer-report">
+    <header class="analyzer-report-header">
+      <div><div class="analyzer-eyebrow">Server-side analysis</div><h2>${esc(fileName)}</h2><p>${a.status === 'partial' ? 'Partial report — some application scripts could not be fully analyzed.' : a.status === 'failed' ? 'Analysis failed — see the report status below.' : 'Actionable issues in application-owned server-side scripts.'}</p></div>
+      <div class="analyzer-context"><span>App scripts only</span><span>BAW ${esc(a.meta?.targetBawVersion || 'unknown')} · ${esc(a.meta?.targetVersionSource || 'unknown')}</span><span>${a.meta?.toolkitsUsedAsContext || 0} toolkit${(a.meta?.toolkitsUsedAsContext || 0) === 1 ? '' : 's'} as context</span></div>
+    </header>
+    <div class="analyzer-coverage"><strong>${analyzed}/${totalElements}</strong> application elements analyzed${coverage.skippedAppElements ? ` · ${coverage.skippedAppElements} skipped` : ''}</div>
+    <div class="analyzer-overview">
+      ${summaryCard('critical', s.critical ?? s.totalCritical ?? critical.length, 'Confirmed critical', `${s.elementsWithCritical ?? new Set(critical.map(f => f.elementId)).size} affected elements`)}
+      ${summaryCard('warning', s.warnings ?? s.totalWarnings ?? warnings.length, 'Confirmed warnings', `${s.elementsWithWarnings ?? new Set(warnings.map(f => f.elementId)).size} affected elements`)}
+      ${summaryCard('review', s.needsReview ?? needsReview.length, 'Needs review', 'Excluded from confirmed totals')}
     </div>
-    <div class="analyzer-summary">
-      <div class="analyzer-summary-card critical"><div class="analyzer-summary-value">0</div><div class="analyzer-summary-label">CRITICAL</div></div>
-      <div class="analyzer-summary-card warning"><div class="analyzer-summary-value">0</div><div class="analyzer-summary-label">WARNINGS</div></div>
+    <div class="analyzer-type-strip">${Object.entries(byType).map(([name, data]) => `<div><strong>${esc(name)}</strong><span>${data.elements || 0} elements</span><small>${data.critical || 0} critical · ${data.warnings || 0} warnings · ${data.needsReview || 0} review</small></div>`).join('')}</div>
+    ${a.diagnostics?.length ? `<div class="analyzer-diagnostics">${a.diagnostics.map(d => esc(d.message)).join('<br>')}</div>` : ''}
+    <div class="analyzer-findings">
+      ${critical.length ? `<section><h3>Confirmed critical <span>${critical.length}</span></h3>${criticalHtml}</section>` : ''}
+      ${warnings.length ? `<section><h3>Confirmed warnings <span>${warnings.length}</span></h3>${ruleHtml(warnings, 'warning')}</section>` : ''}
+      ${needsReview.length ? `<section><h3>Needs review <span>${needsReview.length}</span></h3>${ruleHtml(needsReview, 'review')}</section>` : ''}
+      ${findings.length ? '' : viewEmptyState('No confirmed issues or review candidates were found in the application scripts.', '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>')}
     </div>
-    ${viewEmptyState('No issues found. All analyzed elements passed every rule.', '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>')}`;
-
-  const criticalFindings = findings.filter(f => f.severity === 'critical');
-  const warningFindings = findings.filter(f => f.severity === 'warning');
-
-  let html = `
-    <div class="analyzer-header">
-      <div class="analyzer-file-name">📄 ${esc(fileName)}</div>
-      <div class="analyzer-file-meta">${totalElements} elements analyzed</div>
-    </div>
-    <div class="analyzer-summary">
-      <div class="analyzer-summary-card critical">
-        <div class="analyzer-summary-value">${s.totalCritical ?? criticalFindings.length}</div>
-        <div class="analyzer-summary-label">CRITICAL</div>
-      </div>
-      <div class="analyzer-summary-card warning">
-        <div class="analyzer-summary-value">${s.totalWarnings ?? warningFindings.length}</div>
-        <div class="analyzer-summary-label">WARNINGS</div>
-      </div>
-    </div>`;
-
-  // By Type section
-  const typeKeys = Object.keys(byType);
-  if (typeKeys.length > 0) {
-    html += `<div class="card"><div class="card-header"><span class="card-title">By Type</span></div><div class="analyzer-by-type">`;
-    typeKeys.forEach(t => {
-      const d = byType[t];
-      html += `<div class="analyzer-by-type-card">
-        <div class="analyzer-by-type-header">
-          <span class="analyzer-by-type-name">${esc(t)}</span>
-          <span class="analyzer-by-type-count">${d.elements ?? 0} element${(d.elements ?? 0) !== 1 ? 's' : ''}</span>
-        </div>
-        <div class="analyzer-by-type-stats">
-          ${d.critical ? `<span class="analyzer-stat critical">${d.critical} critical</span>` : ''}
-          ${d.warnings ? `<span class="analyzer-stat warning">${d.warnings} warning${d.warnings !== 1 ? 's' : ''}</span>` : ''}
-          ${!d.critical && !d.warnings ? `<span class="analyzer-stat clean">No issues</span>` : ''}
-        </div>
-      </div>`;
-    });
-    html += `</div></div>`;
-  }
-
-  // Findings section
-  html += `<div class="analyzer-findings"><div class="analyzer-findings-title">Findings (${findings.length})</div>`;
-
-  if (criticalFindings.length > 0) {
-    html += `<div class="analyzer-severity-group critical">
-      <div class="analyzer-severity-header">CRITICAL (${criticalFindings.length})</div>
-      ${criticalFindings.map(f => renderFindingCard(f)).join('')}
-    </div>`;
-  }
-
-  if (warningFindings.length > 0) {
-    html += `<div class="analyzer-severity-group warning">
-      <div class="analyzer-severity-header">WARNINGS (${warningFindings.length})</div>
-      ${warningFindings.map(f => renderFindingCard(f)).join('')}
-    </div>`;
-  }
-
-  html += `</div>`;
+  </section>`;
   return html;
 }
 
 function renderFindingCard(f) {
-  const snippet = f.snippet
-    ? `<div class="analyzer-finding-snippet">${esc(f.snippet).replace(/\r\n/g, '\n').replace(/\r/g, '\n')}</div>`
+  const location = f.location || {};
+  const snippet = location.snippet || f.snippet
+    ? `<pre class="analyzer-finding-snippet">${esc(location.snippet || f.snippet).replace(/\r\n/g, '\n').replace(/\r/g, '\n')}</pre>`
     : '';
-  return `<div class="analyzer-finding ${esc(f.severity)}">
-    <div class="analyzer-finding-header">
-      <span class="analyzer-finding-object">${esc(f.objectName || 'Unnamed')}</span>
-      <span class="analyzer-finding-type-badge">${esc(f.objectType || '')}</span>
-      <span class="analyzer-finding-sep">›</span>
-      <span class="analyzer-finding-element">${esc(f.elementName || '')}</span>
-      <span class="analyzer-finding-element-type">[${esc(f.elementType || '')}]</span>
-    </div>
-    <div class="analyzer-finding-rule">${esc(f.ruleName || f.ruleId || '')}</div>
-    <div class="analyzer-finding-message">${esc(f.message || '')}</div>
-    ${f.line ? `<div class="analyzer-finding-line">Line ${f.line}</div>` : ''}
+  const status = f.status === 'needs-review' ? 'Needs review' : f.severity === 'critical' ? 'Critical' : 'Warning';
+  return `<article class="analyzer-finding ${esc(f.severity || 'review')}">
+    <div class="analyzer-finding-header"><span class="analyzer-finding-status">${status}</span><span>${esc(f.ruleName || f.ruleId || '')}</span>${location.line ? `<small>Line ${location.line}</small>` : ''}</div>
+    <p>${esc(f.message || '')}</p>
     ${snippet}
-  </div>`;
+    ${f.evidence?.length ? `<ul class="analyzer-evidence">${f.evidence.map(item => `<li>${esc(item)}</li>`).join('')}</ul>` : ''}
+    <footer>${f.affectedBawVersions?.length ? `BAW ${esc(f.affectedBawVersions.join(', '))}` : ''}${f.remediation ? `<span>${esc(f.remediation)}</span>` : ''}</footer>
+  </article>`;
 }
 
 async function loadAnalysis() {

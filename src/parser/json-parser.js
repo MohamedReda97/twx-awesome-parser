@@ -4,6 +4,37 @@ const TWXExtractor = require('./twx-extractor')
 const { groupByType } = require('../utils/type-mappings')
 const { objectTypeFileName, combinedObjectTypeFileName } = require('../utils/file-names')
 
+function failedAnalysis (error, sourceFile) {
+  return {
+    schemaVersion: 2,
+    status: 'failed',
+    meta: {
+      sourceFile: sourceFile || null,
+      generatedAt: new Date().toISOString(),
+      targetBawVersion: null,
+      targetVersionSource: 'unknown',
+      scope: 'app-server-side',
+      toolkitsUsedAsContext: 0,
+      toolkitContractsUsed: 0
+    },
+    coverage: { eligibleAppElements: 0, analyzedAppElements: 0, skippedAppElements: 0, skipped: [] },
+    summary: { critical: 0, warnings: 0, needsReview: 0, elementsWithCritical: 0, elementsWithWarnings: 0 },
+    byAppType: { CSHS: { elements: 0, critical: 0, warnings: 0, needsReview: 0 }, Service: { elements: 0, critical: 0, warnings: 0, needsReview: 0 }, BPD: { elements: 0, critical: 0, warnings: 0, needsReview: 0 } },
+    diagnostics: [{ code: 'ANALYSIS_FAILED', message: error.message }],
+    findings: []
+  }
+}
+
+function writeAnalysis (outputDir, analysis) {
+  const content = JSON.stringify(analysis, null, 2)
+  const targets = [...new Set([path.resolve(outputDir, 'analysis.json'), path.resolve('analysis.json')])]
+  for (const target of targets) {
+    const temporary = `${target}.${process.pid}.tmp`
+    fs.writeFileSync(temporary, content)
+    fs.renameSync(temporary, target)
+  }
+}
+
 /**
  * JSON-based TWX parser that outputs structured JSON files
  */
@@ -96,23 +127,24 @@ class JSONParser {
       filesGenerated.push(toolkitsFile)
     }
 
-    // 8. Generate analysis.json (app + toolkit objects)
+    // 8. Generate app-only analysis.json with toolkit declarations as context
     try {
       const TWXAnalyzer = require('./analyzer')
-      const allObjects = [
-        ...(extractedData.objects || []),
-        ...(extractedData.toolkits || []).flatMap(tk => tk.objects || [])
-      ]
-      const analyzer = new TWXAnalyzer(allObjects)
+      const analyzer = new TWXAnalyzer(extractedData.objects || [], {
+        toolkits: extractedData.toolkits || [],
+        metadata: extractedData.metadata,
+        sourceFile: extractedData.sourceFile
+      })
       const analysis = analyzer.analyze()
       const analysisPath = path.join(this.outputDir, 'analysis.json')
-      fs.writeFileSync(analysisPath, JSON.stringify(analysis, null, 2))
-      // ponytail: also write to root so the static file server can serve it at /analysis.json
-      fs.writeFileSync('analysis.json', JSON.stringify(analysis, null, 2))
+      writeAnalysis(this.outputDir, analysis)
       filesGenerated.push(analysisPath)
       console.log(`Generated analysis file: ${analysisPath} (${analysis.findings.length} findings)`)
     } catch (err) {
       console.warn('Analysis generation failed (non-fatal):', err.message)
+      const analysisPath = path.join(this.outputDir, 'analysis.json')
+      writeAnalysis(this.outputDir, failedAnalysis(err, extractedData.sourceFile))
+      filesGenerated.push(analysisPath)
     }
 
     return {
