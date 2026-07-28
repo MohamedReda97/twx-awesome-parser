@@ -641,7 +641,14 @@ function viewAnalyzer() {
   const byType = a.byType || {};
   const findings = a.findings || [];
 
+  const fileName = state.parsedFile?.name || 'Currently loaded TWX';
+  const totalElements = s.totalElements ?? Object.values(byType).reduce((n, d) => n + (d.elements || 0), 0);
+
   if (findings.length === 0) return `
+    <div class="analyzer-header">
+      <div class="analyzer-file-name">📄 ${esc(fileName)}</div>
+      <div class="analyzer-file-meta">${totalElements} elements analyzed</div>
+    </div>
     <div class="analyzer-summary">
       <div class="analyzer-summary-card critical"><div class="analyzer-summary-value">0</div><div class="analyzer-summary-label">CRITICAL</div></div>
       <div class="analyzer-summary-card warning"><div class="analyzer-summary-value">0</div><div class="analyzer-summary-label">WARNINGS</div></div>
@@ -652,6 +659,10 @@ function viewAnalyzer() {
   const warningFindings = findings.filter(f => f.severity === 'warning');
 
   let html = `
+    <div class="analyzer-header">
+      <div class="analyzer-file-name">📄 ${esc(fileName)}</div>
+      <div class="analyzer-file-meta">${totalElements} elements analyzed</div>
+    </div>
     <div class="analyzer-summary">
       <div class="analyzer-summary-card critical">
         <div class="analyzer-summary-value">${s.totalCritical ?? criticalFindings.length}</div>
@@ -1321,6 +1332,9 @@ function renderAll() { renderSidebar(); renderTopbar(); renderContent(); }
 document.addEventListener('DOMContentLoaded', async () => {
   setupGlobalListeners();
   renderAll();
-  try { await loadAllData(); } catch (_) {}
+  try {
+    await loadAllData();
+    await loadAnalysis();
+  } catch (_) {}
   renderAll();
 });
