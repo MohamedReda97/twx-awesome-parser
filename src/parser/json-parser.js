@@ -96,6 +96,19 @@ class JSONParser {
       filesGenerated.push(toolkitsFile)
     }
 
+    // 8. Generate analysis.json (app objects only — toolkits are IBM-provided)
+    try {
+      const TWXAnalyzer = require('./analyzer')
+      const analyzer = new TWXAnalyzer(extractedData.objects)
+      const analysis = analyzer.analyze()
+      const analysisPath = path.join(this.outputDir, 'analysis.json')
+      fs.writeFileSync(analysisPath, JSON.stringify(analysis, null, 2))
+      filesGenerated.push(analysisPath)
+      console.log(`Generated analysis file: ${analysisPath} (${analysis.findings.length} findings)`)
+    } catch (err) {
+      console.warn('Analysis generation failed (non-fatal):', err.message)
+    }
+
     return {
       filesGenerated: filesGenerated.filter(Boolean), // Remove any null/undefined entries
       summary: {
