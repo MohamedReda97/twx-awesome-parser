@@ -391,7 +391,7 @@ function renderSection3(obj, type) {
   tabs.push({ id: 'info', label: 'Info' });
   if (obj.details) {
     if (obj.details.variables) tabs.push({ id: 'variables', label: 'Variables' });
-    if ((obj.details.scripts && obj.details.scripts.length > 0) || (obj.details.inlineScripts && obj.details.inlineScripts.length > 0) || obj.details.loadJsFunction) tabs.push({ id: 'scripts', label: 'Scripts' });
+    if (Array.isArray(obj.details.scripts) && obj.details.scripts.length > 0 || (obj.details.scripts && !Array.isArray(obj.details.scripts) && (obj.details.scripts.loadJsFunction || obj.details.scripts.unloadJsFunction || obj.details.scripts.viewJsFunction || obj.details.scripts.changeJsFunction || obj.details.scripts.collaborationJsFunction || obj.details.scripts.validateJsFunction || (Array.isArray(obj.details.scripts.inlineScripts) && obj.details.scripts.inlineScripts.length > 0))) || (obj.details.inlineScripts && obj.details.inlineScripts.length > 0) || obj.details.loadJsFunction) tabs.push({ id: 'scripts', label: 'Scripts' });
     if (obj.details.elements) tabs.push({ id: 'elements', label: 'Elements' });
     if (obj.details.schema) tabs.push({ id: 'schema', label: 'Schema' });
   }
@@ -540,7 +540,7 @@ function renderSection3SubNav(obj) {
   const tabs = [{ id: 'info', label: 'Info' }];
   if (obj.details) {
     if (obj.details.variables) tabs.push({ id: 'variables', label: 'Variables' });
-    if ((obj.details.scripts && obj.details.scripts.length > 0) || (obj.details.inlineScripts && obj.details.inlineScripts.length > 0) || obj.details.loadJsFunction) tabs.push({ id: 'scripts', label: 'Scripts' });
+    if (Array.isArray(obj.details.scripts) && obj.details.scripts.length > 0 || (obj.details.scripts && !Array.isArray(obj.details.scripts) && (obj.details.scripts.loadJsFunction || obj.details.scripts.unloadJsFunction || obj.details.scripts.viewJsFunction || obj.details.scripts.changeJsFunction || obj.details.scripts.collaborationJsFunction || obj.details.scripts.validateJsFunction || (Array.isArray(obj.details.scripts.inlineScripts) && obj.details.scripts.inlineScripts.length > 0))) || (obj.details.inlineScripts && obj.details.inlineScripts.length > 0) || obj.details.loadJsFunction) tabs.push({ id: 'scripts', label: 'Scripts' });
     if (obj.details.elements) tabs.push({ id: 'elements', label: 'Elements' });
     if (obj.details.schema) tabs.push({ id: 'schema', label: 'Schema' });
   }
@@ -655,7 +655,7 @@ function renderDrawerSubNav(obj) {
   const tabs = [{ id: 'info', label: 'Info' }];
   if (obj.details) {
     if (obj.details.variables) tabs.push({ id: 'variables', label: 'Variables' });
-    if ((obj.details.scripts && obj.details.scripts.length > 0) || (obj.details.inlineScripts && obj.details.inlineScripts.length > 0) || obj.details.loadJsFunction) tabs.push({ id: 'scripts', label: 'Scripts' });
+    if (Array.isArray(obj.details.scripts) && obj.details.scripts.length > 0 || (obj.details.scripts && !Array.isArray(obj.details.scripts) && (obj.details.scripts.loadJsFunction || obj.details.scripts.unloadJsFunction || obj.details.scripts.viewJsFunction || obj.details.scripts.changeJsFunction || obj.details.scripts.collaborationJsFunction || obj.details.scripts.validateJsFunction || (Array.isArray(obj.details.scripts.inlineScripts) && obj.details.scripts.inlineScripts.length > 0))) || (obj.details.inlineScripts && obj.details.inlineScripts.length > 0) || obj.details.loadJsFunction) tabs.push({ id: 'scripts', label: 'Scripts' });
     if (obj.details.elements) tabs.push({ id: 'elements', label: 'Elements' });
     if (obj.details.schema) tabs.push({ id: 'schema', label: 'Schema' });
   }
@@ -724,12 +724,70 @@ function drawVariables(obj) {
 // ── Drawer: Scripts ────────────────────────────────────────────
 function drawScripts(obj) {
   if (!obj.details) return viewEmptyMsg('No scripts found.');
+  const scripts = obj.details.scripts;
+
+  // Coach View: new data shape — scripts object with 6 JS function fields + inlineScripts
+  if (scripts && !Array.isArray(scripts)) {
+    const fnDefs = [
+      { key: 'loadJsFunction', label: 'LOAD' },
+      { key: 'unloadJsFunction', label: 'UNLOAD' },
+      { key: 'viewJsFunction', label: 'VIEW' },
+      { key: 'changeJsFunction', label: 'CHANGE' },
+      { key: 'collaborationJsFunction', label: 'COLLABORATION' },
+      { key: 'validateJsFunction', label: 'VALIDATE' },
+    ];
+    const nonEmpty = fnDefs.filter(f => scripts[f.key] && scripts[f.key].trim());
+
+    let html = '';
+
+    // Section A — JS Functions
+    html += '<div class="detail-section"><div class="detail-section-title">JS Functions</div>';
+    if (nonEmpty.length === 0) {
+      html += viewEmptyMsg('No JS functions');
+    } else {
+      html += nonEmpty.map((f, i) => {
+        const id = `jsfn-${i}`;
+        const escaped = esc(scripts[f.key]).replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+        return `<div class="js-function-card">
+          <div class="script-block-header" data-script-id="${id}">
+            <span class="js-function-label">${f.label}</span>
+            <span class="script-block-chevron">${I.chevron}</span>
+          </div>
+          <div class="script-block-body"><div class="code-block">${escaped}</div></div>
+        </div>`;
+      }).join('');
+    }
+    html += '</div>';
+
+    // Section B — Inline Scripts (from layout)
+    if (Array.isArray(scripts.inlineScripts) && scripts.inlineScripts.length > 0) {
+      html += '<div class="script-section-divider"></div>';
+      html += `<div class="detail-section"><div class="detail-section-title">Inline Scripts (${scripts.inlineScripts.length})</div>`;
+      html += scripts.inlineScripts.map((s, i) => {
+        const id = `inline-${i}`;
+        const escaped = esc(s.script || '').replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+        return `<div class="inline-script-card">
+          <div class="script-block-header" data-script-id="${id}">
+            <span class="script-block-name">${esc(s.context || `Inline ${i + 1}`)}</span>
+            <span class="script-block-chevron">${I.chevron}</span>
+          </div>
+          <div class="script-block-body"><div class="code-block">${escaped}</div></div>
+        </div>`;
+      }).join('');
+      html += '</div>';
+    }
+
+    return html;
+  }
+
+  // Legacy: array-based scripts (non-Coach View)
   let html = '';
-  const scripts = obj.details.scripts || [];
-  scripts.forEach((s, i) => { html += scriptBlock(`script-${i}`, s.name || `Script ${i+1}`, 'JS', s.script); });
+  if (Array.isArray(scripts)) {
+    scripts.forEach((s, i) => { html += scriptBlock(`script-${i}`, s.name || `Script ${i + 1}`, 'JS', s.script); });
+  }
   const inline = obj.details.inlineScripts || [];
   inline.forEach((s, i) => {
-    html += scriptBlock(`inline-${i}`, s.name || `Inline ${i+1}`, s.scriptType || 'JS', s.script || s.scriptBlock);
+    html += scriptBlock(`inline-${i}`, s.name || `Inline ${i + 1}`, s.scriptType || 'JS', s.script || s.scriptBlock);
     if (s.preScript && s.preScript.trim()) html += `<div class="sub-code"><div class="sub-code-label">Pre Script</div><div class="code-block">${esc(s.preScript)}</div></div>`;
     if (s.postScript && s.postScript.trim()) html += `<div class="sub-code"><div class="sub-code-label">Post Script</div><div class="code-block">${esc(s.postScript)}</div></div>`;
   });
@@ -753,29 +811,73 @@ function drawElements(obj) {
   if (!obj.details || !obj.details.elements) return viewEmptyMsg('No process elements found.');
   const e = obj.details.elements;
   let html = '';
-  const sections = [
+
+  // Group order locked: Script Tasks → Form Tasks → Call Activities → Gateways → Events
+  // BPD has: scriptTasks, callActivities, exclusiveGateways, events
+  // CSHS has: formTasks, scriptTasks, callActivities, exclusiveGateways
+  // Service has: scriptTasks only
+  const groups = [
     { key: 'scriptTasks', label: 'Script Tasks' },
     { key: 'formTasks', label: 'Form Tasks' },
     { key: 'callActivities', label: 'Call Activities' },
+    { key: 'exclusiveGateways', label: 'Gateways' },
+    { key: 'events', label: 'Events' },
   ];
-  for (const s of sections) {
-    const items = e[s.key];
+
+  for (const g of groups) {
+    const items = e[g.key];
     if (!items || items.length === 0) continue;
-    html += `<div class="detail-section"><div class="detail-section-title">${s.label}</div>`;
+    html += `<div class="detail-section"><div class="detail-section-title">▸ ${g.label} (${items.length})</div>`;
     items.forEach((el, i) => {
-      const elId = `${s.key}-${i}`;
-      html += `<div class="script-block">
-        <div class="script-block-header" data-script-id="${elId}"><span class="script-block-name">${esc(el.name||'Unnamed')}</span><span class="script-block-type">${s.label}</span><span class="element-row-id">${esc(el.id||'')}</span><span class="script-block-chevron">${I.chevron}</span></div>
-        <div class="script-block-body">
-          ${el.script ? `<div class="sub-code"><div class="sub-code-label">Main Script</div><div class="code-block">${esc(el.script)}</div></div>` : ''}
-          ${el.preScript ? `<div class="sub-code"><div class="sub-code-label">Pre Script</div><div class="code-block">${esc(el.preScript)}</div></div>` : ''}
-          ${el.postScript ? `<div class="sub-code"><div class="sub-code-label">Post Script</div><div class="code-block">${esc(el.postScript)}</div></div>` : ''}
-        </div>
-      </div>`;
+      const elId = `${g.key}-${i}`;
+      html += renderElementCard(elId, el, g.key);
     });
     html += '</div>';
   }
+
   return html || viewEmptyMsg('No process elements found.');
+}
+
+// ponytail: renders a single element card — script body or call target, plus lane/PRE/POST footer
+function renderElementCard(id, el, groupKey) {
+  const escaped = el.script ? esc(el.script).replace(/\r\n/g, '\n').replace(/\r/g, '\n') : '';
+  let bodyHtml = '';
+
+  if (groupKey === 'callActivities' && el.callsTarget) {
+    bodyHtml = `<div class="element-card-body"><span class="element-calls-target">Calls: ${esc(el.callsTarget)}${el.callsTargetType ? ` (${esc(el.callsTargetType)})` : ''}</span></div>`;
+  } else if (escaped) {
+    bodyHtml = `<div class="element-card-body"><div class="code-block">${escaped}</div></div>`;
+  }
+
+  // Footer: lane (BPD/CSHS), PRE, POST — only render lines that have data
+  const hasLane = el.lane;
+  const hasPre = el.preAssignment && el.preAssignment.trim();
+  const hasPost = el.postAssignment && el.postAssignment.trim();
+
+  let footerHtml = '';
+  if (hasLane || hasPre || hasPost) {
+    footerHtml = '<div class="element-card-footer">';
+    if (hasLane) footerHtml += `<div class="element-card-lane">Lane: ${esc(el.lane)}</div>`;
+    if (hasPre) {
+      const preEsc = esc(el.preAssignment).replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+      footerHtml += `<div class="element-card-pre"><span class="pre-post-label">PRE:</span> <span class="pre-post-code">${preEsc}</span></div>`;
+    }
+    if (hasPost) {
+      const postEsc = esc(el.postAssignment).replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+      footerHtml += `<div class="element-card-post"><span class="pre-post-label">POST:</span> <span class="pre-post-code">${postEsc}</span></div>`;
+    }
+    footerHtml += '</div>';
+  }
+
+  return `<div class="element-card">
+    <div class="script-block-header" data-script-id="${id}">
+      <span class="element-card-header">${esc(el.name || 'Unnamed')}</span>
+      <span class="element-row-id">${esc(el.id || '')}</span>
+      <span class="script-block-chevron">${I.chevron}</span>
+    </div>
+    ${bodyHtml}
+    ${footerHtml}
+  </div>`;
 }
 
 // ── Drawer: Schema ────────────────────────────────────────────
