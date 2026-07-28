@@ -417,6 +417,11 @@ function renderSection3(obj, type) {
     <div class="section-3-body">${bodyHtml}</div>`;
 }
 
+function setupByTypeListeners() {
+  const toggle = $('toolkit-toggle');
+  if (toggle) toggle.onclick = () => { state.toolkitToggle = !state.toolkitToggle; renderAll(); };
+}
+
 // ── Toolkits Tab ──────────────────────────────────────────────
 function getToolkitList() {
   const tkMap = {};
@@ -924,27 +929,9 @@ function setupGlobalListeners() {
     const objRow = e.target.closest('[data-obj-id]');
     if (objRow) { const id = objRow.dataset.objId; const obj = findObjectById(id); if (obj) openDrawer(obj.object); return; }
 
-    // Object clicks from By Type table
-    const objJson = e.target.closest('[data-obj-json]');
-    if (objJson) {
-      try {
-        const ref = JSON.parse(objJson.dataset.objJson);
-        const data = state.currentObjects[ref.type];
-        if (data && data.objects) {
-          const obj = data.objects.find(o => o.id === ref.id);
-          if (obj) openDrawer({ ...obj, type: ref.type }, state.drawerSubTab);
-        }
-      } catch (_) {}
-      return;
-    }
-
     // Search result clicks
     const sRow = e.target.closest('[data-search-obj-id]');
     if (sRow) { const id = sRow.dataset.searchObjId; const found = findObjectById(id); if (found) openDrawer(found.object, 'scripts'); return; }
-
-    // Type row clicks
-    const tRow = e.target.closest('[data-type]');
-    if (tRow) { state.selectedType = tRow.dataset.type; state.selectedTypeData = state.currentObjects[state.selectedType]; renderAll(); return; }
 
     // Toolkit filter link
     const tkLink = e.target.closest('[data-filter-toolkit]');
