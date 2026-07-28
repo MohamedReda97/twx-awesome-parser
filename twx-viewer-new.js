@@ -990,7 +990,8 @@ function setupGlobalListeners() {
       try {
         state.toolkitsSection3Object = JSON.parse(tkItem.dataset.toolkitItemJson);
         state.toolkitsSection3SubTab = 'info';
-        renderAll();
+        const s3 = $('toolkits-section-3');
+        if (s3) { s3.innerHTML = renderToolkitsSection3(); s3.scrollTop = 0; }
       } catch (_) {}
       return;
     }
