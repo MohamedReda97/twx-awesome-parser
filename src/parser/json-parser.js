@@ -96,10 +96,14 @@ class JSONParser {
       filesGenerated.push(toolkitsFile)
     }
 
-    // 8. Generate analysis.json (app objects only — toolkits are IBM-provided)
+    // 8. Generate analysis.json (app + toolkit objects)
     try {
       const TWXAnalyzer = require('./analyzer')
-      const analyzer = new TWXAnalyzer(extractedData.objects)
+      const allObjects = [
+        ...(extractedData.objects || []),
+        ...(extractedData.toolkits || []).flatMap(tk => tk.objects || [])
+      ]
+      const analyzer = new TWXAnalyzer(allObjects)
       const analysis = analyzer.analyze()
       const analysisPath = path.join(this.outputDir, 'analysis.json')
       fs.writeFileSync(analysisPath, JSON.stringify(analysis, null, 2))

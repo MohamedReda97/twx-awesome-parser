@@ -25,7 +25,7 @@ const state = {
   quickFilter: '',
   searchSearched: false,
   searchIncludeToolkits: false,
-  analysisData: undefined,
+  analysisData: null,
   // Toolkits tab breadcrumb state
   toolkitsLevel: 0,
   toolkitsSelectedToolkit: null,
@@ -631,9 +631,9 @@ function viewSettings() {
 
 // ── Analyzer Tab ──────────────────────────────────────────────
 function viewAnalyzer() {
-  if (state.analysisData === undefined || state.analysisData === null) return `<div class="empty-state" style="padding:80px 24px">
+  if (state.analysisData === null) return `<div class="empty-state" style="padding:80px 24px">
     <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-    <p class="empty-state-caption">${state.analysisData === undefined ? 'Loading analysis…' : 'Analysis not available — parse a TWX file first'}</p>
+    <p class="empty-state-caption">Analysis not available — parse a TWX file first</p>
   </div>`;
 
   const a = state.analysisData;
