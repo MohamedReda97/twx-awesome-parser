@@ -25,6 +25,7 @@ const state = {
   quickFilter: '',
   searchSearched: false,
   searchIncludeToolkits: false,
+  analysisData: undefined,
   // Toolkits tab breadcrumb state
   toolkitsLevel: 0,
   toolkitsSelectedToolkit: null,
@@ -40,6 +41,7 @@ const I = {
   toolkits: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>',
   search: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>',
   deps: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>',
+  analyzer: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="13" y2="17"/><path d="M16.5 3.5l2 2"/></svg>',
   settings: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>',
   cloud: '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></svg>',
   empty: '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>',
@@ -140,6 +142,8 @@ async function loadAllData() {
   try { state.metadata = await fetchJSON('output/metadata.json'); } catch (_) {}
   // Load dependencies (root-level for static serving)
   try { state.dependencies = await fetchJSON('dependencies.json'); } catch (_) {}
+  // Load analysis
+  await loadAnalysis();
 }
 
 async function performServerSearch(term) {
@@ -217,6 +221,7 @@ function renderSidebar() {
     { section: 'ANALYZE', items: [
       { id: 'search', label: 'Search', icon: I.search },
       { id: 'deps', label: 'Dependencies', icon: I.deps },
+      { id: 'analyzer', label: 'Analyzer', icon: I.analyzer },
     ]},
     { section: 'APP', items: [
       { id: 'settings', label: 'Settings', icon: I.settings },
@@ -245,7 +250,7 @@ function hasData() { return Object.keys(state.currentObjects).length > 0; }
 
 function renderContent() {
   const el = $('content');
-  if (!hasData() && state.activeTab !== 'search' && state.activeTab !== 'deps' && state.activeTab !== 'settings') {
+  if (!hasData() && state.activeTab !== 'search' && state.activeTab !== 'deps' && state.activeTab !== 'analyzer' && state.activeTab !== 'settings') {
     el.innerHTML = viewGlobalEmpty(); return;
   }
   switch (state.activeTab) {
@@ -254,6 +259,7 @@ function renderContent() {
     case 'toolkits': el.innerHTML = viewToolkits(); break;
     case 'search': el.innerHTML = viewSearch(); break;
     case 'deps': el.innerHTML = viewDeps(); break;
+    case 'analyzer': el.innerHTML = viewAnalyzer(); break;
     case 'settings': el.innerHTML = viewSettings(); break;
     default: el.innerHTML = viewEmptyState('Select a tab from the sidebar.');
   }
@@ -621,6 +627,109 @@ function viewSettings() {
     <label class="toolkit-toggle-label"><span class="toggle-switch${state.toolkitToggle?' on':''}" id="settings-toolkit-toggle"></span></label></div>
   </div>
   <div class="error-message" style="justify-content:center;"><span>Settings are stored locally per session.</span></div>`;
+}
+
+// ── Analyzer Tab ──────────────────────────────────────────────
+function viewAnalyzer() {
+  if (state.analysisData === undefined || state.analysisData === null) return `<div class="empty-state" style="padding:80px 24px">
+    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+    <p class="empty-state-caption">${state.analysisData === undefined ? 'Loading analysis…' : 'Analysis not available — parse a TWX file first'}</p>
+  </div>`;
+
+  const a = state.analysisData;
+  const s = a.summary || {};
+  const byType = a.byType || {};
+  const findings = a.findings || [];
+
+  if (findings.length === 0) return `
+    <div class="analyzer-summary">
+      <div class="analyzer-summary-card critical"><div class="analyzer-summary-value">0</div><div class="analyzer-summary-label">CRITICAL</div></div>
+      <div class="analyzer-summary-card warning"><div class="analyzer-summary-value">0</div><div class="analyzer-summary-label">WARNINGS</div></div>
+    </div>
+    ${viewEmptyState('No issues found. All analyzed elements passed every rule.', '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>')}`;
+
+  const criticalFindings = findings.filter(f => f.severity === 'critical');
+  const warningFindings = findings.filter(f => f.severity === 'warning');
+
+  let html = `
+    <div class="analyzer-summary">
+      <div class="analyzer-summary-card critical">
+        <div class="analyzer-summary-value">${s.totalCritical ?? criticalFindings.length}</div>
+        <div class="analyzer-summary-label">CRITICAL</div>
+      </div>
+      <div class="analyzer-summary-card warning">
+        <div class="analyzer-summary-value">${s.totalWarnings ?? warningFindings.length}</div>
+        <div class="analyzer-summary-label">WARNINGS</div>
+      </div>
+    </div>`;
+
+  // By Type section
+  const typeKeys = Object.keys(byType);
+  if (typeKeys.length > 0) {
+    html += `<div class="card"><div class="card-header"><span class="card-title">By Type</span></div><div class="analyzer-by-type">`;
+    typeKeys.forEach(t => {
+      const d = byType[t];
+      html += `<div class="analyzer-by-type-card">
+        <div class="analyzer-by-type-header">
+          <span class="analyzer-by-type-name">${esc(t)}</span>
+          <span class="analyzer-by-type-count">${d.elements ?? 0} element${(d.elements ?? 0) !== 1 ? 's' : ''}</span>
+        </div>
+        <div class="analyzer-by-type-stats">
+          ${d.critical ? `<span class="analyzer-stat critical">${d.critical} critical</span>` : ''}
+          ${d.warnings ? `<span class="analyzer-stat warning">${d.warnings} warning${d.warnings !== 1 ? 's' : ''}</span>` : ''}
+          ${!d.critical && !d.warnings ? `<span class="analyzer-stat clean">No issues</span>` : ''}
+        </div>
+      </div>`;
+    });
+    html += `</div></div>`;
+  }
+
+  // Findings section
+  html += `<div class="analyzer-findings"><div class="analyzer-findings-title">Findings (${findings.length})</div>`;
+
+  if (criticalFindings.length > 0) {
+    html += `<div class="analyzer-severity-group critical">
+      <div class="analyzer-severity-header">CRITICAL (${criticalFindings.length})</div>
+      ${criticalFindings.map(f => renderFindingCard(f)).join('')}
+    </div>`;
+  }
+
+  if (warningFindings.length > 0) {
+    html += `<div class="analyzer-severity-group warning">
+      <div class="analyzer-severity-header">WARNINGS (${warningFindings.length})</div>
+      ${warningFindings.map(f => renderFindingCard(f)).join('')}
+    </div>`;
+  }
+
+  html += `</div>`;
+  return html;
+}
+
+function renderFindingCard(f) {
+  const snippet = f.snippet
+    ? `<div class="analyzer-finding-snippet">${esc(f.snippet).replace(/\r\n/g, '\n').replace(/\r/g, '\n')}</div>`
+    : '';
+  return `<div class="analyzer-finding ${esc(f.severity)}">
+    <div class="analyzer-finding-header">
+      <span class="analyzer-finding-object">${esc(f.objectName || 'Unnamed')}</span>
+      <span class="analyzer-finding-type-badge">${esc(f.objectType || '')}</span>
+      <span class="analyzer-finding-sep">›</span>
+      <span class="analyzer-finding-element">${esc(f.elementName || '')}</span>
+      <span class="analyzer-finding-element-type">[${esc(f.elementType || '')}]</span>
+    </div>
+    <div class="analyzer-finding-rule">${esc(f.ruleName || f.ruleId || '')}</div>
+    <div class="analyzer-finding-message">${esc(f.message || '')}</div>
+    ${f.line ? `<div class="analyzer-finding-line">Line ${f.line}</div>` : ''}
+    ${snippet}
+  </div>`;
+}
+
+async function loadAnalysis() {
+  try {
+    state.analysisData = await fetchJSON('analysis.json');
+  } catch (_) {
+    state.analysisData = null;
+  }
 }
 
 // ── Drawer ─────────────────────────────────────────────────────
