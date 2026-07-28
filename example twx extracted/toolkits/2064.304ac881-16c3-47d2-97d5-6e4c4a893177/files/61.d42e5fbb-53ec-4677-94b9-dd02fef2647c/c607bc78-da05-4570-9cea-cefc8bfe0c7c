@@ -1,0 +1,202 @@
+/*
+ * #BEGIN COPYRIGHT
+ *
+ * Licensed Materials - Property of IBM
+ * 5725-C95
+ * (C) Copyright IBM Corporation 2017. All Rights Reserved.
+ * US Government Users Restricted Rights- Use, duplication or disclosure
+ * restricted by GSA ADP Schedule Contract with IBM Corp.
+ *
+ * #END COPYRIGHT
+ */
+
+var mixObject = {
+	createPreview:function(containingDiv, labelText, callback){
+		var bpmextUri = this.context.getManagedAssetUrl("BPMExt-Core-Designer.js", this.context.assetType_WEB, "SYSBPMUI");
+		require([ "dojo/dom-construct", "dojo/dom-class", "dojo/dom-style", "dojo/dom-attr", bpmextUri], this.lang.hitch(this, function(domConstruct, domClass, domStyle, domAttr, bpmext){
+			bpmext.uidesign.css.ensureSparkUIClass(containingDiv);
+			bpmext.uidesign.css.ensureGlyphsLoaded(this);
+			
+			this.context.coachViewData.containingDiv = containingDiv;
+			
+			var tempID;
+			while(true) {
+				tempID = dojox.uuid.generateRandomUuid();
+				if(this.context.coachViewData.containingDiv.querySelector("div[data-temp-id='" + tempID + "']") == null)
+					break;
+			}
+			
+			this.context.coachViewData.containingDiv.setAttribute("data-temp-id", tempID);
+			domClass.add(this.context.coachViewData.containingDiv, "WYSIWYGCollapsiblePanel panel-group");
+			
+			this.context.coachViewData.hyperlink = this.context.coachViewData.containingDiv.querySelector("div[data-temp-id='" + tempID + "']  .accordion-toggle");
+			//this.context.coachViewData.hyperlink.style.width="100%";	
+			//this.context.coachViewData.hyperlink.style = "width:100%;text-align:left;";
+			domStyle.set(this.context.coachViewData.hyperlink,{"width": "100%","display": "block","text-align": "left"});
+			this.context.coachViewData.labelTextDom = document.createTextNode(labelText);
+			this.context.coachViewData.hyperlink.appendChild(this.context.coachViewData.labelTextDom);
+			
+			this.context.coachViewData.collapsibleDiv = this.context.coachViewData.containingDiv.querySelector("div[data-temp-id='" + tempID + "'] .SPARKCPanel.panel .panel-collapse");
+			this.context.coachViewData.bodyDiv = this.context.coachViewData.containingDiv.querySelector("div[data-temp-id='" + tempID + "'] .SPARKCPanel.panel .panel-collapse .panel-body");
+			
+			//this.context.coachViewData.hyperlink.setAttribute("href", "javascript:void(0)");
+			this.context.coachViewData.hyperlink.onclick = this.lang.hitch(this, function(){
+				if(!this.context.coachViewData.collapsed){
+					domClass.add(this.context.coachViewData.hyperlink, "collapsed");
+					domClass.replace(this.context.coachViewData.collapsibleDiv, "collapse", "collapse in");
+					this.context.coachViewData.collapsed = true;
+				} else {
+					domClass.remove(this.context.coachViewData.hyperlink, "collapsed");
+					domClass.replace(this.context.coachViewData.collapsibleDiv, "collapse in", "collapse");
+					this.context.coachViewData.collapsed = false;
+				}
+				return false;
+			});
+
+			this.context.coachViewData.labelHandler = bpmext.uidesign.createLabelHandler(this.context.coachViewData.labelTextDom, undefined/*we handle label vis*/, this.context.coachViewData.containingDiv, false, true);
+
+			// The following needs to be in a timeout so the theme's font family has time to take effect otherwise getActiveTheme always returns CLASSIC
+			setTimeout(this.lang.hitch(this, function(){
+				try {
+					var theme = this.getActiveTheme().slice(1, -1);
+					domClass.add(this.context.coachViewData.containingDiv.querySelector(".panel-heading"), theme);
+					if (theme !== "CARBON") {
+						return;
+					}
+					this.context.coachViewData.hyperlink.appendChild(bpmext.uidesign.svg.getCarbonIcon("ci-chevron-up"));
+				} catch(e) {
+					console.log("Error getting active theme", e);
+				}
+			}), 200);
+
+			callback();
+		}));	
+	},
+	getLabelDomElement:function(){
+		return this.context.coachViewData.hyperlink;
+	},
+	propertyChanged:function(propertyName, propertyValue){
+		var configHelperUri = this.context.getManagedAssetUrl("BPMExt-Core-ConfigHelper.js",this.context.assetType_WEB, "SYSBPMUI");
+		require(["dojo/dom-style", "dojo/dom-class",  "dojo/dom-construct", configHelperUri], this.lang.hitch(this, function(domStyle, domClass, domConstruct, configHelper){
+
+			this.context.coachViewData.labelHandler.propertyChanged(propertyName, propertyValue);
+			if(propertyName == "@style"){
+				var width = configHelper.getResponsiveConfigOptionValue(this, "width");
+				var minWidth = configHelper.getResponsiveConfigOptionValue(this, "@minWidth");
+				var finalWidth = width || minWidth || this.context.coachViewData.width;
+				if(finalWidth) {
+					if(!isNaN(finalWidth)){
+						finalWidth += "px";
+					}
+					this.context.coachViewData.containingDiv.style.width = finalWidth;
+				} else {
+					this.context.coachViewData.containingDiv.style.width = "";
+				}
+			} else if(propertyName ==  "@labelVisibility"){
+				if(propertyValue == "HIDE"){
+					//this.context.coachViewData.hyperlink.style.display = "none";
+					//this.context.coachViewData.hyperlink.style="padding-bottom:25px;width:100%;display:block;";
+					domStyle.set(this.context.coachViewData.hyperlink,{"padding-bottom": "25px"});
+					this.context.coachViewData.hyperlink.removeChild(this.context.coachViewData.labelTextDom);
+				} else {
+					//this.context.coachViewData.hyperlink.style.display = "";
+					//this.context.coachViewData.hyperlink.style="padding-bottom:9px;width:100%;display:block;";
+					domStyle.set(this.context.coachViewData.hyperlink,{"padding-bottom": "9px"});
+					this.context.coachViewData.hyperlink.appendChild(this.context.coachViewData.labelTextDom);
+				}
+			} else if(propertyName == "colorStyle"){
+				var colorStyle;
+				if(propertyValue == "D"){
+					colorStyle = "";
+				} else if(propertyValue == "I"){
+					colorStyle = "panel-group-info";
+				} else if(propertyValue == "S"){
+					colorStyle = "panel-group-success";
+				} else if(propertyValue == "W"){
+					colorStyle = "panel-group-warning";
+				} else if(propertyValue == "G"){
+					colorStyle = "panel-group-danger";
+				} else if(propertyValue == "T"){
+					colorStyle = "panel-group-transparent";
+				} else if(propertyValue == "P"){
+					colorStyle = "panel-group-primary";
+				} else {
+					colorStyle = "";
+				}
+				domClass.replace(this.context.coachViewData.containingDiv, colorStyle, "panel-group-transparent panel-group-info panel-group-success panel-group-warning panel-group-danger panel-group-primary");	
+			} else if(propertyName == "width"){
+				this.context.coachViewData.width = propertyValue;
+				if(propertyValue != "" && !isNaN(propertyValue)){
+					propertyValue += "px";
+				}
+				if(!!propertyValue) {
+					this.context.coachViewData.containingDiv.style.width = propertyValue;
+				} else {
+					this.context.coachViewData.containingDiv.style.width = "";
+				}
+			} else if(propertyName == "height"){
+				this.context.coachViewData.height = propertyValue;
+				if(propertyValue != "" && !isNaN(propertyValue)){
+					propertyValue += "px";
+				}
+				if(!!propertyValue) {
+					this.context.coachViewData.containingDiv.style.height = propertyValue;
+				} else {
+					this.context.coachViewData.containingDiv.style.height = "";
+				}
+			} else if(propertyName == "footerText"){
+				this.context.coachViewData.footerTextDom.data = !!propertyValue ? propertyValue : "";
+				if(!!propertyValue){
+					domClass.remove(this.context.coachViewData.footerDiv, "hidden");
+				} else {
+					domClass.add(this.context.coachViewData.footerDiv, "hidden");
+				}
+			} else if(propertyName == "initiallyCollapsed"){
+				if(propertyValue == "true" || propertyValue == true){
+					domClass.add(this.context.coachViewData.hyperlink, "collapsed");
+					domClass.replace(this.context.coachViewData.collapsibleDiv, "collapse", "collapse in");
+					this.context.coachViewData.collapsed = true;
+				} else {
+					domClass.remove(this.context.coachViewData.hyperlink, "collapsed");
+					domClass.replace(this.context.coachViewData.collapsibleDiv, "collapse in", "collapse");
+					this.context.coachViewData.collapsed = false;
+				}
+			}
+		}));	
+    },
+	modelChanged: function(propertyName, propertyValue) {
+		this.context.coachViewData.labelHandler.modelChanged(propertyName, propertyValue);
+	},
+
+	/*
+	 * Could not reuse com.ibm.bpm.coach.utils/utilities getActiveTheme as it
+	 * has a dependency on com.ibm.bpm.coach/dataBindingHelper which is only
+	 * available at coach runtime. Also need to create div within scope of
+	 * the coach layout.
+	 */
+	getActiveTheme : function(forceUpdate) {
+		var result = null;
+		require(["dojo/dom-class"], this.lang.hitch(this, function(domClass) {
+			if (!forceUpdate && this.activeTheme) {
+				// console.log("***** - getActiveTheme", this.activeTheme);
+				result = this.activeTheme;
+			} else {
+				var div = document.createElement("div");
+				domClass.add(div, "active_theme");
+				this.context.coachViewData.containingDiv.appendChild(div);
+
+				var themeStyle = window.getComputedStyle(div);
+				var activeTheme = themeStyle.fontFamily;
+
+				// unify output theme string
+				this.activeTheme = activeTheme.indexOf("CARBON") > -1 ? '"CARBON"':'"CLASSIC"';
+
+				div.parentNode.removeChild(div);
+
+				// console.log("***** - getActiveTheme", this.activeTheme, "fontFamily", activeTheme);
+				result = this.activeTheme;
+			}
+		}));
+		return result;
+	}
+};

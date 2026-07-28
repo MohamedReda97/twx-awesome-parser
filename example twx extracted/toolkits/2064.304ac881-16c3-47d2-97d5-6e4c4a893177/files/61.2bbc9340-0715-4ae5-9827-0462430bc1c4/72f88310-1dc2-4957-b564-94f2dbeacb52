@@ -1,0 +1,264 @@
+/*
+ * #BEGIN COPYRIGHT
+ *
+ * Licensed Materials - Property of IBM
+ * 5725-C95
+ * (C) Copyright IBM Corporation 2017. All Rights Reserved.
+ * US Government Users Restricted Rights- Use, duplication or disclosure
+ * restricted by GSA ADP Schedule Contract with IBM Corp.
+ *
+ * #END COPYRIGHT
+ */
+
+var mixObject = {
+	createPreview:function(containingDiv, labelText, callback){
+		var bpmextUri = this.context.getManagedAssetUrl("BPMExt-Core-Designer.js", this.context.assetType_WEB, "SYSBPMUI");
+		require([ "dojo/dom-construct", "dojo/dom-class", "dojo/dom-attr", bpmextUri], this.lang.hitch(this, function(domConstruct, domClass, domAttr, bpmext){
+			bpmext.uidesign.css.ensureGeneralStylesLoaded(this);
+			bpmext.uidesign.css.ensureSparkUIClass(containingDiv);
+
+			this.context.coachViewData.containingDiv = containingDiv;
+			
+			var tempID;
+			while(true) {
+				tempID = dojox.uuid.generateRandomUuid();
+				if(this.context.coachViewData.containingDiv.querySelector("div[data-temp-id='" + tempID + "']") == null)
+					break;
+			}
+			
+			this.context.coachViewData.containingDiv.setAttribute("data-temp-id", tempID);
+			
+			this.context.coachViewData.root = this.context.coachViewData.containingDiv.querySelector("div[data-temp-id='" + tempID + "'] > .DesignSectionRoot");
+			this.context.coachViewData.outerDiv = this.context.coachViewData.root;
+			this.context.coachViewData.label = this.context.coachViewData.containingDiv.querySelector("div[data-temp-id='" + tempID + "']  .control-label");
+			this.context.coachViewData.innerDiv = this.context.coachViewData.containingDiv.querySelector("div[data-temp-id='" + tempID + "'] .inner");
+			this.context.coachViewData.contentBoxDiv = this.context.coachViewData.containingDiv.querySelector("div[data-temp-id='" + tempID + "']  .DesignContentBox");
+			this.context.coachViewData.statusBox = this.context.coachViewData.containingDiv.querySelector("div[data-temp-id='" + tempID + "']  .help-block");
+
+			this.context.coachViewData.labelTextDom = document.createTextNode(labelText);
+			this.context.coachViewData.containingDiv.removeAttribute("data-temp-id");
+			this.context.coachViewData.label.appendChild(this.context.coachViewData.labelTextDom);
+			
+			this.context.coachViewData.labelHandler = bpmext.uidesign.createLabelHandler(this.context.coachViewData.labelTextDom, this.context.coachViewData.label, this.context.coachViewData.containingDiv, false, false);
+			
+			callback();
+		}));
+	},
+	getLabelDomElement:function(){
+		return this.context.coachViewData.label;
+	},
+	propertyChanged:function(propertyName, propertyValue){
+		var configHelperUri = this.context.getManagedAssetUrl("BPMExt-Core-ConfigHelper.js",this.context.assetType_WEB, "SYSBPMUI");
+		require(["dojo/dom-style", "dojo/dom-class",  "dojo/dom-construct", configHelperUri], this.lang.hitch(this, function(domStyle, domClass, domConstruct, configHelper){
+			this.context.coachViewData.labelHandler.propertyChanged(propertyName, propertyValue);
+			this.context.coachViewData.createStatusTipNode = this.lang.hitch(this, function(statusText){
+				this.context.coachViewData.statusTip = domConstruct.create("div");
+				domClass.add(this.context.coachViewData.statusTip, "Status_Box");	
+				
+				this.context.coachViewData.statusTextNode = document.createTextNode(statusText);
+				this.context.coachViewData.statusBox.appendChild(this.context.coachViewData.statusTextNode);
+				domClass.add(this.context.coachViewData.statusBox, "help-block");
+				
+				this.context.coachViewData.innerDiv.appendChild(this.context.coachViewData.statusBox);
+			});
+			
+			this.context.coachViewData.deleteStatusTipNode = this.lang.hitch(this, function(){
+				if(this.context.coachViewData.statusTip){
+					this.context.coachViewData.statusBox.removeChild(this.context.coachViewData.statusTextNode);
+					this.context.coachViewData.innerDiv.removeChild(this.context.coachViewData.statusBox);
+					this.context.coachViewData.statusTip = undefined;
+					this.context.coachViewData.statusTextNode = undefined;
+				}
+			});
+			
+			if(propertyName == "@style"){
+				var width = configHelper.getResponsiveConfigOptionValue(this, "@width");
+				var minWidth = configHelper.getResponsiveConfigOptionValue(this, "@minWidth");
+				if(!!width || !!minWidth || this.context.coachViewData.width) {
+					this.context.coachViewData.containingDiv.style.width =  minWidth || this.context.coachViewData.width || width;
+				} else {
+					this.context.coachViewData.containingDiv.style.width = "";
+				}
+			} else if(propertyName ==  "@helpText"){
+				var showStatus = configHelper.getConfigOptionValue(this, "showStatus");
+				var expr = configHelper.getConfigOptionValue(this, "expression");
+				var htmlStatus = configHelper.getConfigOptionValue(this, "htmlStatus");
+
+				this.context.coachViewData.statusBox.innerHTML = "";
+				this.context.coachViewData.statusTip = undefined;
+				
+				if(showStatus){
+					if(expr && propertyValue) {
+						expr = expr.replace(/"/g,"");
+						if(htmlStatus == "true" || htmlStatus == true){
+							this.context.coachViewData.statusBox.innerHTML = expr ;
+						}else{
+							if(!this.context.coachViewData.statusTip){
+								this.context.coachViewData.createStatusTipNode(expr);
+							}
+						}
+						this.context.coachViewData.statusBox.style.display = "block";
+					} else if(!expr && propertyValue) {
+						if(htmlStatus == "true" || htmlStatus == true){
+							this.context.coachViewData.statusBox.innerHTML = propertyValue ;
+						}else{
+							if(!this.context.coachViewData.statusTip){
+								this.context.coachViewData.createStatusTipNode(propertyValue);
+							}
+						}
+						this.context.coachViewData.statusBox.style.display = "block";
+					}
+				} 
+				
+				if(!propertyValue && (!expr)) {
+					this.context.coachViewData.deleteStatusTipNode();
+					this.context.coachViewData.statusBox.innerHTML = "";
+					this.context.coachViewData.statusBox.style.display = "none";
+				}
+			} else if(propertyName == "width"){
+				this.context.coachViewData.width = propertyValue;
+				if(!!propertyValue) {
+					this.context.coachViewData.containingDiv.style.width = isNaN(propertyValue) ? propertyValue : (propertyValue+"px");
+				} else {
+					this.context.coachViewData.containingDiv.style.width = "";
+				}
+			} else if(propertyName == "colorStyle"){
+				var colorStyle;
+				if(propertyValue == "P"){
+					colorStyle = "has-primary";
+				} else if(propertyValue == "I"){
+					colorStyle = "has-info";
+				} else if(propertyValue == "S"){
+					colorStyle = "has-success";
+				} else if(propertyValue == "W"){
+					colorStyle = "has-warning";
+				} else if(propertyValue == "E"){
+					colorStyle = "has-error";
+				} else {
+					colorStyle = "";
+				}
+				domClass.replace(this.context.coachViewData.innerDiv, colorStyle, "has-primary has-info has-success has-warning has-error");
+			} else if(propertyName == "statusStyle"){
+				var statusStyle;
+				if(propertyValue == "K"){
+					statusStyle = "dark";
+				} else if(propertyValue == "S"){
+					statusStyle = "simple";
+				} else if(propertyValue == "N" || propertyValue == "D"){
+					statusStyle = "";
+				} else {
+					statusStyle = "";
+				}
+				domClass.replace(this.context.coachViewData.innerDiv, statusStyle, "dark simple");
+			} else if(propertyName == "floatStatus"){
+				if(propertyValue == true && propertyValue){
+					domClass.add(this.context.coachViewData.statusBox, "float");
+				} else {
+					domClass.remove(this.context.coachViewData.statusBox, "float");
+				}
+			} else if(propertyName == "showStatus"){
+				var statusText = configHelper.getConfigOptionValue(this, "@helpText");
+				var htmlStatus = configHelper.getConfigOptionValue(this, "htmlStatus");
+				var expr = configHelper.getConfigOptionValue(this, "expression");
+				
+				this.context.coachViewData.statusBox.innerHTML = "";
+				this.context.coachViewData.statusTip = undefined;
+				
+				if(propertyValue){
+					if(expr) {
+						expr = expr.replace(/"/g,"");
+						if(htmlStatus == "true" || htmlStatus == true){
+							this.context.coachViewData.statusBox.innerHTML = expr ;
+						}else{
+							if(!this.context.coachViewData.statusTip){
+								this.context.coachViewData.createStatusTipNode(expr);
+							}
+						}
+					}
+					if(statusText != "") {
+						if(htmlStatus == "true" || htmlStatus == true){
+							this.context.coachViewData.statusBox.innerHTML = statusText ;
+						}else{
+							if(!this.context.coachViewData.statusTip){
+								this.context.coachViewData.createStatusTipNode(statusText);
+							}
+						}
+					}
+					this.context.coachViewData.statusBox.style.display = "block";
+				} else{
+					this.context.coachViewData.statusBox.style.display = "none";
+				}
+				
+				if(statusText == "" && (expr == "")) {
+					this.context.coachViewData.deleteStatusTipNode();
+					this.context.coachViewData.statusBox.innerHTML = "";
+					this.context.coachViewData.statusBox.style.display = "none";
+				}
+			} else if(propertyName == "htmlStatus"){
+				var statusText = configHelper.getConfigOptionValue(this, "@helpText");	
+				var showStatus = configHelper.getConfigOptionValue(this, "showStatus");
+				var expr = configHelper.getConfigOptionValue(this, "expression");
+				
+				var statusValue = (!!expr) ? expr.replace(/"/g,"") : statusText;
+				this.context.coachViewData.statusTip = undefined ;
+				
+				if(showStatus) {
+					if(propertyValue == true && statusValue){
+						this.context.coachViewData.statusBox.innerHTML = statusValue;
+						this.context.coachViewData.statusTip = undefined;
+					}else{					
+						this.context.coachViewData.statusBox.innerHTML = "";
+						if(!this.context.coachViewData.statusTip){
+							this.context.coachViewData.createStatusTipNode(statusValue);
+						}
+					}
+				}
+			} else if(propertyName == "expression"){
+				var showStatus = configHelper.getConfigOptionValue(this, "showStatus");
+				var statusText = configHelper.getConfigOptionValue(this, "@helpText");
+				var htmlStatus = configHelper.getConfigOptionValue(this, "htmlStatus");
+				
+				this.context.coachViewData.statusBox.innerHTML = "";
+				this.context.coachViewData.statusTip = undefined;
+				
+				if(!!propertyValue){
+					propertyValue = propertyValue.replace(/"/g,"");	
+				}
+				
+				if(showStatus){
+					if(propertyValue != ""){
+						if(htmlStatus == "true" || htmlStatus == true){
+							this.context.coachViewData.statusBox.innerHTML = propertyValue ;
+						}else{
+							if(!this.context.coachViewData.statusTip){
+								this.context.coachViewData.createStatusTipNode(propertyValue);
+							}
+						}
+						this.context.coachViewData.statusBox.style.display = "block";	
+					
+					} else if(propertyValue == "" && statusText != ""){
+						if(htmlStatus == "true" || htmlStatus == true){
+							this.context.coachViewData.statusBox.innerHTML = statusText ;
+						}else{
+							if(!this.context.coachViewData.statusTip){
+								this.context.coachViewData.createStatusTipNode(statusText);
+							}
+						}
+						this.context.coachViewData.statusBox.style.display = "block";
+					
+					}
+				}
+				
+				if(propertyValue == "" && statusText == "") {
+					this.context.coachViewData.deleteStatusTipNode();
+					this.context.coachViewData.statusBox.innerHTML = "";
+					this.context.coachViewData.statusBox.style.display = "none";
+				}
+				
+			} 
+		}));
+    },
+	modelChanged: function(propertyName, propertyValue) {
+		this.context.coachViewData.labelHandler.modelChanged(propertyName, propertyValue);
+	}
+};

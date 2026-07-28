@@ -1,0 +1,159 @@
+/*
+ * #BEGIN COPYRIGHT
+ *
+ * Licensed Materials - Property of IBM
+ * 5725-C95
+ * (C) Copyright IBM Corporation 2017, 2019. All Rights Reserved.
+ * US Government Users Restricted Rights- Use, duplication or disclosure
+ * restricted by GSA ADP Schedule Contract with IBM Corp.
+ *
+ * #END COPYRIGHT
+ */
+
+var mixObject = {
+	createPreview:function(containingDiv, labelText, callback){
+		var bpmextUri = this.context.getManagedAssetUrl("BPMExt-Core-Designer.js", this.context.assetType_WEB, "SYSBPMUI");
+		require(["dojo/dom-class", bpmextUri], this.lang.hitch(this, function(domClass, bpmext){
+			bpmext.uidesign.css.ensureSparkUIClass(containingDiv);
+            bpmext.uidesign.css.ensureGlyphsLoaded(this);
+            bpmext.uidesign.svg.ensureCarbonIconsLoaded(this);
+
+			this.context.coachViewData.containingDiv = containingDiv;
+
+			var tempID;
+			while(true) {
+				tempID = dojox.uuid.generateRandomUuid();
+				if(this.context.coachViewData.containingDiv.querySelector("div[data-temp-id='" + tempID + "']") == null)
+					break;
+			}
+
+			this.context.coachViewData.containingDiv.setAttribute("data-temp-id", tempID);
+			domClass.add(this.context.coachViewData.containingDiv, "WYSIWYGPanel");
+			domClass.add(this.context.coachViewData.containingDiv, "panel-group");
+
+			this.context.coachViewData.label = this.context.coachViewData.containingDiv.querySelector("div[data-temp-id='" + tempID + "']  .panel-title");
+			this.context.coachViewData.labelTextDom = document.createTextNode(labelText);
+			this.context.coachViewData.label.appendChild(this.context.coachViewData.labelTextDom);
+
+			this.context.coachViewData.icon = this.context.coachViewData.containingDiv.querySelector("div[data-temp-id='" + tempID + "']  .panel-heading-icon span");
+
+			//Added for WYSIWYG for default width & height
+			this.context.coachViewData.defaultWidth = "100%";
+
+			this.context.coachViewData.wrapperDiv = this.context.coachViewData.containingDiv.querySelector("div[data-temp-id='" + tempID + "'] .SPARKPanel.panel.colourable");
+			this.context.coachViewData.headingDiv = this.context.coachViewData.containingDiv.querySelector("div[data-temp-id='" + tempID + "'] .SPARKPanel.panel.colourable .panel-heading");
+			this.context.coachViewData.bodyDiv = this.context.coachViewData.containingDiv.querySelector("div[data-temp-id='" + tempID + "'] .SPARKPanel.panel.colourable .panel-body");
+			this.context.coachViewData.footerDiv = this.context.coachViewData.containingDiv.querySelector("div[data-temp-id='" + tempID + "'] .SPARKPanel.panel.colourable .panel-footer");
+			this.context.coachViewData.footerTextDom = document.createTextNode("");
+			this.context.coachViewData.footerDiv.appendChild(this.context.coachViewData.footerTextDom);
+
+			domClass.add(this.context.coachViewData.wrapperDiv, "panel-dark");
+
+			this.context.coachViewData.labelHandler = bpmext.uidesign.createLabelHandler(this.context.coachViewData.labelTextDom, undefined/*we handle label vis*/, this.context.coachViewData.containingDiv, false, true);
+
+			callback();
+		}));
+	},
+	getLabelDomElement:function(){
+		return this.context.coachViewData.label;
+	},
+	propertyChanged:function(propertyName, propertyValue){
+		var configHelperUri = this.context.getManagedAssetUrl("BPMExt-Core-ConfigHelper.js",this.context.assetType_WEB, "SYSBPMUI");
+		require(["dojo/dom-style", "dojo/dom-class",  "dojo/dom-construct", configHelperUri], this.lang.hitch(this, function(domStyle, domClass, domConstruct, configHelper){
+			this.context.coachViewData.labelHandler.propertyChanged(propertyName, propertyValue);
+			if(propertyName == "@style"){
+				var width = configHelper.getResponsiveConfigOptionValue(this, "width");
+				var minWidth = configHelper.getResponsiveConfigOptionValue(this, "@minWidth");
+				var finalWidth = width || minWidth || this.context.coachViewData.width;
+				if(!!finalWidth) {
+					this.context.coachViewData.containingDiv.style.width =  isNaN(finalWidth) ? finalWidth : (finalWidth+"px");
+				} else {
+					this.context.coachViewData.containingDiv.style.width = "";
+				}
+			} else if(propertyName ==  "@labelVisibility"){
+				if(propertyValue == "HIDE"){
+					this.context.coachViewData.label.style.display = "none";
+					this.context.coachViewData.headingDiv.setAttribute("style","padding-bottom:25px !important;");
+				} else {
+					this.context.coachViewData.label.style.display = "";
+					this.context.coachViewData.headingDiv.removeAttribute("style");
+				}
+			} else if(propertyName ==  "icon"){
+                var newIcon;
+                // removing the contents of the icon node
+                dojo.empty(this.context.coachViewData.icon);
+                domClass.remove(this.context.coachViewData.icon);
+                propertyValue = propertyValue && propertyValue.trim();
+                if(propertyValue) {
+                    newIcon = propertyValue.toLowerCase();
+                    if (newIcon.indexOf("fa-") !== 0 && newIcon.indexOf("ci-") !== 0) {
+                        domClass.add(this.context.coachViewData.icon, " fa fa-" + newIcon);
+                    } else if (newIcon.indexOf("ci-") === 0) {
+                        // add a new icon since we are clearing the content of the icon node
+                        this.context.coachViewData.icon.appendChild(bpmext.uidesign.svg.getCarbonIcon(newIcon));
+                    } else {
+                        domClass.add(this.context.coachViewData.icon, " fa " + newIcon);
+                    }
+                }
+			} else if(propertyName == "lightColor"){
+				if(propertyValue == true){
+					domClass.remove(this.context.coachViewData.wrapperDiv, "panel-dark");
+				} else {
+					domClass.add(this.context.coachViewData.wrapperDiv, "panel-dark");
+				}
+			} else if(propertyName == "colorfulBody"){
+				if(propertyValue == true){
+					domClass.add(this.context.coachViewData.wrapperDiv, "panel-body-colorful");
+				} else {
+					domClass.remove(this.context.coachViewData.wrapperDiv, "panel-body-colorful");
+				}
+			} else if(propertyName == "colorStyle"){
+				var colorStyle;
+				if(propertyValue == "D"){
+					colorStyle = "";
+				} else if(propertyValue == "I"){
+					colorStyle = "panel-info";
+				} else if(propertyValue == "S"){
+					colorStyle = "panel-success";
+				} else if(propertyValue == "W"){
+					colorStyle = "panel-warning";
+				} else if(propertyValue == "G"){
+					colorStyle = "panel-danger";
+				} else if(propertyValue == "P"){
+					colorStyle = "panel-primary";
+				} else if(propertyValue == "T"){
+					colorStyle = "panel-transparent";
+				} else {
+					colorStyle = "";
+				}
+				domClass.replace(this.context.coachViewData.wrapperDiv, colorStyle, "panel-transparent panel-info panel-success panel-warning panel-danger panel-primary");
+			} else if(propertyName == "width"){
+				this.context.coachViewData.width = propertyValue;
+				if(propertyValue===null || propertyValue===undefined || propertyValue == ""){
+					this.context.coachViewData.containingDiv.style.width = this.context.coachViewData.defaultWidth;
+				}else{
+					this.context.coachViewData.containingDiv.style.width = isNaN(propertyValue) ? propertyValue : propertyValue+"px";
+				}
+			} else if(propertyName == "height"){
+				this.context.coachViewData.height = propertyValue;
+				if(!propertyValue){
+					this.context.coachViewData.bodyDiv.style.height = "";
+					this.context.coachViewData.bodyDiv.style.overflowY = "";
+				}else{
+					this.context.coachViewData.bodyDiv.style.height = isNaN(propertyValue) ? propertyValue : propertyValue+"px";
+					this.context.coachViewData.bodyDiv.style.overflowY = "scroll";
+				}
+			} else if(propertyName == "footerText"){
+				this.context.coachViewData.footerTextDom.data = !!propertyValue ? propertyValue : "";
+				if(!!propertyValue){
+					domClass.remove(this.context.coachViewData.footerDiv, "hidden");
+				} else {
+					domClass.add(this.context.coachViewData.footerDiv, "hidden");
+				}
+			}
+		}));
+    },
+	modelChanged: function(propertyName, propertyValue) {
+		this.context.coachViewData.labelHandler.modelChanged(propertyName, propertyValue);
+	}
+};

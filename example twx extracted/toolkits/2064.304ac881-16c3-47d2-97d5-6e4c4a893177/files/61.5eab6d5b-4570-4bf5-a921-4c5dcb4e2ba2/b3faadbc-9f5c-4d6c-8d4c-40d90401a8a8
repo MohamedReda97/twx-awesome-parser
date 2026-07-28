@@ -1,0 +1,856 @@
+/*
+ * #BEGIN COPYRIGHT
+ *
+ * Licensed Materials - Property of IBM
+ * 5725-C95
+ * (C) Copyright IBM Corporation 2017, 2019. All Rights Reserved.
+ * US Government Users Restricted Rights- Use, duplication or disclosure
+ * restricted by GSA ADP Schedule Contract with IBM Corp.
+ *
+ * #END COPYRIGHT
+ */
+
+/**
+ * @ignore
+ * @instance
+ * @memberof Well
+ * @method isValid
+ */
+
+/**
+ * @ignore
+ * @instance
+ * @memberof Well
+ * @method setValid
+ */
+
+/**
+ * @ignore
+ * @instance
+ * @memberof Well
+ * @method recalculate
+ */
+
+/**
+ * @ignore
+ * @instance
+ * @memberof Well
+ * @method getData
+ */
+
+/**
+ * @ignore
+ * @instance
+ * @memberof Well
+ * @method setData
+ */
+
+/**
+ * @ignore
+ * @instance
+ * @memberof Well
+ * @method isLabelVisible
+ */
+
+/**
+ * @ignore
+ * @instance
+ * @memberof Well
+ * @method setLabelVisible
+ */
+
+/**
+ *   <tr class=Prop>
+ *     <td class=SectionName colspan=3>Events</td>
+ *   </tr>
+ *   <tr class=Prop>
+ *     <td>On Load:</td>
+ *     <td colspan="2">
+ *       <table>
+ *         <tr class=Prop>
+ *           <td>Description: </td>
+ *           <td>Triggers whenever the view is loaded.</td>
+ *         </tr>
+ *         <tr class=Prop>
+ *           <td>Example: </td>
+ *           <td><pre class="prettyprint"><code>me.setHeight("200px")</code></pre></td>
+ *         </tr>
+ *       </table>
+ *     </td>
+ *   </tr>
+ *   <tr class=Prop>
+ *     <td>On Click:</td>
+ *     <td colspan="2">
+ *       <table>
+ *         <tr class=Prop>
+ *           <td>Description: </td>
+ *           <td>Triggers when well is clicked.</td>
+ *         </tr>
+ *         <tr class=Prop>
+ *           <td>Example: </td>
+ *           <td><pre class="prettyprint"><code>me.setHeight("500px")</code></pre></td>
+ *         </tr>
+ *       </table>
+ *     </td>
+ *   </tr>
+ * </table>
+ */
+bpmext_control_InitWell = function (utilities, bpmext, domClass, domAttr, domConstruct)
+{
+    this._instance =
+    {
+        vAlignment: "D"
+    };
+
+    if (!this.constructor.prototype._proto)
+    {
+        this.constructor.prototype.IS_ADDRESS_INVISIBLE = true;
+
+        this.constructor.prototype._proto =
+        {
+            //{#feature: * Allow for both E and G for Danger color style}
+            OPTS_COL_STLZ :
+            {
+                "D" : "",
+                "P": "bg-primary",
+                "I" : "bg-info",
+                "S" : "bg-success",
+                "W" : "bg-warning",
+                "E" : "bg-danger",
+                "G" : "bg-danger"
+            },
+            OPTS_DRK_STLZ :
+            {
+                "N" : "",
+                "D" : "darken",
+                "R" : "darker"
+            },
+            OPTS_ALGN_STLZ :
+            {
+                "BR" : "",
+                "BL" : "align-bl",
+                "TR" : "align-tr",
+                "TL" : "align-tl"
+            },
+            EVT_ONCLICK : "eventON_CLICK",
+            _setWidth : function (view, width)
+            {
+                try
+                {
+                    if(width == null || width == "")
+                        width = "auto";
+
+                    if (!isNaN(width))
+                        width += "px";
+
+                    view.context.element.style.width = width;
+                }
+                catch (e)
+                {
+                    //{#feature: US-1330 Added RT localization}
+                    //bpmext.log.error("Well._setWidth() error: " + e);
+                    bpmext.log.error("Well._setWidth() " + bpmext.localization.formatMsg("general", "ERROR") + ": " + e);
+                    if(e.stack) {
+                        //{#feature: US-1330 Added RT localization}
+                        //bpmext.log.error("  Call stack: " + e.stack);
+                        bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+                    }
+                }
+            },
+            _setHeight : function (view, height)
+            {
+                try
+                {
+                    if(height != null || height != "")
+                    {
+                        if (!isNaN(height))
+                            height += "px";
+
+                        view._instance.statPanel.style.height = height;
+                    }
+                }
+                catch (e)
+                {
+                    //{#feature: US-1330 Added RT localization}
+                    //bpmext.log.error("Well._setHeight() error: " + e);
+                    bpmext.log.error("Well._setHeight() " + bpmext.localization.formatMsg("general", "ERROR") + ": " + e);
+                    if(e.stack) {
+                        //{#feature: US-1330 Added RT localization}
+                        //bpmext.log.error("  Call stack: " + e.stack);
+                        bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+                    }
+                }
+            },
+            _normalizeVerticalAlignment : function(vAlign)
+            {
+                if(!vAlign)
+                    vAlign = "D";
+
+                vAlign = vAlign.toUpperCase();
+                switch(vAlign)
+                {
+                    case "T":
+                    case "TOP":
+                        return "valignTop";
+                    case "M":
+                    case "MIDDLE":
+                        return "valignMiddle";
+                    case "B":
+                    case "BOTTOM":
+                        return "valignBottom";
+                    case "D":
+                    case "DEFAULT":
+                    default:
+                        return "valignTop";
+                };
+            },
+            _setVAlignment : function (view, newVal, oldVal)
+            {
+                if(!oldVal)
+                    oldVal = view._instance.oldVAlignment;
+
+                view._instance.oldVAlignment = newVal;
+                newVal = this._normalizeVerticalAlignment(newVal);
+                oldVal = this._normalizeVerticalAlignment(oldVal);
+
+                domClass.replace(view._instance.statCell, newVal, oldVal);
+            },
+            _setPadding : function (view, padding)
+            {
+                try
+                {
+                    if(padding != null || padding != "")
+                    {
+                        if (!isNaN(padding))
+                            padding += "px";
+
+                        view._instance.statCell.style.padding = padding;
+                    }
+                }
+                catch (e)
+                {
+                    //{#feature: US-1330 Added RT localization}
+                    //bpmext.log.error("Well._setPadding() error: " + e);
+                    bpmext.log.error("Well._setPadding() " + bpmext.localization.formatMsg("general", "ERROR") + ": " + e);
+                    if(e.stack) {
+                        //{#feature: US-1330 Added RT localization}
+                        //bpmext.log.error("  Call stack: " + e.stack);
+                        bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+                    }
+                }
+            },
+            _setIconSize : function (view, size)
+            {
+                try
+                {
+                    if(size == null || size == "")
+                        size = "100px";
+
+                    if (!isNaN(size))
+                        size += "px";
+
+                    if (bpmext.text.startsWith((view.context.options.icon.get("value") || "").trim().toLowerCase(), "ci-")) {
+                        view._instance.icon.style.height = size;
+                        view._instance.icon.style.width = size;
+                    } else {
+                        view._instance.icon.style.fontSize = size;
+                    }
+                }
+                catch (e)
+                {
+                    //{#feature: US-1330 Added RT localization}
+                    //bpmext.log.error("Well._setIconSize() error: " + e);
+                    bpmext.log.error("Well._setIconSize() " + bpmext.localization.formatMsg("general", "ERROR") + ": " + e);
+                    if(e.stack) {
+                        //{#feature: US-1330 Added RT localization}
+                        //bpmext.log.error("  Call stack: " + e.stack);
+                        bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+                    }
+                }
+            },
+            _replaceClass : function (view, elt, valueMap, newVal, oldVal)
+            {
+                if(newVal != null)
+                    newVal = newVal.toUpperCase();
+
+                if(oldVal != null)
+                    oldVal = oldVal.toUpperCase();
+
+                var oldClass = valueMap[oldVal];
+                if(oldClass == null)
+                    oldClass = "";
+
+                var newClass = valueMap[newVal];
+                if(newClass == null)
+                    newClass = "";
+
+                domClass.replace(elt, newClass, oldClass);
+            },
+            _normalizeColorStyle: function(style)
+            {
+                // OPTS_COL_STLZ :
+                // {
+                    // "D" : "",
+                    // "P": "bg-primary",
+                    // "I" : "bg-info",
+                    // "S" : "bg-success",
+                    // "W" : "bg-warning",
+                    // "G" : "bg-danger"
+                // },
+                if(!style)
+                    style = "D";
+
+                style = style.toUpperCase();
+
+                if(style == "E")
+                    style = "G";
+
+                if(style.length > 1)
+                {
+                    switch (style)
+                    {
+                        case "DEFAULT":
+                        case "DEF":
+                            style = "D";
+                            break;
+                        case "SUCCESS":
+                            style = "S";
+                            break;
+                        case "INFO":
+                        case "INF":
+                            style = "I";
+                            break;
+                        case "PRIMARY":
+                        case "PRI":
+                            style = "P";
+                            break;
+                        case "WARNING":
+                        case "WARN":
+                            style = "W";
+                            break;
+                        case "ERROR":
+                        case "ERR":
+                        case "DANGER":
+                            style = "G";
+                            break;
+                        default:
+                            //{#feature: US-1330 Added RT localization}
+                            //bpmext.log.warn("Unexpected color style: " + style);
+                            bpmext.log.warn(bpmext.localization.formatMsg("general", "COLOR_STYLE_WARNING",style));
+                    }
+                }
+
+                return style;
+            },
+            _setColorStyle : function (view, newVal, oldVal)
+            {
+                if(!oldVal)
+                    oldVal = view._instance.oldColStyle;
+
+                newVal = this._normalizeColorStyle(newVal);
+                oldVal = this._normalizeColorStyle(oldVal);
+
+                this._replaceClass(view, view._instance.statCell, this.OPTS_COL_STLZ, newVal, oldVal);
+                view._instance.oldColStyle = newVal;
+            },
+            _normalizeColorDarkness: function(style)
+            {
+                // OPTS_DRK_STLZ :
+                // {
+                    // "N" : "",
+                    // "D" : "darken",
+                    // "R" : "darker"
+                // },
+                if(!style)
+                    style = "N";
+
+                style = style.toUpperCase();
+                if(style.length > 1)
+                {
+                    switch (style)
+                    {
+                        case "DEFAULT":
+                        case "DEF":
+                            style = "N";
+                            break;
+                        case "DARKEN":
+                            style = "D";
+                            break;
+                        case "DARKER":
+                            style = "R";
+                            break;
+                        default:
+                            //{#feature: US-1330 Added RT localization}
+                            //bpmext.log.warn("Unexpected color darkness: " + style);
+                            bpmext.log.warn(bpmext.localization.formatMsg("general", "COLOR_DARKNESS_WARNING",style));
+                    }
+                }
+
+                return style;
+            },
+            _setColorDarkness : function (view, newVal, oldVal)
+            {
+                if(!oldVal)
+                    oldVal = view._instance.oldColDarkness;
+
+                newVal = this._normalizeColorDarkness(newVal);
+                oldVal = this._normalizeColorDarkness(oldVal);
+
+                this._replaceClass(view, view._instance.statCell, this.OPTS_DRK_STLZ, newVal, oldVal);
+                view._instance.oldColDarkness = newVal;
+            },
+            _setRadius : function (view, newVal)
+            {
+                if (newVal != null && newVal.length > 0)
+                {
+                    if (!isNaN(newVal))
+                        newVal += "px";
+                }
+                else
+                    newVal = 0;
+
+                view._instance.statPanel.style.borderRadius = newVal;
+                view._instance.statCell.style.borderRadius = newVal;
+            },
+            _setIcon : function(view, icon)
+            {
+                if(icon != null && icon != "")
+                {
+                    icon = icon.trim().toLowerCase();
+                    if(bpmext.text.startsWith(icon, "ci-")) {
+                        // get the carbon svg icon
+                        var svgElement = utilities.getCarbonIcon(icon);
+                        if (svgElement) {
+                            // remove the current carbon icon
+                            view._instance.statCell.removeChild(view._instance.icon);
+
+                            svgElement.classList.add("bg-icon");
+                            // assign the new svg icon to the instance
+                            view._instance.icon = svgElement;
+
+                            domConstruct.place(view._instance.icon, view._instance.statCell, "first");
+                        }
+                    } else {
+                        if(!bpmext.text.startsWith(icon, "fa-"))
+                            icon = "fa-" + icon;
+
+                        if(view._instance.oldIcon)
+                            domClass.replace(view._instance.icon, icon, view._instance.oldIcon);
+                        else
+                            domClass.add(view._instance.icon, icon);
+                    }
+
+                    view._instance.oldIcon = icon;
+                }
+            },
+            _normalizeIconPosition: function(style)
+            {
+                // OPTS_ALGN_STLZ :
+                // {
+                    // "BR" : "",
+                    // "BL" : "align-bl",
+                    // "TR" : "align-tr",
+                    // "TL" : "align-tl"
+                // },
+                if(!style)
+                    style = "BR";
+
+                style = style.toUpperCase();
+                if(style.length > 2)
+                {
+                    switch (style)
+                    {
+                        case "BOTTOM LEFT":
+                        case "BOTTOM-LEFT":
+                        case "B L":
+                            style = "BL";
+                            break;
+                        case "BOTTOM RIGHT":
+                        case "BOTTOM-RIGHT":
+                            style = "BR";
+                            break;
+                        case "TOP LEFT":
+                        case "TOP-LEFT":
+                            style = "TL";
+                            break;
+                        case "TOP RIGHT":
+                        case "TOP-RIGHT":
+                            style = "TR";
+                            break;
+                        default:
+                            //{#feature: US-1330 Added RT localization}
+                            //bpmext.log.warn("Unexpected icon position: " + style);
+                            bpmext.log.warn(bpmext.localization.formatMsg("general", "ICON_POSITION_WARNING",style));
+                    }
+                }
+
+                return style;
+            },
+            _setIconPos : function(view, newVal, oldVal)
+            {
+                if(!oldVal)
+                    oldVal = view._instance.oldIconPos;
+
+                newVal = this._normalizeIconPosition(newVal);
+                oldVal = this._normalizeIconPosition(oldVal);
+
+                this._replaceClass(view, view._instance.statPanel, this.OPTS_ALGN_STLZ, newVal, oldVal);
+                view._instance.oldIconPos = newVal;
+            },
+            _handleVisibility : function (view)
+            {
+                var elt = view._instance.statPanel;
+				var visibility = utilities.handleVisibility(view.context, null, null, [elt], null, false);
+
+                if (visibility != "NONE")
+                {
+                    if (visibility == "READONLY")
+                    {
+                        elt.disabled = true;
+                        domClass.add(elt, "disabled");
+                    }
+                    else
+                    {
+                        elt.disabled = false;
+                        domClass.remove(elt, "disabled");
+                    }
+                }
+            }
+        };
+
+
+        /*
+        Public control methods *************************************************************
+         */
+
+        /**
+         * @instance
+         * @memberof Well
+         * @method setWidth
+         * @param {string} width Well width
+         * @desc Set width of well (e.g. 50px, 20%, 2em - omitting the unit assumes px)
+         */
+        this.constructor.prototype.setWidth = function (size)
+        {
+            this.context.options.width.set("value", size);
+        }
+
+        /**
+         * @instance
+         * @memberof Well
+         * @method getWidth
+         * @desc Get configured width for well (including unit)
+         * @returns {string}
+         */
+        this.constructor.prototype.getWidth = function ()
+        {
+            return this.context.options.width.get("value");
+        }
+
+        /**
+         * @instance
+         * @memberof Well
+         * @method setHeight
+         * @param {string} height Well height
+         * @desc Set height of well (e.g. 50px, 20%, 2em - omitting the unit assumes px)
+         */
+        this.constructor.prototype.setHeight = function (size)
+        {
+            this.context.options.height.set("value", size);
+        }
+
+        /**
+         * @instance
+         * @memberof Well
+         * @method getHeight
+         * @desc Get configured height for well (including unit)
+         * @returns {string}
+         */
+        this.constructor.prototype.getHeight = function ()
+        {
+            return this.context.options.height.get("value");
+        }
+
+        /**
+         * @instance
+         * @memberof Well
+         * @method setIcon
+		 * @param {string} icon See {@link http://fontawesome.io/icons Font Awesome} for a comprehensive list of icons. Refer to the knowledge center for the latest Font Awesome version.
+         * @desc Sets icon to display on the well
+         */
+        this.constructor.prototype.setIcon = function (icon)
+        {
+            return this.context.options.icon.set("value", icon);
+        }
+
+        /**
+         * @instance
+         * @memberof Well
+         * @method setColorStyle
+         * @param {string} style "DEFAULT"|"DEF"|"D"=Default | PRIMARY"|"P"=Primary | "INFO"|INF"|"I"=Info | "SUCCESS"|"S"=Success | "WARNING"|"WARN"|"W"=Warning | "ERROR"|"ERR"|"DANGER"|"G"=Danger
+         * @desc Sets color style of well.  NOTE: to avoid ambiguity always set the color using "D"|P"|"I"|"S"|"W"|"G"
+         */
+        this.constructor.prototype.setColorStyle = function (style)
+        {
+            this.context.options.colorStyle.set("value", style);
+        }
+
+/**
+         * @instance
+         * @memberof Well
+         * @method getColorStyle
+         * @desc Gets color style of well.  NOTE: This always returns the color as set, to avoid ambiguity always set the color using "D"|"P"|"I"|"S"|"W"|"G"
+         * @returns {string}
+         */
+        this.constructor.prototype.getColorStyle = function ()
+        {
+            return this.context.options.colorStyle.get("value");
+        }
+
+        /**
+         * @instance
+         * @memberof Well
+         * @method setRadius
+         * @param {string} radius Corner radius of curvature
+         * @desc Sets radius (roundness) of well
+         */
+        this.constructor.prototype.setRadius = function (radius)
+        {
+            return this.context.options.radius.set("value", radius);
+        }
+
+        /**
+         * @instance
+         * @memberof Well
+         * @method setIconSize
+         * @param {string} size Icon size
+         * @desc Sets size of icon
+         */
+        this.constructor.prototype.setIconSize = function (size)
+        {
+            return this.context.options.iconSize.set("value", size);
+        }
+
+        /**
+         * @instance
+         * @memberof Well
+         * @method click
+         * @desc Programmatically click this well
+         */
+        this.constructor.prototype.click = function ()
+        {
+            this._instance.statPanel.click();
+        }
+
+        /**
+         * @instance
+         * @memberof Well
+         * @method getType
+         * @desc Get descriptive string representing the type of control
+         * @returns {string}
+         */
+        this.constructor.prototype.getType = function ()
+        {
+            return "well.3";
+        }
+
+
+        /*
+        Coach NG Lifecycle methods *************************************************************
+         */
+        this.constructor.prototype.load = function ()
+        {
+            try
+            {
+                var opts = this.context.options;
+                var mdt = opts._metadata;
+
+                if (!opts.colorStyle)
+                    opts.colorStyle = bpmext.ui.substituteConfigOption(this, "colorStyle", "D");
+
+                if(!opts.colorDarkness)
+                    opts.colorDarkness = bpmext.ui.substituteConfigOption(this, "colorDarkness", "N");
+
+                if (!opts.radius)
+                    opts.radius = bpmext.ui.substituteConfigOption(this, "radius", "2px");
+
+                if (!opts.icon)
+                    opts.icon = bpmext.ui.substituteConfigOption(this, "icon", null);
+
+                if (!opts.iconSize)
+                    opts.iconSize = bpmext.ui.substituteConfigOption(this, "iconSize", "100px");
+
+                if (!opts.iconPosition)
+                    opts.iconPosition = bpmext.ui.substituteConfigOption(this, "iconPosition", "BR");
+
+                if (!opts.padding)
+                    opts.padding = bpmext.ui.substituteConfigOption(this, "padding", null);
+
+                if (!opts.width)
+                    opts.width = bpmext.ui.substituteConfigOption(this, "width", null);
+
+                if (!opts.height)
+                    opts.height = bpmext.ui.substituteConfigOption(this, "height", null);
+
+                if(!opts.vAlignment)
+                    bpmext.ui.substituteConfigOption(this, "vAlignment", this._instance.vAlignment);
+                else
+                    this._instance.vAlignment = opts.vAlignment.get("value");
+
+                this._instance.statPanel = this.context.element.querySelector(".stat-panel");
+                this._instance.statCell = this.context.element.querySelector(".stat-cell");
+                this._instance.icon = this.context.element.querySelector(".bg-icon");
+
+                //Added for US-691 : TK-1689 : STARTS
+                domAttr.set(this._instance.statPanel, "tabindex", 0);
+                //US-691 : TK-1689 : ENDS
+                this._proto._setPadding(this, opts.padding.get("value"));
+                this._proto._setWidth(this, opts.width.get("value"));
+                this._proto._setHeight(this, opts.height.get("value"));
+                this._proto._setVAlignment(this, opts.vAlignment.get("value"));
+                this._proto._setColorStyle(this, opts.colorStyle.get("value"));
+                this._proto._setColorDarkness(this, opts.colorDarkness.get("value"));
+                this._proto._setRadius(this, opts.radius.get("value"));
+                this._proto._setIcon(this, opts.icon.get("value"));
+                this._proto._setIconSize(this, opts.iconSize.get("value"));
+                this._proto._setIconPos(this, opts.iconPosition.get("value"));
+
+                bpmext.ui.registerEventHandlingFunction(this, this._proto.EVT_ONCLICK);
+
+                var _this = this;
+
+                this._instance.statPanel.onclick = function (event)
+                {
+                    if(!_this._instance.statPanel.disabled){
+                        var fireBE = bpmext.ui.executeEventHandlingFunction(_this, _this._proto.EVT_ONCLICK);
+                    }
+                }
+                //Added for US-691 : TK-1689 : STARTS
+                this._instance.statPanel.addEventListener('keydown', function(evt) {
+                     if(evt.key === "Enter" || evt.key === " " || evt.key === "Spacebar"){
+                        if(!_this._instance.statPanel.disabled){
+                            bpmext.ui.executeEventHandlingFunction(_this, _this._proto.EVT_ONCLICK);
+                        }
+                    }
+                });
+                //US-691 : TK-1689 : ENDS
+
+                bpmext.ui.loadContainer(this);
+            }
+            catch (e)
+            {
+                //{#feature: US-1330 Added RT localization}
+                //bpmext.log.error("Error on load event [" + this.context.viewid + "]: " + e);
+                bpmext.log.error(bpmext.localization.formatMsg("general", "ERROR_ONLOAD_EVENT") + " [" + this.context.viewid + "]: " + e);
+                if(e.stack) {
+                    //{#feature: US-1330 Added RT localization}
+                    //bpmext.log.error("  Call stack: " + e.stack);
+                    bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+                }
+            }
+        };
+
+        this.constructor.prototype.view = function ()
+        {
+            try
+            {
+                this._proto._handleVisibility(this);
+            }
+            catch (e)
+            {
+                //{#feature: US-1330 Added RT localization}
+                //bpmext.log.error("Error on view event [" + this.ui.getAbsoluteName() + "]: " + e);
+                bpmext.log.error(bpmext.localization.formatMsg("general", "ERROR_ONVIEW_EVENT") + " [" + this.ui.getAbsoluteName() + "]: " + e);
+                if(e.stack) {
+                    //{#feature: US-1330 Added RT localization}
+                    //bpmext.log.error("  Call stack: " + e.stack);
+                    bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+                }
+            }
+        };
+
+        this.constructor.prototype.change = function (event)
+        {
+            try
+            {
+                if (event.type == "config")
+                {
+                    switch (event.property)
+                    {
+                        case "_metadata.visibility":
+                        {
+                            this._proto._handleVisibility(this);
+                            break;
+                        }
+                        case "width":
+                        {
+                            this._proto._setWidth(this, event.newVal);
+                            break;
+                        }
+                        case "height":
+                        {
+                            this._proto._setHeight(this, event.newVal);
+                            break;
+                        }
+                        case "padding":
+                        {
+                            this._proto._setPadding(this, event.newVal);
+                            break;
+                        }
+                        case "vAlignment":
+                        {
+                            this._proto._setVAlignment(this, event.newVal);
+                            break;
+                        }
+                        case "colorStyle":
+                        {
+                            this._proto._setColorStyle(this, event.newVal, event.oldVal);
+                            break;
+                        }
+                        case "colorDarkness":
+                        {
+                            this._proto._setColorDarkness(this, event.newVal, event.oldVal);
+                            break;
+                        }
+                        case "radius":
+                        {
+                            this._proto._setRadius(this, event.newVal);
+                            break;
+                        }
+                        case "iconSize":
+                        {
+                            this._proto._setIconSize(this, event.newVal);
+                            break;
+                        }
+                        case "iconPosition":
+                        {
+                            this._proto._setIconPos(this, event.newVal, event.oldVal);
+                            break;
+                        }
+                        case "icon":
+                        {
+                            this._proto._setIcon(this, event.newVal);
+                            break;
+                        }
+                    }
+                }
+            }
+            catch (e)
+            {
+                //{#feature: US-1330 Added RT localization}
+                //bpmext.log.error("Error on change event [" + this.ui.getAbsoluteName() + "]: " + e);
+                bpmext.log.error(bpmext.localization.formatMsg("general", "ERROR_ONCHANGE_EVENT") + " [" + this.ui.getAbsoluteName() + "]: " + e);
+                if(e.stack) {
+                    //{#feature: US-1330 Added RT localization}
+                    //bpmext.log.error("  Call stack: " + e.stack);
+                    bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+                }
+            }
+        };
+
+        this.constructor.prototype.unload = function ()
+        {
+            bpmext.ui.unloadContainer(this);
+        };
+    }
+}

@@ -1,0 +1,648 @@
+// *************************************************************************
+//
+// Licensed Materials - Property of IBM
+// 5737-I23
+// Copyright IBM Corp. 2017,2021. All Rights Reserved.
+// U.S. Government Users Restricted Rights:
+// Use, duplication or disclosure restricted by GSA ADP Schedule
+// Contract with IBM Corp.
+//
+// *************************************************************************
+// END COPYRIGHT
+
+/**
+ * @ignore
+ * @instance
+ * @memberof ModalSection
+ * @method isValid
+ */  
+
+/**
+ * @ignore
+ * @instance
+ * @memberof ModalSection
+ * @method setValid
+ */
+
+/**
+ * @ignore
+ * @instance
+ * @memberof ModalSection
+ * @method recalculate
+ */
+
+/**
+ * @ignore
+ * @instance
+ * @memberof ModalSection
+ * @method getData
+ */
+
+/**
+ * @ignore
+ * @instance
+ * @memberof ModalSection
+ * @method setData
+ */ 
+
+/** 
+ *   <tr class=Prop>
+ *     <td class=SectionName colspan=3>Events</td>
+ *   </tr>
+ *   <tr class=Prop>
+ *     <td>On Load:</td>
+ *	   <td colspan = "2">
+ *       <table> 
+ *         <tr class=Prop>
+ *           <td>Description: </td>
+ *           <td>This event is fired when the control is loaded.</td>
+ *         </tr>
+ *         <tr class=Prop>
+ *           <td>Example: </td>
+ *           <td><pre class="prettyprint"><code>me.setVisible(true);<code></pre></td>
+ *         </tr>
+ *       </table>
+ *     </td>
+ *   </tr>
+ *   <tr class=Prop>
+ *     <td>On Load:</td>
+ *	   <td colspan = "2">
+ *       <table> 
+ *         <tr class=Prop>
+ *           <td>Description: </td>
+ *           <td>This event is fired when the control is closed.</td>
+ *         </tr>
+ *         <tr class=Prop>
+ *           <td>Example: </td>
+ *           <td><pre class="prettyprint"><code>${Output_Text1}.setText("Modal section closed...");<code></pre></td>
+ *         </tr>
+ *       </table>
+ *     </td>
+ *   </tr>
+ *   <tr class=Prop>
+ *     <td>On Show:</td>
+ *	   <td colspan = "2">
+ *       <table> 
+ *         <tr class=Prop>
+ *           <td>Description: </td>
+ *           <td>This event is fired when the control is opened.</td>
+ *         </tr>
+ *         <tr class=Prop>
+ *           <td>Example: </td>
+ *           <td><pre class="prettyprint"><code>me.setText("Modal section open");<code></pre></td>
+ *         </tr>
+ *       </table>
+ *     </td>
+ *   </tr>
+ * </table>
+ */
+bpmext_control_InitModalSection = function (utilities, bpmext, domClass, domAttr, domConstruct, dom)
+{
+	this._instance =
+	{
+	};
+
+	if (!this.constructor.prototype._proto)
+	{
+		this.constructor.prototype.IS_ADDRESS_INVISIBLE = true;
+
+		this.constructor.prototype._proto =
+		{
+			EVT_ONCLOSE : "eventON_CLOSE",
+			EVT_ONSHOW : "eventON_SHOW",
+			EVT_PRIMARYONCLICK : "eventPRIMARY_ON_CLICK",
+			EVT_SECONDARYONCLICK : "eventSECONDARY_ON_CLICK",
+			OPTS_COL_STLZ :
+			{
+				"D" : "",
+				"P": "btn-primary",
+				"I" : "btn-info",
+				"S" : "btn-success",
+				"W" : "btn-warning",
+				"G" : "btn-danger",
+				"E" : "btn-danger",
+				"B" : "btn-dark"
+			},
+			//Must replicate some logic between setVisible and _handleVisibility because Coach NG helps
+			//a bit "too much" with child visibility
+			_setModalWellWidth : function(view)
+			{
+				var width = view.context.options.modalWellWidth.get("value");
+
+				if (width != null && width != "")
+				{
+					if (!isNaN(width))
+						width += "px";
+				}
+				
+				if(width == null)
+					width = "";
+				
+				view._instance.modalDialog.style.width = width;
+			},
+			_showButtonGroup: function(view) {
+				var showButtonGroup = view.context.options.showModalButtonGroup.get("value");
+				if (!showButtonGroup && !!view._instance.buttonGroup) {
+					domConstruct.destroy(view._instance.buttonGroup);
+					domConstruct.destroy(view._instance.primaryBtn);
+					domConstruct.destroy(view._instance.secondaryBtn);
+					
+					view._instance.buttonGroup = null;
+					view._instance.primaryBtn = null;
+					view._instance.secondaryBtn = null;
+				} else if (showButtonGroup && !view._instance.buttonGroup) {
+					view._instance.buttonGroup = domConstruct.create("div", {class: "modal_btn_group"}, view._instance.modalContent, "last");
+					view._instance.primaryBtn = domConstruct.create("button", {class: "btn modal_btn"}, view._instance.buttonGroup, "last");
+					view._instance.secondaryBtn = domConstruct.create("button", {class: "btn btn-dark modal_btn"}, view._instance.buttonGroup, "first");
+					
+					var colorStyle = this.OPTS_COL_STLZ[view.context.options.colorStyle.get("value")];
+					domClass.add(view._instance.primaryBtn, colorStyle);
+					view._proto._updateBtnText(view._instance.primaryBtn, view.context.options.primaryBtnText.get("value"));
+					view._instance.primaryBtn.onclick = function(event) {
+						bpmext.ui.executeEventHandlingFunction(view, view._proto.EVT_PRIMARYONCLICK, event);
+					};
+					
+					view._proto._updateBtnText(view._instance.secondaryBtn, view.context.options.secondaryBtnText.get("value"));
+					view._instance.secondaryBtn.onclick = function(event) {
+						bpmext.ui.executeEventHandlingFunction(view, view._proto.EVT_SECONDARYONCLICK, event);
+					};
+				}
+			},
+			_setColorStyle : function (view, newVal, oldVal) {
+				oldVal = bpmext.ui.util.normalizeColorStyle(oldVal, this.OPTS_COL_STLZ);
+				newVal = bpmext.ui.util.normalizeColorStyle(newVal,this.OPTS_COL_STLZ);
+				this._replaceClass(view, this.OPTS_COL_STLZ, newVal, oldVal);
+			},
+			_replaceClass : function (view, valueMap, newVal, oldVal) {
+				if (!view._instance.primaryBtn) {
+					return;
+				}
+				
+				if(newVal != null)
+					newVal = newVal.toUpperCase();
+
+				if(oldVal != null)
+					oldVal = oldVal.toUpperCase();
+
+				var oldClass = valueMap[oldVal];
+				if(oldClass == null)
+					oldClass = "";
+
+				var newClass = valueMap[newVal];
+				if(newClass == null)
+					newClass = "";
+
+				domClass.remove(view._instance.primaryBtn, oldClass);
+				domClass.add(view._instance.primaryBtn, newClass);
+				view.context.options.colorStyle.set("value", newVal);
+			},
+			_updateBtnText: function(btn, text) {
+				if (btn) {
+					btn.innerText = text;
+				}
+			},
+			_handleVisibility : function (view)
+			{
+				//{#bug: * Properly handle modal section set to HIDDEN instead of NONE visibility style}
+				if(domClass.contains(view.context.element, "CoachView_invisible"))
+					domClass.replace(view.context.element, "CoachView_hidden", "CoachView_invisible");
+
+				var visibility = bpmext.ui.getEffectiveVisibility(view);
+				// var visibility = utilities.handleVisibility(view.context);
+				if(visibility != "NONE" && visibility != "HIDDEN")
+				{
+					bpmext.util._modalStack.registerAndOpen(view, function(view, event) {
+						if (event == "wake") {
+							view._proto._applyEvents(view);
+						} else if (event == "sleep") {
+							view._proto._unapplyEvents(view);
+						}
+					});
+
+					domClass.add(document.body, "modal-open");
+					view._instance.modalPanel.style.display = "block";
+					setTimeout(function() {
+						domClass.add(view._instance.modalPanel, "in");
+						if (view._instance.modalContent.querySelector(".panel-heading-icon.clickable")) {
+							view._instance.modalContent.querySelector(".panel-heading-icon.clickable").focus();        
+						}
+                		bpmext.ui.executeEventHandlingFunction(view, view._proto.EVT_ONSHOW);
+					}, 100);
+					
+					if (visibility == "READONLY")
+						domClass.remove(view._instance.disabler, "hidden");
+					else
+						domClass.add(view._instance.disabler, "hidden");
+				}
+				else
+				{
+					//This only gets called if the section was closed through 
+					//<view>.context.options._metadata.visibility.set("value", "NONE")
+					//...in that case, there can be no fade up animation for the content of the section
+					if(view._instance.modalPanel.style.display != "none")
+					{
+						domClass.remove(document.body, "modal-open");
+						domClass.remove(view._instance.modalPanel, "in");
+						setTimeout(function(){
+							view._instance.modalPanel.style.display = "none";
+							if (view._instance.ariaTriggerElementTarget) {
+								view._instance.ariaTriggerElementTarget.focus();
+							}
+							bpmext.ui.executeEventHandlingFunction(view, view._proto.EVT_ONCLOSE);
+						}, 150);
+					}
+					bpmext.util._modalStack.close();
+				}
+			},
+			_handleEvent : function(e){
+	        	switch(e.type){
+	        		case 'focus':
+						var target = e.type === 'focus' ? e.target : (e.relatedTarget || document.activeElement); //In case of blur relatedTarget-element that is receiving focus
+						var isDescendant = dom.isDescendant(target, this.context.element);
+						if (!isDescendant) {
+						    var elm = target;
+						    while (elm) {
+						        if (elm.classList && (elm.classList.contains("dropdown-menu") || elm.classList.contains("mce-panel"))) {
+						            isDescendant = true;
+						            break;
+						        }
+						        elm = elm.offsetParent;
+						    }
+						}
+						if (!isDescendant) {
+						    this._instance.modalDialog.focus();
+						}
+	        			break;
+	        		case 'keydown':
+						if(e.key === "Esc" || e.key === "Escape"){ //Escape
+							if(this.context.options.closeOnClick.get("value"))
+							{
+								this.setVisible(false);
+							}
+						}
+	        			break;
+	        	}
+	        },
+			_applyEvents : function (view)
+			{
+				view._instance.focusEventHandle = this._handleEvent.bind(view);
+				view._instance.keydownEventHandle = this._handleEvent.bind(view);
+				document.addEventListener("focus", view._instance.focusEventHandle, true);
+		        document.addEventListener("keydown", view._instance.keydownEventHandle, false);
+			},
+			_unapplyEvents : function (view)
+			{
+				document.removeEventListener("focus", view._instance.focusEventHandle, true);
+		        document.removeEventListener("keydown", view._instance.keydownEventHandle, false);
+			}
+		};
+
+		/*
+		Public control methods *************************************************************
+		 */
+		 
+		 /**
+		 * @instance
+		 * @memberof ModalSection
+		 * @method setCloseOnClick
+		 * @param {boolean} flag sets the boolean for whether a user can close the modal section by clicking outside of the modal section.  If true, user can close the modal section by clicking outside of the modal section (gray area)
+		 * @desc Sets whether user can close the control without a button.
+		 */
+		 this.constructor.prototype.setCloseOnClick = function(flag){
+			 this.context.options.closeOnClick.set("value", flag);
+		 };
+		 
+		  /**
+		 * @instance
+		 * @memberof ModalSection
+		 * @method getCloseOnClick
+		 * @desc Returns a boolean as to whether a user can close the modal section by clicking outside of the modal section (gray area)
+		 * @return {boolean}
+		 */
+		 this.constructor.prototype.getCloseOnClick = function(flag){
+			 return this.context.options.closeOnClick.get("value");
+		 };
+		 
+		 /**
+		 * @instance
+		 * @memberof ModalSection
+		 * @method show
+		 * @desc Display's the modal section
+		 */
+		 this.constructor.prototype.show = function()
+		 {
+			 bpmEventHelper.ui._showView.call(this);
+		 };
+		 
+		/**
+		 * @instance
+		 * @memberof ModalSection
+		 * @method setVisible
+		 * @param {boolean} flag <code>true</code> to show the section, <code>false</code> to hide it
+		 * @desc Set visibility of control
+		 */
+		this.constructor.prototype.setVisible = function(flag)
+		{
+			if (flag)
+			{
+				this._instance.ariaTriggerElementTarget = document.activeElement;
+				this.context.options._metadata.visibility.set("value", "EDITABLE");
+			}
+			else
+			{
+				this.context.options._metadata.visibility.set("value", "NONE");
+			}	
+		};
+		 
+		/**
+		 * @instance
+		 * @memberof ModalSection
+		 * @method getType
+		 * @desc Get descriptive string representing the type of control
+		 * @returns {string}
+		 */
+		this.constructor.prototype.getType = function ()
+		{
+			return "modalSection.3";
+		};
+		
+		/**
+		 * @instance
+		 * @memberof ModalSection
+		 * @method setColorStyle
+		 * @param {string} style "DEFAULT"|"DEF"|"D"=Default | "PRIMARY"|"PRI"|"P"=Primary | "INFO"|INF"|"I"=Info | "SUCCESS"|"S"=Success | "WARNING"|"WARN"|"W"=Warning | "DANGER"|ERROR|ERR"|"E"|"G"=Danger
+     	 * @desc Sets color style of modal primary button.  NOTE: to avoid ambiguity always set the color using "D"|"P"|"I"|"S"|"W"|"E"
+		 */
+		this.constructor.prototype.setColorStyle = function (style)
+		{
+			this.context.options.colorStyle.set("value", style);
+		};
+
+		/**
+		 * @instance
+		 * @memberof ModalSection
+		 * @method getColorStyle
+		 * @desc Gets color style of modal primary button.  NOTE: This always returns the color as set, to avoid ambiguity always set the color using "D"|"P"|"I"|"S"|"W"|"E"
+		 * @returns {string}
+		 */
+		this.constructor.prototype.getColorStyle = function ()
+		{
+			return this.context.options.colorStyle.get("value");
+		};
+		
+		/**
+		 * @instance
+		 * @memberof ModalSection
+		 * @method setShowModalButtonGroup
+		 * @param {boolean} value True for showing the button group
+     	 * @desc Sets showModalButtonGroup for modal
+		 */
+		this.constructor.prototype.setShowModalButtonGroup = function (value)
+		{
+			this.context.options.showModalButtonGroup.set("value", value);
+		};
+
+		/**
+		 * @instance
+		 * @memberof ModalSection
+		 * @method getShowModalButtonGroup
+		 * @desc Gets showModalButtonGroup for modal
+		 * @returns {boolean}
+		 */
+		this.constructor.prototype.getShowModalButtonGroup = function ()
+		{
+			return this.context.options.showModalButtonGroup.get("value");
+		};
+		
+		/**
+		 * @instance
+		 * @memberof ModalSection
+		 * @method setPrimaryButtonText
+		 * @param {string} str Primary button's text
+     	 * @desc Sets the primary button's text
+		 */
+		this.constructor.prototype.setPrimaryButtonText = function (str)
+		{
+			this.context.options.primaryBtnText.set("value", str);
+		};
+
+		/**
+		 * @instance
+		 * @memberof ModalSection
+		 * @method getPrimaryButtonText
+		 * @desc Gets primary button text for modal
+		 * @returns {string}
+		 */
+		this.constructor.prototype.getPrimaryButtonText = function ()
+		{
+			return this.context.options.primaryBtnText.get("value");
+		};
+		
+		/**
+		 * @instance
+		 * @memberof ModalSection
+		 * @method setSecondaryButtonText
+		 * @param {string} str Secondary button's text
+     	 * @desc Sets the secondary button's text
+		 */
+		this.constructor.prototype.setSecondaryButtonText = function (str)
+		{
+			this.context.options.secondaryBtnText.set("value", str);
+		};
+
+		/**
+		 * @instance
+		 * @memberof ModalSection
+		 * @method getSecondaryButtonText
+		 * @desc Gets secondary button text for modal
+		 * @returns {string}
+		 */
+		this.constructor.prototype.getSecondaryButtonText = function ()
+		{
+			return this.context.options.secondaryBtnText.get("value");
+		};
+
+		/**
+		 * @instance
+		 * @memberof ModalSection
+		 * @method setPrimaryButtonEnabled
+		 * @param {boolean} enabled Enabled/read-only flag (<code>true</code> to enable button, <code>false</code> to disable/make read-only)
+		 * @desc Enable/disable primary button
+		 */
+		this.constructor.prototype.setPrimaryButtonEnabled = function (enabled)
+		{
+			if(this._instance.primaryBtn) {
+				if(enabled === true) {
+					domAttr.remove(this._instance.primaryBtn, "disabled");
+				} else {
+					domAttr.set(this._instance.primaryBtn, "disabled", "");
+				}
+			}
+		};
+		
+		/*
+		Coach NG Lifecycle methods *************************************************************
+		 */
+		this.constructor.prototype.load = function ()
+		{
+			try
+			{
+				var opts = this.context.options;
+				var mdt = opts._metadata;
+
+				if (!opts.closeOnClick)
+					opts.closeOnClick = bpmext.ui.substituteConfigOption(this, "closeOnClick", false);
+
+				//{feature: * Added support to allow setting width of container displaying modal content}
+				if (!opts.modalWellWidth)
+					opts.modalWellWidth = bpmext.ui.substituteConfigOption(this, "modalWellWidth", "");
+				
+				//{feature: * Added button groups}
+				if (!opts.showModalButtonGroup)
+					opts.showModalButtonGroup = bpmext.ui.substituteConfigOption(this, "showModalButtonGroup", false);
+				
+				if (!opts.primaryBtnText)
+					opts.primaryBtnText = bpmext.ui.substituteConfigOption(this, "primaryBtnText", bpmext.localization.formatMsg("controlModalSection", "PRIMARY_BTN_TEXT"));
+				
+				if (!opts.secondaryBtnText)
+					opts.secondaryBtnText = bpmext.ui.substituteConfigOption(this, "secondaryBtnText", bpmext.localization.formatMsg("controlModalSection", "SECONDARY_BTN_TEXT"));
+				
+				if (!opts.colorStyle)
+					opts.colorStyle = bpmext.ui.substituteConfigOption(this, "colorStyle", "D");
+				
+
+				this._instance.modalPanel = this.context.element.querySelector(".modal");
+				this._instance.modalDialog = this.context.element.querySelector(".modal-dialog");
+				this._instance.modalContent = this.context.element.querySelector(".modal-content");
+				
+				//Added for US-691 : TK-1685 : STARTS
+				domAttr.set(this._instance.modalPanel, "role", "presentation");
+				domAttr.set(this._instance.modalDialog, "aria-label", opts._metadata.label.get("value"));
+				domAttr.set(this._instance.modalDialog, "aria-modal", "true");
+				domAttr.set(this._instance.modalDialog, "role", "dialog");
+				this._instance.modalDialog.focus();								
+				//US-691 : TK-1685 : ENDS
+				this._instance.disabler = bpmext.ui.util.createDisabler(this, this._instance.modalDialog);
+				
+				bpmext.ui.registerEventHandlingFunction(this, this._proto.EVT_ONCLOSE);
+				bpmext.ui.registerEventHandlingFunction(this, this._proto.EVT_ONSHOW);
+				bpmext.ui.registerEventHandlingFunction(this, this._proto.EVT_PRIMARYONCLICK);
+				bpmext.ui.registerEventHandlingFunction(this, this._proto.EVT_SECONDARYONCLICK);
+
+				var view = this;
+				this._proto._showButtonGroup(this);
+				
+				this._instance.modalPanel.onclick = function (event)
+				{
+					if(opts.closeOnClick.get("value"))
+					{
+						view.setVisible(false);
+					}
+				};
+				
+				this._instance.modalContent.onclick = function(event)
+				{
+					var evt = event ? event : window.event;
+					if(evt.stopPropagation)
+						evt.stopPropagation();
+					if(evt.cancelBubble != null)
+						evt.cancelBubble = true;
+				};
+				
+				this._proto._setModalWellWidth(this);
+				
+				bpmext.ui.loadContainer(this);
+			}
+			catch (e)
+			{
+				//{#feature: US-1330 Added RT localization}
+				//bpmext.log.error("Error on load event [" + this.context.viewid + "]: " + e);
+				bpmext.log.error(bpmext.localization.formatMsg("general", "ERROR_ONLOAD_EVENT") + " [" + this.context.viewid + "]: " + e);
+				if(e.stack) { 
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.error("  Call stack: " + e.stack);
+					bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+				}
+			}
+		};
+
+		this.constructor.prototype.view = function ()
+		{
+			try
+			{
+				this._proto._handleVisibility(this);
+			}
+			catch (e)
+			{
+				//{#feature: US-1330 Added RT localization}
+				//bpmext.log.error("Error on view event [" + this.ui.getAbsoluteName() + "]: " + e);
+				bpmext.log.error(bpmext.localization.formatMsg("general", "ERROR_ONVIEW_EVENT") + " [" + this.ui.getAbsoluteName() + "]: " + e);
+				if(e.stack) { 
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.error("  Call stack: " + e.stack);
+					bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+				}
+			}
+		};
+
+		this.constructor.prototype.change = function (event)
+		{
+			try
+			{
+				if (event.type == "config")
+				{
+					switch (event.property)
+					{
+						case "_metadata.visibility":
+						{
+							this._proto._handleVisibility(this);
+							break;
+						}
+						case "modalWellWidth":
+						{
+							this._proto._setModalWellWidth(this);
+							break;
+						}
+						case "colorStyle": 
+						{
+							this._proto._setColorStyle(this, event.newVal, event.oldVal);
+							break;
+						}
+						case "showModalButtonGroup":
+						{
+							this._proto._showButtonGroup(this, event.newVal);
+							break;
+						}
+						case "primaryBtnText":
+						{
+							this._proto._updateBtnText(this._instance.primaryBtn, event.newVal);
+							break;
+						}
+						case "secondaryBtnText":
+						{	
+							this._proto._updateBtnText(this._instance.secondaryBtn, event.newVal);
+							break;
+						}
+					}
+				}
+			}
+			catch (e)
+			{
+				//{#feature: US-1330 Added RT localization}
+				//bpmext.log.error("Error on change event [" + this.ui.getAbsoluteName() + "]: " + e);
+				bpmext.log.error(bpmext.localization.formatMsg("general", "ERROR_ONCHANGE_EVENT") + " [" + this.ui.getAbsoluteName() + "]: " + e);
+				if(e.stack) { 
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.error("  Call stack: " + e.stack);
+					bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+				}
+			}
+		};
+
+		this.constructor.prototype.unload = function ()
+		{
+			bpmext.util._modalStack.remove(this);
+			bpmext.ui.unloadContainer(this);
+		};
+	}
+};

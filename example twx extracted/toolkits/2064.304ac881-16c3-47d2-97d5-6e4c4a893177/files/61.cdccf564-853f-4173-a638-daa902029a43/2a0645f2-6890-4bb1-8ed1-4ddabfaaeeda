@@ -1,0 +1,209 @@
+/*
+ * #BEGIN COPYRIGHT
+ *
+ * Licensed Materials - Property of IBM
+ * 5725-C95
+ * (C) Copyright IBM Corporation 2017. All Rights Reserved.
+ * US Government Users Restricted Rights- Use, duplication or disclosure
+ * restricted by GSA ADP Schedule Contract with IBM Corp.
+ *
+ * #END COPYRIGHT
+ */
+
+/**
+ * @ignore
+ * @instance
+ * @memberof Line
+ * @method setEnabled
+ */ 
+
+/**
+ * @ignore
+ * @instance
+ * @memberof Line
+ * @method isEnabled
+ */
+ 
+ /**
+ * @ignore
+ * @instance
+ * @memberof Line
+ * @method isLabelVisible
+ */ 
+
+/**
+ * @ignore
+ * @instance
+ * @memberof Line
+ * @method setLabelVisible
+ */
+ 
+/**
+ * @ignore
+ * @instance
+ * @memberof Line
+ * @method isBound
+ */ 
+
+/**
+ * @ignore
+ * @instance
+ * @memberof Line
+ * @method setData
+ */
+
+/**
+ * @ignore
+ * @instance
+ * @memberof Line
+ * @method getData
+ */
+
+/**
+ * @ignore
+ * @instance
+ * @memberof Line
+ * @method setValid
+ */ 
+
+/**
+ * @ignore
+ * @instance
+ * @memberof Line
+ * @method isValid
+ */
+
+/**
+ * @ignore
+ * @instance
+ * @memberof Line
+ * @method getType
+ */  
+ 
+/**
+ * </table>
+ */
+ 
+bpmext_control_InitLine = function (bpmext)
+{
+	this._instance = {
+	};
+
+	if (!this.constructor.prototype._proto)
+	{
+		this.constructor.prototype._proto =
+		{
+			_handleVisibility : function (view)
+			{
+				var visibility = bpmext.ui.getEffectiveVisibility(view);
+				
+				view.context.setDisplay(visibility != "NONE");
+				view.context.setVisibility(visibility != "HIDDEN");
+			}
+		};
+		
+
+		/*
+		Public control methods *************************************************************
+		 */
+		/**
+		 * @instance
+		 * @memberof Line
+		 * @method getType
+		 * @desc Get descriptive string representing the type of control
+		 * @returns {string}
+		 */
+		this.constructor.prototype.getType = function ()
+		{
+			return "line.3";
+		}
+		
+		
+		/*
+		Coach NG Lifecycle methods *************************************************************
+		 */
+		this.constructor.prototype.load = function ()
+		{
+			try
+			{
+				var opts = this.context.options;
+				var mdt = opts._metadata;
+
+				this.context.element.appendChild(document.createElement("hr"));
+				bpmext.ui.loadView(this);
+			}
+			catch (e)
+			{
+				//{#feature: US-1330 Added RT localization}
+				//bpmext.log.error("Error on load event [" + this.context.viewid + "]: " + e);
+				bpmext.log.error(bpmext.localization.formatMsg("general", "ERROR_ONLOAD_EVENT") + " [" + this.context.viewid + "]: " + e);
+				if(e.stack) { 
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.error("  Call stack: " + e.stack);
+					bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+				}
+			}
+		};
+
+		this.constructor.prototype.view = function ()
+		{
+			try
+			{
+				this._proto._handleVisibility(this);
+			}
+			catch (e)
+			{
+				//{#feature: US-1330 Added RT localization}
+				//bpmext.log.error("Error on view event [" + this.ui.getAbsoluteName() + "]: " + e);
+				bpmext.log.error(bpmext.localization.formatMsg("general", "ERROR_ONVIEW_EVENT") + " [" + this.ui.getAbsoluteName() + "]: " + e);
+				if(e.stack) { 
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.error("  Call stack: " + e.stack);
+					bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+				}
+			}
+		};
+
+		this.constructor.prototype.change = function (event)
+		{
+			try
+			{
+				if (event.type == "config")
+				{
+					switch (event.property)
+					{
+						case "_metadata.visibility":
+						{
+							this._proto._handleVisibility(this);
+							break;
+						}
+					}
+				}
+			}
+			catch (e)
+			{
+				//{#feature: US-1330 Added RT localization}
+				//bpmext.log.error("Error on change event [" + this.ui.getAbsoluteName() + "]: " + e);
+				bpmext.log.error(bpmext.localization.formatMsg("general", "ERROR_ONCHANGE_EVENT") + " [" + this.ui.getAbsoluteName() + "]: " + e);
+				if(e.stack) { 
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.error("  Call stack: " + e.stack);
+					bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+				}
+			}
+		};
+
+		this.constructor.prototype.validate = function (event) {
+			
+		};
+
+		this.constructor.prototype.collaboration = function (event) {
+			
+		};
+
+		this.constructor.prototype.unload = function ()
+		{
+			bpmext.ui.unloadView(this);
+		};
+	}
+}

@@ -1,0 +1,137 @@
+/*
+ * #BEGIN COPYRIGHT
+ *
+ * Licensed Materials - Property of IBM
+ * 5725-C95
+ * (C) Copyright IBM Corporation 2017. All Rights Reserved.
+ * US Government Users Restricted Rights- Use, duplication or disclosure
+ * restricted by GSA ADP Schedule Contract with IBM Corp.
+ *
+ * #END COPYRIGHT
+ */
+
+var mixObject = {
+	createPreview:function(containingDiv, labelText, callback){
+		var bpmextUri = this.context.getManagedAssetUrl("BPMExt-Core-Designer.js", this.context.assetType_WEB, "SYSBPMUI");
+		require([ "dojo/dom-construct", "dojo/dom-class", "dojo/dom-attr", bpmextUri ], this.lang.hitch(this, function(domConstruct, domClass, domAttr, bpmext){
+			bpmext.uidesign.css.ensureSparkUIClass(containingDiv);
+			
+			this.context.coachViewData.containingDiv = containingDiv;
+			this.context.coachViewData.formGroupDiv = domConstruct.create("div");
+			
+			this.context.coachViewData.labelTextDom = document.createTextNode(labelText);
+			this.context.coachViewData.label = domConstruct.create("span");
+			domClass.add(this.context.coachViewData.label, "control-label");
+			domAttr.set(this.context.coachViewData.label, "id", "DecimalLabel_" + this.context.modelData.layoutItemIdPath);
+			this.context.coachViewData.label.appendChild(this.context.coachViewData.labelTextDom);
+			
+			this.context.coachViewData.inputDiv = domConstruct.create("div");
+			domClass.add(this.context.coachViewData.inputDiv, "input");
+
+			this.context.coachViewData.input = domConstruct.create("input");
+			domClass.add(this.context.coachViewData.input, "form-control");
+			//BG-959
+			dojo.attr(this.context.coachViewData.input, "type", "text");
+			dojo.attr(this.context.coachViewData.input, "role", "textbox");			
+			dojo.attr(this.context.coachViewData.input, "aria-labelledby", this.context.coachViewData.label.id);
+			this.context.coachViewData.inputDiv.appendChild(this.context.coachViewData.input);
+			
+			domConstruct.place(this.context.coachViewData.formGroupDiv, this.context.coachViewData.containingDiv);
+			domClass.add(this.context.coachViewData.formGroupDiv, "form-group");
+			this.context.coachViewData.formGroupDiv.appendChild(this.context.coachViewData.label);
+			this.context.coachViewData.formGroupDiv.appendChild(this.context.coachViewData.inputDiv);
+
+			this.context.coachViewData.input.onfocus = this.lang.hitch(this, function(){
+				this.context.coachViewData.input.value = "";
+			});
+
+			this.context.coachViewData.input.onblur = this.lang.hitch(this, function(){
+				if(this.context.coachViewData.placeHolderText != null && this.context.coachViewData.placeHolderText != undefined){
+					this.context.coachViewData.input.value = this.context.coachViewData.placeHolderText;
+				}
+			});
+			
+			//Defect 344875
+			this.context.coachViewData.input.onkeydown = this.lang.hitch(this, function(){
+			    if(event.key == "Delete" || event.key == "Backspace"){
+			    	event.stopPropagation();
+			    }
+			});
+			this.context.coachViewData.labelHandler = bpmext.uidesign.createLabelHandler(this.context.coachViewData.labelTextDom, this.context.coachViewData.label, this.context.coachViewData.containingDiv, false, false);
+			callback();
+		}));
+	},
+	getLabelDomElement:function(){
+		return this.context.coachViewData.label;
+	},
+	propertyChanged:function(propertyName, propertyValue){
+		var configHelperUri = this.context.getManagedAssetUrl("BPMExt-Core-ConfigHelper.js",this.context.assetType_WEB, "SYSBPMUI");
+		require(["dojo/dom-style", "dojo/dom-class", "dojo/dom-attr", configHelperUri], this.lang.hitch(this, function(domStyle, domClass, domAttr, configHelper){
+			this.context.coachViewData.labelHandler.propertyChanged(propertyName, propertyValue);
+			if(propertyName == "@style"){
+				var width = configHelper.getResponsiveConfigOptionValue(this, "@width");
+				var minWidth = configHelper.getResponsiveConfigOptionValue(this, "@minWidth");
+				if(!!width || !!minWidth || this.width) {
+					this.context.coachViewData.containingDiv.style.width =  minWidth || this.width || width;
+				} else {
+					this.context.coachViewData.containingDiv.style.width = "";
+				}
+			} else if(propertyName ==  "@visibility"){
+				if(propertyValue == "READONLY"){
+					domAttr.set(this.context.coachViewData.input, "disabled","disabled");
+				}else{
+					domAttr.remove(this.context.coachViewData.input, "disabled");
+				}
+				if(propertyValue == "REQUIRED"){
+					dojo.attr(this.context.coachViewData.input, "aria-required", "true");
+				} else {
+					dojo.attr(this.context.coachViewData.input, "aria-required", "false");
+				}
+			} else if(propertyName == "labelPlacement"){
+				var labelPlacement;
+				if(propertyValue == "L"){
+					labelPlacement = "label-left";
+				} else {
+					labelPlacement = "";
+				}
+				domClass.replace(this.context.coachViewData.formGroupDiv, labelPlacement, "label-left");
+			} else if(propertyName == "sizeStyle"){
+				var sizeStyle;
+				if(propertyValue == "L"){
+					sizeStyle = "input-lg";
+				} else if(propertyValue == "S"){
+					sizeStyle = "input-sm";
+				} else {
+					sizeStyle = "";
+				}
+				domClass.replace(this.context.coachViewData.input, sizeStyle, "input-sm input-lg");
+			} else if(propertyName == "width"){
+				//TODO: use this.context.coachViewData.width
+				this.width = propertyValue;
+				if(!!propertyValue) {
+					//this.context.coachViewData.containingDiv.style.width = propertyValue;
+					//Added for WYSWYG width without any unit, so set px by default
+					//this.context.coachViewData.containingDiv.style.width = (propertyValue.indexOf('px') >= 0 || propertyValue.indexOf('%') >= 0 || propertyValue.indexOf('em') >= 0) ? propertyValue : (propertyValue+"px");
+					this.context.coachViewData.containingDiv.style.width = isNaN(propertyValue) ? propertyValue : (propertyValue+"px");
+				} else {
+					this.context.coachViewData.containingDiv.style.width = "";
+				}
+            } else if (propertyName == "labelWidth") {
+                if (propertyValue) {
+                    this.context.coachViewData.label.style.width = isNaN(propertyValue) ? propertyValue : (propertyValue + "px");
+                    domClass.add(this.context.coachViewData.containingDiv, "labelWidth");
+                } else {
+                    this.context.coachViewData.label.style.width = "";
+                    domClass.remove(this.context.coachViewData.containingDiv, "labelWidth");
+                }
+			} else if(propertyName == "placeHolder"){
+				this.context.coachViewData.placeHolderText = propertyValue;
+				this.context.coachViewData.input.value = propertyValue;
+				this.context.coachViewData.input.style.color = "#bdbdbd";
+			}
+		}));
+    },
+	modelChanged: function(propertyName, propertyValue) {
+		this.context.coachViewData.labelHandler.modelChanged(propertyName, propertyValue);
+	}
+};

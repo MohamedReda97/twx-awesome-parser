@@ -1,0 +1,117 @@
+/*
+ * #BEGIN COPYRIGHT
+ *
+ * Licensed Materials - Property of IBM
+ * 5725-C95
+ * (C) Copyright IBM Corporation 2017. All Rights Reserved.
+ * US Government Users Restricted Rights- Use, duplication or disclosure
+ * restricted by GSA ADP Schedule Contract with IBM Corp.
+ *
+ * #END COPYRIGHT
+ */
+
+var mixObject = {
+	createPreview:function(containingDiv, labelText, callback){
+		var bpmextUri = this.context.getManagedAssetUrl("BPMExt-Core-Designer.js", this.context.assetType_WEB, "SYSBPMUI");
+		require([ "dojo/dom-construct", "dojo/dom-class", bpmextUri], this.lang.hitch(this, function(domConstruct, domClass, bpmext){
+			bpmext.uidesign.css.ensureGeneralStylesLoaded(this);
+			bpmext.uidesign.css.ensureGlyphsLoaded(this);
+            bpmext.uidesign.css.ensureSparkUIClass(containingDiv);
+            bpmext.uidesign.svg.ensureCarbonIconsLoaded(this);
+
+			this.context.coachViewData.defaultNotificationIcon = "fa-bell";
+
+			this.context.coachViewData.containingDiv = containingDiv;
+			domClass.add(this.context.coachViewData.containingDiv, "spark-ui");
+
+			this.context.coachViewData.notificationWrapper = domConstruct.create("div");
+			domClass.add(this.context.coachViewData.notificationWrapper, "SPARKNotif navbar ");
+
+			this.context.coachViewData.notificationColorSyleNode = domConstruct.create("div", {tabindex: 0});
+			domClass.add(this.context.coachViewData.notificationColorSyleNode, "nav-icon-btn ");
+			dojo.attr(this.context.coachViewData.notificationColorSyleNode, "role", "button");
+
+			this.context.coachViewData.icon = domConstruct.create("span");
+			domClass.add(this.context.coachViewData.icon, "nav-icon fa");
+			domClass.add(this.context.coachViewData.icon, this.context.coachViewData.defaultNotificationIcon);
+
+			this.context.coachViewData.notificationLabelSpan = domConstruct.create("span");
+			domClass.add(this.context.coachViewData.notificationLabelSpan, "label");
+
+			//Added for WYSIWYG
+			this.context.coachViewData.notificationLabelSpan.style="top:-8px";
+
+			this.context.coachViewData.notificationLabelTextDom = document.createTextNode(labelText);
+
+			this.context.coachViewData.notificationLabelSpan.appendChild(this.context.coachViewData.notificationLabelTextDom);
+			this.context.coachViewData.notificationColorSyleNode.appendChild(this.context.coachViewData.icon);
+			//need to add a linebreak to the source text, because browsers render inline content with space between depending on this
+			this.context.coachViewData.notificationColorSyleNode.appendChild(document.createTextNode("\n"));
+			this.context.coachViewData.notificationColorSyleNode.appendChild(this.context.coachViewData.notificationLabelSpan);
+			this.context.coachViewData.notificationWrapper.appendChild(this.context.coachViewData.notificationColorSyleNode);
+
+			this.context.coachViewData.containingDiv.appendChild(this.context.coachViewData.notificationWrapper);
+
+			this.context.coachViewData.labelHandler = bpmext.uidesign.createLabelHandler(this.context.coachViewData.notificationLabelTextDom, undefined, undefined, true, true);
+
+			callback();
+		}));
+	},
+	getLabelDomElement:function(){
+		return this.context.coachViewData.notificationLabelSpan;
+	},
+	propertyChanged:function(propertyName, propertyValue){
+		var configHelperUri = this.context.getManagedAssetUrl("BPMExt-Core-ConfigHelper.js",this.context.assetType_WEB, "SYSBPMUI");
+		require(["dojo/dom-style", "dojo/dom-class", "dojo/dom-construct", configHelperUri], this.lang.hitch(this, function(domStyle, domClass, domConstruct, configHelper){
+			this.context.coachViewData.labelHandler.propertyChanged(propertyName, propertyValue);
+			if(propertyName == "@style"){
+				var width = configHelper.getResponsiveConfigOptionValue(this, "@width");
+				var minWidth = configHelper.getResponsiveConfigOptionValue(this, "@minWidth");
+				if(!!width || !!minWidth || this.width) {
+					this.context.coachViewData.containingDiv.style.width =  minWidth || this.width || width;
+				} else {
+					this.context.coachViewData.containingDiv.style.width = "";
+				}
+			} else if(propertyName == "icon"){
+                var newIcon;
+                propertyValue = propertyValue && propertyValue.trim();
+                // removing the contents of the icon node
+                dojo.empty(this.context.coachViewData.icon);
+                domClass.remove(this.context.coachViewData.icon);
+                domClass.add(this.context.coachViewData.icon, "nav-icon");
+                if(propertyValue){
+                    newIcon = propertyValue.toLowerCase();
+                    if (newIcon.indexOf("fa-") !== 0 && newIcon.indexOf("ci-") !== 0) {
+                        domClass.add(this.context.coachViewData.icon, "fa fa-" + newIcon);
+                    } else if (newIcon.indexOf("ci-") === 0) {
+                        // add a new icon since we are clearing the content of the icon node
+                        this.context.coachViewData.icon.appendChild(bpmext.uidesign.svg.getCarbonIcon(newIcon));
+                    } else {
+                        domClass.add(this.context.coachViewData.icon, "fa " + newIcon);
+                    }
+                } else {
+                    domClass.add(this.context.coachViewData.icon, "fa " + this.context.coachViewData.defaultNotificationIcon);
+                }
+			} else if(propertyName == "colorStyle"){
+				var colorStyle;
+				if(propertyValue == "P"){
+					colorStyle = "nav-icon-btn-primary";
+				} else if(propertyValue == "I"){
+					colorStyle = "nav-icon-btn-info";
+				} else if(propertyValue == "S"){
+					colorStyle = "nav-icon-btn-success";
+				} else if(propertyValue == "W"){
+					colorStyle = "nav-icon-btn-warning";
+				} else if(propertyValue == "E"){
+					colorStyle = "nav-icon-btn-danger";
+				} else {
+					colorStyle = "";
+				}
+				domClass.replace(this.context.coachViewData.notificationColorSyleNode, colorStyle, "nav-icon-btn-primary nav-icon-btn-info nav-icon-btn-success nav-icon-btn-warning nav-icon-btn-danger");
+			}
+		}));
+	},
+	modelChanged: function(propertyName, propertyValue) {
+		this.context.coachViewData.labelHandler.modelChanged(propertyName, propertyValue);
+	}
+};

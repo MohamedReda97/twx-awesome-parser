@@ -1,0 +1,502 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<teamworks>
+    <process id="1.26d2889e-266f-4622-82d2-6ba6f7f07204" name="IBM Case Role TRS">
+        <lastModified>1554875345465</lastModified>
+        <lastModifiedBy>tw_admin</lastModifiedBy>
+        <processId>1.26d2889e-266f-4622-82d2-6ba6f7f07204</processId>
+        <image isNull="true" />
+        <tabGroup isNull="true" />
+        <startingProcessItemId>2025.d889b16d-1319-4d34-8316-03db391916af</startingProcessItemId>
+        <isRootProcess>false</isRootProcess>
+        <processType>12</processType>
+        <isErrorHandlerEnabled>false</isErrorHandlerEnabled>
+        <errorHandlerItemId isNull="true" />
+        <isLoggingVariables>false</isLoggingVariables>
+        <isTransactional>false</isTransactional>
+        <processTimingLevel isNull="true" />
+        <participantRef isNull="true" />
+        <exposedType>0</exposedType>
+        <isTrackingEnabled>true</isTrackingEnabled>
+        <xmlData isNull="true" />
+        <cachingType>false</cachingType>
+        <itemLabel isNull="true" />
+        <cacheLength>0</cacheLength>
+        <mobileReady>false</mobileReady>
+        <sboSyncEnabled>true</sboSyncEnabled>
+        <externalId isNull="true" />
+        <isSecured>true</isSecured>
+        <isAjaxExposed>true</isAjaxExposed>
+        <description isNull="true" />
+        <guid>guid:df4281376b3e69ae:-4f2d4a4:16a05e59f13:-7fd8</guid>
+        <versionId>53668bc1-2e34-4714-8943-4a849f4e8b8e</versionId>
+        <dependencySummary>&lt;dependencySummary id="bpdid:df4281376b3e69ae:-4f2d4a4:16a05e59f13:-7f2e" /&gt;</dependencySummary>
+        <jsonData>{"rootElement":[{"flowElement":[{"parallelMultiple":false,"outgoing":["7d740060-e1fa-455d-8423-754d0337a353"],"isInterrupting":false,"extensionElements":{"nodeVisualInfo":[{"color":"#F8F8F8","width":24,"x":25,"y":80,"declaredType":"TNodeVisualInfo","height":24}]},"name":"Start","declaredType":"startEvent","id":"16f9a4f0-2ed6-43c9-804a-783e6d1648b2"},{"incoming":["a342e0af-78c9-47ea-8cfa-e5d4bfe0a948"],"extensionElements":{"nodeVisualInfo":[{"color":"#F8F8F8","width":24,"x":650,"y":80,"declaredType":"TNodeVisualInfo","height":24}],"endStateId":["guid:df4281376b3e69ae:-4f2d4a4:16a05e59f13:-7fd6"],"saveExecutionContext":[true]},"name":"End","declaredType":"endEvent","id":"c9a3655c-361e-43b3-8af0-08bd21429b2b"},{"startQuantity":1,"outgoing":["a342e0af-78c9-47ea-8cfa-e5d4bfe0a948"],"incoming":["7d740060-e1fa-455d-8423-754d0337a353"],"extensionElements":{"nodeVisualInfo":[{"width":95,"x":343,"y":57,"declaredType":"TNodeVisualInfo","height":70}]},"name":"Compute Team","isForCompensation":false,"completionQuantity":1,"declaredType":"scriptTask","id":"d889b16d-1319-4d34-8316-03db391916af","scriptFormat":"text\/x-javascript","script":{"content":["var roleName = \"caseRole_\" + tw.local.caseSolutionId + \"_\" + tw.local.caseRoleId;\r\nvar roleDisplayName = roleName;\r\nvar roleDescription = \"Internal BPM group that mirrors case role \" + tw.local.caseRoleId + \" from case solution \" +  tw.local.caseSolutionId;\r\n\r\nvar internalCaseGroup = tw.system.org.findRoleByName(roleName);\r\nif (internalCaseGroup == null ) {\r\n   log.info(\"IBM Case Role TRS create internal BPM group \" + roleName);\r\n   internalCaseGroup = tw.system.org.createRole(roleName , roleDisplayName , roleDescription , false);\r\n   if (internalCaseGroup == null) {\r\n      internalCaseGroup = tw.system.org.findRoleByName(roleName);\r\n   }\r\n}\r\n\r\ntw.local.team = new tw.object.Team();\r\ntw.local.team.members = new tw.object.listOf.String();\r\ntw.local.team.members[0] = internalCaseGroup.name;"]}},{"targetRef":"d889b16d-1319-4d34-8316-03db391916af","extensionElements":{"linkVisualInfo":[{"sourcePortLocation":"rightCenter","showCoachControlLabel":false,"labelPosition":0.0,"targetPortLocation":"leftCenter","declaredType":"TLinkVisualInfo","saveExecutionContext":false,"showLabel":false}]},"name":"To Compute Team","declaredType":"sequenceFlow","id":"7d740060-e1fa-455d-8423-754d0337a353","sourceRef":"16f9a4f0-2ed6-43c9-804a-783e6d1648b2"},{"targetRef":"c9a3655c-361e-43b3-8af0-08bd21429b2b","extensionElements":{"sequenceFlowImplementation":[{"fireValidation":"Never","sboSyncEnabled":true,"declaredType":"com.ibm.bpmsdk.model.bpmn20.ibmext.TSequenceFlowImplementation"}],"linkVisualInfo":[{"sourcePortLocation":"rightCenter","showCoachControlLabel":false,"labelPosition":0.0,"targetPortLocation":"leftCenter","declaredType":"TLinkVisualInfo","saveExecutionContext":true,"showLabel":false}]},"name":"To End","declaredType":"sequenceFlow","id":"a342e0af-78c9-47ea-8cfa-e5d4bfe0a948","sourceRef":"d889b16d-1319-4d34-8316-03db391916af"}],"laneSet":[{"id":"33b09f46-dfbb-45f2-8805-1c675f4a8475","lane":[{"flowNodeRef":["16f9a4f0-2ed6-43c9-804a-783e6d1648b2","c9a3655c-361e-43b3-8af0-08bd21429b2b","d889b16d-1319-4d34-8316-03db391916af"],"extensionElements":{"nodeVisualInfo":[{"color":"#F8F8F8","width":3000,"x":0,"y":0,"declaredType":"TNodeVisualInfo","height":500}]},"name":"System","partitionElementRef":"24.6fd38d02-81cf-48ab-bd42-8ff4c0a1628b","declaredType":"lane","id":"2a8b67d9-c314-488c-882e-ef5b8d5ae14e","otherAttributes":{"{http:\/\/www.ibm.com\/xmlns\/prod\/bpm\/bpmn\/ext\/process\/wle}isSystemLane":"true"}}]}],"isClosed":false,"extensionElements":{"isSecured":[true],"isAjaxExposed":[true],"sboSyncEnabled":[true]},"documentation":[{"textFormat":"text\/plain"}],"name":"IBM Case Role TRS","declaredType":"process","id":"1.26d2889e-266f-4622-82d2-6ba6f7f07204","processType":"None","otherAttributes":{"{http:\/\/www.ibm.com\/xmlns\/prod\/bpm\/bpmn\/ext\/process}executionMode":"microflow"},"ioSpecification":{"dataOutput":[{"itemSubjectRef":"itm.12.4f114e73-2520-40d7-b2ea-db9dcc4aa1f0","name":"team","isCollection":false,"id":"2055.446b334c-859b-4e25-84a5-882f2eed9a3b","otherAttributes":{"{http:\/\/www.ibm.com\/xmlns\/prod\/bpm\/bpmn\/ext\/process}readOnly":"true"}}],"inputSet":[{"dataInputRefs":["2055.8be7d918-8864-4f56-8363-170d4ddc9818","2055.9cfa97c8-e5c5-40e5-8bdf-c11196c6b5cf","2055.4e25602d-7a16-4f02-81d4-e14c0aa1dccf"]}],"outputSet":[{}],"otherAttributes":{"{http:\/\/www.ibm.com\/xmlns\/prod\/bpm\/bpmn\/ext\/process}readOnlyOutputs":"true"},"dataInput":[{"itemSubjectRef":"itm.12.db884a3c-c533-44b7-bb2d-47bec8ad4022","name":"name","isCollection":false,"id":"2055.8be7d918-8864-4f56-8363-170d4ddc9818","otherAttributes":{"{http:\/\/www.ibm.com\/xmlns\/prod\/bpm\/bpmn\/ext\/process}readOnly":"true"}},{"itemSubjectRef":"itm.12.db884a3c-c533-44b7-bb2d-47bec8ad4022","name":"caseSolutionId","isCollection":false,"id":"2055.9cfa97c8-e5c5-40e5-8bdf-c11196c6b5cf"},{"itemSubjectRef":"itm.12.db884a3c-c533-44b7-bb2d-47bec8ad4022","name":"caseRoleId","isCollection":false,"id":"2055.4e25602d-7a16-4f02-81d4-e14c0aa1dccf"}]}}],"targetNamespace":"","typeLanguage":"http:\/\/www.w3.org\/2001\/XMLSchema","expressionLanguage":"http:\/\/www.ibm.com\/xmlns\/prod\/bpm\/expression-lang\/javascript"}</jsonData>
+        <field1 isNull="true" />
+        <field2 isNull="true" />
+        <field3>0</field3>
+        <field4 isNull="true" />
+        <field5>false</field5>
+        <clobField1 isNull="true" />
+        <blobField1 isNull="true" />
+        <processParameter name="name">
+            <lastModified isNull="true" />
+            <lastModifiedBy isNull="true" />
+            <processParameterId>2055.8be7d918-8864-4f56-8363-170d4ddc9818</processParameterId>
+            <processId>1.26d2889e-266f-4622-82d2-6ba6f7f07204</processId>
+            <parameterType>1</parameterType>
+            <isArrayOf>false</isArrayOf>
+            <classId>/12.db884a3c-c533-44b7-bb2d-47bec8ad4022</classId>
+            <seq>1</seq>
+            <hasDefault>false</hasDefault>
+            <defaultValue isNull="true" />
+            <isLocked>false</isLocked>
+            <description isNull="true" />
+            <guid>f09e45d3-4cb6-4a83-92a8-bfac409e0d72</guid>
+            <versionId>cc5780e6-1f50-4625-926b-0eeea40b078c</versionId>
+        </processParameter>
+        <processParameter name="caseSolutionId">
+            <lastModified isNull="true" />
+            <lastModifiedBy isNull="true" />
+            <processParameterId>2055.9cfa97c8-e5c5-40e5-8bdf-c11196c6b5cf</processParameterId>
+            <processId>1.26d2889e-266f-4622-82d2-6ba6f7f07204</processId>
+            <parameterType>1</parameterType>
+            <isArrayOf>false</isArrayOf>
+            <classId>/12.db884a3c-c533-44b7-bb2d-47bec8ad4022</classId>
+            <seq>2</seq>
+            <hasDefault>false</hasDefault>
+            <defaultValue isNull="true" />
+            <isLocked>false</isLocked>
+            <description isNull="true" />
+            <guid>5ffb74b2-66c9-4ac9-9534-1769f406d489</guid>
+            <versionId>b383432a-5ea2-4dae-93e4-f58a50ee91e1</versionId>
+        </processParameter>
+        <processParameter name="caseRoleId">
+            <lastModified isNull="true" />
+            <lastModifiedBy isNull="true" />
+            <processParameterId>2055.4e25602d-7a16-4f02-81d4-e14c0aa1dccf</processParameterId>
+            <processId>1.26d2889e-266f-4622-82d2-6ba6f7f07204</processId>
+            <parameterType>1</parameterType>
+            <isArrayOf>false</isArrayOf>
+            <classId>/12.db884a3c-c533-44b7-bb2d-47bec8ad4022</classId>
+            <seq>3</seq>
+            <hasDefault>false</hasDefault>
+            <defaultValue isNull="true" />
+            <isLocked>false</isLocked>
+            <description isNull="true" />
+            <guid>068f484d-c748-47c7-871e-d86e47b3c865</guid>
+            <versionId>f12aad0e-931e-487a-ae86-1fe65973d851</versionId>
+        </processParameter>
+        <processParameter name="team">
+            <lastModified isNull="true" />
+            <lastModifiedBy isNull="true" />
+            <processParameterId>2055.446b334c-859b-4e25-84a5-882f2eed9a3b</processParameterId>
+            <processId>1.26d2889e-266f-4622-82d2-6ba6f7f07204</processId>
+            <parameterType>2</parameterType>
+            <isArrayOf>false</isArrayOf>
+            <classId>/12.4f114e73-2520-40d7-b2ea-db9dcc4aa1f0</classId>
+            <seq>4</seq>
+            <hasDefault>false</hasDefault>
+            <defaultValue isNull="true" />
+            <isLocked>false</isLocked>
+            <description isNull="true" />
+            <guid>7625b389-367c-463e-bb17-f69444274b9f</guid>
+            <versionId>6977fa7e-6694-432a-bcd6-cf1da8447fae</versionId>
+        </processParameter>
+        <item>
+            <lastModified isNull="true" />
+            <lastModifiedBy isNull="true" />
+            <processItemId>2025.c9a3655c-361e-43b3-8af0-08bd21429b2b</processItemId>
+            <processId>1.26d2889e-266f-4622-82d2-6ba6f7f07204</processId>
+            <name>End</name>
+            <tWComponentName>ExitPoint</tWComponentName>
+            <tWComponentId>3008.378b9a86-50e8-48a2-80da-5d730f83d933</tWComponentId>
+            <isLogEnabled>false</isLogEnabled>
+            <isTraceEnabled>false</isTraceEnabled>
+            <traceCategory isNull="true" />
+            <traceLevel isNull="true" />
+            <traceMessage isNull="true" />
+            <traceSymbolTable isNull="true" />
+            <isExecutionContextTraced>false</isExecutionContextTraced>
+            <saveExecutionContext>true</saveExecutionContext>
+            <documentation isNull="true" />
+            <isErrorHandlerEnabled>false</isErrorHandlerEnabled>
+            <errorHandlerItemId isNull="true" />
+            <guid>guid:df4281376b3e69ae:-4f2d4a4:16a05e59f13:-7fd6</guid>
+            <versionId>0f9d50c9-4e63-4f20-ae68-a0667c95d4a6</versionId>
+            <externalServiceRef isNull="true" />
+            <externalServiceOp isNull="true" />
+            <nodeColor isNull="true" />
+            <layoutData x="650" y="80">
+                <errorLink>
+                    <controlPoints />
+                    <showEndState>false</showEndState>
+                    <showName>false</showName>
+                </errorLink>
+            </layoutData>
+            <TWComponent>
+                <lastModified isNull="true" />
+                <lastModifiedBy isNull="true" />
+                <exitPointId>3008.378b9a86-50e8-48a2-80da-5d730f83d933</exitPointId>
+                <haltProcess>false</haltProcess>
+                <guid>a3736480-93cc-4c73-b752-2b19d617f6e2</guid>
+                <versionId>b5622c78-1b13-41d0-93a7-8eaa21da7825</versionId>
+            </TWComponent>
+        </item>
+        <item>
+            <lastModified isNull="true" />
+            <lastModifiedBy isNull="true" />
+            <processItemId>2025.d889b16d-1319-4d34-8316-03db391916af</processItemId>
+            <processId>1.26d2889e-266f-4622-82d2-6ba6f7f07204</processId>
+            <name>Compute Team</name>
+            <tWComponentName>Script</tWComponentName>
+            <tWComponentId>3011.45e16fe6-9c95-4aa0-b1df-83c359334b31</tWComponentId>
+            <isLogEnabled>false</isLogEnabled>
+            <isTraceEnabled>false</isTraceEnabled>
+            <traceCategory isNull="true" />
+            <traceLevel isNull="true" />
+            <traceMessage isNull="true" />
+            <traceSymbolTable isNull="true" />
+            <isExecutionContextTraced>false</isExecutionContextTraced>
+            <saveExecutionContext>false</saveExecutionContext>
+            <documentation isNull="true" />
+            <isErrorHandlerEnabled>false</isErrorHandlerEnabled>
+            <errorHandlerItemId isNull="true" />
+            <guid>guid:df4281376b3e69ae:-4f2d4a4:16a05e59f13:-7fba</guid>
+            <versionId>d01ac6f9-fb27-439f-a5f3-a95bba706cef</versionId>
+            <externalServiceRef isNull="true" />
+            <externalServiceOp isNull="true" />
+            <nodeColor isNull="true" />
+            <layoutData x="343" y="57">
+                <errorLink>
+                    <controlPoints />
+                    <showEndState>false</showEndState>
+                    <showName>false</showName>
+                </errorLink>
+            </layoutData>
+            <TWComponent>
+                <lastModified isNull="true" />
+                <lastModifiedBy isNull="true" />
+                <scriptId>3011.45e16fe6-9c95-4aa0-b1df-83c359334b31</scriptId>
+                <scriptTypeId>2</scriptTypeId>
+                <isActive>true</isActive>
+                <script>var roleName = "caseRole_" + tw.local.caseSolutionId + "_" + tw.local.caseRoleId;&#xD;
+var roleDisplayName = roleName;&#xD;
+var roleDescription = "Internal BPM group that mirrors case role " + tw.local.caseRoleId + " from case solution " +  tw.local.caseSolutionId;&#xD;
+&#xD;
+var internalCaseGroup = tw.system.org.findRoleByName(roleName);&#xD;
+if (internalCaseGroup == null ) {&#xD;
+   log.info("IBM Case Role TRS create internal BPM group " + roleName);&#xD;
+   internalCaseGroup = tw.system.org.createRole(roleName , roleDisplayName , roleDescription , false);&#xD;
+   if (internalCaseGroup == null) {&#xD;
+      internalCaseGroup = tw.system.org.findRoleByName(roleName);&#xD;
+   }&#xD;
+}&#xD;
+&#xD;
+tw.local.team = new tw.object.Team();&#xD;
+tw.local.team.members = new tw.object.listOf.String();&#xD;
+tw.local.team.members[0] = internalCaseGroup.name;</script>
+                <isRule>false</isRule>
+                <guid>5216c66e-c339-4b84-b712-c66787b4dece</guid>
+                <versionId>c8d40381-7a31-425c-a09a-e64287fbc2e6</versionId>
+            </TWComponent>
+        </item>
+        <startingProcessItemId>2025.d889b16d-1319-4d34-8316-03db391916af</startingProcessItemId>
+        <errorHandlerItemId isNull="true" />
+        <layoutData noConversion="true">
+            <errorLink>
+                <controlPoints />
+                <showEndState>false</showEndState>
+                <showName>false</showName>
+            </errorLink>
+        </layoutData>
+        <startPoint>
+            <layoutData x="25" y="80">
+                <errorLink>
+                    <controlPoints />
+                    <showEndState>false</showEndState>
+                    <showName>false</showName>
+                </errorLink>
+            </layoutData>
+        </startPoint>
+        <startLink>
+            <fromPort locationId="rightCenter" portType="1" />
+            <toPort locationId="leftCenter" portType="2" />
+            <layoutData>
+                <controlPoints />
+                <showEndState>false</showEndState>
+                <showName>false</showName>
+            </layoutData>
+        </startLink>
+        <bpmn2Model>
+            <ns17:definitions xmlns:ns17="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:ns2="http://www.ibm.com/xmlns/prod/bpm/bpmn/ext/process" xmlns:ns3="http://www.ibm.com/xmlns/prod/bpm/bpmn/ext/process/wle" xmlns:ns4="http://www.ibm.com/xmlns/prod/bpm/bpmn/ext/process/case" xmlns:ns5="http://www.ibm.com/xmlns/prod/bpm/bpmn/ext/team" xmlns:ns6="http://www.ibm.com/bpm/Extensions" xmlns:ns7="http://www.ibm.com/xmlns/prod/bpm/uca" xmlns:ns8="http://www.ibm.com/xmlns/prod/bpm/bpmn/ext/trackinggroup" xmlns:ns9="http://www.ibm.com/xmlns/bpmnx/20100524/v1/BusinessVocabulary" xmlns:ns10="http://www.omg.org/spec/DD/20100524/DI" xmlns:ns11="http://www.omg.org/spec/DD/20100524/DC" xmlns:ns12="http://www.omg.org/spec/BPMN/20100524/BPMNDI" xmlns:ns13="http://www.ibm.com/xmlns/prod/bpm/graph" xmlns:ns14="http://www.ibm.com/xmlns/prod/bpm/bpmn/ext/process/auth" xmlns:ns15="http://www.ibm.com/xmlns/prod/bpm/bpmn/ext/extservice" xmlns:ns16="http://www.ibm.com/xmlns/links" xmlns:ns18="http://www.ibm.com/bpm/CoachDesignerNG" xmlns:ns19="http://www.ibm.com/xmlns/tagging" xmlns:ns20="http://www.ibm.com/bpm/uitheme" xmlns:ns21="http://www.ibm.com/bpm/coachview" targetNamespace="" expressionLanguage="http://www.ibm.com/xmlns/prod/bpm/expression-lang/javascript" typeLanguage="http://www.w3.org/2001/XMLSchema">
+                
+                
+                <ns17:process name="IBM Case Role TRS" id="1.26d2889e-266f-4622-82d2-6ba6f7f07204" ns2:executionMode="microflow">
+                    
+                    
+                    <ns17:documentation textFormat="text/plain" />
+                    
+                    
+                    <ns17:extensionElements>
+                        
+                        
+                        <ns2:isSecured>true</ns2:isSecured>
+                        
+                        
+                        <ns2:isAjaxExposed>true</ns2:isAjaxExposed>
+                        
+                        
+                        <ns2:sboSyncEnabled>true</ns2:sboSyncEnabled>
+                        
+                    
+                    </ns17:extensionElements>
+                    
+                    
+                    <ns17:ioSpecification ns2:readOnlyOutputs="true">
+                        
+                        
+                        <ns17:dataInput name="name" itemSubjectRef="itm.12.db884a3c-c533-44b7-bb2d-47bec8ad4022" isCollection="false" id="2055.8be7d918-8864-4f56-8363-170d4ddc9818" ns2:readOnly="true" />
+                        
+                        
+                        <ns17:dataInput name="caseSolutionId" itemSubjectRef="itm.12.db884a3c-c533-44b7-bb2d-47bec8ad4022" isCollection="false" id="2055.9cfa97c8-e5c5-40e5-8bdf-c11196c6b5cf" />
+                        
+                        
+                        <ns17:dataInput name="caseRoleId" itemSubjectRef="itm.12.db884a3c-c533-44b7-bb2d-47bec8ad4022" isCollection="false" id="2055.4e25602d-7a16-4f02-81d4-e14c0aa1dccf" />
+                        
+                        
+                        <ns17:dataOutput name="team" itemSubjectRef="itm.12.4f114e73-2520-40d7-b2ea-db9dcc4aa1f0" isCollection="false" id="2055.446b334c-859b-4e25-84a5-882f2eed9a3b" ns2:readOnly="true" />
+                        
+                        
+                        <ns17:inputSet>
+                            
+                            
+                            <ns17:dataInputRefs>2055.8be7d918-8864-4f56-8363-170d4ddc9818</ns17:dataInputRefs>
+                            
+                            
+                            <ns17:dataInputRefs>2055.9cfa97c8-e5c5-40e5-8bdf-c11196c6b5cf</ns17:dataInputRefs>
+                            
+                            
+                            <ns17:dataInputRefs>2055.4e25602d-7a16-4f02-81d4-e14c0aa1dccf</ns17:dataInputRefs>
+                            
+                        
+                        </ns17:inputSet>
+                        
+                        
+                        <ns17:outputSet />
+                        
+                    
+                    </ns17:ioSpecification>
+                    
+                    
+                    <ns17:laneSet id="33b09f46-dfbb-45f2-8805-1c675f4a8475">
+                        
+                        
+                        <ns17:lane name="System" partitionElementRef="24.6fd38d02-81cf-48ab-bd42-8ff4c0a1628b" id="2a8b67d9-c314-488c-882e-ef5b8d5ae14e" ns3:isSystemLane="true">
+                            
+                            
+                            <ns17:extensionElements>
+                                
+                                
+                                <ns13:nodeVisualInfo x="0" y="0" width="3000" height="500" color="#F8F8F8" />
+                                
+                            
+                            </ns17:extensionElements>
+                            
+                            
+                            <ns17:flowNodeRef>16f9a4f0-2ed6-43c9-804a-783e6d1648b2</ns17:flowNodeRef>
+                            
+                            
+                            <ns17:flowNodeRef>c9a3655c-361e-43b3-8af0-08bd21429b2b</ns17:flowNodeRef>
+                            
+                            
+                            <ns17:flowNodeRef>d889b16d-1319-4d34-8316-03db391916af</ns17:flowNodeRef>
+                            
+                        
+                        </ns17:lane>
+                        
+                    
+                    </ns17:laneSet>
+                    
+                    
+                    <ns17:startEvent isInterrupting="false" parallelMultiple="false" name="Start" id="16f9a4f0-2ed6-43c9-804a-783e6d1648b2">
+                        
+                        
+                        <ns17:extensionElements>
+                            
+                            
+                            <ns13:nodeVisualInfo x="25" y="80" width="24" height="24" color="#F8F8F8" />
+                            
+                        
+                        </ns17:extensionElements>
+                        
+                        
+                        <ns17:outgoing>7d740060-e1fa-455d-8423-754d0337a353</ns17:outgoing>
+                        
+                    
+                    </ns17:startEvent>
+                    
+                    
+                    <ns17:endEvent name="End" id="c9a3655c-361e-43b3-8af0-08bd21429b2b">
+                        
+                        
+                        <ns17:extensionElements>
+                            
+                            
+                            <ns13:nodeVisualInfo x="650" y="80" width="24" height="24" color="#F8F8F8" />
+                            
+                            
+                            <ns3:saveExecutionContext>true</ns3:saveExecutionContext>
+                            
+                            
+                            <ns2:endStateId>guid:df4281376b3e69ae:-4f2d4a4:16a05e59f13:-7fd6</ns2:endStateId>
+                            
+                        
+                        </ns17:extensionElements>
+                        
+                        
+                        <ns17:incoming>a342e0af-78c9-47ea-8cfa-e5d4bfe0a948</ns17:incoming>
+                        
+                    
+                    </ns17:endEvent>
+                    
+                    
+                    <ns17:scriptTask scriptFormat="text/x-javascript" name="Compute Team" id="d889b16d-1319-4d34-8316-03db391916af">
+                        
+                        
+                        <ns17:extensionElements>
+                            
+                            
+                            <ns13:nodeVisualInfo x="343" y="57" width="95" height="70" />
+                            
+                        
+                        </ns17:extensionElements>
+                        
+                        
+                        <ns17:incoming>7d740060-e1fa-455d-8423-754d0337a353</ns17:incoming>
+                        
+                        
+                        <ns17:outgoing>a342e0af-78c9-47ea-8cfa-e5d4bfe0a948</ns17:outgoing>
+                        
+                        
+                        <ns17:script>var roleName = "caseRole_" + tw.local.caseSolutionId + "_" + tw.local.caseRoleId;&#xD;
+var roleDisplayName = roleName;&#xD;
+var roleDescription = "Internal BPM group that mirrors case role " + tw.local.caseRoleId + " from case solution " +  tw.local.caseSolutionId;&#xD;
+&#xD;
+var internalCaseGroup = tw.system.org.findRoleByName(roleName);&#xD;
+if (internalCaseGroup == null ) {&#xD;
+   log.info("IBM Case Role TRS create internal BPM group " + roleName);&#xD;
+   internalCaseGroup = tw.system.org.createRole(roleName , roleDisplayName , roleDescription , false);&#xD;
+}&#xD;
+&#xD;
+tw.local.team = new tw.object.Team();&#xD;
+tw.local.team.members = new tw.object.listOf.String();&#xD;
+tw.local.team.members[0] = internalCaseGroup.name;</ns17:script>
+                        
+                    
+                    </ns17:scriptTask>
+                    
+                    
+                    <ns17:sequenceFlow sourceRef="16f9a4f0-2ed6-43c9-804a-783e6d1648b2" targetRef="d889b16d-1319-4d34-8316-03db391916af" name="To Compute Team" id="7d740060-e1fa-455d-8423-754d0337a353">
+                        
+                        
+                        <ns17:extensionElements>
+                            
+                            
+                            <ns13:linkVisualInfo>
+                                
+                                
+                                <ns13:sourcePortLocation>rightCenter</ns13:sourcePortLocation>
+                                
+                                
+                                <ns13:targetPortLocation>leftCenter</ns13:targetPortLocation>
+                                
+                                
+                                <ns13:showLabel>false</ns13:showLabel>
+                                
+                                
+                                <ns13:showCoachControlLabel>false</ns13:showCoachControlLabel>
+                                
+                                
+                                <ns13:labelPosition>0.0</ns13:labelPosition>
+                                
+                                
+                                <ns13:saveExecutionContext>false</ns13:saveExecutionContext>
+                                
+                            
+                            </ns13:linkVisualInfo>
+                            
+                        
+                        </ns17:extensionElements>
+                        
+                    
+                    </ns17:sequenceFlow>
+                    
+                    
+                    <ns17:sequenceFlow sourceRef="d889b16d-1319-4d34-8316-03db391916af" targetRef="c9a3655c-361e-43b3-8af0-08bd21429b2b" name="To End" id="a342e0af-78c9-47ea-8cfa-e5d4bfe0a948">
+                        
+                        
+                        <ns17:extensionElements>
+                            
+                            
+                            <ns2:sequenceFlowImplementation sboSyncEnabled="true" />
+                            
+                            
+                            <ns13:linkVisualInfo>
+                                
+                                
+                                <ns13:sourcePortLocation>rightCenter</ns13:sourcePortLocation>
+                                
+                                
+                                <ns13:targetPortLocation>leftCenter</ns13:targetPortLocation>
+                                
+                                
+                                <ns13:showLabel>false</ns13:showLabel>
+                                
+                                
+                                <ns13:showCoachControlLabel>false</ns13:showCoachControlLabel>
+                                
+                                
+                                <ns13:labelPosition>0.0</ns13:labelPosition>
+                                
+                                
+                                <ns13:saveExecutionContext>true</ns13:saveExecutionContext>
+                                
+                            
+                            </ns13:linkVisualInfo>
+                            
+                        
+                        </ns17:extensionElements>
+                        
+                    
+                    </ns17:sequenceFlow>
+                    
+                
+                </ns17:process>
+                
+            
+            </ns17:definitions>
+        </bpmn2Model>
+        <link name="To End">
+            <lastModified isNull="true" />
+            <lastModifiedBy isNull="true" />
+            <processLinkId>2027.a342e0af-78c9-47ea-8cfa-e5d4bfe0a948</processLinkId>
+            <processId>1.26d2889e-266f-4622-82d2-6ba6f7f07204</processId>
+            <description isNull="true" />
+            <fromProcessItemId>2025.d889b16d-1319-4d34-8316-03db391916af</fromProcessItemId>
+            <endStateId>Out</endStateId>
+            <toProcessItemId>2025.c9a3655c-361e-43b3-8af0-08bd21429b2b</toProcessItemId>
+            <guid>f91d04f0-caca-4845-ba8e-bf05b3c66727</guid>
+            <versionId>a6971a2d-7c8c-4f50-85d1-33d7d6a36ea8</versionId>
+            <layoutData>
+                <controlPoints />
+                <showEndState>false</showEndState>
+                <showName>false</showName>
+            </layoutData>
+            <fromItemPort locationId="rightCenter" portType="1" />
+            <toItemPort locationId="leftCenter" portType="2" />
+            <fromProcessItemId>2025.d889b16d-1319-4d34-8316-03db391916af</fromProcessItemId>
+            <toProcessItemId>2025.c9a3655c-361e-43b3-8af0-08bd21429b2b</toProcessItemId>
+        </link>
+    </process>
+</teamworks>
+

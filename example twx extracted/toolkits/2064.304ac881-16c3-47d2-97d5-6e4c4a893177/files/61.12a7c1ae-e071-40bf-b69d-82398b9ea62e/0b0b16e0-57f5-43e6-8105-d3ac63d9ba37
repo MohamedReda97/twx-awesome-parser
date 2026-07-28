@@ -1,0 +1,258 @@
+/*
+ * #BEGIN COPYRIGHT
+ *
+ * Licensed Materials - Property of IBM
+ * 5725-C95
+ * (C) Copyright IBM Corporation 2017, 2019. All Rights Reserved.
+ * US Government Users Restricted Rights- Use, duplication or disclosure
+ * restricted by GSA ADP Schedule Contract with IBM Corp.
+ *
+ * #END COPYRIGHT
+ */
+
+var mixObject = {
+    createPreview:function(containingDiv, labelText, callback){
+		var bpmextUri = this.context.getManagedAssetUrl("BPMExt-Core-Designer.js", this.context.assetType_WEB, "SYSBPMUI");
+		var configHelperUri = this.context.getManagedAssetUrl("BPMExt-Core-ConfigHelper.js",this.context.assetType_WEB, "SYSBPMUI");
+		require([ "dojo/dom-construct", "dojo/dom-style", "dojo/dom-class", "dojo/dom-attr", bpmextUri, configHelperUri], this.lang.hitch(this, function(domConstruct, domStyle, domClass, domAttr, bpmext, configHelper){
+            bpmext.uidesign.css.ensureGlyphsLoaded(this);
+            bpmext.uidesign.svg.ensureCarbonIconsLoaded(this);
+
+			this.context.coachViewData.containingDiv = containingDiv;
+			var tempID;
+
+			while(true) {
+				tempID = dojox.uuid.generateRandomUuid();
+				if(this.context.coachViewData.containingDiv.querySelector("div[data-temp-id='" + tempID + "']") == null)
+					break;
+			}
+			this.context.coachViewData.containingDiv.setAttribute("data-temp-id", tempID);
+			domClass.add(this.context.coachViewData.containingDiv, "WYSIWYGWell_Layout ");
+
+			domClass.add(this.context.coachViewData.containingDiv, "Well");
+
+			//set width back to override default behaviour, override CSS from styler manager
+			domStyle.set(this.context.coachViewData.containingDiv, "width", "auto");
+
+			this.context.coachViewData.defaultHeight = "";
+			this.context.coachViewData.defaultWidth = "100%";
+			this.context.coachViewData.defaultBorderRadius = "5px";
+			this.context.coachViewData.defaultPadding = "5px";
+			this.context.coachViewData.defaultFontSize = "100px";
+			var styleString = "width: " + this.context.coachViewData.defaultWidth +
+									"; height: " + this.context.coachViewData.defaultHeight +
+									"; border-radius: " + this.context.coachViewData.defaultBorderRadius +
+									"; padding: " + this.context.coachViewData.defaultPadding;
+			this.context.coachViewData.wellWrapper = domConstruct.create("div", {style: styleString, tabindex: 0});
+			domClass.add(this.context.coachViewData.wellWrapper, "SPARKWell stat-panel");
+
+			this.context.coachViewData.wellInner = domConstruct.create("div");
+			domClass.add(this.context.coachViewData.wellInner, "stat-cell");
+
+			this.context.coachViewData.contentBoxDiv = this.context.coachViewData.containingDiv.querySelector("div[data-temp-id='" + tempID + "']  .DesignContentBox");
+
+			this.context.coachViewData.wellInner.appendChild(this.context.coachViewData.contentBoxDiv);
+			this.context.coachViewData.wellWrapper.appendChild(this.context.coachViewData.wellInner);
+			this.context.coachViewData.containingDiv.appendChild(this.context.coachViewData.wellWrapper);
+			//Init the config section to hide any options that are not relevant to the current selections
+			this.configurationOptionVisiblity = null;
+			this.initializeConfigurationOptionVisibility(configHelper);
+
+			callback();
+		}));
+    },
+    propertyChanged:function(propertyName, propertyValue){
+		var configHelperUri = this.context.getManagedAssetUrl("BPMExt-Core-ConfigHelper.js",this.context.assetType_WEB, "SYSBPMUI");
+		require(["dojo/dom-style", "dojo/dom-class", "dojo/dom-construct", configHelperUri], this.lang.hitch(this, function(domStyle, domClass, domConstruct, configHelper){
+			if(propertyName == "@label") {
+				dojo.attr(this.context.coachViewData.wellWrapper, "aria-label", propertyValue);
+			} else if(propertyName ==  "@labelVisibility"){
+
+			} else if(propertyName == "@style"){
+				var minWidth = configHelper.getResponsiveConfigOptionValue(this, "@minWidth");
+				if(minWidth===null || minWidth===undefined || minWidth==="") {
+					domStyle.set(this.context.coachViewData.containingDiv, "min-width", "");
+				}else if(isNaN(minWidth)){
+					domStyle.set(this.context.coachViewData.containingDiv, "min-width", minWidth);
+				}else{
+					domStyle.set(this.context.coachViewData.containingDiv, "min-width", minWidth+"px");
+				}
+			} else if(propertyName == "iconPosition"){
+				var iconPos;
+				if(propertyValue == "BR"){
+					iconPos = "align-br";
+				} else if(propertyValue == "BL"){
+					iconPos = "align-bl";
+				} else if(propertyValue == "TR"){
+					iconPos = "align-tr";
+				} else if(propertyValue == "TL"){
+					iconPos = "align-tl";
+				}
+				domClass.replace(this.context.coachViewData.wellWrapper, iconPos, "align-br align-bl align-tr align-tl");
+			} else if(propertyName == "iconSize"){
+				if(!!this.context.coachViewData.icon){
+                    var svgWrapper = this.context.coachViewData.icon.querySelector("svg.ci");
+					if(propertyValue===null || propertyValue=== undefined || propertyValue==""){
+						domStyle.set(this.context.coachViewData.icon, "font-size", this.context.coachViewData.defaultFontSize);
+					}else if(isNaN(propertyValue)){
+						domStyle.set(this.context.coachViewData.icon, "font-size", propertyValue);
+					}else{
+						domStyle.set(this.context.coachViewData.icon, "font-size", propertyValue+"px");
+                    }
+
+                    if (svgWrapper) {
+                        svgWrapper.style.height = this.context.coachViewData.icon.style.fontSize;
+                        svgWrapper.style.width = svgWrapper.style.height;
+                    }
+				}
+			} else if(propertyName == "radius"){
+				if(propertyValue==""){
+					domStyle.set(this.context.coachViewData.wellInner, "border-radius", this.context.coachViewData.defaultBorderRadius);
+				}else if(isNaN(propertyValue)){
+					domStyle.set(this.context.coachViewData.wellInner, "border-radius", propertyValue);
+				}else{
+					domStyle.set(this.context.coachViewData.wellInner, "border-radius", propertyValue+"px");
+				}
+			} else if(propertyName == "padding"){
+				if(propertyValue==""){
+					domStyle.set(this.context.coachViewData.wellInner, "padding", this.context.coachViewData.defaultPadding);
+				}else if(isNaN(propertyValue)){
+					domStyle.set(this.context.coachViewData.wellInner, "padding", propertyValue);
+				}else{
+					domStyle.set(this.context.coachViewData.wellInner, "padding", propertyValue+"px");
+				}
+			} else if(propertyName == "width"){
+				if(propertyValue===null || propertyValue===undefined || propertyValue==""){
+					domStyle.set(this.context.coachViewData.containingDiv, "width", this.context.coachViewData.defaultWidth);
+				}else if(isNaN(propertyValue)){
+					domStyle.set(this.context.coachViewData.containingDiv, "width", propertyValue);
+				}else{
+					domStyle.set(this.context.coachViewData.containingDiv, "width", propertyValue+"px");
+				}
+			} else if(propertyName == "height"){
+				if(propertyValue===null || propertyValue===undefined || propertyValue==""){
+					domStyle.set(this.context.coachViewData.wellWrapper, "height", this.context.coachViewData.defaultHeight);
+				}else if(isNaN(propertyValue)){
+					domStyle.set(this.context.coachViewData.wellWrapper, "height", propertyValue);
+				}else{
+					domStyle.set(this.context.coachViewData.wellWrapper, "height", propertyValue+"px");
+				}
+			} else if(propertyName == "icon"){
+				//update the config tab to hide any options that should not be shown
+				this.setConfigurationOptionVisibility(this.getOptionVisibility(propertyValue));
+				if (this.updateConfigurationOptionVisibility) {
+					this.updateConfigurationOptionVisibility()
+                };
+                if(!this.context.coachViewData.icon){
+                    this.context.coachViewData.icon = domConstruct.create("span");
+                }
+
+                propertyValue = propertyValue && propertyValue.trim();
+				if(propertyValue){
+                    var newIcon = propertyValue.toLowerCase();
+
+                    // removing the contents of the icon node
+                    dojo.empty(this.context.coachViewData.icon);
+                    domClass.remove(this.context.coachViewData.icon);
+                    domClass.add(this.context.coachViewData.icon, "bg-icon");
+
+                    if (newIcon.indexOf("fa-") !== 0 && newIcon.indexOf("ci-") !== 0) {
+                        domClass.add(this.context.coachViewData.icon, "fa fa-" + newIcon);
+                    } else if (newIcon.indexOf("ci-") === 0) {
+                        // add a new icon since we are clearing the content of the icon node
+                        var svgIcon = bpmext.uidesign.svg.getCarbonIcon(newIcon);
+                        svgIcon.classList.add("bg-icon");
+                        svgIcon.style.height = this.context.coachViewData.icon.style.fontSize || "100px";
+                        svgIcon.style.width = svgIcon.style.height;
+                        this.context.coachViewData.icon.appendChild(svgIcon);
+                    } else {
+                    	domClass.add(this.context.coachViewData.icon, "fa " + newIcon);
+                    }
+
+					this.context.coachViewData.wellInner.appendChild(this.context.coachViewData.icon);
+					this.context.coachViewData.wellInner.appendChild(this.context.coachViewData.contentBoxDiv);
+				} else {
+					if(!!this.context.coachViewData.icon && dojo.isDescendant(this.context.coachViewData.icon, this.context.coachViewData.wellInner)){
+                        domClass.remove(this.context.coachViewData.icon);
+                        dojo.empty(this.context.coachViewData.icon);
+                        this.context.coachViewData.wellInner.removeChild(this.context.coachViewData.icon);
+					}
+				}
+			} else if(propertyName == "colorStyle"){
+				var colorStyle;
+				if(propertyValue == "P"){
+					colorStyle = "bg-primary";
+				} else if(propertyValue == "I"){
+					colorStyle = "bg-info";
+				} else if(propertyValue == "S"){
+					colorStyle = "bg-success";
+				} else if(propertyValue == "W"){
+					colorStyle = "bg-warning";
+				} else if(propertyValue == "G"){
+					colorStyle = "bg-danger";
+				} else if(propertyValue == "T"){
+					colorStyle = "bg-transparent";
+				} else {
+					colorStyle = "";
+				}
+				domClass.replace(this.context.coachViewData.wellInner, colorStyle, "bg-primary bg-info bg-success bg-warning bg-danger bg-transparent");
+			} else if(propertyName == "colorDarkness"){
+				var colorDarkness;
+				if(propertyValue == "D"){
+					colorDarkness = "darken";
+				} else if(propertyValue == "R"){
+					colorDarkness = "darker";
+				} else {
+					colorDarkness = "";
+				}
+				domClass.replace(this.context.coachViewData.wellInner, colorDarkness, "darken darker");
+			} else if(propertyName == "vAlignment"){
+				var vAlign;
+				if(propertyValue == "T"){
+					vAlign = "valignTop";
+				} else if(propertyValue == "M"){
+					vAlign = "valignMiddle";
+				} else if(propertyValue == "B"){
+					vAlign = "valignBottom";
+				}
+				domClass.replace(this.context.coachViewData.wellInner, vAlign, "valignTop valignMiddle valignBottom");
+			}
+		}));
+    },
+
+	modelChanged: function(propertyName, propertyValue) {
+
+	},
+
+	//Init the config section to hide any options that are not relevant to the current selections
+	initializeConfigurationOptionVisibility: function(configHelper) {
+		var visibility, value = "";
+		var configOptionValue = configHelper.getConfigOptionValue(this, "icon");
+		if (configOptionValue != undefined) {
+			value = configOptionValue;
+		}
+		visibility = this.getOptionVisibility(value);
+
+		this.setConfigurationOptionVisibility(visibility);
+	},
+	setConfigurationOptionVisibility: function(visibility) {
+		this.configurationOptionVisibility = visibility;
+	},
+	getConfigurationOptionVisibility: function() {
+		return this.configurationOptionVisibility;
+	},
+	getOptionVisibility: function(value) {
+		var visibility;
+
+		if (value != "") {
+			visibility = {	"iconPosition": {visible: true},
+					 		"iconSize": {visible: true}
+						 };
+		} else {
+			visibility = {	"iconPosition": {visible: false},
+			 				"iconSize": {visible: false}
+				 		  };
+		}
+		return visibility;
+	}
+};

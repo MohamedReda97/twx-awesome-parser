@@ -1,0 +1,452 @@
+/*
+ * #BEGIN COPYRIGHT
+ *
+ * Licensed Materials - Property of IBM
+ * 5725-C95
+ * (C) Copyright IBM Corporation 2017. All Rights Reserved.
+ * US Government Users Restricted Rights- Use, duplication or disclosure
+ * restricted by GSA ADP Schedule Contract with IBM Corp.
+ *
+ * #END COPYRIGHT
+ */
+
+/**
+ * @ignore
+ * @instance
+ * @memberof GeoCoder
+ * @method isValid
+ */  
+
+/**
+ * @ignore
+ * @instance
+ * @memberof GeoCoder
+ * @method setValid
+ */
+
+/**
+ * @ignore
+ * @instance
+ * @memberof GeoCoder
+ * @method recalculate
+ */
+
+/**
+ * @ignore
+ * @instance
+ * @memberof GeoCoder
+ * @method getData
+ */
+
+/**
+ * @ignore
+ * @instance
+ * @memberof GeoCoder
+ * @method setData
+ */ 
+
+/** 
+ *   <tr class=Prop>
+ *     <td class=SectionName colspan=3>Events</td>
+ *   </tr>
+ 
+ *   <tr class=Prop>
+ *     <td>On Load:</td>
+ *     <td colspan="2">
+ *       <table> 
+ *         <tr class=Prop>
+ *           <td>Description: </td>
+ *           <td>Triggers whenever the view is loaded.</td>
+ *         </tr>
+ *         <tr class=Prop>
+ *           <td>Example: </td>
+ *           <td><pre class="prettyprint"><code>me.requestAddressLookup(${Geolocation}.getData().latitude, ${GeoLocation}.getData().longitude)</code></pre></td>
+ *         </tr>
+ *       </table>
+ *     </td>
+ *   </tr>
+ *   <tr class=Prop>
+ *     <td>On Address Requested:</td>
+ *     <td colspan="2">
+ *       <table> 
+ *         <tr class=Prop>
+ *           <td>Description: </td>
+ *           <td>Triggers when an address is requested</td>
+ *         </tr>
+ *         <tr class=Prop>
+ *           <td>Example: </td>
+ *           <td><pre class="prettyprint"><code>console.log("Address requested")</code></pre></td>
+ *         </tr>
+ *       </table>
+ *     </td>
+ *   </tr>
+ *   <tr class=Prop>
+ *     <td>On Address Resolved:</td>
+ *     <td colspan="2">
+ *       <table> 
+ *         <tr class=Prop>
+ *           <td>Description: </td>
+ *           <td>Triggers when an address is returned.</td>
+ *         </tr>
+ *         <tr class=Prop>
+ *           <td>Example: </td>
+ *           <td><pre class="prettyprint"><code>${Location}.setText(address.formatted);</code></pre></td>
+ *         </tr>
+ *       </table>
+ *       <table style="border: 1px solid black; border-collapse: collapse; ">
+ *         <tr style="border: 1px solid black; border-collapse: collapse;">
+ *           <th style="border: 1px solid black; border-collapse: collapse;padding: 5px;">Context Variables</th>
+ *           <th style="border: 1px solid black; border-collapse: collapse; padding: 5px;">address</th>
+ *         </tr>
+ *         <tr style="border: 1px solid black; border-collapse: collapse;">
+ *           <td rowspan="11" style= "border: 1px solid black; border-collapse: collapse;padding: 5px;">Properties</td>
+ *           <td style="color: black; font-weight: normal; border: 1px solid black; border-collapse: collapse;padding: 5px;">streetNumber</td>
+ *         </tr>
+ *         <tr  style= "border: 1px solid black; border-collapse: collapse;">
+ *           <td style="color: black; font-weight: normal; border: 1px solid black; border-collapse: collapse;padding: 5px;">route</td>
+ *         </tr>
+ *         <tr  style= "border: 1px solid black; border-collapse: collapse;">
+ *           <td style="color: black; font-weight: normal; border: 1px solid black; border-collapse: collapse;padding: 5px;">locality</td>
+ *         </tr>
+ *         <tr  style= "border: 1px solid black; border-collapse: collapse;">
+ *           <td style="color: black; font-weight: normal; border: 1px solid black; border-collapse: collapse;padding: 5px;">administrativeAreaLevel1</td>
+ *         </tr>
+ *         <tr  style= "border: 1px solid black; border-collapse: collapse;">
+ *           <td style="color: black; font-weight: normal; border: 1px solid black; border-collapse: collapse;padding: 5px;">administrativeAreaLevel2</td>
+ *         </tr>
+ *         <tr  style= "border: 1px solid black; border-collapse: collapse;">
+ *           <td style="color: black; font-weight: normal; border: 1px solid black; border-collapse: collapse;padding: 5px;">administrativeAreaLevel3</td>
+ *         </tr>
+ *         <tr  style= "border: 1px solid black; border-collapse: collapse;">
+ *           <td style="color: black; font-weight: normal; border: 1px solid black; border-collapse: collapse;padding: 5px;">postalCode</td>
+ *         </tr>
+ *         <tr  style= "border: 1px solid black; border-collapse: collapse;">
+ *           <td style="color: black; font-weight: normal; border: 1px solid black; border-collapse: collapse;padding: 5px;">country</td>
+ *         </tr>
+ *         <tr  style= "border: 1px solid black; border-collapse: collapse;">
+ *           <td style="color: black; font-weight: normal; border: 1px solid black; border-collapse: collapse;padding: 5px;">components</td>
+ *         </tr>
+ *         <tr  style= "border: 1px solid black; border-collapse: collapse;">
+ *           <td style="color: black; font-weight: normal; border: 1px solid black; border-collapse: collapse;padding: 5px;">formatted</td>
+ *         </tr>
+ *       </table>
+ *     </td>
+ *   </tr>
+ *   <tr class=Prop>
+ *     <td>On Address Error:</td>
+ *     <td colspan="2">
+ *       <table> 
+ *         <tr class=Prop>
+ *           <td>Description: </td>
+ *           <td>Triggers when there is an error getting the address.</td>
+ *         </tr>
+ *         <tr class=Prop>
+ *           <td>Example: </td>
+ *           <td><pre class="prettyprint"><code>${LocationErrorText}.setVisible(true)</code></pre></td>
+ *         </tr>
+ *       </table>
+ *       <table style="border: 1px solid black; border-collapse: collapse; ">
+ *         <tr style="border: 1px solid black; border-collapse: collapse;">
+ *           <th style="border: 1px solid black; border-collapse: collapse;padding: 5px;">Context Variables</th>
+ *           <th style="border: 1px solid black; border-collapse: collapse; padding: 5px;">error</th>
+ *         </tr>
+ *         <tr style="border: 1px solid black; border-collapse: collapse;">
+ *           <td rowspan="4" style= "border: 1px solid black; border-collapse: collapse;padding: 5px;">Properties</td>
+ *           <td style="color: black; font-weight: normal; border: 1px solid black; border-collapse: collapse;padding: 5px;">message</td>
+ *         </tr>
+ *         <tr  style= "border: 1px solid black; border-collapse: collapse;">
+ *           <td style="color: black; font-weight: normal; border: 1px solid black; border-collapse: collapse;padding: 5px;">code</td>
+ *         </tr>
+ *         <tr  style= "border: 1px solid black; border-collapse: collapse;">
+ *           <td style="color: black; font-weight: normal; border: 1px solid black; border-collapse: collapse;padding: 5px;">status</td>
+ *         </tr>
+ *       </table>
+ *     </td>
+ *   </tr>
+ * </table>
+ */
+bpmext_control_InitGeoCoder = function (utilities, bpmext, domClass, domAttr, domConstruct)
+{
+	this._instance =
+	{
+	};
+
+	if (!this.constructor.prototype._proto)
+	{
+		this.constructor.prototype._proto =
+		{
+			EVT_ONADDRESSREQ : "eventON_ADDRESSREQ",
+			EVT_ONADDRESS : "eventON_ADDRESS",
+			EVT_ONADDRESSERR : "eventON_ADDRESSERR",
+			_getStreetAddressElement : function(geoCoderResponses)
+			{
+				for(var i = 0; i < geoCoderResponses.length; i++)
+				{
+					var types = geoCoderResponses[i].types;
+					if(types != null && types.length > 0)
+					{
+						for(var j = 0; j < types.length; j++)
+						{
+							if(types[j] == "street_address")
+								return geoCoderResponses[i];
+						}
+					}
+				}
+				
+				//If no street address...
+				for(var i = 0; i < geoCoderResponses.length; i++)
+				{
+					var types = geoCoderResponses[i].types;
+					if(types != null && types.length > 0)
+					{
+						for(var j = 0; j < types.length; j++)
+						{
+							if(types[j] == "route")
+								return geoCoderResponses[i];
+						}
+					}
+				}
+				
+				
+				return null;
+			},
+			_getAddressComponent : function(addressElement, subType, longName)
+			{
+				for(var i = 0; i < addressElement.address_components.length; i++)
+				{
+					var ac = addressElement.address_components[i];
+					var types = ac.types;
+					
+					for(var j = 0; j < types.length; j++)
+					{
+						if(types[j] == subType)
+						{
+							return longName ? ac["long_name"] : ac["short_name"];
+						}
+					}
+				}
+				
+				return null;
+			},
+			_geocodePosition : function(view, pos) 
+			{
+				try
+				{
+					if(view._instance.geocoder == null)
+						throw new Error("Geo-coder not ready.");
+				
+					view._instance.geocoder.geocode({
+						latLng: pos
+					},
+					function(responses, status) {
+						if (status == "OK" && responses && responses.length > 0) 
+						{
+							var res = view._proto._getStreetAddressElement(responses);
+							var streetAddress = {};
+							
+							streetAddress.streetNumber = view._proto._getAddressComponent(res, "street_number", true);
+							streetAddress.route = view._proto._getAddressComponent(res, "route", true);
+							streetAddress.locality = view._proto._getAddressComponent(res, "locality", true);
+							streetAddress.administrativeAreaLevel1 = view._proto._getAddressComponent(res, "administrative_area_level_1", false);
+							streetAddress.administrativeAreaLevel2 = view._proto._getAddressComponent(res, "administrative_area_level_2", true);
+							streetAddress.administrativeAreaLevel3 = view._proto._getAddressComponent(res, "administrative_area_level_3", true);
+							streetAddress.postalCode = view._proto._getAddressComponent(res, "postal_code", true);
+							streetAddress.country = view._proto._getAddressComponent(res, "country", true);
+							
+							if(res.address_components != null)
+							{
+								streetAddress.components = [];
+								for(var i = 0; i < res.address_components.length; i++)
+								{
+									var ac = res.address_components[i];
+									
+									streetAddress.components.push({
+										longName : ac["long_name"],
+										shortName : ac["short_name"],
+										type : ac.types[0]
+									});
+								}
+							}
+							
+							streetAddress.formatted = res.formatted_address;
+							view._instance.curAddress = streetAddress;
+							
+							view.context.binding.set("value", streetAddress);
+						
+							bpmext.ui.executeEventHandlingFunction(view, view._proto.EVT_ONADDRESS, streetAddress);
+						} 
+						else
+						{
+							view._instance.curAddress = {
+								found: false
+							};
+							
+							bpmext.ui.executeEventHandlingFunction(view, view._proto.EVT_ONADDRESSERR, {message: "No address at location", code: -2, status: status});
+						}
+					});					
+				}
+				catch(e)
+				{
+					bpmext.ui.executeEventHandlingFunction(view, view._proto.EVT_ONADDRESSERR, {message: e.message, code: -1});
+				}
+            },
+			_requestAddressLookup: function(view, location)
+			{
+				var loc = (location == null) ? view.context.options.location.get("value") : location;
+				
+				bpmext.ui.executeEventHandlingFunction(view, this.EVT_ONADDRESSREQ);
+
+				if(view._instance._apiLoaded)
+				{
+					var latLng = new google.maps.LatLng(loc.latitude, loc.longitude);
+					this._geocodePosition(view, latLng);
+				}
+				else
+					view._instance._queuedReq = {latitude: loc.latitude, longitude: loc.longitude};				
+			}
+		};
+		
+
+		/*
+		Public control methods *************************************************************
+		 */
+
+		/**
+		 * @instance
+		 * @memberof GeoCoder
+		 * @method getType
+		 * @desc Get descriptive string representing the type of control
+		 * @returns {string}
+		 */
+		this.constructor.prototype.getType = function ()
+		{
+			return "geoCoder.3";
+		}
+		
+		
+		/**
+		 * @instance
+		 * @memberof GeoCoder
+		 * @method getLastAddressInfo
+		 * @desc Get the information of the last address
+		 * @returns {string}
+		 */
+		this.constructor.prototype.getLastAddressInfo = function()
+		{
+			return this._instance.curAddress;
+		}
+		
+		
+		/**
+		 * @instance
+		 * @memberof GeoCoder
+		 * @method requestAddressLookup
+		 * @param {decimal} latitude the latitude
+		 * @param {decimal} longitude the longitude
+		 * @desc Gets the address of a location with the provided latitude and longitude
+		 * @returns {string}
+		 */
+	
+		this.constructor.prototype.requestAddressLookup = function(latitude, longitude)
+		{
+			this.context.options.location.set("value", {latitude: latitude, longitude: longitude});
+			
+			/*
+			if(view._instance._apiLoaded)
+			{
+				var latLng = new google.maps.LatLng(latitude, longitude);
+				this._proto._geocodePosition(this, latLng);
+			}
+			else
+				this._instance._queuedReq = {latitude: latitude, longitude: longitude};
+			*/
+		}
+		
+		/*
+		Coach NG Lifecycle methods *************************************************************
+		 */
+		this.constructor.prototype.load = function ()
+		{
+			try
+			{
+				bpmext.ui.registerEventHandlingFunction(this, this._proto.EVT_ONADDRESSREQ);
+				bpmext.ui.registerEventHandlingFunction(this, this._proto.EVT_ONADDRESS, "address");
+				bpmext.ui.registerEventHandlingFunction(this, this._proto.EVT_ONADDRESSERR, "error");
+
+				var opts = this.context.options;
+				var mdt = opts._metadata;
+
+				if (!this.context.binding)
+					this.context.binding = bpmext.ui.substituteObject(this, null, null, null);
+
+				if (!opts.location)
+					bpmext.ui.substituteConfigOption(this, "location", null);
+				
+				bpmext.ui.loadView(this);
+
+				var view = this;
+				bpmext.ui.addEventSubscription("GOOGLE_APIS_LOADED", function(evtName, payload) {
+					try
+					{
+						view._instance._apiLoaded = true;
+						
+						var google = payload.google;
+						view._instance.geocoder = new google.maps.Geocoder();
+						
+						if(view._instance._queuedReq)
+						{
+							view.requestAddressLookup(view._instance._queuedReq.latitude, view._instance._queuedReq.longitude);
+							delete view._instance._queuedReq;
+						}
+					}
+					catch(e)
+					{
+						bpmext.log.error("Error on Google API loaded event [" + view.context.viewid + "]: " + e);
+						if(e.stack)
+							bpmext.log.error("  Call stack: " + e.stack);						
+					}
+				},
+				this,
+				true
+				);				
+			}
+			catch (e)
+			{
+				bpmext.log.error("Error on load event [" + this.context.viewid + "]: " + e);
+				if(e.stack)
+					bpmext.log.error("  Call stack: " + e.stack);
+			}
+		};
+
+		this.constructor.prototype.view = function ()
+		{
+		};
+
+		this.constructor.prototype.change = function (event)
+		{
+			try
+			{
+				if (event.type == "config")
+				{
+					switch (event.property)
+					{
+						case "location":
+							this._proto._requestAddressLookup(this);
+							break;
+					}
+				}
+			}
+			catch (e)
+			{
+				bpmext.log.error("Error on change event [" + this.ui.getAbsoluteName() + "]: " + e);
+				if(e.stack)
+					bpmext.log.error("  Call stack: " + e.stack);
+			}
+		};
+
+		this.constructor.prototype.unload = function ()
+		{
+			bpmext.ui.unloadView(this);
+		};
+	}
+}

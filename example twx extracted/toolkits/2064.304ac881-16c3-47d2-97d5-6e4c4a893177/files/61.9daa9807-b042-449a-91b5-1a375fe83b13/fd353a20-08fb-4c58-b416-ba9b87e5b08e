@@ -1,0 +1,176 @@
+/*
+ * #BEGIN COPYRIGHT
+ *
+ * Licensed Materials - Property of IBM
+ * 5725-C95
+ * (C) Copyright IBM Corporation 2017. All Rights Reserved.
+ * US Government Users Restricted Rights- Use, duplication or disclosure
+ * restricted by GSA ADP Schedule Contract with IBM Corp.
+ *
+ * #END COPYRIGHT
+ */
+
+/**
+ * @ignore
+ * @instance
+ * @memberof TableLayoutCell
+ * @method isBound
+ */  
+
+/**
+ * @ignore
+ * @instance
+ * @memberof TableLayoutCell
+ * @method isValid
+ */  
+
+/**
+ * @ignore
+ * @instance
+ * @memberof TableLayoutCell
+ * @method setValid
+ */
+
+/**
+ * @ignore
+ * @instance
+ * @memberof TableLayoutCell
+ * @method recalculate
+ */
+
+/**
+ * @ignore
+ * @instance
+ * @memberof TableLayoutCell
+ * @method getData
+ */
+
+/**
+ * @ignore
+ * @instance
+ * @memberof TableLayoutCell
+ * @method setData
+ */  
+ 
+/**
+ * </table>
+ */
+ 
+bpmext_control_InitTableLayoutCell = function (bpmext, utilities, domClass, domAttr, domConstruct)
+{
+	this._instance = {
+		
+	}
+
+	if(!this.constructor.prototype._proto)
+	{
+		this.constructor.prototype.IS_ADDRESS_INVISIBLE = true;
+		
+		this.constructor.prototype._proto =
+		{
+			_getContentBox : function(view)
+			{
+				if(!view._instance.contentBox)
+				{
+					var children = view.context.element.children;
+					for(var i = 0; i < children.length; i++)
+					{
+						var child = children[i];
+						if(child.className && /\bContentBox\b/.test(child.className))
+						{
+							view._instance.contentBox = child;
+							break;
+						}
+					}				
+				}
+					
+				return view._instance.contentBox;
+			}
+		};
+
+		/**
+		 * @instance
+		 * @memberof TableLayoutCell
+		 * @method getType
+		 * @desc Get descriptive string representing the type of control
+		 * @returns {string}
+		 */
+		this.constructor.prototype.getType = function ()
+		{
+			return "tableLayoutCell.3";
+		}		
+		
+		this.constructor.prototype.load = function ()
+		{
+			try
+			{
+				domClass.add(this.context.element, "SPARKTblLayoutCell");
+				bpmext.ui.loadContainer(this);
+			}
+			catch (e)
+			{
+				//{#feature: US-1330 Added RT localization}
+				//bpmext.log.error("Error on load event [" + this.context.viewid + "]: " + e);
+				bpmext.log.error(bpmext.localization.formatMsg("general", "ERROR_ONLOAD_EVENT") + " [" + this.context.viewid + "]: " + e);
+				if(e.stack) { 
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.error("  Call stack: " + e.stack);
+					bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+				}			
+			}
+		};
+		
+		this.constructor.prototype.unload = function ()
+		{
+			bpmext.ui.unloadContainer(this);
+		};
+
+		this.constructor.prototype.view = function ()
+		{
+			try
+			{
+				var visibility = utilities.handleVisibility(this.context);
+			}
+			catch (e)
+			{
+				//{#feature: US-1330 Added RT localization}
+				//bpmext.log.error("Error on view event [" + this.ui.getAbsoluteName() + "]: " + e);
+				bpmext.log.error(bpmext.localization.formatMsg("general", "ERROR_ONVIEW_EVENT") + " [" + this.ui.getAbsoluteName() + "]: " + e);
+				if(e.stack) { 
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.error("  Call stack: " + e.stack);
+					bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+				}
+			}
+		};
+
+		this.constructor.prototype.change = function (event)
+		{
+			try
+			{
+				if (event.type == "config")
+				{
+					switch (event.property)
+					{
+						case "_metadata.visibility":
+						{
+							this.view();
+							break;
+						}
+					}
+				}
+			}
+			catch (e)
+			{
+				//{#feature: US-1330 Added RT localization}
+				//bpmext.log.error("Error on change event [" + this.ui.getAbsoluteName() + "]: " + e);
+				bpmext.log.error(bpmext.localization.formatMsg("general", "ERROR_ONCHANGE_EVENT") + " [" + this.ui.getAbsoluteName() + "]: " + e);
+				if(e.stack) { 
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.error("  Call stack: " + e.stack);
+					bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+				}
+			}        
+		};
+	}
+}

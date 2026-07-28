@@ -1,0 +1,70 @@
+/*
+ * #BEGIN COPYRIGHT
+ *
+ * Licensed Materials - Property of IBM
+ * 5725-C95
+ * (C) Copyright IBM Corporation 2020. All Rights Reserved.
+ * US Government Users Restricted Rights- Use, duplication or disclosure
+ * restricted by GSA ADP Schedule Contract with IBM Corp.
+ *
+ * #END COPYRIGHT
+ */
+
+var mixObject = {
+  createPreview: function (containingDiv, labelText, callback) {
+    var bpmextUri = this.context.getManagedAssetUrl("BPMExt-Core-Designer.js", this.context.assetType_WEB, "SYSBPMUI");
+    require(["dojo/dom-construct", "dojo/dom-class", "dojo/dom-attr", "dojo/dom-style", bpmextUri], this.lang.hitch(this, function (domConstruct, domClass, domAttr, domStyle, bpmext) {
+
+      bpmext.uidesign.css.ensureSparkUIClass(containingDiv);
+
+      this.context.coachViewData.containingDiv = containingDiv;
+
+      var spinnerImage = this.context.getManagedAssetUrl("BPMExt-Control-Spinner-Preview.png", this.context.assetType_WEB, "SYSBPMUI");
+
+      this.context.coachViewData.image = domConstruct.create("img");
+      domAttr.set(this.context.coachViewData.image, "src", spinnerImage);
+      domAttr.set(this.context.coachViewData.image, "alt", "spinner image");
+      domAttr.set(this.context.coachViewData.image, "width", "50px");
+      domAttr.set(this.context.coachViewData.image, "height", "50px");
+
+      this.context.coachViewData.label = domConstruct.create("span");
+      this.context.coachViewData.label.innerHTML = labelText;
+      domClass.add(this.context.coachViewData.label, "control-label");
+      domAttr.set(this.context.coachViewData.label, "id", "spinnerLabel_" + this.context.modelData.layoutItemIdPath);
+
+      var _this = this;
+      bpmext.uidesign.loadLocalization(this, function () {
+        _this.context.coachViewData.defaultSpinnerText = bpmext.localization.formatMsg("controlSpinner", "DEFAULT_SPINNER_TEXT");
+        if (!labelText) {
+          _this.context.coachViewData.label.innerHTML = _this.context.coachViewData.defaultSpinnerText;
+        }
+      });
+
+      this.context.coachViewData.containingDiv.appendChild(this.context.coachViewData.image);
+      this.context.coachViewData.containingDiv.appendChild(this.context.coachViewData.label);
+
+      callback();
+    }));
+  },
+
+  getLabelDomElement: function () {
+    return this.context.coachViewData.label;
+  },
+
+  propertyChanged: function (propertyName, propertyValue) {
+    var configHelperUri = this.context.getManagedAssetUrl("BPMExt-Core-ConfigHelper.js", this.context.assetType_WEB, "SYSBPMUI");
+    require(["dojo/dom-style", "dojo/dom-class", "dojo/dom-construct", configHelperUri], this.lang.hitch(this, function (domStyle, domClass, domConstruct, configHelper) {
+
+      if (propertyName == "@label") {
+        this.context.coachViewData.label.innerHTML = (!propertyValue) ? this.context.coachViewData.defaultSpinnerText : propertyValue;
+
+      } else if (propertyName == "@labelVisibility") {
+        if (propertyValue == "HIDE") domClass.add(this.context.coachViewData.label, "CoachView_hidden");
+        else domClass.remove(this.context.coachViewData.label, "CoachView_hidden");
+
+      }
+    }));
+  },
+
+  modelChanged: function (propertyName, propertyValue) {}
+};

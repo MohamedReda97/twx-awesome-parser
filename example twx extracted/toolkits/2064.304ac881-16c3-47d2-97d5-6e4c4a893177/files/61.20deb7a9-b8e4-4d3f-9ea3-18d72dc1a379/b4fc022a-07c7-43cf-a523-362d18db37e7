@@ -1,0 +1,455 @@
+// *************************************************************************
+//
+// Licensed Materials - Property of IBM
+// 5737-I23
+// Copyright IBM Corporation 2020. All Rights Reserved.
+// U.S. Government Users Restricted Rights:
+// Use, duplication or disclosure restricted by GSA ADP Schedule
+// Contract with IBM Corp.
+//
+// *************************************************************************
+// END COPYRIGHT
+
+/**
+ * @ignore
+ * @instance
+ * @memberof Spinner
+ * @method isValid
+ */
+
+/**
+ * @ignore
+ * @instance
+ * @memberof Spinner
+ * @method setValid
+ */
+
+/**
+ * @ignore
+ * @instance
+ * @memberof Spinner
+ * @method recalculate
+ */
+
+/**
+ * @ignore
+ * @instance
+ * @memberof Spinner
+ * @method getData
+ */
+
+/**
+ * @ignore
+ * @instance
+ * @memberof Spinner
+ * @method setData
+ */
+
+/**
+ *   <tr class=Prop>
+ *     <td class=SectionName colspan=3>Events</td>
+ *   </tr>
+ *   <tr class=Prop>
+ *     <td>On Load:</td>
+ *     <td colspan = "2">
+ *       <table>
+ *         <tr class=Prop>
+ *           <td>Description: </td>
+ *           <td>This event is fired when the control is loaded.</td>
+ *         </tr>
+ *         <tr class=Prop>
+ *           <td>Example: </td>
+ *           <td><pre class="prettyprint"><code>me.setVisible(true);<code></pre></td>
+ *         </tr>
+ *       </table>
+ *     </td>
+ *   </tr>
+ *   <tr class=Prop>
+ *     <td>On Show:</td>
+ *     <td colspan = "2">
+ *       <table>
+ *         <tr class=Prop>
+ *           <td>Description: </td>
+ *           <td>This event is fired when the control is opened.</td>
+ *         </tr>
+ *         <tr class=Prop>
+ *           <td>Example: </td>
+ *           <td><pre class="prettyprint"><code>me.setText("Spinner open");<code></pre></td>
+ *         </tr>
+ *       </table>
+ *     </td>
+ *   </tr>
+ * </table>
+ *   <tr class=Prop>
+ *     <td>On Close:</td>
+ *     <td colspan = "2">
+ *       <table>
+ *         <tr class=Prop>
+ *           <td>Description: </td>
+ *           <td>This event is fired when the control is closed.</td>
+ *         </tr>
+ *         <tr class=Prop>
+ *           <td>Example: </td>
+ *           <td><pre class="prettyprint"><code>${Output_Text1}.setText("Spinner closed...");<code></pre></td>
+ *         </tr>
+ *       </table>
+ *     </td>
+ *   </tr>
+ */
+bpmext_control_InitSpinner = function (utilities, bpmext, domClass, domAttr, domConstruct, dom) {
+    this._instance = {};
+
+    if (!this.constructor.prototype._proto) {
+        this.constructor.prototype._proto = {
+            OPTS_SZ_STLZ: { //TODO figure out how this changes
+                "D": "",
+                "S": "SMALL"
+            },
+            
+            EVT_ONLOAD: "eventON_LOAD",
+            EVT_ONSHOW: "eventON_SHOW",
+            EVT_ONCLOSE: "eventON_CLOSE",
+            
+            _setSizeStyle: function (view, newVal) {
+                newVal = bpmext.ui.util.normalizeSizeStyle(newVal, this.OPTS_SZ_STLZ);
+                var content = view.context.element.querySelector(".spinner-content"),
+                    isSmall = domClass.contains(content, "spinner-small");
+                //if small add small to class
+                if (newVal == 'S') {
+                    if (!isSmall) domClass.add(content, "spinner-small");
+                } else {
+                    if (isSmall) domClass.remove(content, "spinner-small");
+                }
+
+            },
+
+            _handleVisibility: function (view) {
+                view._instance.visibilityChangeInProgress = true;
+
+                if (domClass.contains(view.context.element, "CoachView_invisible"))
+                    domClass.replace(view.context.element, "CoachView_hidden", "CoachView_invisible");
+
+                var visibility = bpmext.ui.getEffectiveVisibility(view);
+                if (visibility != "NONE" && visibility != "HIDDEN") {
+                    view._instance.spinnerPanel.style.display = "block";
+                    view.setData(true);
+                    bpmext.ui.executeEventHandlingFunction(view, view._proto.EVT_ONSHOW);
+                } else {
+                    view._instance.spinnerPanel.style.display = "none";
+                    view.setData(false);
+                    bpmext.ui.executeEventHandlingFunction(view, view._proto.EVT_ONCLOSE);
+                }
+                
+                view._instance.visibilityChangeInProgress = false;
+            },
+
+            _adjustAnimation: function (view) {
+                view._instance.spinnerAnimation = view.context.element.querySelector(".spinner-animation");
+                view._instance.spinnerContent.appendChild(view._instance.spinnerAnimation);
+
+                var spinnerId = "spinner-id-" + view.context.controlidpath;
+                domAttr.set(view._instance.spinnerAnimation.querySelector(".spinner-box"), "aria-labelledby", spinnerId);
+                domAttr.set(view._instance.spinnerAnimation.querySelector("label"), "id", spinnerId);
+
+            },
+
+            _createLabel: function (view) {
+                var _cbUid = "spinner-label-" + view.context.controlidpath;
+                view._instance.label = domConstruct.create("span", {
+                    "className": "control-label spinner-text",
+                    "id": _cbUid,
+                }, view._instance.spinnerContent, "last");
+            },
+
+            _setLabel: function (view, label) {
+                try {
+                    if (label != null && label.length > 0) {
+                        view._instance.label.innerHTML = view.context.htmlEscape(label);
+                        utilities.BiDi.applyTextDir(
+                            view._instance.label,
+                            view._instance.label.innerHTML,
+                            view._instance.baseTxtDir,
+                            view._instance.genPrefTextDir
+                        );
+                    } else view._instance.label.innerHTML = bpmext.localization.formatMsg("controlSpinner", "DEFAULT_SPINNER_TEXT");
+                } catch (e) {
+                    //{#feature: US-1330 Added RT localization}
+                    //bpmext.log.error("Checkbox._setLabel() error: " + e);
+                    bpmext.log.error("Spinner._setLabel() " + bpmext.localization.formatMsg("general", "ERROR") + ": " + e);
+                    if (e.stack) {
+                        //{#feature: US-1330 Added RT localization}
+                        //bpmext.log.error("  Call stack: " + e.stack);
+                        bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+                    }
+                }
+            },
+
+            _setLabelVisibility: function (view, visibility) {
+                if (visibility == "SHOW") {
+                    domClass.remove(view._instance.label, "hidden");
+                    if (domAttr.has(view._instance.spinnerContent, "style"))
+                        domAttr.remove(view._instance.spinnerContent, "style");
+                } else {
+                    domClass.add(view._instance.label, "hidden");
+                    domAttr.set(view._instance.spinnerContent, "style", "background-color: transparent;");
+                }
+            },
+            _setHelpText : function(view, text){
+				utilities.setHelpText(view, text);
+			}
+        };
+
+        /*
+        Public control methods *************************************************************
+         */
+
+        /**
+         * @instance
+         * @memberof Spinner
+         * @method getType
+         * @desc Get descriptive string representing the type of control
+         * @returns {string}
+         */
+        this.constructor.prototype.getType = function () {
+            return "spinner3";
+        };
+
+        /**
+         * @instance
+         * @memberof Spinner
+         * @method setLabel
+         * @param {string} label set the label name.
+         * @desc Set label for this control
+         */
+        this.constructor.prototype.setLabel = function (text) {
+            this.context.options._metadata.label.set("value", text);
+        };
+
+        /**
+         * @instance
+         * @memberof Spinner
+         * @method getLabel
+         * @desc Get label associated with this control
+         * @returns {string}
+         */
+        this.constructor.prototype.getLabel = function () {
+            return this.context.options._metadata.label.get("value");
+        };
+
+        /**
+		 * @instance
+		 * @memberof Spinner
+		 * @method setHelpText
+		 * @param {string} helptext Help text for the control
+		 * @desc Set help text for spinner control
+		 */
+		this.constructor.prototype.setHelpText = function (text)
+		{
+			this.context.options._metadata.helpText.set("value", text);
+		};
+
+		/**
+		 * @instance
+		 * @memberof Spinner
+		 * @method getHelpText
+		 * @desc Get help text associated with spinner control
+		 * @returns {string}
+		 */
+		this.constructor.prototype.getHelpText = function ()
+		{
+			return this.context.options._metadata.helpText.get("value");
+		};
+
+        /**
+         * @instance
+         * @memberof Spinner
+         * @method isLabelVisible
+         * @desc Get label visibility for this control
+         * @returns {boolean}
+         */
+        this.constructor.prototype.isLabelVisible = function () {
+            return this.context.options._metadata.labelVisibility.get("value") == "SHOW";
+        };
+
+        /**
+         * @instance
+         * @memberof Spinner
+         * @method setLabelVisible
+         * @param {boolean} flag sets the visibility {true | false}
+         * @desc Set label visibility for this control
+         */
+        this.constructor.prototype.setLabelVisible = function (flag) {
+            this.context.options._metadata.labelVisibility.set("value", flag ? "SHOW" : "HIDE");
+        };
+
+        /**
+         * @instance
+         * @memberof Spinner
+         * @method setSizeStyle
+         * @param {string} size "DEFAULT"|"D"=Default | "SMALL"|"S"=small
+         * @desc Set the size of the control. NOTE: to avoid ambiguity always set the size using "D"|"S"
+         */
+        this.constructor.prototype.setSizeStyle = function (size) {
+            if (size) this.context.options.sizeStyle.set("value", size.toUpperCase());
+        };
+        
+        /**
+         * @instance
+         * @memberof Spinner
+         * @method getSizeStyle
+         * @desc Gets the size style of the control.
+         * @returns {string}
+         */
+        this.constructor.prototype.getSizeStyle = function () {
+            return this.context.options.sizeStyle.get("value");
+        };
+
+        /**
+         * @instance
+         * @memberof Spinner
+         * @method show
+         * @desc Show this view/control
+         */
+        this.constructor.prototype.show = function()
+        {
+            this._instance.visibilityChangeInProgress = true;
+            this.setData(true);
+            bpmEventHelper.ui._showView.call(this);
+            this._instance.visibilityChangeInProgress = false;
+        };
+
+        /**
+         * @instance
+         * @memberof Spinner
+         * @method hide
+         * @desc hide this view/control
+         */
+        this.constructor.prototype.hide = function()
+        {
+            this._instance.visibilityChangeInProgress = true;
+            this.setData(false);
+            bpmEventHelper.ui._hideView.call(this, true);
+            this._instance.visibilityChangeInProgress = false;
+        };
+
+        /*
+        Coach NG Lifecycle methods *************************************************************
+         */
+        this.constructor.prototype.load = function () {
+            try {
+                var opts = this.context.options;
+                var mdt = opts._metadata;
+
+                this._instance.baseTxtDir = mdt.baseTextDirection && mdt.baseTextDirection.get("value") ? mdt.baseTextDirection.get("value") : utilities.BiDi.BASE_TEXT_DIRECTION._default;
+                this._instance.genPrefTextDir = this.context.bpm.system.baseTextDirection;
+
+                if (!this.context.binding)
+                    this.context.binding = bpmext.ui.substituteObject(this, null, null, true);
+
+                if (!opts.sizeStyle)
+                    opts.sizeStyle = bpmext.ui.substituteConfigOption(this, "sizeStyle", "D");
+
+                this._instance.spinnerPanel = domConstruct.create("div", {
+                    "className": "overlay modal fade in"
+                }, this.context.element);
+                this._instance.spinnerModal = domConstruct.create("div", {
+                    "className": "spinner-modal"
+                }, this._instance.spinnerPanel);
+                this._instance.spinnerContent = domConstruct.create("div", {
+                    "className": "spinner-content"
+                }, this._instance.spinnerModal);
+
+                this._proto._adjustAnimation(this);
+                this._proto._createLabel(this);
+                this._proto._setLabel(this, opts._metadata.label.get("value"));
+                this._proto._setLabelVisibility(this, opts._metadata.labelVisibility.get("value"));
+                this._proto._setSizeStyle(this, opts.sizeStyle.get("value"));
+                
+                var tmp = mdt.helpText ? mdt.helpText.get("value") : null;
+				if (tmp && tmp.length > 0)
+				{
+					this._proto._setHelpText(this, tmp);
+				}
+
+                bpmext.ui.loadView(this);
+            } catch (e) {
+                //{#feature: US-1330 Added RT localization}
+                //bpmext.log.error("Error on load event [" + this.context.viewid + "]: " + e);
+                bpmext.log.error(bpmext.localization.formatMsg("general", "ERROR_ONLOAD_EVENT") + " [" + this.context.viewid + "]: " + e);
+                if (e.stack) {
+                    //{#feature: US-1330 Added RT localization}
+                    //bpmext.log.error("  Call stack: " + e.stack);
+                    bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+                }
+            }
+        };
+
+        this.constructor.prototype.view = function () {
+            try {
+                this._proto._handleVisibility(this);
+            } catch (e) {
+                //{#feature: US-1330 Added RT localization}
+                //bpmext.log.error("Error on view event [" + this.ui.getAbsoluteName() + "]: " + e);
+                bpmext.log.error(bpmext.localization.formatMsg("general", "ERROR_ONVIEW_EVENT") + " [" + this.ui.getAbsoluteName() + "]: " + e);
+                if (e.stack) {
+                    //{#feature: US-1330 Added RT localization}
+                    //bpmext.log.error("  Call stack: " + e.stack);
+                    bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+                }
+            }
+        };
+
+        this.constructor.prototype.change = function (event) {
+            try {
+                if (event.type == "config") {
+                    switch (event.property) {
+                        case "_metadata.label": {
+                            this._proto._setLabel(this, event.newVal);
+                            break;
+                        }
+                        case "_metadata.visibility": {
+                            this._proto._handleVisibility(this);
+                            break;
+                        }
+                        case "_metadata.labelVisibility": {
+                            this._proto._setLabelVisibility(this, this.context.options._metadata.labelVisibility.get("value"));
+                            break;
+                        }
+                        case "_metadata.helpText":
+						{
+							this._proto._setHelpText(this, event.newVal);
+                            break;
+						}
+                        case "sizeStyle": {
+                            this._proto._setSizeStyle(this, this.context.options.sizeStyle.get("value"));
+                            break;
+                        }
+                    }
+                } else {
+                    if(!this._instance.visibilityChangeInProgress === true && event.newVal !== event.oldVal)
+                        event.newVal === true ? this.show() : this.hide();
+                }
+            } catch (e) {
+                bpmext.log.error(bpmext.localization.formatMsg("general", "ERROR_ONCHANGE_EVENT") + " [" + this.ui.getAbsoluteName() + "]: " + e);
+                if (e.stack) {
+                    bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+                }
+            }
+        };
+
+        this.constructor.prototype.validate = function (event) {
+            try {
+                bpmext.ui.updateViewValidationState(this, event);
+            } catch (e) {
+                bpmext.log.error(bpmext.localization.formatMsg("general", "ERROR_ONVALIDATE_EVENT") + " [" + this.ui.getAbsoluteName() + "]: " + e);
+                if (e.stack) {
+                    bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+                }
+            }
+        };
+
+        this.constructor.prototype.unload = function () {
+            bpmext.ui.unloadView(this);
+        };
+    }
+};

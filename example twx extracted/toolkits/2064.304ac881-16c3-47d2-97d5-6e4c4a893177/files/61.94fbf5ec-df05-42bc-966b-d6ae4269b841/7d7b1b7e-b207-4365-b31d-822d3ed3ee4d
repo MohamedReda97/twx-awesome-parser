@@ -1,0 +1,1014 @@
+/*
+ * #BEGIN COPYRIGHT
+ *
+ * Licensed Materials - Property of IBM
+ * 5725-C95
+ * (C) Copyright IBM Corporation 2017. All Rights Reserved.
+ * US Government Users Restricted Rights- Use, duplication or disclosure
+ * restricted by GSA ADP Schedule Contract with IBM Corp.
+ *
+ * #END COPYRIGHT
+ */
+
+ /**
+ * @ignore
+ * @instance
+ * @memberof TabSection
+ * @method setValid
+ */ 
+
+ /**
+ * @ignore
+ * @instance
+ * @memberof TabSection
+ * @method isValid
+ */ 
+
+ /**
+ * @ignore
+ * @instance
+ * @memberof TabSection
+ * @method setData
+ */ 
+
+ /**
+ * @ignore
+ * @instance
+ * @memberof TabSection
+ * @method getData
+ */ 
+ 
+ /**
+ * @ignore
+ * @instance
+ * @memberof TabSection
+ * @method recalculate
+ */ 
+
+ /** 
+ *   <tr class=Prop>
+ *     <td class=SectionName colspan=3>Events</td>
+ *   </tr>
+ *   <tr class=Prop>
+ *     <td>On Load</td>
+ *     <td><pre class="prettyprint"><code>me.setCurrentPane(1)</code></pre></td>
+ *     <td><code><i>Javascript expression</i></code></td>
+ *   </tr>
+ *   <tr class=Prop>
+ *     <td>On Tab Changed:</td>
+ *	   <td colspan = "2">
+ *       <table> 
+ *         <tr class=Prop>
+ *           <td>Description: </td>
+ *           <td>This event is triggered when a the tab is changed.</td>
+ *         </tr>
+ *         <tr class=Prop>
+ *           <td>Example: </td>
+ *           <td><pre class="prettyprint"><code>if(oldTabIndex == 0){ ${ModalAlert}.setEnabled(true); }</code></pre></td>
+ *         </tr>
+ *       </table>
+ *       <table style= "border: 1px solid black; border-collapse: collapse; ">
+ *         <tr  style= "border: 1px solid black; border-collapse: collapse;">
+ *           <th   style= "border: 1px solid black; border-collapse: collapse;padding: 5px;">Context Variables</th>
+ *           <th   style="border: 1px solid black; border-collapse: collapse; padding: 5px;">oldTabIndex {integer}</th>
+ *           <th   style="border: 1px solid black; border-collapse: collapse; padding: 5px;">tabIndex {integer}</th>
+ *         </tr>
+ *       </table>
+ *     </td>
+ *   </tr>
+ * </table>
+ */
+bpmext_control_TabSection = function(bpmext, utilities, domClass, domAttr)
+{
+	this._instance =
+	{
+		children: [],
+		bindHandle: []		// US177
+	};
+
+	if (!this.constructor.prototype._proto)
+	{
+		this.constructor.prototype.IS_ADDRESS_INVISIBLE = true;
+		
+		this.constructor.prototype._proto =
+		{
+			EVT_ONTABCHANGE : "eventON_TABCHANGE",
+			OPTS_TAB_STLZ : 
+			{
+				"D" : "",
+				"S" : "nav-tabs-simple"
+			},
+			OPTS_COL_CLZ : {
+				"D" : "",
+				"P" : "tabs-primary",
+				"I" : "tabs-info",
+				"S" : "tabs-success",
+				"W" : "tabs-warning",
+				"G" : "tabs-danger",
+				"E" : "tabs-danger"
+			},
+            OPTS_SZ_STLZ :
+            {
+                "D" : "tab-btn",
+                "L" : "tab-btn-lg",
+                "S" : "tab-btn-sm",
+                "X" : "tab-btn-xs"
+            },
+            _handleVisibility: function(view)
+            {
+            	var visibility = utilities.handleVisibility(view.context, null, null, null, null, false);
+
+            	// Disabled in work item#299946 - START
+                /*
+				if (visibility != "NONE")
+				{
+				    if (visibility  == "READONLY")
+				    	domClass.remove(view._instance.disabler, "hidden");
+				    else
+				    	domClass.add(view._instance.disabler, "hidden");
+			    }
+			    */
+			    // Disabled in work item#299946 - STOP
+            },
+            _normalizeColorStyle: function(style)
+			{
+				if(!style)
+					style = "D";
+				
+				style = style.toUpperCase();
+				
+				if(style == "E")
+					style = "G";
+				
+				if(style.length > 1)
+				{
+					switch (style)
+					{
+						case "DEFAULT":
+						case "DEF":
+							style = "D";
+							break;
+						case "PRI":
+						case "PRIMARY":
+							style = "P";
+							break;
+						case "SUCCESS":
+							style = "S";
+							break;
+						case "INFO":
+						case "INF":
+							style = "I";
+							break;
+						case "WARNING":
+						case "WARN":
+							style = "W";
+							break;
+						case "ERROR":
+						case "ERR":
+						case "DANGER":
+							style = "G";
+							break;
+						default:
+							//{#feature: US-1330 Added RT localization}
+							//bpmext.log.warn("Unexpected color style: " + style);
+							bpmext.log.warn(bpmext.localization.formatMsg("general", "COLOR_STYLE_WARNING",style));
+					}
+				}
+
+				return style;
+			},
+            _setColorStyle : function (view, newVal, oldVal)
+            {
+                if(!oldVal)
+                    oldVal = view._instance.oldColStyle;
+
+                newVal = this._normalizeColorStyle(newVal);
+                oldVal = this._normalizeColorStyle(oldVal);
+                
+                bpmext.ui.util.replaceCSSClass(view._instance.navUl, this.OPTS_COL_CLZ, newVal, oldVal);
+                bpmext.ui.util.replaceCSSClass(view._instance.navTabsMnu, this.OPTS_COL_CLZ, newVal, oldVal);
+                view._instance.oldColStyle = newVal;
+            },
+            _setSizeStyle : function (view, newVal, oldVal)
+            {
+                if(!oldVal)
+                    oldVal = view._instance.oldSizeStyle;
+                
+                newVal = bpmext.ui.util.normalizeSizeStyle(newVal,this.OPTS_SZ_STLZ);
+                oldVal = bpmext.ui.util.normalizeSizeStyle(oldVal,this.OPTS_SZ_STLZ);
+
+                bpmext.ui.util.replaceCSSClass(view._instance.navUl, this.OPTS_SZ_STLZ, newVal, oldVal);
+                view._instance.oldSizeStyle = newVal;
+            },
+			_replaceClass : function (view, elt, valueMap, newVal, oldVal)
+			{
+				if(newVal != null)
+					newVal = newVal.toUpperCase();
+				
+				if(oldVal != null)
+					oldVal = oldVal.toUpperCase();
+
+				var oldClass = valueMap[oldVal];
+				if(oldClass == null)
+					oldClass = "";
+
+				var newClass = valueMap[newVal];
+				if(newClass == null)
+					newClass = "";
+
+				domClass.replace(elt, newClass, oldClass);
+			},
+			_setTabsStyle : function(view, newVal, oldVal)
+			{
+				this._replaceClass(view, view._instance.navUl, this.OPTS_TAB_STLZ, newVal, oldVal);
+				this._replaceClass(view, view._instance.navTabsMnu, this.OPTS_TAB_STLZ, newVal, oldVal);
+			},
+			_getContentBox : function(view, from)
+			{
+				if(!view._instance.contentBox)
+				{
+					var children = from.children;
+					for(var i = 0; i < children.length; i++)
+					{
+						var child = children[i];
+						if(child.className && /\bContentBox\b/.test(child.className))
+						{
+							view._instance.contentBox = child;
+							break;
+						}
+					}				
+				}
+				
+				return view._instance.contentBox;
+			},
+			_registerLabelChange : function(view, child, paneIndex, tabChangeEvent)
+			{
+				// START US177 code
+
+				if (child.context && !!child.context.options._metadata.label.boundObject)
+				{	
+					
+					view._instance.bindHandle[paneIndex] = child.context.options._metadata.label.boundObject.bind(child.context.options._metadata.label.property, 
+						function(event) 
+						{ 
+							var labelNode = view._instance.navUl.getElementsByTagName("li")[paneIndex].childNodes[0];
+							labelNode.innerHTML = event.newVal;
+							utilities.BiDi.applyTextDir(
+								labelNode, 
+								labelNode.innerHTML, 
+								view._instance.baseTxtDir, 
+								view._instance.genPrefTextDir
+								);							
+							view._proto._layoutTabs(view);
+							var lastVisible = tabChangeEvent._getLastVisibleTabIdx(view);
+							if ( ( paneIndex > lastVisible ) && (view.getCurrentPane() == paneIndex) )
+								view._instance.overflowTabText.innerHTML = view.context.htmlEscape(event.newVal);
+							utilities.BiDi.applyTextDir(
+								view._instance.overflowTabI, 
+								view._instance.overflowTabText.innerHTML, 
+								view._instance.baseTxtDir, 
+								view._instance.genPrefTextDir
+								);						
+						},
+						view);	
+				}						
+				// END US177 code				
+			},
+			_updateCurrentPane : function(view, isInitialization, index) // US177 isInitialization
+			{
+
+				if(index === null || index === undefined)
+					index = view.context.binding.get("value");
+				
+				for(var i = 0; i < view._instance.children.length; i++)
+				{
+					var li = view._instance.navUl.children[i];
+					var child = view._instance.children[i];
+
+					if(isInitialization)		// US177 isInitialization
+						this._registerLabelChange(view, child, i, this);
+					
+					if(child.context && child.context.viewid)
+					{
+						if(i == index)
+						{
+							domClass.remove(child.context.element, "tab-hidden");
+							// disabling overriding the child visibility for Feature 307757
+							// child.context.options._metadata.visibility.set("value", "DEFAULT");
+							domClass.add(li, "active");
+                            domAttr.set(li, "aria-expanded", "true");
+						}
+						else
+						{
+							//{#bug: BG-796 Tab Section doesn't always hide pane that is a Layout control if layout has responsiveness enabled}
+							domClass.add(child.context.element, "tab-hidden");
+							// disabling overriding the child visibility for Feature 307757
+							// child.context.options._metadata.visibility.set("value", "NONE");
+							domClass.remove(li, "active");
+                            domAttr.set(li, "aria-expanded", "false");
+						}
+					}
+					else
+					{
+						if(i == index)
+						{
+							child.style.display = "inherit";
+							domClass.add(li, "active");
+                            domAttr.set(li, "aria-expanded", "true");
+						}
+						else
+						{
+							child.style.display = "none";
+							domClass.remove(li, "active");
+                            domAttr.set(li, "aria-expanded", "false");
+						}
+					}
+				}
+				
+				bpmext.ui.util.refreshTooltips();
+				this._updateDDMActivation(view);
+				// Disabled in work item#299946 - START
+				// this._updateDisabler(view);
+				// Disabled in work item#299946 - STOP
+			},
+			_updateDisabler: function(view) {
+			    //updates the non-clickable area if the tab is read-only
+			    if (!domClass.contains(view._instance.disabler, "hidden")) {
+	                var headerHeight = view._instance.navUl.clientHeight;
+	                var contentHeight = view._instance.tabsContent.clientHeight;
+	                view._instance.disabler.style.height = contentHeight + "px";
+	                view._instance.disabler.style.top = headerHeight + "px";
+			    }
+			},
+			_updateDDMActivation : function(view)
+			{
+
+				var index = view.context.binding.get("value");
+				var lastVisibleTabIdx = this._getLastVisibleTabIdx(view);
+				
+				//console.info("Current index: " + index);
+				//console.info("Last visible tab idx: " + lastVisibleTabIdx);
+				
+				//{#bug: * Added more graceful tab behavior if invalid index tab specified}
+				if(index < 0 || index >= view._instance.children.length)
+				{
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.warn("Invalid tab index specified: " + index + " - defaulting to 0", view);
+					bpmext.log.warn(bpmext.localization.formatMsg("controlTabSection", "TS_INVALID_TAB_INDEX_WARNING",index), view);
+					index = 0;
+				}
+
+				if(index > lastVisibleTabIdx)
+				{
+					//domClass.add(view._instance.overflowTabI, "has-text");
+					var c = view._instance.children[index];
+					//{#feature: US-1330 Added RT localization}
+					//view._instance.overflowTabI.innerHTML = c.context ? c.context.options._metadata.label.get("value") : "Tab " + index;
+					view._instance.overflowTabText.innerHTML = c.context ? c.context.options._metadata.label.get("value") : bpmext.localization.formatMsg("controlTabSection", "TS_TAB") + " " + index;
+					domClass.add(view._instance.liDD, "active");
+				}
+				else
+				{
+					//domClass.remove(view._instance.overflowTabI, "has-text");
+					view._instance.overflowTabText.innerHTML = "";
+					domClass.remove(view._instance.liDD, "active");
+				}
+			},
+			_setupTabSwitch : function(view, a, index)
+			{
+				a.onclick = function(event)
+				{
+					view.setCurrentPane(index);
+					domClass.remove(view._instance.liDD, "open");
+					domAttr.set(view._instance.liDD.querySelector(".dropdown-toggle"), "aria-expanded", "false");
+					view._proto._updateDDMActivation(view);
+					if (!isVisible(a)) {
+						view._instance.liDD.querySelector(".dropdown-toggle").focus();
+					}
+				}
+				
+				a.onkeydown = function(event) {
+					if (event.key === "ArrowDown" || event.key === "Down") {
+						event.preventDefault();
+						if (a.parentElement.nextElementSibling) {
+							a.parentElement.nextElementSibling.firstElementChild.focus();
+						} else {
+							view._instance.ulDDMenu.querySelector("li > a").focus();
+						}
+					} else if (event.key === "ArrowUp" || event.key === "Up") {
+						event.preventDefault();
+						if (a.parentElement.previousElementSibling) {
+							a.parentElement.previousElementSibling.firstElementChild.focus();
+						} else {
+							var items = view._instance.ulDDMenu.children;
+							items[items.length - 1].firstElementChild.focus();
+						}
+					} else if (event.key === "Enter" ||
+						event.key === " " || event.key === "Spacebar" ||
+						event.key === "Esc" || event.key === "Escape") {
+						event.preventDefault();
+						if (event.key === "Enter" || event.key === " " || event.key === "Spacebar") {
+							index = a.id.substr(-1);
+							view.setCurrentPane(index);
+						}
+						var ddToggle = view._instance.liDD.querySelector(".dropdown-toggle");
+						domClass.remove(view._instance.liDD, "open");
+						domAttr.set(ddToggle, "aria-expanded", "false");
+						view._proto._updateDDMActivation(view);
+						if (!isVisible(a)) {
+							ddToggle.focus();
+						}
+					}
+				}
+
+				a.onblur = function(event) {
+					if (view._instance.liDD.contains(event.relatedTarget)) { return; }
+					setTimeout(function() {
+						domClass.remove(view._instance.liDD, "open");
+						view._proto._updateDDMActivation(view);
+					}, 200);
+				};
+
+				function isVisible(element) {
+					return !!(element.offsetWidth || element.offsetHeight || element.getClientRects().length);
+				};
+			},
+			_getLastVisibleTabIdx : function(view)
+			{
+				var idx = -1;
+				for(var i = 0; i < view._instance.navUl.children.length; i++)
+				{
+					var tab = view._instance.navUl.children[i];
+					tab.style.display = "block";
+					if(tab.offsetTop > 0)
+						break;
+					
+					idx++;
+				}
+                
+                for(var i = idx + 1; i < view._instance.navUl.children.length; i++)
+				{
+					var tab = view._instance.navUl.children[i];
+					tab.style.display = "none";
+				}
+				
+				return idx;
+			},
+			_layoutTabs : function(view)
+			{
+				//setTimeout(function(){
+			
+				//view._instance.liDD.style.display = "block";
+				view._instance.navUl.style.paddingRight = view._instance.liDD.offsetWidth + "px";
+				
+				//console.info("view._instance.navUl.style.paddingRight: " + view._instance.navUl.style.paddingRight);
+				
+				
+				for(var i = 0; i < view._instance.navUl.children.length; i++)
+				{
+					var tab = view._instance.navUl.children[i];
+					if (!tab.classList.contains("hidden")){
+//						if(!domClass.contains(tab, "active")) - Disabled in work item#307166
+						tab.style.display = "block";
+					}
+				}
+				
+				view._instance.ulDDMenu.innerHTML = "";
+				domAttr.set(view._instance.ulDDMenu, "role", "menu");
+
+				var hiddenTabs = 0;
+				for(var i = 0; i < view._instance.navUl.children.length; i++)
+				{
+					var tab = view._instance.navUl.children[i];
+					//tab.style.display = "block";
+					
+					if(tab.offsetTop > 0 && !tab.classList.contains("hidden"))
+					{	
+						var child = view._instance.children[i];
+					
+						//{#feature: US-1330 Added RT localization}
+						//var title = child.context ? child.context.options._metadata.label.get("value") : "Tab " + i;
+						var title = child.context ? child.context.options._metadata.label.get("value") : bpmext.localization.formatMsg("controlTabSection", "TS_TAB") + " " + i;
+						//console.info("Hidden tab title: " + title);
+						var li = document.createElement("li");
+						domAttr.set(li, "id", "tabs-"+view.context.controlidpath+"-tab"+i);
+						var a = document.createElement("a");
+						domAttr.set(a, "id", "tabs-"+view.context.controlidpath+"-tab-text"+i);
+						li.appendChild(a);
+						
+						a.innerHTML = title;
+						domAttr.set(a, "href", "javascript:void(0)");
+						view._instance.ulDDMenu.appendChild(li);
+						domAttr.set(li, "role", "presentation");
+						domAttr.set(li.firstElementChild, "role", "menuitem");
+						view._proto._setupTabSwitch(view, a, i);
+						
+						hiddenTabs++;
+						tab.style.display = "none"; //Helps prevent user from accidently tabbing to hidden tab
+					}
+				}
+				
+				//view._instance.liDD.style.display = (hiddenTabs > 0) ? "block" : "none";
+				view._instance.liDD.style.visibility = (hiddenTabs > 0) ? "visible" : "hidden";
+				
+				//}); //setTimeout
+			}
+		};
+
+		/*
+		Public control methods *************************************************************
+		 */
+
+		/**
+		 * @instance
+		 * @memberof TabSection
+		 * @method getTabCount
+		 * @desc Returns number of tabs in this control
+		 * @example TabSection1.getTabCount();
+		 * @returns {integer}
+		 */
+		this.constructor.prototype.getTabCount = function()
+		{
+			return this._instance.children.length;
+		};
+		 
+		/**
+		 * @instance
+		 * @memberof TabSection
+		 * @method setCurrentPane
+		 * @desc Switches to the pane corresponding to the index specified
+		 * @param {integer}	index 0-based pane index. Specify -1 to not display any pane
+		 * @example TabSection1.setCurrentPane(1); // Switches to the 2nd pane in the tabSection
+		 */
+		this.constructor.prototype.setCurrentPane = function(index)
+		{
+			this.context.binding.set("value", index);
+		};
+		
+		/**
+		 * @instance
+		 * @memberof TabSection
+		 * @method getCurrentPane
+		 * @desc Retrieve the index corresponding to the currently showing pane
+		 * @returns {integer} returns -1 if no pane is showing
+		 */
+		this.constructor.prototype.getCurrentPane = function()
+		{
+			return this.context.binding.get("value");
+		};
+		
+		//{# feature: US-620 Added method to generically retrieve the view immediately contained under the pane specified}
+		/**
+		 * @instance
+		 * @memberof TabSection
+		 * @method getViewInPane
+		 * @desc Retrieve the coach view instance corresponding to the specified tab index (i.e. the view immediately contained under the tab)
+		 * @returns {com.ibm.bpm.coach.CoachView} Returns -1 if no pane is showing
+		 */
+		this.constructor.prototype.getViewInPane = function(index)
+		{
+			for(var i = 0, j = 0; i < this._instance.children.length; i++)
+			{
+				var child = this._instance.children[i];
+				if(child.context && child.context.viewid)
+				{
+					if(j == index)
+						return child;
+					
+					j++;
+				}
+			}
+		};
+		
+		// START US177 code
+		//{#feature: US 177 getTabText/setTabText methods}
+		/**
+		 * @instance
+		 * @memberof TabSection
+		 * @method getTabText
+		 * @desc Retrieve the tab text of the specified tab
+		 * @param {?integer} index 0-based pane index. When null current pane text is returned
+		 * @returns {integer} returns text of current tab
+		 */
+		this.constructor.prototype.getTabText = function(index)
+		{
+			if (index == undefined)
+				index = this.getCurrentPane();
+			if (isNaN(index))
+			{
+				//{#feature: US-1330 Added RT localization}
+				//bpmext.log.error("Tab index must be undefined or a number");
+				bpmext.log.error(bpmext.localization.formatMsg("controlTabSection", "TS_TAB_INDEX_ERROR_1"));
+				return;
+			}
+			if (index >= this.getTabCount())
+			{
+				//{#feature: US-1330 Added RT localization}
+				//bpmext.log.error("Tab index must <= the number of Tabs");
+				bpmext.log.error(bpmext.localization.formatMsg("controlTabSection", "TS_TAB_INDEX_ERROR_2"));
+				return;
+			}			
+//			var child = this._instance.children[index];
+//			return child.context.options._metadata.label.get("value");
+			this._instance._labelToUpdate = index;	
+			return this._instance.navUl.getElementsByTagName("li")[index].childNodes[0].innerHTML;
+		};
+		
+		/**
+		 * @instance
+		 * @memberof TabSection
+		 * @method setTabText
+		 * @desc Set the tab text of the specified tab
+		 * @param {string} tabText The text to set for the tab
+		 * @param {integer} [index] index of tab to set text for. if unspecified, the current tab will be used
+		 */
+		this.constructor.prototype.setTabText = function(tabText, index)
+		{
+			if (tabText == undefined) 
+			{
+				//{#feature: US-1330 Added RT localization}
+				//bpmext.log.error("Tab Text not specified");
+				bpmext.log.error(bpmext.localization.formatMsg("controlTabSection", "TS_TAB_TEXT_NOT_FOUND"));
+				return;
+			}
+			if (index == undefined)
+				index = this.getCurrentPane();
+			if (isNaN(index))
+			{
+				//{#feature: US-1330 Added RT localization}
+				//bpmext.log.error("Tab index must be undefined or a number");
+				bpmext.log.error(bpmext.localization.formatMsg("controlTabSection", "TS_TAB_INDEX_ERROR_1"));
+				return;
+			}
+			if (index >= this.getTabCount())
+			{
+				//{#feature: US-1330 Added RT localization}
+				//bpmext.log.error("Tab index must <= the number of Tabs");
+				bpmext.log.error(bpmext.localization.formatMsg("controlTabSection", "TS_TAB_INDEX_ERROR_2"));
+				return;
+			}
+
+			var child = this._instance.children[index];
+			this._instance._labelToUpdate = index;
+			if (child.context) // allow for non coach view tab content
+				child.context.options._metadata.label.set("value", tabText);
+			this._instance.navUl.getElementsByTagName("li")[index].childNodes[0].innerHTML = tabText;			
+			return;
+		};
+		// END US177 code
+		
+		/**
+		 * @instance
+		 * @memberof TabSection
+		 * @method getType
+		 * @desc Get descriptive string representing the type of control
+		 * @returns {string}
+		 */
+		this.constructor.prototype.getType = function ()
+		{
+			return "tabSection.3";
+		};
+
+		/**
+		 * @instance
+		 * @memberof TabSection
+		 * @method setPaneVisible
+		 * @desc Show or hide the specified tabs.
+		 * @param {boolean}  visible Visibility flag (true to show the pane, false to hide it)
+		 * @param {integer} [index] List of 0-based pane index. When null, the index is the current pane index.
+		 */
+		this.constructor.prototype.setPaneVisible = function(visible, index)
+		{
+			for (var i = 0; i < index.length; i++){
+				if (index[i] == undefined)
+					index[i] = this.getCurrentPane();
+				if (isNaN(index[i]))
+				{
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.error("Tab index must be undefined or a number");
+					bpmext.log.error(bpmext.localization.formatMsg("controlTabSection", "TS_TAB_INDEX_ERROR_1"));
+					return;
+				}
+				if (index[i] >= this.getTabCount())
+				{
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.error("Tab index must <= the number of Tabs");
+					bpmext.log.error(bpmext.localization.formatMsg("controlTabSection", "TS_TAB_INDEX_ERROR_2"));
+					return;
+				}			
+
+				var tab = this._instance.navUl.children[index[i]];
+				if(visible){
+					tab.style.display = "block";
+					tab.classList.remove("hidden");
+				}else{
+					tab.style.display = "none";
+					tab.classList.add("hidden");
+				}
+			}
+		};
+		
+		
+		/*
+		Coach NG Lifecycle methods *************************************************************
+		 */
+		this.constructor.prototype.load = function ()
+		{
+			try
+			{
+				var opts = this.context.options;
+				var view = this;
+				// START US177 code			
+				var mdt = opts._metadata;			
+				this._instance.baseTxtDir = mdt.baseTextDirection && mdt.baseTextDirection.get("value") ? mdt.baseTextDirection.get("value") : utilities.BiDi.BASE_TEXT_DIRECTION._default;
+				this._instance.genPrefTextDir = this.context.bpm.system.baseTextDirection;
+				// END US177 code				
+				var paneIdx = null;
+
+				if(opts[this._proto.EVT_ONTABCHANGE])
+				{
+					bpmext.ui.registerEventHandlingFunction(this, this._proto.EVT_ONTABCHANGE, "oldTabIndex", "tabIndex");
+				}				
+				
+				if(!opts.defaultPaneIdx)
+					bpmext.ui.substituteConfigOption(this, "defaultPaneIdx", 0);
+				
+				if(!this.context.binding)
+					this.context.binding = bpmext.ui.substituteObject(this, null, null, opts.defaultPaneIdx.get("value"));
+				else
+					paneIdx = this.context.binding.get("value");
+								
+				if(paneIdx === null)
+					paneIdx = opts.defaultPaneIdx.get("value");
+					
+				if (!opts.tabsStyle)
+					opts.tabsStyle = bpmext.ui.substituteConfigOption(this, "tabsStyle", "D");
+
+                if (!opts.colorStyle)
+                    bpmext.ui.substituteConfigOption(this, "colorStyle", "D");
+                
+                if (!opts.sizeStyle)
+                    bpmext.ui.substituteConfigOption(this, "sizeStyle", "D");
+                
+				this._instance.navUl = this.context.element.querySelector("ul.nav-tabs-strip");
+                domAttr.set(this._instance.navUl, "role", "tablist");
+				this._instance.navTabsMnu = this.context.element.querySelector("ul.nav-tabs-mnu");
+				var tabsContent = this.context.element.querySelector(".tab-content");
+				this._instance.tabsContent = tabsContent;
+				var cBox = this._proto._getContentBox(this, tabsContent);
+				var children = cBox.children;
+				
+				this._instance.disabler = this.context.element.querySelector("div.disabler");
+				this._instance.liDD = this.context.element.querySelector("li.dropdown");
+				this._instance.ulDDMenu = this.context.element.querySelector("ul.dropdown-menu");
+				this._instance.overflowTabI = this.context.element.querySelector("i.overflow-tab");
+				this._instance.overflowTabText = this.context.element.querySelector("span.overflow-tab-text");
+				//this._instance.ddToggle = this._instance.liDD.querySelector(".dropdown-toggle");
+				//this._instance.ddToggleA = this._instance.ddToggle.querySelector(".overflow-tab");
+                
+				for(var i = 0; i < children.length; i++)
+				{
+					var child = children[i];
+					if(domClass.contains(child, "CoachView"))
+					{
+						var viewId = domAttr.get(child, "data-viewid");
+						if(viewId)
+						{
+							var child2 = this.context.subview[viewId];
+							for(var subViewId in child2)
+							{
+								var subView = child2[subViewId];
+								child = subView;
+								break;
+							}
+						}
+					}
+					
+					if(child.context)
+					{
+						domClass.add(child.context.element, "tab-pane");
+						domAttr.set(child.context.element, "role", "tabpanel");
+						domAttr.set(child.context.element, "aria-label", child.context.options._metadata.label.get("value"));
+					}
+					else
+					{
+						domClass.add(child, "tab-pane");
+						domAttr.set(child, "role", "tabpanel");
+						//{#feature: US-1330 Added RT localization}
+						//domAttr.set(child, "aria-label", "Tab " + i);
+						domAttr.set(child, "aria-label", bpmext.localization.formatMsg("controlTabSection", "TS_TAB") + " " + i);
+					}
+					
+					this._instance.children.push(child);
+					
+					var li = document.createElement("li");
+					domAttr.set(li, "id", "tabs-"+this.context.controlidpath+"-tab"+i);
+					var a = document.createElement("a");
+					domAttr.set(a, "id", "tabs-"+this.context.controlidpath+"-tab-text"+i);
+					
+					domAttr.set(a, "href", "javascript:void(0)");
+					// Safari needs a tabindex to receive JS keyboard events
+					domAttr.set(a, "tabindex", "0");
+                    domAttr.set(li, "role", "tab");
+					domAttr.set(li, "aria-expanded", "false");
+					
+					a.addEventListener('keydown', function(event) {
+						var key = event.key;
+						var index = view.getCurrentPane();
+						if (key === "ArrowLeft" || key === "ArrowRight" || key === "Left" || key === "Right" ) {
+							if (key === "ArrowLeft" || key === "Left") {
+								index--;
+							} else {
+								index++;
+							}
+							// ensure the index is positive
+							index = (index + children.length) % children.length;
+							view.setCurrentPane(index);
+							view._instance.navUl.querySelector(".active > a").focus();
+						}
+					});
+					li.appendChild(a);
+					this._instance.navUl.appendChild(li);
+					a.innerHTML = child.context ? child.context.options._metadata.label.get("value") : ("Tab " + i);
+					this._proto._setupTabSwitch(this, a, i);
+					if(child.context)
+						child.context.options._metadata.labelVisibility.set("value", "NONE");
+				}
+				
+				var ddToggle = this._instance.liDD.querySelector(".dropdown-toggle");
+				domAttr.set(ddToggle, "role", "button");
+				domAttr.set(ddToggle, "aria-haspopup", "true");
+				domAttr.set(ddToggle, "aria-expanded", "false");
+				domAttr.set(ddToggle, "aria-label", bpmext.localization.formatMsg("controlTabSection", "TS_HAMBURGER"));
+
+				ddToggle.setAttribute("tabindex", "0");
+				ddToggle.setAttribute("id", "tabs-menu-toggle-"+view.context.controlidpath);
+				//set up other IDs
+				ddToggle.querySelector(".overflow-tab").setAttribute("id", "tabs-menu-toggle-icon-"+view.context.controlidpath);
+				ddToggle.querySelector(".overflow-tab-text").setAttribute("id", "tabs-menu-toggle-text-"+view.context.controlidpath);
+				ddToggle.querySelector(".caret").setAttribute("id", "tabs-menu-toggle-caret-"+view.context.controlidpath);
+				
+				this._proto._updateCurrentPane(this, false, paneIdx); 	// US177 isInitialization
+				
+				var rszHndl;
+				var rszBegun = false;
+				var resizeCallBack = function(event) {
+					view._proto._updateCurrentPane(view, false );		// US177 isInitialization
+					view._proto._layoutTabs(view);
+					
+					rszBegun = false;
+				};
+				
+				var resizeStartCallback = function() {
+					view._instance.liDD.style.visibility = "hidden";
+					//console.info("DD invisible...");
+				};
+				
+				window.addEventListener(
+					"resize", function(event){
+						if(!rszBegun)
+						{
+							rszBegun = true;
+							resizeStartCallback(event);
+						}
+							
+						clearTimeout(rszHndl); 
+						rszHndl = setTimeout(resizeCallBack, 200);
+					}
+				);
+
+				var openMenu = function(event) {
+					if (event.type === "click" || event.key === "Enter" || event.key === " " || event.key === "Spacebar") {
+						event.preventDefault();
+						domClass.toggle(view._instance.liDD, "open");
+						if (domClass.contains(view._instance.liDD, "open")) {
+							domAttr.set(ddToggle, "aria-expanded", "true");
+							view._instance.selectedItem = view._instance.ulDDMenu.querySelector("li");
+							view._instance.selectedItem.firstElementChild.focus();
+						} else {
+							domAttr.set(ddToggle, "aria-expanded", "false");
+							view._proto._updateDDMActivation(view);
+							ddToggle.focus();
+						}
+					}
+				};
+
+				ddToggle.addEventListener("keydown", openMenu);
+				ddToggle.addEventListener("click", openMenu);
+				
+				this._proto._setTabsStyle(this, opts.tabsStyle.get("value"));
+                this._proto._setColorStyle(this, opts.colorStyle.get("value")); 
+                this._proto._setSizeStyle(this, opts.sizeStyle.get("value")); 
+				
+				bpmext.ui.loadContainer(this);
+
+				
+				setTimeout(function(){
+					view._proto._updateCurrentPane(view, true);		// US177 isInitialization
+					view._proto._layoutTabs(view);
+					}
+				);
+			}
+			catch (e)
+			{
+				//{#feature: US-1330 Added RT localization}
+				//bpmext.log.error("Error on load event [" + this.context.viewid + "]: " + e);
+				bpmext.log.error(bpmext.localization.formatMsg("general", "ERROR_ONLOAD_EVENT") + " [" + this.context.viewid + "]: " + e);
+				if(e.stack) { 
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.error("  Call stack: " + e.stack);
+					bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+				}
+			}
+		};
+
+		this.constructor.prototype.view = function ()
+		{
+			try
+			{
+				this._proto._handleVisibility(this);
+			}
+			catch (e)
+			{
+				//{#feature: US-1330 Added RT localization}
+				//bpmext.log.error("Error on view event [" + this.ui.getAbsoluteName() + "]: " + e);
+				bpmext.log.error(bpmext.localization.formatMsg("general", "ERROR_ONVIEW_EVENT") + " [" + this.ui.getAbsoluteName() + "]: " + e);
+				if(e.stack) { 
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.error("  Call stack: " + e.stack);
+					bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+				}
+			}
+		};
+
+		this.constructor.prototype.change = function (event)
+		{
+			try
+			{
+				if (event.type == "config")
+				{
+					switch (event.property)
+					{
+						case "_metadata.visibility":
+						{
+							this._proto._handleVisibility(this);
+							break;
+						}
+						case "tabsStyle" :
+						{
+							this._proto._setTabsStyle(this, event.newVal, event.oldVal);
+							break;
+						}
+						case "colorStyle":
+						{
+							this._proto._setColorStyle(this, event.newVal, event.oldVal);
+							break;
+						}
+                        case "sizeStyle":
+                        {
+                            this._proto._setSizeStyle(this, event.newVal, event.oldVal);
+                            break;
+                        }
+					}
+				}
+				else
+				{
+					this._proto._updateCurrentPane(this, false);		// US177 isInitialization
+					this._proto._layoutTabs(this);
+					
+					bpmext.ui.executeEventHandlingFunction(this, this._proto.EVT_ONTABCHANGE, event.oldVal, event.newVal);
+				}
+			}
+			catch (e)
+			{
+				//{#feature: US-1330 Added RT localization}
+				//bpmext.log.error("Error on change event [" + this.ui.getAbsoluteName() + "]: " + e);
+				bpmext.log.error(bpmext.localization.formatMsg("general", "ERROR_ONCHANGE_EVENT") + " [" + this.ui.getAbsoluteName() + "]: " + e);
+				if(e.stack) { 
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.error("  Call stack: " + e.stack);
+					bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+				}
+			}
+		};
+
+		this.constructor.prototype.validate = function (event)
+		{};
+
+		this.constructor.prototype.collaboration = function (event)
+		{};
+
+		this.constructor.prototype.unload = function ()
+		{
+
+			// START US177 code			
+			for (var i = 0; i < this._instance.bindHandle.length; i++)
+			{
+				this._instance.bindHandle[i].unbind();
+			}
+			// END US177 code
+			bpmext.ui.unloadContainer(this);
+		};
+	}
+};
+

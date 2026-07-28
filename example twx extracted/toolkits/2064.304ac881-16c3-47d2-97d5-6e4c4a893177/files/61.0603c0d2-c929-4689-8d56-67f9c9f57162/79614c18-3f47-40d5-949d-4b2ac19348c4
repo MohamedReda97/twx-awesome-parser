@@ -1,0 +1,795 @@
+/*
+ * #BEGIN COPYRIGHT
+ *
+ * Licensed Materials - Property of IBM
+ * 5725-C95
+ * (C) Copyright IBM Corporation 2021. All Rights Reserved.
+ * US Government Users Restricted Rights- Use, duplication or disclosure
+ * restricted by GSA ADP Schedule Contract with IBM Corp.
+ *
+ * #END COPYRIGHT
+ */
+
+/**
+ * @ignore
+ * @instance
+ * @memberof NavigationMenu
+ * @method setEnabled
+ */
+
+/**
+ * @ignore
+ * @instance
+ * @memberof NavigationMenu
+ * @method isEnabled
+ */
+
+/**
+* @ignore
+* @instance
+* @memberof NavigationMenu
+* @method isLabelVisible
+*/
+
+/**
+ * @ignore
+ * @instance
+ * @memberof NavigationMenu
+ * @method setLabelVisible
+ */
+
+/**
+ * @ignore
+ * @instance
+ * @memberof NavigationMenu
+ * @method isBound
+ */
+
+/**
+ * @ignore
+ * @instance
+ * @memberof NavigationMenu
+ * @method setData
+ */
+
+/**
+ * @ignore
+ * @instance
+ * @memberof NavigationMenu
+ * @method getData
+ */
+
+/**
+ * @ignore
+ * @instance
+ * @memberof NavigationMenu
+ * @method setValid
+ */
+
+/**
+ * @ignore
+ * @instance
+ * @memberof NavigationMenu
+ * @method isValid
+ */
+
+/**
+ * @ignore
+ * @instance
+ * @memberof NavigationMenu
+ * @method getType
+ */
+
+bpmext_control_InitSiteMenu = function (bpmext, domClass, utilities,domAttr) {
+	this._instance =
+	{
+		theNavBar: null,
+		theLogo: null,
+		navBarID: null,
+		navHeader: null,
+		currentPage: null,
+		responsiveNavButton: null,
+		pendingResizeCheck: 0,
+		pageID: null,
+		pageLabel:null,
+	};
+
+	if (!this.constructor.prototype._proto) {
+		this.constructor.prototype._proto =
+		{
+			OPTS_NAV_COLOR_MODE:
+			{
+				"light": "navigationBar-background-color-light",
+				"dark": "navigationBar-background-color-dark"
+			},
+			OPTS_NAV_ALIGNMENT: {
+				"left": "alignLeft",
+				"center": "alignCenter",
+				"right": "alignRight"
+			},
+			OPTS_SZ_STLZ :
+			{
+				"D" : "",
+				"L" : "navLarge",
+				"S" : "navSmall",
+				"X" : "navXSmall"
+			},
+			NAV_CONTAINER_STYLE: "navigationContainer",
+			_setSizeStyle : function (view, newVal, oldVal)
+			{
+				newVal = bpmext.ui.util.normalizeSizeStyle(newVal,this.OPTS_SZ_STLZ);
+				oldVal = bpmext.ui.util.normalizeSizeStyle(oldVal,this.OPTS_SZ_STLZ);
+
+				this._replaceClass(view, this.OPTS_SZ_STLZ, newVal, oldVal);
+				if (view._instance.navHeader) {
+					switch (view.context.options.sizeStyle.get("value")) {
+						case "D" : view._instance.navHeader.style.fontSize = "14px"; break;
+						case "L" : view._instance.navHeader.style.fontSize = "20px"; break;
+						case "S" : view._instance.navHeader.style.fontSize = "12px"; break;
+						case "X" : view._instance.navHeader.style.fontSize = "10px"; break;
+						default: view._instance.navHeader.style.fontSize = "14px"; break;
+					}
+				}
+				
+			},
+			_setHoverStates: function(view, hoverBackground, hoverBorder, alignment, fontColor) {
+				var buildStyle = "<style>";
+				if (hoverBackground || hoverBorder) {
+					buildStyle += ".ContentBox.navigationContainer button.btn.btn-ghost:hover, "; 
+					buildStyle += ".ContentBox.navigationContainer.alignRight button.btn.btn-ghost:hover, "; 
+					buildStyle += ".ContentBox.navigationContainer.alignCenter button.btn.btn-ghost:hover, "; 
+					
+					buildStyle += ".ContentBox.navigationContainer.navigationBar-background-color-dark button.btn.btn-ghost:hover{"
+					if (hoverBackground) {
+						buildStyle += "background:" + hoverBackground + " !important; ";
+						
+					}
+					if (hoverBorder) {
+						buildStyle += "box-shadow: 0 -3px 0 inset " + hoverBorder + " !important; -moz-box-shadow: 0 -3px 0 inset " + hoverBorder + " !important; -webkit-box-shadow: 0 -3px 0 inset " + hoverBorder + " !important; ";
+					}
+					if (fontColor) {
+						buildStyle += "color: " + fontColor + "; ";
+					}
+					buildStyle += "}";
+	
+					//focus state
+					buildStyle += ".ContentBox.navigationContainer button.btn:not([role='img']):focus{";
+					if (hoverBackground) {
+						buildStyle += "background:" + hoverBackground + " !important; ";
+					}
+					if (hoverBorder) {
+						buildStyle += "box-shadow: 0 -3px 0 inset " + hoverBorder + " !important; -moz-box-shadow: 0 -3px 0 inset " + hoverBorder + " !important; -webkit-box-shadow: 0 -3px 0 inset " + hoverBorder + " !important; ";
+						buildStyle += "outline: 1px solid " + hoverBorder + " !important; outline-offset:-1px; border:none !important; "
+					}
+					buildStyle += "}";
+	
+					//set hover state for folder
+					
+					buildStyle += ".ContentBox.navigationContainer .Navigation_list:hover, .ContentBox.navigationContainer button.btn.btn-ghost[aria-current='page'], .ContentBox.navigationContainer.navigationBar-background-color-dark .Navigation_list[aria-current='page'], .ContentBox.navigationContainer .Navigation_list[aria-current='page'],.ContentBox.navigationContainer.navTooBig .currentPageDiv {";
+					buildStyle += "background:transparent !important; box-shadow: 0 -3px 0 inset " + hoverBorder + " !important; -moz-box-shadow: 0 -3px 0 inset " + hoverBorder + " !important; -webkit-box-shadow: 0 -3px 0 inset " + hoverBorder + " !important; color:inherit";
+					buildStyle += "}";
+
+					buildStyle += ".ContentBox.navigationContainer button.btn.btn-ghost[aria-current='page'], .ContentBox.navigationContainer button.btn.btn-ghost:hover, .ContentBox.navigationContainer.navigationBar-background-color-dark button.btn.btn-ghost:hover {";
+					buildStyle += "box-shadow: 0 -3px 0 inset " + hoverBorder + " !important; -moz-box-shadow: 0 -3px 0 inset " + hoverBorder + " !important; -webkit-box-shadow: 0 -3px 0 inset " + hoverBorder + " !important; ";
+					buildStyle += "}";
+
+
+					buildStyle += "</style>";
+					//.ContentBox.navigationContainer .Navigation_list:hover
+					
+					try {
+						view._instance.theNavBar.innerHTML += buildStyle;
+					}catch(ex) {
+						//debugger;
+					}
+					
+				}
+				
+			},
+			_replaceClass : function (view, valueMap, newVal, oldVal)
+			{
+				if(newVal != null)
+					newVal = newVal.toUpperCase();
+
+				if(oldVal != null)
+					oldVal = oldVal.toUpperCase();
+
+				var oldClass = valueMap[oldVal];
+				if(oldClass == null)
+					oldClass = "";
+
+				var newClass = valueMap[newVal];
+				if(newClass == null)
+					newClass = "";
+				domClass.replace(view._instance.theNavBar, newClass, oldClass);
+			},
+			_handleVisibility: function (view) {
+				var visibility = bpmext.ui.getEffectiveVisibility(view);
+
+				view.context.setDisplay(visibility != "NONE");
+				view.context.setVisibility(visibility != "HIDDEN");
+			},
+			_initNavContainerStyle: function(view, colorMode, alignment) {
+				var navBarContentBox = view._instance.theNavBar;
+
+				view._instance.navBarID = navBarContentBox.id ? navBarContentBox.id : undefined;
+				navBarContentBox.classList.add(this.NAV_CONTAINER_STYLE);
+				
+				navBarContentBox.classList.remove(this.OPTS_NAV_COLOR_MODE["dark"]);
+				navBarContentBox.classList.remove(this.OPTS_NAV_COLOR_MODE["light"]);
+				navBarContentBox.classList.remove("alignRight");
+				navBarContentBox.classList.remove("alignLeft");
+				
+				navBarContentBox.classList.add(this.OPTS_NAV_COLOR_MODE[colorMode]);
+				navBarContentBox.classList.add(this.OPTS_NAV_ALIGNMENT[alignment]);
+
+				
+				view._instance.resizeHandle = view._proto._resizeWindow.bind(view);
+				window.addEventListener("resize", view._instance.resizeHandle, false);
+			},
+			_isOverflowing : function (element) {
+				return element.scrollWidth > element.offsetWidth
+			},
+			_resizeWindow: function (event) {
+				if (event.type === "resize") {
+					this._proto._windowResizeHandler(this);
+				}
+			},
+			_windowResizeHandler: function(view) {
+
+				var navBar = view._instance.theNavBar;
+				if (view._instance.pendingResizeCheck === 0) {
+					view._instance.pendingResizeCheck = 1;
+					domClass.remove(navBar, "navTooBig");
+					domClass.remove(navBar, "sidemenuOpen");
+					
+					var alignment = view.context.options.alignment.get("value");
+					var navAlignment = this.OPTS_NAV_ALIGNMENT[alignment];
+					var theNavView = view;
+					
+					if (view._instance.theLogo) {
+						view._instance.theLogo.style.display = "block";
+					}
+					
+					setTimeout(function () {
+						if (alignment == "center" || alignment == "right") {
+							domClass.remove(navBar, "alignRight");
+							domClass.remove(navBar, "alignCenter");
+							domClass.add(navBar, "alignLeft");
+						}
+
+						if (view._proto._isOverflowing(view._instance.theNavBar)) {
+							navBar.classList.add("navTooBig");
+							if (view._instance.currentPage.innerHTML != "") {
+								view._instance.currentPage.setAttribute("style", "display:block");
+							} else {
+								view._instance.currentPage.setAttribute("style", "display:none");
+							}
+						} else {
+							view._instance.currentPage.setAttribute("style", "display:none");
+							navBar.classList.remove("alignRight");
+							navBar.classList.remove("alignCenter");
+							navBar.classList.remove("alignLeft");
+							navBar.classList.add(navAlignment);
+
+							//fix position for logo, brand name and current page if alignment is set to right
+							
+							if (alignment == "right") {
+								var boundX = 0;
+								if (view._instance.theLogo) {
+									/*view._instance.theLogo.style.position = "fixed";
+									view._instance.theLogo.style.top = "0";
+									view._instance.theLogo.style.left = boundX + "px";
+									*/
+									//debugger;
+									boundX = view._instance.theLogo.offsetWidth + 15;
+								}
+								if (view._instance.navHeader) {
+									if (boundX == 15) view._instance.navHeader.style.display = "none";
+									view._instance.navHeader.style.position = "fixed";
+									view._instance.navHeader.style.paddingBottom = "3px";
+									view._instance.navHeader.style.left = boundX + "px";
+									boundX = view._instance.navHeader.getBoundingClientRect().right - 15;
+								}
+								if (view._instance.currentPage) {
+									view._instance.currentPage.style.position = "fixed";
+									view._instance.currentPage.style.paddingBottom = "21px";
+									view._instance.currentPage.style.left = boundX + "px";
+									boundX = view._instance.currentPage.getBoundingClientRect().right - 15;
+								}
+
+							}
+						}
+						
+						view._instance.pendingResizeCheck = 0;
+					}, (alignment=="right") ? 500 : 10);
+				}
+			}
+
+		};
+
+
+		/*
+		Public control methods *************************************************************
+		 */
+		/**
+		 * @instance
+		 * @memberof NavigationMenu
+		 * @method setVisible
+		 * @param {boolean} flag <code>true</code> to show the navigation menu, <code>false</code> to hide it
+		 * @desc Set visibility of control
+		 */
+		this.constructor.prototype.setVisible = function(flag)
+		{
+			if (flag)
+			{
+				this._instance.ariaTriggerElementTarget = document.activeElement;
+				this.context.options._metadata.visibility.set("value", "EDITABLE");
+			}
+			else
+			{
+				this.context.options._metadata.visibility.set("value", "NONE");
+			}	
+		};
+		/**
+		 * @instance
+		 * @memberof NavigationMenu
+		 * @method setText
+		 * @param {string} Text to be set as header on the navigation menu
+		 * @desc Set header text of navigation menu
+		 */
+		this.constructor.prototype.setText = function (text) {
+			this.context.options._metadata.label.set("value", text);
+			this._instance.navHeader.innerHTML = "<strong>" + text + "</strong>";
+		};
+		/**
+		 * @instance
+		 * @memberof NavigationMenu
+		 * @method getText
+		 * @desc Get label text of navigation menu
+		 * @returns {string}
+		 */
+		this.constructor.prototype.getText = function ()
+		{
+			return this.context.options._metadata.label.get("value");
+		}  
+		/**
+		 * @instance
+		 * @memberof NavigationMenu
+		 * @method getAlignment
+		 * @desc Get alignment of the navigation menu
+		 * @returns {string}
+		 */
+		this.constructor.prototype.getAlignment = function ()
+		{
+			return this.context.options.alignment.get("value");
+		}  
+		/**
+		 * @instance
+		 * @memberof NavigationMenu
+		 * @method setAlignment
+		 * @param {string} Alignment of navigation items ('left', 'center', 'right')
+		 * @desc Set the alignment of the navigation items children
+		 */
+		this.constructor.prototype.setAlignment = function (alignment) {
+			this.context.options.alignment.set("value", alignment);
+			this._instance.pendingResizeCheck = 0;
+			this._proto._initNavContainerStyle(this, this.context.options.colorMode.get("value"), alignment);
+			this._proto._windowResizeHandler(this);
+		};
+		/**
+		 * @instance
+		 * @memberof NavigationMenu
+		 * @method getColorMode
+		 * @desc Get color mode of the navigation menu
+		 * @returns {string}
+		 */
+		this.constructor.prototype.getColorMode = function ()
+		{
+			return this.context.options.colorMode.get("value");
+		} 
+		/**
+		 * @instance
+		 * @memberof NavigationMenu
+		 * @method setColorMode
+		 * @param {string} Color mode for the navigation menu ('light', 'dark')
+		 * @desc Set the color mode style of the navigation menu to either light or dark
+		 */
+		this.constructor.prototype.setColorMode = function (colorMode) {
+			
+			this.context.options.colorMode.set("value", colorMode);
+			this._proto._initNavContainerStyle(this, colorMode, this.context.options.alignment.get("value"));
+			
+		};
+		/**
+		 * @instance
+		 * @memberof NavigationMenu
+		 * @method setSizeStyle
+		 * @param {string} Size style for the navigation items (D-Default, L-large, S-small, X-extra small)
+		 * @desc Set the text style size of the navigation item children
+		 */
+		this.constructor.prototype.setSizeStyle = function (sizeStyle) {
+			this.context.options.sizeStyle.set("value", sizeStyle);
+			/*
+			switch (sizeStyle) {
+				case "D" : this._instance.navHeader.style.fontSize = "14px"; break;
+				case "L" : this._instance.navHeader.style.fontSize = "20px"; break;
+				case "S" : this._instance.navHeader.style.fontSize = "12px"; break;
+				case "X" : this._instance.navHeader.style.fontSize = "10px"; break;
+				default: this._instance.navHeader.style.fontSize = "14px"; break;
+			}*/
+		};
+		/**
+		 * @instance
+		 * @memberof NavigationMenu
+		 * @method getSizeStyle
+		 * @desc Get size style of the navigation menu
+		 * @returns {string}
+		 */
+		this.constructor.prototype.getSizeStyle = function ()
+		{
+			return this.context.options.sizeStyle.get("value");
+		} 
+		/**
+		 * @instance
+		 * @memberof NavigationMenu
+		 * @method setHoverColor
+		 * @param {string} The color to be set for navigation item children on mouse-over state
+		 * @desc Set the mouse-over highlight color for the navigation item children
+		 */
+		this.constructor.prototype.setHoverColor = function (hoverColor) {
+			var ops = this.context.options;
+			if (!ops.highlightColor) {
+				ops.highlightColor = bpmext.ui.substituteConfigOption(this, "highlightColor", hoverColor);
+			} else {
+				ops.highlightColor.set("value", hoverColor);
+			}
+			if (ops.highlightColor || ops.borderColor)
+				this._proto._setHoverStates(this, ops.highlightColor ? ops.highlightColor.get("value") : undefined, ops.borderColor ? ops.borderColor.get("value"):undefined, ops.alignment);
+		};
+		/**
+		 * @instance
+		 * @memberof NavigationMenu
+		 * @method getHoverColor
+		 * @desc Get hover color of the navigation menu
+		 * @returns {string}
+		 */
+		this.constructor.prototype.getHoverColor = function ()
+		{
+			return this.context.options.highlightColor.get("value");
+		} 
+		/**
+		 * @instance
+		 * @memberof NavigationMenu
+		 * @method setNavItemBorderColor
+		 * @param {string} The color to be set for navigation item children border highlight 
+		 * @desc Set the border highlight color for the navigation item children
+		 */
+		this.constructor.prototype.setNavItemBorderColor = function (borderColor) {
+			var ops = this.context.options;
+			if (!ops.borderColor) {
+				ops.borderColor = bpmext.ui.substituteConfigOption(this, "borderColor", borderColor);
+			} else {
+				ops.borderColor.set("value", borderColor);
+			}
+			if (ops.highlightColor || ops.borderColor)
+				this._proto._setHoverStates(this, ops.highlightColor ? ops.highlightColor.get("value") : undefined, ops.borderColor ? ops.borderColor.get("value"):undefined, ops.alignment);
+			
+		};
+		/**
+		 * @instance
+		 * @memberof NavigationMenu
+		 * @method getNavItemBorderColor
+		 * @desc Get navigation item border color of the navigation menu
+		 * @returns {string}
+		 */
+		this.constructor.prototype.getNavItemBorderColor = function ()
+		{
+			return this.context.options.borderColor.get("value");
+		}
+		/**
+		 * @instance
+		 * @memberof NavigationMenu
+		 * @method setPageID
+		 * @param {string} 
+		 * @desc set page id
+		 */
+		this.constructor.prototype.setPageID = function (text)
+		{
+			this._instance.pageID = text;
+		};
+		
+		/**
+		 * @instance
+		 * @memberof NavigationMenu
+		 * @method setPageLabel
+		 * @param {string} 
+		 * @desc set current page label
+		 */
+		this.constructor.prototype.setPageLabel = function (text, isFolder)
+		{
+			if (this._instance.theNavBar.querySelectorAll(".ContentBox.navigationContainer button.btn") &&
+				this._instance.theNavBar.querySelectorAll(".ContentBox.navigationContainer button.btn").length > 0) {
+					this._instance.theNavBar.querySelectorAll(".ContentBox.navigationContainer button.btn").forEach(function (anode) {
+						anode.removeAttribute("aria-current");
+					});
+			}
+			if (this._instance.theNavBar.querySelectorAll(".ContentBox.navigationContainer panel-collapse.collapse .panel button.btn") &&
+				this._instance.theNavBar.querySelectorAll(".ContentBox.navigationContainer panel-collapse.collapse .panel button.btn").length > 0) {
+					this._instance.theNavBar.querySelectorAll(".ContentBox.navigationContainer panel-collapse.collapse .panel button.btn").foreach(function (anode) {
+						anode.removeAttribute("aria-current");
+					});
+			}
+			if (this._instance.theNavBar.querySelectorAll(".ContentBox.navigationContainer .Navigation_list") && 
+				this._instance.theNavBar.querySelectorAll(".ContentBox.navigationContainer .Navigation_list").length > 0) {
+					this._instance.theNavBar.querySelectorAll(".ContentBox.navigationContainer .Navigation_list").forEach(function (anode) {
+						anode.removeAttribute("aria-current");
+					});
+			}
+			if (this._instance.theNavBar.querySelectorAll(".panel-collapse.collapse") &&
+				this._instance.theNavBar.querySelectorAll(".panel-collapse.collapse").length > 0) {
+					this._instance.theNavBar.querySelectorAll(".panel-collapse.collapse").forEach(function (anode) {
+						anode.classList.remove("in");
+					});
+			}
+			
+			if (!isFolder) {
+                try {
+					if (this._instance.theNavBar.querySelectorAll(".ContentBox.navigationContainer .Navigation_list") && this._instance.theNavBar.querySelectorAll(".ContentBox.navigationContainer .Navigation_list").length > 0) {
+						var folderItem = this._instance.theNavBar.querySelectorAll(".ContentBox.navigationContainer .Navigation_list")[0].getElementsByClassName("accordion-toggle")[0];
+
+						folderItem.style.paddingBottom = "11px";
+						if ( this._instance.theNavBar.querySelector(".subitemButton")) {
+							folderItem.innerHTML = this._instance.theNavBar.querySelector(".subitemButton").innerText;
+						}
+					}
+                }catch(e){
+                    bpmext.log.error(bpmext.localization.formatMsg("general", "ERROR_FOLDER_ITEM") + " : " + e);
+                    if (e.stack) {
+                        bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+                    }
+                }
+			}
+			
+			this._instance.pageLabel = text;
+			this._instance.currentPage.innerHTML = this._instance.pageLabel;
+
+			
+			if (this._instance.theNavBar.classList.contains("sidemenuOpen") || this._instance.theNavBar.classList.contains("navTooBig")){
+				this._instance.currentPage.setAttribute("style", "display:flex");
+				if (isFolder && isFolder == 1) {
+					this._instance.currentPage.setAttribute("style", "padding:5px 15px !important");
+				}
+			} else 
+			{
+				this._instance.currentPage.setAttribute("style", "display:none");
+			}
+		};
+
+		/*
+		Coach NG Lifecycle methods *************************************************************
+		 */
+		this.constructor.prototype.load = function () {
+			try {
+				
+				var opts = this.context.options;
+				var mdt = opts._metadata;
+
+				//Set default config option values
+				if (!opts.alignment)
+					opts.alignment = bpmext.ui.substituteConfigOption(this, "alignment", "left");
+				if (!opts.colorMode)
+					opts.colorMode = bpmext.ui.substituteConfigOption(this, "colorMode", "light");
+				if (!opts.sizeStyle)
+					opts.sizeStyle = bpmext.ui.substituteConfigOption(this, "sizeStyle", "D");
+				
+				// Set Navigation Header (from meta label property)	
+				if (mdt.labelVisibility.get("value") != "SHOW" || !mdt.label.get("value")) {
+					opts.showNavHeader = false;
+				} else {
+					opts.showNavHeader = true;
+					this._instance.navHeader = document.createElement("div");
+					this._instance.navHeader.setAttribute("id", "nav-bar-brandName-" + this.context.controlidpath);
+					this._instance.navHeader.setAttribute("class", "brandNameDiv");
+					if (mdt.label.get("value")) {
+						this._instance.navHeader.innerHTML = "<strong>" + mdt.label.get("value") + "</strong>";
+					} else {
+						opts.showNavHeader = false;
+					}
+				}
+
+				//Initialize nav bar style
+				this._instance.theNavBar = this.context.element.children[0];
+				this._proto._initNavContainerStyle(this, opts.colorMode.get("value"), opts.alignment.get("value"));
+				
+				//Set button size style
+				this._proto._setSizeStyle(this, opts.sizeStyle.get("value"));
+
+				// Create Logo Element
+				if (this.context.binding) {
+					if (this.context.binding.get("value")) {
+					this._instance.theLogo = document.createElement("img");
+					this._instance.theLogo.setAttribute("id", "nav-bar-logo-" + this.context.controlidpath);
+					this._instance.theLogo.setAttribute("class", "Image");
+					this._instance.theLogo.setAttribute("src", this.context.binding.get("value"));
+					this._instance.theNavBar.prepend(this._instance.theLogo);
+					}
+				}
+				
+
+				// set hover states
+				if (opts.highlightColor || opts.borderColor)
+					this._proto._setHoverStates(this, opts.highlightColor ? opts.highlightColor.get("value") : undefined, opts.borderColor ? opts.borderColor.get("value"):undefined, opts.alignment, opts.fontColor ? opts.fontColor.get("value"):undefined);
+
+				// Create nav header if header exist
+				if (opts.showNavHeader) {
+					if (this._instance.theNavBar.children && this._instance.theNavBar.children.length>0) {
+						if (this._instance.theNavBar.children[0].getAttribute("class").indexOf("Image") == -1) {
+							this._instance.theNavBar.prepend(this._instance.navHeader);
+						} else {
+							this._instance.theNavBar.children[0].parentNode.insertBefore(this._instance.navHeader, this._instance.theNavBar.children[0].nextSibling);
+						}
+					}
+				}
+				
+				
+				// Create current page div placeholder
+				this._instance.currentPage = document.createElement("div");
+					this._instance.currentPage.setAttribute("id", "nav-bar-current-page-" + this.context.controlidpath);
+					this._instance.currentPage.setAttribute("class", "currentPageDiv");
+					this._instance.currentPage.setAttribute("style", "display:none !important");
+					
+					if (this._instance.theNavBar.children && this._instance.theNavBar.children.length>0) {
+						if (this._instance.theNavBar.children[0].getAttribute("class").indexOf("Image") == -1) {
+							this._instance.theNavBar.prepend(this._instance.currentPage);
+						} else {
+							//this._instance.theLogo = this._instance.theNavBar.children[0];
+							if (this._instance.theNavBar.children[1]) {
+								if (this._instance.theNavBar.children[1].id.indexOf("nav-bar-brandName") > -1) {
+									this._instance.theNavBar.children[1].parentNode.insertBefore(this._instance.currentPage, this._instance.theNavBar.children[1].nextSibling);
+								} else {
+									this._instance.theNavBar.children[0].parentNode.insertBefore(this._instance.currentPage, this._instance.theNavBar.children[0].nextSibling);
+								}
+							} else {
+								this._instance.theNavBar.children[0].parentNode.insertBefore(this._instance.currentPage, this._instance.theNavBar.children[0].nextSibling);
+							}
+
+						}
+					} 
+
+				//load items
+				
+				var cb = this.context.element.querySelector(".ContentBox");
+				for(var i = 0; i < cb.children.length; i++) {
+					  var child = cb.children[i];
+					  if(domClass.contains(child, "ContentBox")) {
+						this._loadChildren(child);       
+					  } else if(domAttr.has(child, "data-viewid")) {
+						try {
+						 if (child.classList.contains("Navigation_item") || child.classList.contains("Navigation_list")) {
+							if (child.classList.contains("Navigation_item")) {
+									child.classList.add("page-item"); 
+									//if (!this._instance.itemClone) this._instance.itemClone = child;
+								} else{
+									child.classList.add("page-folder"); 
+									//if (!this._instance.folderClone) this._instance.folderClone = child;
+								} 
+							this.context.createView(child, null, this);
+						 }
+						  
+						} catch(e) {
+						  console.error(e);
+						}
+					  }
+				} 
+				
+				// Create spacer
+				var spacer = document.createElement("div");
+				spacer.setAttribute("id", "nav-bar-spacer-" + this.context.controlidpath);
+				spacer.setAttribute("class", "spacerDiv");
+				this._instance.theNavBar.append(spacer);
+
+				// Create nav button icon
+				this._instance.responsiveNavButton = document.createElement("button");
+				var navIcon = document.createElement("span");
+				var svgElement = utilities.getCarbonIcon("ci-app-switcher");
+				if (svgElement) {
+					navIcon.appendChild(svgElement);
+				}
+
+				this._instance.responsiveNavButton.appendChild(navIcon);
+				this._instance.responsiveNavButton.setAttribute("class", "sideNavOpenButton");
+
+				this._instance.theNavBar.append(this._instance.responsiveNavButton);
+
+				this._instance.responsiveNavButton.onclick = function (event) {
+					event.currentTarget.parentNode.classList.toggle("navTooBig");
+					event.currentTarget.parentNode.classList.toggle("sidemenuOpen");
+				}
+
+				
+
+				bpmext.ui.loadView(this);
+				this._proto._windowResizeHandler(this);
+			}
+			catch (e) {
+				bpmext.log.error(bpmext.localization.formatMsg("general", "ERROR_ONLOAD_EVENT") + " [" + this.context.viewid + "]: " + e);
+				if (e.stack) {
+					bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+				}
+			}
+		};
+
+		this.constructor.prototype.view = function () {
+			try {
+				this._proto._handleVisibility(this);
+			}
+			catch (e) {
+				bpmext.log.error(bpmext.localization.formatMsg("general", "ERROR_ONVIEW_EVENT") + " [" + this.ui.getAbsoluteName() + "]: " + e);
+				if (e.stack) {
+					bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+				}
+			}
+		};
+
+		this.constructor.prototype.change = function (event) {
+			try {
+				if (event.type == "config") {
+					switch (event.property) {
+						case "_metadata.label": {
+							this._instance.navHeader.innerHTML = "<strong>" + event.newVal + "</strong>";
+	                        break;
+	                    }
+						case "_metadata.visibility":
+							{
+								this._proto._handleVisibility(this);
+								break;
+							}
+						case "sizeStyle": {
+								this._proto._setSizeStyle(this, event.newVal);
+								break;
+							}
+						case "colorMode": {
+							this._proto._initNavContainerStyle(this, event.newVal, this.context.options.alignment.get("value"));
+							break;
+						}
+						case "alignment": {
+							this._proto._initNavContainerStyle(this, this.context.options.colorMode.get("value"), event.newVal);
+							break;
+						}
+						case "borderColor": {
+							this._proto._setHoverStates(this, this.context.options.highlightColor ? this.context.options.highlightColor.get("value") : undefined, event.newVal ? event.newVal :undefined, this.context.options.alignment);
+							break;
+						}
+						case "highlightColor": {
+							this._proto._setHoverStates(this, event.newVal ? event.newVal : undefined, this.context.options.borderColor ? this.context.options.borderColor.get("value") :undefined, this.context.options.alignment);
+							break;
+						}
+						case "fontColor": {
+							this._proto._setHoverStates(this, event.newVal ? event.newVal : undefined, this.context.options.borderColor ? this.context.options.borderColor.get("value") :undefined, this.context.options.alignment, this.context.options.fontColor ? this.context.options.fontColor.get("value") :undefined);
+							break;
+						}
+					}
+				}
+			}
+			catch (e) {
+				bpmext.log.error(bpmext.localization.formatMsg("general", "ERROR_ONCHANGE_EVENT") + " [" + this.ui.getAbsoluteName() + "]: " + e);
+				if (e.stack) {
+					bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+				}
+			}
+		};
+
+		this.constructor.prototype.validate = function (event) {
+
+		};
+
+		this.constructor.prototype.collaboration = function (event) {
+
+		};
+
+		this.constructor.prototype.unload = function () {
+			bpmext.ui.unloadView(this);
+		};
+	}
+}

@@ -1,0 +1,949 @@
+/*
+ * #BEGIN COPYRIGHT
+ *
+ * Licensed Materials - Property of IBM
+ * 5725-C95
+ * (C) Copyright IBM Corporation 2017, 2020. All Rights Reserved.
+ * US Government Users Restricted Rights- Use, duplication or disclosure
+ * restricted by GSA ADP Schedule Contract with IBM Corp.
+ *
+ * #END COPYRIGHT
+ */
+
+/**
+ * @ignore
+ * @instance
+ * @memberof Icon
+ * @method isValid
+ */
+
+/**
+ * @ignore
+ * @instance
+ * @memberof Icon
+ * @method setValid
+ */
+
+/**
+ * @ignore
+ * @instance
+ * @memberof Icon
+ * @method recalculate
+ */
+
+/**
+ * @ignore
+ * @instance
+ * @memberof Icon
+ * @method getData
+ */
+
+/**
+ * @ignore
+ * @instance
+ * @memberof Icon
+ * @method setData
+ */
+
+/**
+ *   <tr class=Prop>
+ *     <td class=SectionName colspan=3>Events</td>
+ *   </tr>
+ *   <tr class=Prop>
+ *     <td>On Load:</td>
+ *     <td colspan = "2">
+ *       <table>
+ *         <tr class=Prop>
+ *           <td>Description: </td>
+ *           <td>This event is fired when the icon is loaded.</td>
+ *         </tr>
+ *         <tr class=Prop>
+ *           <td>Example: </td>
+ *           <td><pre class="prettyprint"><code>me.setIcon("gears")<code>/pre></td>
+ *         </tr>
+ *       </table>
+ *     </td>
+ *   </tr>
+ *   <tr class=Prop>
+ *     <td>On Click:</td>
+ *     <td colspan = "2">
+ *       <table>
+ *         <tr class=Prop>
+ *           <td>Description: </td>
+ *           <td>This event is fired when the icon is clicked.</td>
+ *         </tr>
+ *         <tr class=Prop>
+ *           <td>Example: </td>
+ *           <td><pre class="prettyprint"><code>return confirm("Are you sure?")<code></pre></td>
+ *         </tr>
+ *       </table>
+ *     </td>
+ *   </tr>
+ *   <tr class=Prop>
+ *     <td>On Boundary Event:</td>
+ *     <td colspan = "2">
+ *       <table>
+ *         <tr class=Prop>
+ *           <td>Description: </td>
+ *           <td>Triggers upon reaching a Stay On Page event after a boundary event is fired through this control. Additional parameters passed: status.  For information on the status context variable see the context.trigger() method in the Knowledge Center.</td>
+ *         </tr>
+ *         <tr class=Prop>
+ *           <td>Example: </td>
+ *           <td><pre class="prettyprint"><code>alert("Stay on Page status '" + status + "'")<code></pre></td>
+ *         </tr>
+ *       </table>
+ *       <table style="border: 1px solid black; border-collapse: collapse; ">
+ *         <tr style="border: 1px solid black; border-collapse: collapse;">
+ *           <th style="border: 1px solid black; border-collapse: collapse;padding: 5px;">Context Variables</th>
+ *           <th style="border: 1px solid black; border-collapse: collapse; padding: 5px;">status {string}</th>
+ *         </tr>
+ *       </table>
+ *     </td>
+ *   </tr>
+ * </table>
+ */
+bpmext_control_InitIcon = function (utilities, bpmext, domClass, domAttr, domConstruct, fastclick)
+{
+    /*
+    Instance-specific "PRIVATE" data
+    We use _instance so as to keep the number of attributes and functions visible at the main
+    object level to a minimum. If we don't do that, people will see all kinds of extra
+    functions and attributes at the main object level and assume it is ok to use them.
+
+    We'll need to tell users/developers that anything under _instance is private and should
+    not be accessed/called outide of the control.
+     */
+    this._instance =
+    {
+        btn : null,
+        iconSpan : null,
+        multiClicks : true,
+        colorStyle : null,
+        radius : null,
+        iconSize : null
+    };
+
+    if (!this.constructor.prototype._proto)
+    {
+        /*
+        Prototype-specific "PRIVATE" data - this is common to ALL instances of this control.
+
+        We use _proto so as to keep the number of attributes and functions visible at the main
+        object level to a minimum. If we don't do that, people will see all kinds of extra
+        functions and attributes at the main object level and assume it is ok to use them.
+
+        We'll need to tell users/developers that anything under _proto is private and should
+        not be accessed/called ouside of the control.
+         */
+        this.constructor.prototype._proto =
+        {
+            //Declarations for "private" constant values & structures
+            OPTS_COL_STLZ :
+            {
+                "D" : "",
+                "P": "btn-primary",
+                "I" : "btn-info",
+                "S" : "btn-success",
+                "W" : "btn-warning",
+                "G" : "btn-danger",
+                "E" : "btn-danger",
+                "T" : "btn-transparent"
+            },
+            EVT_ONCLICK : "eventON_CLICK",
+            EVT_ONBOUNDARYEVT : "eventON_BOUNDARYEVT",
+            _setSize : function (view, size)
+            {
+                try
+                {
+                    if(size == null || size == "")
+                        return; // default value is extracted to css
+
+                    if (!isNaN(size))
+                        size += "px";
+
+                    //{#bug: * Prevent icon from collapsing/expanding width if displayed as table cell}
+                    view._instance.btn.style.width = view._instance.btn.style.minWidth /*= view._instance.btn.style.maxWidth */ = size;
+                    view._instance.btn.style.height = size;
+                }
+                catch (e)
+                {
+                    //{#feature: US-1330 Added RT localization}
+                    //bpmext.log.error("Icon._setSize() error: " + e);
+                    bpmext.log.error("Icon._setSize() " + bpmext.localization.formatMsg("general", "ERROR") + ": " + e);
+                    if(e.stack) {
+                        //{#feature: US-1330 Added RT localization}
+                        //bpmext.log.error("  Call stack: " + e.stack);
+                        bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+                    }
+                }
+            },
+            _setIconSize : function (view, size)
+            {
+                try
+                {
+                    if(size == null || size == "")
+                        return; // default value is extracted to css
+
+                    if (!isNaN(size))
+                        size += "px";
+
+                    if(bpmext.text.startsWith((view.context.options.icon.get("value") || "" ).trim().toLowerCase(), "ci-")) {
+                        var svgElement = view._instance.btn.querySelector("svg");
+                        if (svgElement) {
+	                        svgElement.style.height = size;
+                        	svgElement.style.width = size;
+                        }
+                    } else {
+                        view._instance.btn.style.fontSize = size;
+                    }
+                }
+                catch (e)
+                {
+                    //{#feature: US-1330 Added RT localization}
+                    //bpmext.log.error("Icon._setIconSize() error: " + e);
+                    bpmext.log.error("Icon._setIconSize() " + bpmext.localization.formatMsg("general", "ERROR") + ": " + e);
+                    if(e.stack) {
+                        //{#feature: US-1330 Added RT localization}
+                        //bpmext.log.error("  Call stack: " + e.stack);
+                        bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+                    }
+                }
+            },
+            _normalizeColorStyle: function(style)
+            {
+                if(!style)
+                    style = "D";
+
+                style = style.toUpperCase();
+
+                if(!style == "E")
+                    style = "G";
+
+                if(style.length > 1)
+                {
+                    switch (style)
+                    {
+                        case "DEFAULT":
+                        case "DEF":
+                            style = "D";
+                            break;
+                        case "PRIMARY":
+                            style = "P";
+                            break;
+                        case "SUCCESS":
+                            style = "S";
+                            break;
+                        case "INFO":
+                        case "INF":
+                            style = "I";
+                            break;
+                        case "WARNING":
+                        case "WARN":
+                            style = "W";
+                            break;
+                        case "ERR":
+                        case "ERROR":
+                        case "DANGER":
+                            style = "G";
+                            break;
+                        case "TRANSPARENT":
+                            style = "T";
+                            break;
+                        default:
+                            //{#feature: US-1330 Added RT localization}
+                            //bpmext.log.warn("Unexpected color style: " + style);
+                            bpmext.log.warn(bpmext.localization.formatMsg("general", "COLOR_STYLE_WARNING",style));
+                    }
+                }
+
+                return style;
+            },
+            _setColorStyle : function (view, newVal, oldVal)
+            {
+                if(!oldVal)
+                    oldVal = view._instance.oldColStyle;
+
+                newVal = this._normalizeColorStyle(newVal);
+                oldVal = this._normalizeColorStyle(oldVal);
+
+                bpmext.ui.util.replaceCSSClass(view._instance.btn, this.OPTS_COL_STLZ, newVal, oldVal);
+                view._instance.oldColStyle = newVal;
+            },
+            _setRadius : function (view, newVal)
+            {
+                if (newVal === null || newVal === "") 
+                    return; // default value is extracted to css
+                
+                if (newVal != null && newVal.length > 0)
+                {
+                    if (!isNaN(newVal))
+                        newVal += "px";
+                }
+                else
+                    newVal = 0;
+
+                view._instance.btn.style.borderRadius = newVal;
+            },
+            _setOutline : function(view, outline)
+            {
+                var fn = outline ? domClass.add : domClass.remove;
+                fn(view._instance.btn, "btn-outline");
+            },
+            _setIcon : function(view, icon)
+            {
+                if(view._instance.iconSpan)
+                {
+                    view._instance.btn.removeChild(view._instance.iconSpan);
+                    view._instance.iconSpan = null;
+                }
+
+                if(icon != null && icon != "")
+                {
+                    var span = document.createElement("span");
+                    var iconClasses = "";
+                    domAttr.set(span, "id", "icon-label-"+view.context.controlidpath);
+
+                    icon = icon.trim().toLowerCase();
+
+                    if(bpmext.text.startsWith(icon, "ci-")) {
+                        var svgElement = utilities.getCarbonIcon(icon);
+                        if (svgElement) {
+                            span.appendChild(svgElement);
+                            iconClasses = " ci ";
+                        }
+                    } else {
+                        if(!bpmext.text.startsWith(icon, "fa-")) {
+                            icon = "fa-" + icon;
+                        }
+                        iconClasses = " fa " + icon;
+                    }
+                    domClass.add(span, "btn-label icon " + iconClasses);
+                    domConstruct.place(span, view._instance.btn, "first");
+                    view._instance.iconSpan = span;
+                }
+                else
+                {
+                    view._proto._createLabel(view, view.context.options._metadata.label.get("value"));
+                }
+            },
+			_setLabelVisibility : function (view, flag)
+			{
+				try
+				{
+					if(!view._instance.iconSpan)
+						view._proto._createLabel(view, view.context.options._metadata.label.get("value"));
+
+					// by setting icon label as hidden means not showing the icon within the icon-button
+					// but the button like actions and effects are persisted
+					view.context.setDisplay(flag == "SHOW", view._instance.iconSpan);
+				}
+				catch (e)
+				{
+					bpmext.log.error("Icon._setLabelVisibility() " + bpmext.localization.formatMsg("general", "ERROR") + ": " + e);
+					if(e.stack) { 
+						bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+					}
+				}
+			},
+            _setLabel : function(view, label)
+            {
+                try
+                {
+                    if(label != null)
+                    {
+                        if(view._instance.iconSpan && !domClass.contains(view._instance.iconSpan, "icon")) {
+                            view._proto._createLabel(view, label);
+                        } else {
+                            domAttr.set(view._instance.btn, "aria-label", label);
+                        }
+                    }
+                }
+                catch (e)
+                {
+                    bpmext.log.error("Icon._setLabel() " + bpmext.localization.formatMsg("general", "ERROR") + ": " + e);
+                    if (e.stack)
+                    {
+                        bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+                    }
+                }
+            },
+            _createLabel : function(view, label)
+            {
+                if(!view._instance.iconSpan)
+                {
+                    view._instance.iconSpan = document.createElement("span");
+                    domConstruct.place(view._instance.iconSpan, view._instance.btn, "first");
+                }
+                view._instance.iconSpan.innerHTML = view.context.htmlEscape(label);
+                utilities.BiDi.applyTextDir(
+                    view._instance.iconSpan,
+                    view._instance.iconSpan.innerHTML,
+                    view._instance.baseTxtDir,
+                    view._instance.genPrefTextDir);
+                    view._instance.iconSpan.style.fontSize = "12px";
+            },
+            _handleVisibility : function (view)
+            {
+                var btn = view._instance.btn;
+                var visibility = utilities.handleVisibility(view.context, null, null, [btn]);
+                var showAsIcon = view.getOption("showAsIcon");
+
+                if (visibility != "NONE")
+                {
+                    if (visibility == "READONLY")
+                    {
+                        if (showAsIcon) {
+                            domClass.remove(btn, "disabled");
+                            domAttr.remove(btn, "disabled");
+                        } else {
+                        	domClass.add(btn, "disabled");
+                            domAttr.set(btn, "disabled", "true");
+                        }
+                        this._setTabindex(view, false);
+                    }
+                    else
+                    {
+                        domAttr.remove(btn, "disabled");
+                        domClass.remove(btn, "disabled");
+                        this._setTabindex(view);
+                    }
+                }
+
+                // Updates for WAI
+                if (domAttr.has(btn, "disabled")) {										
+                    domAttr.set(btn, "aria-disabled", "true");
+                } else {					
+                    domAttr.remove(btn, "aria-disabled");
+                }
+            },
+            _setTabindex : function (view, setIndex)
+            {
+                try {
+                    if(setIndex === undefined || setIndex === null) {
+                        setIndex = true;
+                    }
+
+                    var showAsIcon = view.getOption("showAsIcon");
+
+                    if(!showAsIcon && setIndex) {
+                        domAttr.set(view._instance.btn, "tabindex", 0);
+                    } else {
+                        domAttr.remove(view._instance.btn, "tabindex");
+                    }
+                } catch(e) {
+                    bpmext.log.error("Icon._setTabindex() " + bpmext.localization.formatMsg("general", "ERROR") + ": " + e);
+                    if (e.stack)
+                    {
+                        bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+                    }
+                }
+            },
+            _setBtnAttributes : function (view)
+            {
+                try {
+                    var showAsIcon = view.getOption("showAsIcon");
+
+                    //Add aria role
+                    domAttr.set(view._instance.btn, "role", showAsIcon ? "img" : "button");
+
+                    //Set tabindex
+                    this._setTabindex(view);
+
+                    domAttr.set(view._instance.btn, "aria-label", view.context.options._metadata.label.get("value"));
+                    
+                    domAttr.set(view._instance.btn, "id", "icon-button-" + view.context.controlidpath);
+                } catch(e) {
+                    bpmext.log.error("Icon._setBtnAttributes() " + bpmext.localization.formatMsg("general", "ERROR") + ": " + e);
+                    if (e.stack)
+                    {
+                        bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+                    }
+                }
+            },
+            
+            _balanceIconAndControlSize: function (view)
+            {
+                // query default button style if it is not existed
+                if (!view._instance.defaultBtnStyle) {
+                    view._instance.defaultBtnStyle = view._proto._getDefaultBtnStyle();
+                }
+                
+                var size = view.context.options.size.get("value");
+                var iSize = view.context.options.iconSize.get("value");
+                
+                if (!size) {
+                    // if size is not defined, then use the default control size
+                    size = view._instance.defaultBtnStyle.width;
+                }
+                
+                if (!iSize) {
+                    // if iSize is not defined, then use the default icon size
+                    iSize = view._instance.defaultBtnStyle.fontSize;
+                }
+                
+                if (!isNaN(size)) {
+                    size += "px";
+                }
+                
+                if (!isNaN(iSize)) {
+                    iSize += "px";
+                }
+
+                var btnSize = Number(size.substring(0, size.length - 2));
+                var icnSize = Number(iSize.substring(0, iSize.length - 2));
+                
+                // if the sizes are at same unit
+                if (size.substr(-2) == iSize.substr(-2)) {
+                    if (btnSize < icnSize) {
+                        // automatically enlarge the btnSize to icnSize
+                        view._proto._setSize(view, icnSize);
+                    } else if (view.context.options.size.get("value")) {
+                        // set size back to user defined size
+                        view._proto._setSize(view, view.context.options.size.get("value"));
+                    } else if (view._instance.btn.style.width) {
+                        // set size back to default
+                        view._instance.btn.style.width = view._instance.btn.style.minWidth = null;
+                        view._instance.btn.style.height = null;
+                    }
+                } 
+            },
+            
+            _getDefaultBtnStyle: function () {
+                var div = domConstruct.create("div", {
+                    className: "SPARKIcon btn"
+                }, document.body);
+                
+                var defaultBtnStyle = window.getComputedStyle(div);
+                
+                // making sure that deleting the div won't address to clean up the styles
+                defaultBtnStyle = dojo.clone({
+                    width: defaultBtnStyle.width,
+                    fontSize: defaultBtnStyle.fontSize
+                });
+                
+                domConstruct.destroy(div);
+                
+                return defaultBtnStyle;
+            }
+        };
+
+
+        /*
+        Public control methods *************************************************************
+         */
+
+		/**
+		 * @instance
+		 * @memberof Icon
+		 * @method setLabel
+		 * @param {string} label Control label
+		 * @desc Set label for Icon control
+		 */
+		this.constructor.prototype.setLabel = function (text)
+		{
+			this.context.options._metadata.label.set("value", text);
+		};
+
+		/**
+		 * @instance
+		 * @memberof Icon
+		 * @method getLabel
+		 * @desc Get the label associated with the icon control
+		 * @returns {string}
+		 */
+		this.constructor.prototype.getLabel = function ()
+		{
+			return this.context.options._metadata.label.get("value");
+		};
+
+        /**
+         * @instance
+         * @memberof Icon
+         * @method setSize
+         * @param {string} size Size of icon container
+         * @desc Set size of icon (e.g. 50px, 20%, 2em - omitting the unit assumes px)
+         */
+        this.constructor.prototype.setSize = function (size)
+        {
+            this.context.options.size.set("value", size);
+        };
+
+        /**
+         * @instance
+         * @memberof Icon
+         * @method getSize
+         * @desc Get configured size for icon (including unit)
+         * @returns {string}
+         */
+        this.constructor.prototype.getSize = function ()
+        {
+            return this.context.options.size.get("value");
+        };
+
+        /**
+         * @instance
+         * @memberof Icon
+         * @method setIcon
+         * @param {string} icon See {@link http://fontawesome.io/icons Font Awesome} for a comprehensive list of icons (note the "fa-" prefix is optional). Refer to the knowledge center for the latest Font Awesome version.
+         * @desc Sets icon to display on the icon
+         */
+        this.constructor.prototype.setIcon = function (icon)
+        {
+            return this.context.options.icon.set("value", icon);
+        };
+
+        /**
+         * @instance
+         * @memberof Icon
+         * @method setColorStyle
+         * @param {string} style "DEFAULT"|"DEF"|"D"=Default | "PRIMARY"|"P"=Primary | "INFO"|INF"|"I"=Info | "SUCCESS"|"S"=Success | "WARNING"|"WARN"|"W"=Warning | "DANGER"|"G"=Danger | "TRANSPARENT"|"T"=Transparent
+         * @desc Sets color style of icon.  NOTE: This always returns the color as set, to avoid ambiguity always set the color using "D"|"P"|"I"|"S"|"W"|"G"|"T"
+         */
+        this.constructor.prototype.setColorStyle = function (style)
+        {
+            this.context.options.colorStyle.set("value", style);
+        };
+
+        /**
+         * @instance
+         * @memberof Icon
+         * @method getColorStyle
+         * @desc Gets color style of icon.   NOTE: This always returns the color as set, to avoid ambiguity always set the color using "D"|"P"|"I"|"S"|"W"|"G"|"T"
+         * @returns {string}
+         */
+        this.constructor.prototype.getColorStyle = function ()
+        {
+            return this.context.options.colorStyle.get("value");
+        };
+
+        /**
+         * @instance
+         * @memberof Icon
+         * @method setRadius
+         * @param {string} radius Radius of curvature for icon container corners
+         * @desc Sets radius (roundness) of icon
+         */
+        this.constructor.prototype.setRadius = function (radius)
+        {
+            return this.context.options.radius.set("value", radius);
+        };
+
+        /**
+         * @instance
+         * @memberof Icon
+         * @method setIconSize
+         * @param {string} size Icon size
+         * @desc Sets size of icon. Note that this changes the size of the icon itself (the image), not the container
+         */
+        this.constructor.prototype.setIconSize = function (size)
+        {
+            return this.context.options.iconSize.set("value", size);
+        };
+
+        /**
+         * @instance
+         * @memberof Icon
+         * @method setOutline
+         * @param {boolean} outline {true | false} Set to true to use outline only
+         * @desc Sets outline style of icon
+         */
+        this.constructor.prototype.setOutline = function (outline)
+        {
+            return this.context.options.outline.set("value", outline);
+        };
+
+        /**
+         * @instance
+         * @memberof Icon
+         * @method click
+         * @desc Programmatically click this icon
+         */
+        this.constructor.prototype.click = function ()
+        {
+            this._instance.btn.click();
+        };
+
+        /**
+         * @instance
+         * @memberof Icon
+         * @method getType
+         * @desc Get descriptive string representing the type of control
+         * @returns {string}
+         */
+        this.constructor.prototype.getType = function ()
+        {
+            return "icon.3";
+        };
+
+        //{#feature: US-696 ARIA labeling}
+        this.constructor.prototype._getHTMLInputElement = function ()
+        {
+            return this._instance.btn;   //This is the element that will need its "aria-labelledby" attribute set
+        };
+        //End US-696
+
+        //{#feature: US-696 ARIA Accessibility}
+        this.constructor.prototype._getTriggerElement = function ()
+        {
+            return this._instance.btn; //This is the element which is referred in Popup Menu for adding WAI-ARIA Accessibility Roles
+        };
+        //End US-696
+
+        /*
+        Coach NG Lifecycle methods *************************************************************
+         */
+        this.constructor.prototype.load = function ()
+        {
+            try
+            {
+                var opts = this.context.options;
+                var mdt = opts._metadata;
+
+                this._instance.baseTxtDir = mdt.baseTextDirection && mdt.baseTextDirection.get("value") ? mdt.baseTextDirection.get("value") : utilities.BiDi.BASE_TEXT_DIRECTION._default;
+                this._instance.genPrefTextDir = this.context.bpm.system.baseTextDirection;
+
+                if (!opts.preventMultipleClicks)
+                    opts.preventMultipleClicks = bpmext.ui.substituteConfigOption(this, "preventMultipleClicks", false);
+
+                if (!opts.showAsIcon)
+                    opts.showAsIcon = bpmext.ui.substituteConfigOption(this, "showAsIcon", false);
+
+                if (!opts.colorStyle)
+                    opts.colorStyle = bpmext.ui.substituteConfigOption(this, "colorStyle", "DEF");
+
+                if (!opts.radius)
+                    opts.radius = bpmext.ui.substituteConfigOption(this, "radius", null);
+
+                if (!opts.iconSize)
+                    opts.iconSize = bpmext.ui.substituteConfigOption(this, "iconSize", null);
+
+                if (!opts.outline)
+                    opts.outline = bpmext.ui.substituteConfigOption(this, "outline", false);
+
+                if (!opts.size)
+                    opts.size = bpmext.ui.substituteConfigOption(this, "size", null);
+
+                if (!opts.icon)
+                    opts.icon = bpmext.ui.substituteConfigOption(this, "icon", null);
+
+                this._instance.btn = document.createElement("div");
+
+                fastclick.attach(this._instance.btn);
+
+                domClass.add(this._instance.btn, "SPARKIcon btn");
+
+                bpmext.ui.registerEventHandlingFunction(this, this._proto.EVT_ONCLICK);
+                bpmext.ui.registerEventHandlingFunction(this, this._proto.EVT_ONBOUNDARYEVT, "status");
+
+                this._proto._setSize(this, opts.size.get("value"));
+                this._proto._setColorStyle(this, opts.colorStyle.get("value"));
+                this._proto._setRadius(this, opts.radius.get("value"));
+                this._proto._setOutline(this, opts.outline.get("value"));
+                this._proto._setIcon(this, opts.icon.get("value"));
+                this._proto._setIconSize(this, opts.iconSize.get("value"));
+				this._proto._setLabelVisibility(this, mdt.labelVisibility.get("value"));
+                this._proto._balanceIconAndControlSize(this);
+
+                this.context.element.appendChild(this._instance.btn);
+
+                this._instance.multiClicks = !(opts.preventMultipleClicks ? opts.preventMultipleClicks.get("value") : false);
+
+                bpmext.ui.loadView(this);
+
+                this._proto._setBtnAttributes(this); //Call this function after the view and events are registered otherwise there will be exceptions
+
+                var _this = this;
+
+                if(!opts.showAsIcon.get("value"))
+                {
+                    this._instance.btn.onclick = function (event)
+                    {
+                        if (domAttr.get(_this._instance.btn, "disabled") !== "true" && !!_this.context)
+                        {
+                            //Example of triggering the onClick event for Icon:
+                            var fireBE = bpmext.ui.executeEventHandlingFunction(_this, _this._proto.EVT_ONCLICK);
+                            //Note: The above calls the logic specified on the control's on click event
+                            //and captures the value returned by your code (assuming you return a value)
+                            if (fireBE)
+                            {
+                                if (!_this._instance.multiClicks)
+                                {
+                                    domAttr.set(_this._instance.btn, "disabled", "true");
+                                    domClass.add(_this._instance.btn, "disabled");
+                                    _this._proto._setTabindex(_this, false);
+                                }
+
+                                if (_this.context.binding)
+                                {
+                                    _this.context.binding.set("value", true);
+                                }
+
+                                _this.context.trigger(function (st)
+                                {
+                                    domAttr.remove(_this._instance.btn, "disabled");
+                                    domClass.remove(_this._instance.btn, "disabled");
+                                    _this._proto._setTabindex(_this);
+
+                                    setTimeout(function(){
+                                        bpmext.ui.executeEventHandlingFunction(_this, _this._proto.EVT_ONBOUNDARYEVT, st.status);
+                                    });
+                                }, {callBackForAll : true});
+                            }
+                        }
+                    };
+
+                    this._instance.btn.onkeypress = function (event)
+                    {
+                        if (event.key === "Enter" || event.key === " " || event.key === "Spacebar") {
+                            if (domAttr.get(_this._instance.btn, "disabled") !== "true")
+                            {
+                                //Example of triggering the onClick event for Icon:
+                                var fireBE = bpmext.ui.executeEventHandlingFunction(_this, _this._proto.EVT_ONCLICK);
+                                //Note: The above calls the logic specified on the control's on click event
+                                //and captures the value returned by your code (assuming you return a value)
+                                if (fireBE)
+                                {
+                                    if (!_this._instance.multiClicks)
+                                    {
+                                        domAttr.set(_this._instance.btn, "disabled", "true");
+                                        domClass.add(_this._instance.btn, "disabled");
+                                        _this._proto._setTabindex(_this, false);
+                                    }
+
+                                    if (_this.context.binding)
+                                    {
+                                        _this.context.binding.set("value", true);
+                                    }
+
+                                    _this.context.trigger(function (st)
+                                    {
+                                        domAttr.remove(_this._instance.btn, "disabled");
+                                        domClass.remove(_this._instance.btn, "disabled");
+                                        _this._proto._setTabindex(_this);
+
+                                        setTimeout(function(){
+                                            bpmext.ui.executeEventHandlingFunction(_this, _this._proto.EVT_ONBOUNDARYEVT, st.status);
+                                        });
+                                    }, {callBackForAll : true});
+                                }
+                            }
+                        }
+                    };
+                }
+            }
+            catch (e)
+            {
+                //{#feature: US-1330 Added RT localization}
+                //bpmext.log.error("Error on load event [" + this.context.viewid + "]: " + e);
+                bpmext.log.error(bpmext.localization.formatMsg("general", "ERROR_ONLOAD_EVENT") + " [" + this.context.viewid + "]: " + e);
+                if(e.stack) {
+                    //{#feature: US-1330 Added RT localization}
+                    //bpmext.log.error("  Call stack: " + e.stack);
+                    bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+                }
+            }
+        };
+
+        this.constructor.prototype.view = function ()
+        {
+            try
+            {
+                this._proto._handleVisibility(this);
+            }
+            catch (e)
+            {
+                //{#feature: US-1330 Added RT localization}
+                //bpmext.log.error("Error on view event [" + this.ui.getAbsoluteName() + "]: " + e);
+                bpmext.log.error(bpmext.localization.formatMsg("general", "ERROR_ONVIEW_EVENT") + " [" + this.ui.getAbsoluteName() + "]: " + e);
+                if(e.stack) {
+                    //{#feature: US-1330 Added RT localization}
+                    //bpmext.log.error("  Call stack: " + e.stack);
+                    bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+                }
+            }
+        };
+
+        this.constructor.prototype.change = function (event)
+        {
+            try
+            {
+                if (event.type == "config")
+                {
+                    switch (event.property)
+                    {
+                    case "_metadata.label":
+                        {
+                            this._proto._setLabel(this, event.newVal);
+                            break;
+                        }
+                    case "_metadata.visibility":
+                        {
+                            this._proto._handleVisibility(this);
+                            break;
+                        }
+                    case "_metadata.labelVisibility":
+						{
+							this._proto._setLabelVisibility(this, event.newVal);
+							break;
+						}
+                    case "_metadata.helpText":
+                        {
+                            this._proto._setHelpText(this, event.newVal);
+                            break;
+                        }
+                    case "size":
+                        {
+                            this._proto._setSize(this, event.newVal);
+                            this._proto._balanceIconAndControlSize(this);
+                            break;
+                        }
+                    case "colorStyle":
+                        {
+                            this._proto._setColorStyle(this, event.newVal, event.oldVal);
+                            break;
+                        }
+                    case "radius":
+                        {
+                            this._proto._setRadius(this, event.newVal);
+                            break;
+                        }
+                    case "iconSize":
+                        {
+                            this._proto._setIconSize(this, event.newVal);
+                            this._proto._balanceIconAndControlSize(this);
+                            break;
+                        }
+                    case "outline":
+                        {
+                            this._proto._setOutline(this, event.newVal);
+                            break;
+                        }
+                    case "icon":
+                        {
+                            this._proto._setIcon(this, event.newVal);
+                            this._proto._setIconSize(this, this.context.options.iconSize.get("value"));
+                            this._proto._balanceIconAndControlSize(this);
+                            break;
+                        }
+                    }
+                }
+            }
+            catch (e)
+            {
+                //{#feature: US-1330 Added RT localization}
+                //bpmext.log.error("Error on change event [" + this.ui.getAbsoluteName() + "]: " + e);
+                bpmext.log.error(bpmext.localization.formatMsg("general", "ERROR_ONCHANGE_EVENT") + " [" + this.ui.getAbsoluteName() + "]: " + e);
+                if(e.stack) {
+                    //{#feature: US-1330 Added RT localization}
+                    //bpmext.log.error("  Call stack: " + e.stack);
+                    bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+                }
+            }
+        };
+
+        this.constructor.prototype.unload = function ()
+        {
+            bpmext.ui.unloadView(this);
+        };
+    }
+};

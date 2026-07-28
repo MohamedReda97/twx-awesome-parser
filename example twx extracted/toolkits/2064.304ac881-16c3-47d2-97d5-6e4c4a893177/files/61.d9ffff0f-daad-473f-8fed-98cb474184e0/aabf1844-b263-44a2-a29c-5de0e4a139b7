@@ -1,0 +1,984 @@
+/*
+ * #BEGIN COPYRIGHT
+ *
+ * Licensed Materials - Property of IBM
+ * 5725-C95
+ * (C) Copyright IBM Corporation 2017, 2021. All Rights Reserved.
+ * US Government Users Restricted Rights- Use, duplication or disclosure
+ * restricted by GSA ADP Schedule Contract with IBM Corp.
+ *
+ * #END COPYRIGHT
+ */
+
+/**
+ * @ignore
+ * @instance
+ * @memberof InputGroup
+ * @method isValid
+ */ 
+
+/**
+ * @ignore
+ * @instance
+ * @memberof InputGroup
+ * @method setValid
+ */ 
+
+/**
+ *   <tr class=Prop>
+ *     <td class=SectionName colspan=3>Events</td>
+ *   </tr>
+ *   <tr class=Prop>
+ *     <td>On Load:</td>
+ *	   <td colspan = "2">
+ *       <table>
+ *         <tr class=Prop>
+ *           <td>Description: </td>
+ *           <td>This event is triggered when the control is loaded.</td>
+ *         </tr>
+ *         <tr class=Prop>
+ *           <td>Example: </td>
+ *           <td><pre class="prettyprint"><code>me.setIcon("rocket");<code></pre></td>
+ *         </tr>
+ *       </table>
+ *     </td>
+ *   </tr>
+ *   <tr class=Prop>
+ *     <td>On Button Click:</td>
+ *	   <td colspan = "2">
+ *       <table>
+ *         <tr class=Prop>
+ *           <td>Description: </td>
+ *           <td>This event is triggered when the control is clicked.</td>
+ *         </tr>
+ *         <tr class=Prop>
+ *           <td>Example: </td>
+ *           <td><pre class="prettyprint"><code>${PopupMenu1}.setMenuVisible(!${PopupMenu1}.isMenuVisible())<code></pre></td>
+ *         </tr>
+ *       </table>
+ *     </td>
+ *   </tr>
+ * </table>
+ */
+bpmext_control_InitInputGroup = function (bpmext, utilities, domClass, domAttr, domConstruct, fastclick)
+{
+	this._instance = {};
+
+	if (!this.constructor.prototype._proto)
+	{
+		this.constructor.prototype.IS_ADDRESS_INVISIBLE = true;
+
+		this.constructor.prototype._proto =
+		{
+			EVT_ONCHANGE : "eventON_CHANGE",
+			EVT_ONCLICK : "eventON_CLICK",
+			OPTS_COL_BG_CLZ : {
+				"D" : "bg",
+				"P" : "bg-primary",
+				"I" : "bg-info",
+				"S" : "bg-success",
+				"W" : "bg-warning",
+				"G" : "bg-danger",
+				"E" : "bg-danger"
+			},
+			OPTS_COL_BTN_CLZ : {
+				"D" : "btn",
+				"P" : "btn-primary",
+				"I" : "btn-info",
+				"S" : "btn-success",
+				"W" : "btn-warning",
+				"G" : "btn-danger",
+				"E" : "btn-danger"
+			},
+			OPTS_SZ_STL_CLZ: {
+				"D" : "",
+				"L" : "input-group-lg",
+				"S" : "input-group-sm"
+			},
+			OPTS_BTN_LOC_CLZ: {
+				"L" : "left",
+				"R" : "right"
+			},
+			_updateControl : function (view)
+			{
+
+			},
+			_createLabel : function (view)
+			{
+				//view._instance.label = document.createElement("label");
+				//Added for TK-1269 : STARTS
+				view._instance.label = document.createElement("span");
+				//TK-1269 : ENDS
+				domClass.add(view._instance.label, "control-label");
+				domConstruct.place(view._instance.label, view._instance.outer, "first");
+
+				//{#feature: US-696 ARIA labeling}
+				if(view._instance.ariaLabelTarget != null)
+				{
+					var lblId = "ig-lbl-" + view.getUID();
+
+					domAttr.set(view._instance.label, "id", lblId);
+					domAttr.set(view._instance.ariaLabelTarget, "aria-labelledby", lblId);
+
+					if(view._instance.ariaLabelTarget.nodeName == "BUTTON" || view._instance.ariaLabelTarget.nodeName == "A")
+						domAttr.remove(view._instance.ariaLabelTarget, "aria-labelledby");
+				}
+				//End US-696
+			},
+			_setButtonKind : function (view, bKind)
+			{
+                var classes = "btn-label icon ";
+				if(bKind == "I")
+					domClass.add(view._instance.button, classes);
+				else
+				{
+                    //+remove actual icon - e.g. fa-bell
+                    view._instance.button.innerHTML = "";
+					domClass.remove(view._instance.button, classes + (view._instance._oldBtnInfo || ""));
+				}
+			},
+			_setButtonInfo : function (view, buttonInfo)
+			{
+				switch(view.context.options.buttonKind.get("value"))
+				{
+					case "I":
+					{
+                        var iconName = buttonInfo;
+                        view._instance.button.innerHTML = "";
+                        if (bpmext.text.startsWith(iconName, "ci-")) {
+                            view._instance.button.appendChild(utilities.getCarbonIcon(iconName));
+                            // add icon class
+                            iconName = "ci " + iconName;
+                        } else {
+                            if (!bpmext.text.startsWith(iconName, "fa-")) {
+                                iconName = "fa-" + iconName;
+                            }
+                            // add icon class
+                            iconName = "fa " + iconName;
+                        }
+                        if(view._instance._oldBtnInfo != null && view._instance._oldBtnInfo.length > 0)
+                            domClass.replace(view._instance.button, iconName, view._instance._oldBtnInfo);
+                        else
+                            domClass.add(view._instance.button, iconName);
+						view._instance._oldBtnInfo = iconName;
+						break;
+					}
+					case "T":
+					{
+						view._instance.button.innerHTML = buttonInfo != null ? buttonInfo : "@";
+						break;
+					}
+					case "M":
+					{
+						view._instance.button.innerHTML = (buttonInfo != null ? buttonInfo : "") + "<span id='inputgroup-button-icon-"+view.context.controlidpath+"' class='ig-menu-btn fa fa-caret-down'></span>";
+						break;
+					}
+				}
+			},
+			_setButtonLocation : function (view, newVal, oldVal)
+			{
+				if(!oldVal)
+					oldVal = view._instance.oldBtnLoc;
+
+				newVal = bpmext.ui.util.normalizeHorizontalPos(newVal, this.OPTS_BTN_LOC_CLZ);
+				oldVal = bpmext.ui.util.normalizeHorizontalPos(oldVal, this.OPTS_BTN_LOC_CLZ);
+
+				bpmext.ui.util.replaceCSSClass(view._instance.inputGroup, this.OPTS_BTN_LOC_CLZ, newVal, oldVal);
+				view._instance.oldBtnLoc = newVal;
+
+				domConstruct.place(
+					view._instance.button,
+					view._instance.inputGroup,
+					newVal == "L" ? "first" : "last"
+				);
+			},
+			_setLabelVisibility : function (view, flag)
+			{
+				try
+				{
+					if(!view._instance.label)
+						this._createLabel(view);
+
+					view.context.setDisplay(flag == "SHOW", view._instance.label);
+				}
+				catch (e)
+				{
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.error("InputGroup._setLabelVisibility() error: " + e);
+					bpmext.log.error("InputGroup._setLabelVisibility() " + bpmext.localization.formatMsg("general", "ERROR") + ": " + e);
+					if(e.stack) {
+						//{#feature: US-1330 Added RT localization}
+						//bpmext.log.error("  Call stack: " + e.stack);
+						bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+					}
+				}
+			},
+			_setLabel : function (view, label)
+			{
+				try
+				{
+					if(label)
+					{
+						if(!view._instance.label)
+							this._createLabel(view);
+
+						view._instance.label.innerHTML = view.context.htmlEscape(label);
+						utilities.BiDi.applyTextDir(
+							view._instance.label,
+							view._instance.label.innerHTML,
+							view._instance.baseTxtDir,
+							view._instance.genPrefTextDir
+							);
+					}
+					else
+					{
+						if(view._instance.label)
+						{
+							view._instance.outer.removeChild(view._instance.label);
+							delete view._instance.label;
+						}
+					}
+				}
+				catch (e)
+				{
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.error("InputGroup._setLabel() error: " + e);
+					bpmext.log.error("InputGroup._setLabel() " + bpmext.localization.formatMsg("general", "ERROR") + ": " + e);
+					if(e.stack) {
+						//{#feature: US-1330 Added RT localization}
+						//bpmext.log.error("  Call stack: " + e.stack);
+						bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+					}
+				}
+			},
+			_setLabelPlacement : function (view, newVal, oldVal)
+			{
+				if(!oldVal)
+					oldVal = view._instance.oldLblPlc;
+
+				newVal = bpmext.ui.util.normalizeLabelPlacement(newVal, bpmext.ui.util.OPTS_LBL_PLC_CLZ);
+				oldVal = bpmext.ui.util.normalizeLabelPlacement(oldVal, bpmext.ui.util.OPTS_LBL_PLC_CLZ);
+
+				bpmext.ui.util.replaceCSSClass(view._instance.outer, bpmext.ui.util.OPTS_LBL_PLC_CLZ, newVal, oldVal);
+				view._instance.oldLblPlc = newVal;
+			},
+			_setLabelWidth : function (view, labelWidth)
+			{
+				if(labelWidth != null && labelWidth != "")
+				{
+					if(!isNaN(labelWidth))
+						labelWidth += "px";
+
+					view._instance.label.style.width = labelWidth;
+					domClass.add(view.context.element, "labelWidth");
+				}
+				else 
+				{
+					if (view._instance.label) {
+						view._instance.label.style.width = null;
+					}
+
+					domClass.remove(view.context.element, "labelWidth");
+				}
+
+			},
+			_setHelpText : function (view, text)
+			{
+				utilities.setHelpText(view, text);
+			},
+			_setWidth : function (view, width)
+			{
+				try
+				{
+					if (width != null && width != "")
+					{
+						if (!isNaN(width))
+							width += "px";
+
+						view.context.element.style.width = width;
+
+						domClass.add(view.context.element, "widthSet");
+					}
+					else 
+					{
+						view.context.element.style.width = null;
+
+						domClass.remove(view.context.element, "widthSet");
+					}
+				}
+				catch (e)
+				{
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.error("InputGroup._setWidth() error: " + e);
+					bpmext.log.error("InputGroup._setWidth() " + bpmext.localization.formatMsg("general", "ERROR") + ": " + e);
+					if(e.stack) {
+						//{#feature: US-1330 Added RT localization}
+						//bpmext.log.error("  Call stack: " + e.stack);
+						bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+					}
+				}
+			},
+			_normalizeSizeStyle: function(sizeStyle)
+			{
+				// OPTS_SZ_STL_CLZ: {
+					// "D" : "",
+					// "L" : "input-group-lg",
+					// "S" : "input-group-sm"
+				// },
+				if(!sizeStyle)
+					sizeStyle = "D";
+
+				sizeStyle = sizeStyle.toUpperCase();
+				if(sizeStyle.length > 1)
+				{
+					switch (sizeStyle)
+					{
+						case "LARGE":
+							sizeStyle = "L";
+							break;
+						case "SMALL":
+							sizeStyle = "S";
+							break;
+						case "DEF":
+						case "DEFAULT":
+							sizeStyle = "D";
+							break;
+						default:
+							//{#feature: US-1330 Added RT localization}
+							//bpmext.log.warn("Unexpected size style: " + sizeStyle);
+							bpmext.log.warn(bpmext.localization.formatMsg("general", "SIZE_STYLE_WARNING",sizeStyle));
+					}
+				}
+
+				return sizeStyle;
+			},
+			_setSizeStyle : function (view, newVal, oldVal)
+			{
+				if(!oldVal)
+					oldVal = view._instance.oldSzStyle;
+
+				newVal = this._normalizeSizeStyle(newVal);
+				oldVal = this._normalizeSizeStyle(oldVal);
+
+				bpmext.ui.util.replaceCSSClass(view._instance.inputGroup, this.OPTS_SZ_STL_CLZ, newVal, oldVal);
+				view._instance.oldSzStyle = newVal;
+
+				bpmext.ui.util.propagateDownSizeStyle(view, newVal);
+				bpmext.ui.util.propagateUpSizeStyle(view, newVal);
+			},
+			_normalizeColorStyle: function(style)
+			{
+				if(!style)
+					style = "D";
+
+				style = style.toUpperCase();
+				if(style.length > 1)
+				{
+					switch (style)
+					{
+						case "DEFAULT":
+						case "DEF":
+							style = "D";
+							break;
+						case "SUCCESS":
+							style = "S";
+							break;
+						case "INFO":
+						case "INF":
+							style = "I";
+							break;
+						case "PRIMARY":
+						case "PRI":
+							style = "P";
+							break;
+						case "WARNING":
+						case "WARN":
+							style = "W";
+							break;
+						case "ERROR":
+						case "ERR":
+						case "DANGER":
+							style = "G";
+							break;
+						default:
+							//{#feature: US-1330 Added RT localization}
+							//bpmext.log.warn("Unexpected color style: " + style);
+							bpmext.log.warn(bpmext.localization.formatMsg("general", "COLOR_STYLE_WARNING",style));
+					}
+				}
+
+				return style;
+			},
+			_setButtonColorStyle : function (view, newVal, oldVal)
+			{
+				var clsMap = view._instance.clickable ? this.OPTS_COL_BTN_CLZ : this.OPTS_COL_BG_CLZ;
+				if(!oldVal)
+					oldVal = view._instance.oldColStyle;
+
+				newVal = this._normalizeColorStyle(newVal);
+				oldVal = this._normalizeColorStyle(oldVal);
+
+				if(newVal == "D")
+					domClass.remove(view._instance.inputGroup, "no-border");
+				else
+					domClass.add(view._instance.inputGroup, "no-border");
+
+				bpmext.ui.util.replaceCSSClass(view._instance.button, clsMap, newVal, oldVal);
+				view._instance.oldColStyle = newVal;
+			},
+			_handleVisibility : function (view)
+			{
+				var visibility = utilities.handleVisibility(view.context);
+
+				if (visibility != "NONE")
+				{
+					if (visibility === "READONLY")
+						domClass.remove(view._instance.disabler, "hidden");
+					else
+						domClass.add(view._instance.disabler, "hidden");
+					if (!view._instance.label)
+						return;
+					if (visibility === "READONLY")
+						domClass.add(view.context.element, "disabled");
+					else
+						domClass.remove(view.context.element, "disabled");
+				}
+			}
+		};
+
+		/*
+		Public control methods *************************************************************
+		 */
+
+		//{#feature: * Re-introduced set/getSizeStyle() methods for Input Group - ED}
+		/**
+		 * @instance
+		 * @memberof InputGroup
+		 * @method setSizeStyle
+		 * @param {string} style "DEFAULT"|"DEF"|"NORMAL"|"D"=Default | "SMALL"|"S"=Small | "LARGE"|"L"=Large
+		 * @desc Sets size style of control.  NOTE: to avoid ambiguity always set the size style using "D"|"S"|"L"
+		 */
+		this.constructor.prototype.setSizeStyle = function (style) {
+			return this.context.options.sizeStyle.set("value", style);
+		}
+
+		/**
+		 * @instance
+		 * @memberof InputGroup
+		 * @method getSizeStyle
+		 * @desc Gets size style of control
+		 * @return {string} {"L"=Large | "S"=Small | "D"=Default}
+		 */
+		this.constructor.prototype.getSizeStyle = function () {
+			return this.context.options.sizeStyle.get("value");
+		}
+
+		/**
+		 * @instance
+		 * @memberof InputGroup
+		 * @method setLabel
+		 * @param {string} label label text for the control
+		 * @desc Set label for control
+		 */
+		this.constructor.prototype.setLabel = function (text)
+		{
+			this.context.options._metadata.label.set("value", text);
+		};
+
+		/**
+		 * @instance
+		 * @memberof InputGroup
+		 * @method getLabel
+		 * @desc Get label associated with control
+		 * @returns {string}
+		 */
+		this.constructor.prototype.getLabel = function ()
+		{
+			return this.context.options._metadata.label.get("value");
+		}
+
+		/**
+		 * @instance
+		 * @memberof InputGroup
+		 * @method setLabelPlacement
+		 * @param {string} placement "T"|"TOP"=Top | "L"|"LEFT"=Left
+		 * @desc Set label placement for control.  NOTE: to avoid ambiguity always set the label placement using "T"|"L"
+		 */
+		this.constructor.prototype.setLabelPlacement = function (plc)
+		{
+			this.context.options.labelPlacement.set("value", plc);
+		};
+
+		/**
+		 * @instance
+		 * @memberof InputGroup
+		 * @method getLabelPlacement
+		 * @desc Get label placement for control.  NOTE: This always returns the label placement as set, to avoid ambiguity always set the label placement using "T"|"L"
+		 * @returns {string}
+		 */
+		this.constructor.prototype.getLabelPlacement = function ()
+		{
+			return this.context.options.labelPlacement.get("value");
+		}
+
+		/**
+		 * @instance
+		 * @memberof InputGroup
+		 * @method getLabelWidth
+		 * @desc Get label width of InputGroup control (e.g. 50px, 20%, 2em - omitting the unit assumes px)
+		 * @returns {string}
+		 */
+		this.constructor.prototype.getLabelWidth = function ()
+		{
+			return this.context.options.labelWidth.get("value");
+		};
+
+		/**
+		 * @instance
+		 * @memberof InputGroup
+		 * @method setLabelWidth
+		 * @param {string} labelWidth Control's label width
+		 * @desc Set label width of InputGroup control (e.g. 50px, 20%, 2em - omitting the unit assumes px)
+		 */
+		this.constructor.prototype.setLabelWidth = function (labelWidth)
+		{
+			this.context.options.labelWidth.set("value", labelWidth);
+		};
+
+		/**
+		 * @instance
+		 * @memberof InputGroup
+		 * @method setWidth
+		 * @param {string} width width of the input group
+		 * @desc Set width of the control (e.g. 50px, 20%, 2em - omitting the unit assumes px)
+		 */
+		this.constructor.prototype.setWidth = function (width)
+		{
+			this.context.options.width.set("value", width);
+		}
+
+		/**
+		 * @instance
+		 * @memberof InputGroup
+		 * @method getWidth
+		 * @desc Get configured width for the control (including unit)
+		 * @returns {string}
+		 */
+		this.constructor.prototype.getWidth = function ()
+		{
+			return this.context.options.width.get("value");
+		}
+
+		/**
+		 * @instance
+		 * @memberof InputGroup
+		 * @method setColorStyle
+		 * @param {string} style "DEFAULT"|"DEF"|"D"=Default | "PRIMARY"|"P"=Primary | "INFO"|INF"|"I"=Info | "SUCCESS"|"S"=Success | "WARNING"|"WARN"|"W"=Warning | "ERROR"|"ERR"|"DANGER"|"G"=Danger
+		 * @desc Sets color style of the control.  NOTE: to avoid ambiguity always set the color using "D"|"P"|"I"|"S"|"W"|"G"
+		 */
+		this.constructor.prototype.setColorStyle = function (style)
+		{
+			return this.context.options.buttonColorStyle.set("value", style);
+		}
+
+		/**
+		 * @instance
+		 * @memberof InputGroup
+		 * @method setButtonLocation
+		 * @param {string} placement "L"|"LEFT"=Left | "R"|"RIGHT"=right
+		 * @desc Sets horizontal location of button in the control.  NOTE: to avoid ambiguity always set the label placement using "L" | "R"
+		 */
+		this.constructor.prototype.setButtonLocation = function (loc)
+		{
+			this.context.options.buttonLocation.set("value", loc);
+		}
+
+		/**
+		 * @instance
+		 * @memberof InputGroup
+		 * @method getButtonLocation
+		 * @desc Gets horizontal location of button in the control.  NOTE: This always returns the button placement as set, to avoid ambiguity always set the label placement using "L"|"R"
+		 * @returns {string}
+		 */
+		this.constructor.prototype.getButtonLocation = function ()
+		{
+			return this.context.options.buttonLocation.get("value");
+		}
+
+		/**
+		 * @instance
+		 * @memberof InputGroup
+		 * @method setIcon
+		 * @param {string} icon See {@link http://fontawesome.io/icons Font Awesome} for a comprehensive list of icons (note the "fa-" prefix is optional). Refer to the knowledge center for the latest Font Awesome version.
+		 * @desc Sets the icon to display
+		 */
+		this.constructor.prototype.setIcon = function(icon)
+		{
+			this.context.options.buttonInfo.set("value", icon);
+		}
+
+		/**
+		 * @instance
+		 * @memberof InputGroup
+		 * @method getIcon
+		 * @return {string} icon See {@link http://fontawesome.io/icons Font Awesome} for a comprehensive list of icons (note the "fa-" prefix is optional). Refer to the knowledge center for the latest Font Awesome version.
+		 * @desc Gets the icon currently on display
+		 */
+		this.constructor.prototype.getIcon=function(){
+			return this.context.options.buttonInfo.get("value");
+		}
+
+		/**
+		 * @instance
+		 * @memberof InputGroup
+		 * @method getType
+		 * @desc Get descriptive string representing the type of control
+		 * @returns {string}
+		 */
+		this.constructor.prototype.getType = function ()
+		{
+			return "statusBox.3";
+		}
+
+		//{#feature: US-696 ARIA labeling}
+		this.constructor.prototype._getHTMLInputElement = function ()
+		{
+			return this._instance.ariaLabelTarget;
+		}
+		//End US-696
+		//{#feature: US-696 ARIA Accessibility}
+		this.constructor.prototype._getTriggerElement = function ()
+		{
+			return this._instance.button; //This is the element which is referred in Popup Menu for adding WAI-ARIA Accessibility Roles
+		}
+		//End US-696
+
+		/**
+		 * @instance
+		 * @memberof InputGroup
+		 * @method setHelpText
+		 * @param {string} helptext Help text for the control
+		 * @desc Set help text for the control
+		 */
+		this.constructor.prototype.setHelpText = function (text) {
+			this.context.options._metadata.helpText.set("value", text);
+		};
+
+		/**
+		 * @instance
+		 * @memberof InputGroup
+		 * @method getHelpText
+		 * @desc Get help text associated with the control
+		 * @returns {string}
+		 */
+		this.constructor.prototype.getHelpText = function () {
+			return this.context.options._metadata.helpText.get("value");
+		};
+
+		/*
+		Coach NG Lifecycle methods *************************************************************
+		 */
+		this.constructor.prototype.load = function ()
+		{
+			try
+			{
+				var opts = this.context.options;
+				var mdt = opts._metadata;
+
+				this._instance.baseTxtDir = mdt.baseTextDirection && mdt.baseTextDirection.get("value") ? mdt.baseTextDirection.get("value") : utilities.BiDi.BASE_TEXT_DIRECTION._default;
+				this._instance.genPrefTextDir = this.context.bpm.system.baseTextDirection;
+
+				if (!opts.statusStyle)
+					bpmext.ui.substituteConfigOption(this, "statusStyle", "N");
+
+				if (!opts.width)
+					bpmext.ui.substituteConfigOption(this, "width", null);
+
+				if(!opts.labelPlacement)
+					bpmext.ui.substituteConfigOption(this, "labelPlacement", "T");
+
+				if(!opts.labelWidth)
+					bpmext.ui.substituteConfigOption(this, "labelWidth", null);
+
+				if (!opts.sizeStyle)
+					bpmext.ui.substituteConfigOption(this, "sizeStyle", "D");
+
+				if(!opts.buttonLocation)
+					bpmext.ui.substituteConfigOption(this, "buttonLocation", "L");
+
+				if(!opts.buttonColorStyle)
+					bpmext.ui.substituteConfigOption(this, "buttonColorStyle", "D");
+
+				if(!opts.buttonKind)
+					bpmext.ui.substituteConfigOption(this, "buttonKind", "I");
+
+				if(!opts.buttonInfo) {
+                    if (this.context.options.buttonKind.get("value") === "I") {
+                        bpmext.ui.substituteConfigOption(this, "buttonInfo", "fa-circle-o");
+                    } else {
+                        bpmext.ui.substituteConfigOption(this, "buttonInfo", "");
+                    }
+				}
+
+				if(!opts.showAsButton)
+					bpmext.ui.substituteConfigOption(this, "showAsButton", false);
+
+				this._instance._isChildStyleable = true;
+
+				this._instance.inputGroup = this.context.element.querySelector(".input-group"); //Only used for styling - this reference is actually useless...
+				domClass.add(this._instance.inputGroup, "SPARKInputGroup");
+				//Added for TK-1269 : STARTS
+				//domAttr.set(this._instance.inputGroup, "role", "group");
+				//TK-1269 : ENDS
+				this._instance.disabler = bpmext.ui.util.createDisabler(this, this._instance.inputGroup);
+
+				var cBox = bpmext.ui.util.getContentBox(this, this._instance.inputGroup);
+				if(!cBox)
+					throw new Error("Content Box not found in InputGroup Coach View");
+
+				this._instance.cbox = cBox;
+
+				bpmext.ui.loadContainer(this);
+				this._instance.outer = this.context.element.querySelector(".outer");
+
+				var childNodes = cBox.childNodes;
+				var j = 0;
+				var view = this;
+
+				for(var i = 0; i < childNodes.length; i++)
+				{
+					var childNode = childNodes[i];
+					if(domAttr.has(childNode, "data-viewid"))
+					{
+						j++;
+
+						if(j > 1)
+						{
+							//{#feature: US-1330 Added RT localization}
+							//bpmext.log.warn("This InputGroup control should only contain one child view - it contains " + childNodes.length);
+							bpmext.log.warn(bpmext.localization.formatMsg("controlInputGroup", "INPUTGROUP_CONTROL") + " " + bpmext.localization.formatMsg("general", "ONE_CHILDVIEW_WARNING") + " " + childNodes.length);
+							//bpmext.log.warn("  Only the first view was added");
+							bpmext.log.warn(" " + bpmext.localization.formatMsg("general", "FIRSTVIEW_ADDED_WARNING"));
+
+							break;
+						}
+
+						var subV = this.context.createView(childNode);
+
+						//{#feature: US-696 ARIA labeling}
+						if(subV._getHTMLInputElement)
+							this._instance.ariaLabelTarget = subV._getHTMLInputElement();
+						//End US-696
+
+						subV.context.options._metadata.labelVisibility.set("value", "HIDE");
+						if(!this.context.options._metadata.label.get("value"))
+						{
+							this.context.options._metadata.label.set("value", subV.context.options._metadata.label.get("value"));
+						}
+					}
+				}
+
+				this._instance.button = document.createElement("span");
+				domClass.add(this._instance.button, "input-group-addon");
+				domAttr.set(this._instance.button, "id", "inputgroup-button-"+this.context.controlidpath);
+
+				if(opts[this._proto.EVT_ONCLICK])
+				{
+					bpmext.ui.registerEventHandlingFunction(this, this._proto.EVT_ONCLICK);
+					
+					//Added for TK-1269 : STARTS
+					domAttr.set(this._instance.button, "role", "button");
+					domAttr.set(this._instance.button, "tabindex", 0);
+					//TK-1269 : ENDS
+
+					domClass.add(this._instance.button, "clickable");
+					this._instance.clickable = true;
+
+					fastclick.attach(this._instance.button);
+
+					this._instance.button.onclick = function(event) {
+						bpmext.ui.executeEventHandlingFunction(view, view._proto.EVT_ONCLICK);
+					};
+					
+					//Added for TK-1269 : STARTS
+					this._instance.button.addEventListener('keypress', function(evt) {
+						if(evt.key === "Enter" || evt.key === " " || evt.key === "Spacebar")
+							bpmext.ui.executeEventHandlingFunction(view, view._proto.EVT_ONCLICK);
+					});
+					//TK-1269 : ENDS
+				}
+				else  
+				{
+					domAttr.set(this._instance.button, "role", "img");
+				}
+
+				this._proto._setButtonKind(this, opts.buttonKind.get("value"));
+				this._proto._setButtonInfo(this, opts.buttonInfo.get("value"));
+				this._proto._setButtonLocation(this, opts.buttonLocation.get("value"));
+				this._proto._setButtonColorStyle(this, opts.buttonColorStyle.get("value"));
+				this._proto._setLabelVisibility(this, opts._metadata.labelVisibility.get("value"));
+				this._proto._setLabelPlacement(this, opts.labelPlacement.get("value"));
+				this._proto._setLabel(this, opts._metadata.label.get("value"));
+				this._proto._setLabelWidth(this, opts.labelWidth.get("value"));
+
+				var tmp = mdt.helpText ? mdt.helpText.get("value") : null;
+				if (tmp && tmp.length > 0)
+				{
+					this._proto._setHelpText(this, tmp);
+				}
+				//Added for TK-1269 : STARTS
+				//if(this._instance.label) //{#bug: 771 Input Group error if no label is specified - condition added}
+				//domAttr.set(this._instance.button, "aria-labelledby", this._instance.label.id);	//Commented for BG-815 by Nividous
+				//TK-1269 : ENDS
+				//BG-815 : Added by Nividous :STARTS
+				domAttr.set(this._instance.button, "aria-label", opts.buttonInfo.get("value"));
+				//BG-815 : ENDS
+				this._proto._setWidth(this, opts.width.get("value"));
+				this._proto._updateControl(this);
+			}
+			catch (e)
+			{
+				//{#feature: US-1330 Added RT localization}
+				//bpmext.log.error("Error on load event [" + this.context.viewid + "]: " + e);
+				bpmext.log.error(bpmext.localization.formatMsg("general", "ERROR_ONLOAD_EVENT") + " [" + this.context.viewid + "]: " + e);
+				if(e.stack) {
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.error("  Call stack: " + e.stack);
+					bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+				}
+			}
+		};
+
+		this.constructor.prototype.view = function ()
+		{
+			try
+			{
+				this._proto._handleVisibility(this);
+			}
+			catch (e)
+			{
+				//{#feature: US-1330 Added RT localization}
+				//bpmext.log.error("Error on view event [" + this.ui.getAbsoluteName() + "]: " + e);
+				bpmext.log.error(bpmext.localization.formatMsg("general", "ERROR_ONVIEW_EVENT") + " [" + this.ui.getAbsoluteName() + "]: " + e);
+				if(e.stack) {
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.error("  Call stack: " + e.stack);
+					bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+				}
+			}
+		};
+
+		this.constructor.prototype.change = function (event)
+		{
+			try
+			{
+				if (event.type == "config")
+				{
+					switch (event.property)
+					{
+						case "_metadata.label":
+						{
+							this._proto._setLabel(this, event.newVal);
+							this._proto._setHelpText(this, this.context.options._metadata.helpText.get("value"));
+							break;
+						}
+						case "_metadata.labelVisibility":
+						{
+							this._proto._setLabelVisibility(this, event.newVal);
+							break;
+						}
+						case "labelPlacement":
+						{
+							this._proto._setLabelPlacement(this, event.newVal);
+							break;
+						}
+						case "labelWidth":
+						{
+							this._proto._setLabelWidth(this, event.newVal);
+							break;
+						}
+						case "_metadata.visibility":
+						{
+							this._proto._handleVisibility(this);
+							break;
+						}
+						case "_metadata.helpText":
+                        {
+							this._proto._setHelpText(this, event.newVal);
+                            this._proto._updateControl(this);
+                            break;
+                        }
+						case "width":
+						{
+							this._proto._setWidth(this, event.newVal);
+							break;
+						}
+						case "buttonColorStyle":
+						{
+							this._proto._setButtonColorStyle(this, event.newVal, event.oldVal);
+							break;
+						}
+						case "sizeStyle":
+						{
+							this._proto._setSizeStyle(this, event.newVal, event.oldVal);
+							break;
+						}
+						case "buttonLocation":
+						{
+							this._proto._setButtonLocation(this, event.newVal, event.oldVal);
+							break;
+						}
+						case "buttonKind":
+						{
+							this._proto._setButtonKind(this, event.newVal);
+							break;
+						}
+						case "buttonInfo":
+						{
+							this._proto._setButtonInfo(this, event.newVal);
+							break;
+						}
+					}
+				}
+			}
+			catch (e)
+			{
+				//{#feature: US-1330 Added RT localization}
+				//bpmext.log.error("Error on change event [" + this.ui.getAbsoluteName() + "]: " + e);
+				bpmext.log.error(bpmext.localization.formatMsg("general", "ERROR_ONCHANGE_EVENT") + " [" + this.ui.getAbsoluteName() + "]: " + e);
+				if(e.stack) {
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.error("  Call stack: " + e.stack);
+					bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+				}
+			}
+		};
+
+		/*
+		this.constructor.prototype.validate = function (event)
+		{
+			try {
+			}
+			catch (e) {
+				//{#feature: US-1330 Added RT localization}
+				//bpmext.log.error("Error on validate event [" + this.ui.getAbsoluteName() + "]: " + e);
+				bpmext.log.error(bpmext.localization.formatMsg("general", "ERROR_ONVALIDATE_EVENT") + " [" + this.ui.getAbsoluteName() + "]: " + e);
+				if(e.stack) {
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.error("  Call stack: " + e.stack);
+					bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+				}
+			}
+		};
+
+		this.constructor.prototype.collaboration = function (event)
+		{
+		};
+		*/
+
+		this.constructor.prototype.unload = function ()
+		{
+			bpmext.ui.unloadContainer(this);
+		};
+	}
+}

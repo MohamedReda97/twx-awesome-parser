@@ -1,0 +1,426 @@
+/*
+ * #BEGIN COPYRIGHT
+ *
+ * Licensed Materials - Property of IBM
+ * 5725-C95
+ * (C) Copyright IBM Corporation 2017, 2019. All Rights Reserved.
+ * US Government Users Restricted Rights- Use, duplication or disclosure
+ * restricted by GSA ADP Schedule Contract with IBM Corp.
+ *
+ * #END COPYRIGHT
+ */
+
+/**
+ * @ignore
+ * @instance
+ * @memberof Notification
+ * @method isValid
+ */
+
+/**
+ * @ignore
+ * @instance
+ * @memberof Notification
+ * @method isLabelVisible
+ */
+
+/**
+ * @ignore
+ * @instance
+ * @memberof Notification
+ * @method setLabelVisible
+ */
+
+/**
+ * @ignore
+ * @instance
+ * @memberof Notification
+ * @method setValid
+ */
+
+/**
+ * @ignore
+ * @instance
+ * @memberof Notification
+ * @method recalculate
+ */
+
+/**
+ * @ignore
+ * @instance
+ * @memberof Notification
+ * @method getData
+ */
+
+/**
+ * @ignore
+ * @instance
+ * @memberof Notification
+ * @method setData
+ */
+
+/**
+ *   <tr class=Prop>
+ *     <td class=SectionName colspan=3>Events</td>
+ *   </tr>
+ *   <tr class=Prop>
+ *     <td>On Load:</td>
+ *     <td colspan="2">
+ *       <table>
+ *         <tr class=Prop>
+ *           <td>Description: </td>
+ *           <td>Triggers whenever the view is loaded.</td>
+ *         </tr>
+ *         <tr class=Prop>
+ *           <td>Example: </td>
+ *           <td><pre class="prettyprint"><code>me.setText(${NumNotifs}.getValue())</code></pre></td>
+ *         </tr>
+ *       </table>
+ *     </td>
+ *   </tr>
+ *   <tr class=Prop>
+ *     <td>On Click:</td>
+ *     <td colspan="2">
+ *       <table>
+ *         <tr class=Prop>
+ *           <td>Description: </td>
+ *           <td>Triggers whenever the notification is clicked.</td>
+ *         </tr>
+ *         <tr class=Prop>
+ *           <td>Example: </td>
+ *           <td><pre class="prettyprint"><code>alert("Notification [" + me.getText() + "] fired");</code></pre></td>
+ *         </tr>
+ *       </table>
+ *     </td>
+ *   </tr>
+ * </table>
+ */
+bpmext_control_InitNotification = function (utilities, bpmext, domClass, domAttr, domConstruct)
+{
+    this._instance =
+    {
+    };
+
+    if (!this.constructor.prototype._proto)
+    {
+        this.constructor.prototype._proto =
+        {
+            OPTS_COL_STLZ :
+            {
+                "D" : "",
+                "P" : "nav-icon-btn-primary",
+                "I" : "nav-icon-btn-info",
+                "S" : "nav-icon-btn-success",
+                "W" : "nav-icon-btn-warning",
+                "G" : "nav-icon-btn-danger",
+                "E" : "nav-icon-btn-danger"
+            },
+            EVT_ONCLICK : "eventON_CLICK",
+            _setColorStyle : function (view, newVal, oldVal)
+            {
+                if(!oldVal)
+                    oldVal = view._instance.oldColStyle;
+
+                newVal = bpmext.ui.util.normalizeColorStyle(newVal);
+                oldVal = bpmext.ui.util.normalizeColorStyle(oldVal);
+
+                bpmext.ui.util.replaceCSSClass(view._instance.btn, this.OPTS_COL_STLZ, newVal, oldVal);
+                view._instance.oldColStyle = newVal;
+            },
+            _setText : function(view)
+            {
+                var text = view.context.options._metadata.label.get("value");
+                if(text == null || text == "")
+                    text = "...";
+
+                view._instance.span.innerHTML = view.context.htmlEscape(text);
+                utilities.BiDi.applyTextDir(
+                    view._instance.span,
+                    view._instance.span.innerHTML,
+                    view._instance.baseTxtDir,
+                    view._instance.genPrefTextDir
+                    );
+            },
+            _setIcon : function(view, newVal, oldVal)
+            {
+                newVal = (newVal || "").trim().toLowerCase();
+                if (bpmext.text.startsWith(newVal, "ci-")) {
+                    var svgElement = utilities.getCarbonIcon(newVal);
+                    if (svgElement) {
+                        view._instance.btn.removeChild(view._instance.icon);
+                        domConstruct.place(svgElement, view._instance.btn, "first");
+                        view._instance.icon = svgElement;
+                    }
+                } else {
+                    if(!bpmext.text.startsWith(newVal, "fa-"))
+                    newVal = "fa-" + newVal;
+
+                    if(oldVal != null)
+                    {
+                        oldVal = oldVal.toLowerCase();
+					if(!bpmext.text.startsWith(oldVal, "fa-"))
+                        oldVal = "fa-" + oldVal;
+
+                        domClass.replace(view._instance.icon, newVal, oldVal);
+                    }
+                    else
+                    {
+                        domClass.add(view._instance.icon, newVal);
+                    }
+                }
+            },
+            _handleVisibility : function (view)
+            {
+                var visibility = bpmext.ui.getEffectiveVisibility(view);
+
+                if (visibility != "NONE")
+                {
+                    if (visibility == "READONLY")
+                        domClass.remove(view._instance.disabler, "hidden");
+                    else
+                        domClass.add(view._instance.disabler, "hidden");
+                }
+            }
+        };
+
+
+        /*
+        Public control methods *************************************************************
+         */
+
+        /**
+         * @instance
+         * @memberof Notification
+         * @method setColorStyle
+         * @param {string} style "DEFAULT"|"DEF"|"D"=Default | "PRIMARY"|"P"=Primary | "INFO"|INF"|"I"=Info | "SUCCESS"|"S"=Success | "WARNING"|"WARN"|"W"=Warning | "ERROR"|"ERR"|"DANGER"|"E"=Danger
+        * @desc Sets the color style of the control.  NOTE: to avoid ambiguity always set the color using "D"|"P"|"I"|"S"|"W"|"E"
+         */
+        this.constructor.prototype.setColorStyle = function (style)
+        {
+            this.context.options.colorStyle.set("value", style);
+        }
+
+        /**
+         * @instance
+         * @memberof Notification
+         * @method getColorStyle
+         * @desc Gets teh color style of the control.  NOTE: This always returns the color as set, to avoid ambiguity always set the color using "D"|"P"|"I"|"S"|"W"|"E"
+         * @returns {string}
+         */
+        this.constructor.prototype.getColorStyle = function ()
+        {
+            return this.context.options.colorStyle.get("value");
+        }
+
+        /**
+         * @instance
+         * @memberof Notification
+         * @method setIcon
+		 * @param {string} icon See {@link http://fontawesome.io/icons Font Awesome} for a comprehensive list of icons. Refer to the knowledge center for the latest Font Awesome version.
+         * @desc Sets the icon to display on the notification
+         */
+        this.constructor.prototype.setIcon = function (icon)
+        {
+            this.context.options.icon.set("value", icon);
+        }
+
+        /**
+         * @instance
+         * @memberof Notification
+         * @method getIcon
+         * @desc Gets notification icon
+         * @returns {string}
+         */
+        this.constructor.prototype.getIcon = function ()
+        {
+            return this.context.options.icon.get("value");
+        }
+
+        /**
+         * @instance
+         * @memberof Notification
+         * @method setText
+         * @param {string} text Notification text
+         * @desc Sets the notification text
+         */
+        this.constructor.prototype.setText = function (text)
+        {
+            this.context.options._metadata.label.set("value", text);
+        }
+
+        /**
+         * @instance
+         * @memberof Notification
+         * @method getText
+         * @desc Gets the notification text
+         * @returns {string}
+         */
+        this.constructor.prototype.getText = function ()
+        {
+            return this.context.options._metadata.label.get("value");
+        }
+
+        /**
+         * @instance
+         * @memberof Notification
+         * @method getType
+         * @desc Get the descriptive string representing the type of control
+         * @returns {string}
+         */
+        this.constructor.prototype.getType = function ()
+        {
+            return "notification.3";
+        }
+
+        //{#feature: US-696 ARIA Accessibility}
+        this.constructor.prototype._getTriggerElement = function ()
+        {
+            return this._instance.btn; //This is the element which is referred in Popup Menu for adding WAI-ARIA Accessibility Roles
+        }
+        //End US-696
+        /*
+        Coach NG Lifecycle methods *************************************************************
+         */
+        this.constructor.prototype.load = function ()
+        {
+            try
+            {
+                var opts = this.context.options;
+                var mdt = opts._metadata;
+
+                this._instance.baseTxtDir = mdt.baseTextDirection && mdt.baseTextDirection.get("value") ? mdt.baseTextDirection.get("value") : utilities.BiDi.BASE_TEXT_DIRECTION._default;
+                this._instance.genPrefTextDir = this.context.bpm.system.baseTextDirection;
+
+                if (!opts.colorStyle)
+                    opts.colorStyle = bpmext.ui.substituteConfigOption(this, "colorStyle", "D");
+
+                if (!opts.icon)
+                    opts.icon = bpmext.ui.substituteConfigOption(this, "icon", "bell");
+
+                this._instance.navBar = this.context.element.querySelector(".navbar");
+                this._instance.btn = this.context.element.querySelector(".nav-icon-btn");
+                this._instance.icon = this.context.element.querySelector("i.nav-icon");
+
+                this._instance.span = this.context.element.querySelector(".label");
+                domAttr.set(this._instance.span, "id", "notification-label-"+this.context.controlidpath);
+
+                this._instance.disabler = bpmext.ui.util.createDisabler(this, this._instance.navBar);
+
+                this._proto._setColorStyle(this, opts.colorStyle.get("value"));
+                this._proto._setIcon(this, opts.icon.get("value"));
+                this._proto._setText(this);
+
+                bpmext.ui.registerEventHandlingFunction(this, this._proto.EVT_ONCLICK);
+
+                var _this = this;
+                this._instance.btn.onclick = function (event)
+                {
+                    bpmext.ui.executeEventHandlingFunction(_this, _this._proto.EVT_ONCLICK);
+                    return false;
+                }
+
+                this._instance.btn.onkeypress = function (event) {
+                    if (event.key === "Enter" || event.key === " " || event.key === "Spacebar") {
+                        bpmext.ui.executeEventHandlingFunction(_this, _this._proto.EVT_ONCLICK);
+                        return false;
+                    }
+                }
+
+                bpmext.ui.setupFormulaTriggeredUpdates(
+                    this,
+                    function (expResult)
+                    {
+                        if (expResult == undefined)
+                        {
+                            expResult = "";
+                        }
+
+                        _this.setText(expResult);
+                    },
+                    this.getText
+                );
+
+                bpmext.ui.loadView(this);
+            }
+            catch (e)
+            {
+                //{#feature: US-1330 Added RT localization}
+                //bpmext.log.error("Error on load event [" + this.context.viewid + "]: " + e);
+                bpmext.log.error(bpmext.localization.formatMsg("general", "ERROR_ONLOAD_EVENT") + " [" + this.context.viewid + "]: " + e);
+                if(e.stack) {
+                    //{#feature: US-1330 Added RT localization}
+                    //bpmext.log.error("  Call stack: " + e.stack);
+                    bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+                }
+            }
+        };
+
+        this.constructor.prototype.view = function ()
+        {
+            try
+            {
+                this._proto._handleVisibility(this);
+            }
+            catch (e)
+            {
+                //{#feature: US-1330 Added RT localization}
+                //bpmext.log.error("Error on view event [" + this.ui.getAbsoluteName() + "]: " + e);
+                bpmext.log.error(bpmext.localization.formatMsg("general", "ERROR_ONVIEW_EVENT") + " [" + this.ui.getAbsoluteName() + "]: " + e);
+                if(e.stack) {
+                    //{#feature: US-1330 Added RT localization}
+                    //bpmext.log.error("  Call stack: " + e.stack);
+                    bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+                }
+            }
+        };
+
+        this.constructor.prototype.change = function (event)
+        {
+            try
+            {
+                if (event.type == "config")
+                {
+                    switch (event.property)
+                    {
+                        case "_metadata.visibility":
+                        {
+                            this._proto._handleVisibility(this);
+                            break;
+                        }
+                        case "_metadata.label":
+                        {
+                            this._proto._setText(this);
+                            break;
+                        }
+                        case "colorStyle":
+                        {
+                            this._proto._setColorStyle(this, event.newVal, event.oldVal);
+                            break;
+                        }
+                        case "icon":
+                        {
+                            this._proto._setIcon(this, event.newVal, event.oldVal);
+                            break;
+                        }
+                    }
+                }
+            }
+            catch (e)
+            {
+                //{#feature: US-1330 Added RT localization}
+                //bpmext.log.error("Error on change event [" + this.ui.getAbsoluteName() + "]: " + e);
+                bpmext.log.error(bpmext.localization.formatMsg("general", "ERROR_ONCHANGE_EVENT") + " [" + this.ui.getAbsoluteName() + "]: " + e);
+                if(e.stack) {
+                    //{#feature: US-1330 Added RT localization}
+                    //bpmext.log.error("  Call stack: " + e.stack);
+                    bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+                }
+            }
+        };
+
+        this.constructor.prototype.unload = function ()
+        {
+            bpmext.ui.unloadView(this);
+        };
+    }
+}

@@ -1,0 +1,283 @@
+/*
+ * #BEGIN COPYRIGHT
+ *
+ * Licensed Materials - Property of IBM
+ * 5725-C95
+ * (C) Copyright IBM Corporation 2017. All Rights Reserved.
+ * US Government Users Restricted Rights- Use, duplication or disclosure
+ * restricted by GSA ADP Schedule Contract with IBM Corp.
+ *
+ * #END COPYRIGHT
+ */
+
+var mixObject =
+{
+	createPreview : function (containingDiv, labelText, callback)
+	{
+		var bpmextUri = this.context.getManagedAssetUrl("BPMExt-Core-Designer.js", this.context.assetType_WEB, "SYSBPMUI");
+		require(["dojo/dom-construct", "dojo/dom-class", bpmextUri], this.lang.hitch(this, function (domConstruct, domClass, bpmext)
+			{
+				bpmext.uidesign.css.ensureSparkUIClass(containingDiv);
+                bpmext.uidesign.css.ensureGlyphsLoaded(this);
+                bpmext.uidesign.svg.ensureCarbonIconsLoaded(this);
+
+				this.context.coachViewData.containingDiv = containingDiv;
+				this.context.coachViewData.button = domConstruct.create("button");
+				dojo.attr(this.context.coachViewData.button, "role", "button");
+				this.context.coachViewData.icon = null;
+				this.context.coachViewData.configWidth = null;
+				this.context.coachViewData.styleWidth = null;
+				this.context.coachViewData.styleMinWidth = null;
+				this.context.coachViewData.iconLocation = null;
+
+				domConstruct.place(this.context.coachViewData.button, containingDiv);
+				domClass.add(this.context.coachViewData.button, "btn");
+				this.context.coachViewData.labelTextDom = document.createTextNode(labelText);
+				this.context.coachViewData.button.appendChild(this.context.coachViewData.labelTextDom);
+
+				this.context.coachViewData.labelHandler = bpmext.uidesign.createLabelHandler(this.context.coachViewData.labelTextDom, undefined, undefined, true, true);
+
+				callback();
+			}
+		));
+	},
+	getLabelDomElement:function(){
+		return this.context.coachViewData.button;
+	},
+	propertyChanged : function (propertyName, propertyValue)
+	{
+		var configHelperUri = this.context.getManagedAssetUrl("BPMExt-Core-ConfigHelper.js",this.context.assetType_WEB, "SYSBPMUI");
+		require(["dojo/dom-style", "dojo/dom-class", "dojo/dom-construct", "dojo/dom-attr", configHelperUri], this.lang.hitch(this, function (domStyle, domClass, domConstruct, domAttr, configHelper)
+			{
+				this.context.coachViewData.labelHandler.propertyChanged(propertyName, propertyValue);
+				if (propertyName == "@style")
+				{
+					this.context.coachViewData.styleWidth = configHelper.getResponsiveConfigOptionValue(this, "@width");
+					this.context.coachViewData.styleMinWidth = configHelper.getResponsiveConfigOptionValue(this, "@minWidth");
+					this.updateWidth();
+				}
+				else if(propertyName ==  "@visibility"){
+					if(propertyValue == "READONLY"){
+						domClass.add(this.context.coachViewData.button, "disabled");
+					}else{
+						domClass.remove(this.context.coachViewData.button, "disabled");
+					}
+					if(propertyValue == "REQUIRED"){
+						dojo.attr(this.context.coachViewData.button, "aria-required", "true");
+					} else {
+						dojo.attr(this.context.coachViewData.button, "aria-required", "false");
+					}
+				}
+				else if (propertyName == "colorStyle")
+				{
+					var colorStyle;
+					if (propertyValue == "P")
+					{
+						colorStyle = "btn-primary";
+					}
+					else if (propertyValue == "I")
+					{
+						colorStyle = "btn-info";
+					}
+					else if (propertyValue == "S")
+					{
+						colorStyle = "btn-success";
+					}
+					else if (propertyValue == "W")
+					{
+						colorStyle = "btn-warning";
+					}
+					else if (propertyValue == "G")
+					{
+						colorStyle = "btn-danger";
+					}
+					else if (propertyValue == "B")
+					{
+						colorStyle = "btn-dark";
+					}
+					else
+					{
+						colorStyle = "";
+					}
+					domClass.replace(this.context.coachViewData.button, colorStyle, "btn-primary btn-info btn-success btn-warning btn-danger btn-dark");
+				}
+				else if (propertyName == "shapeStyle")
+				{
+					var shapeStyle;
+					if (propertyValue == "R")
+					{
+						shapeStyle = "btn-rounded";
+					}
+					else if (propertyValue == "F")
+					{
+						shapeStyle = "btn-flat";
+					}
+					else
+					{
+						shapeStyle = "";
+					}
+
+					domClass.replace(this.context.coachViewData.button, shapeStyle, "btn-rounded btn-flat");
+				}
+				else if (propertyName == "sizeStyle")
+				{
+					var sizeStyle;
+
+					if (propertyValue == "X")
+					{
+						sizeStyle = "btn-xs";
+					}
+					else if (propertyValue == "S")
+					{
+						sizeStyle = "btn-sm";
+					}
+					else if (propertyValue == "L")
+					{
+						sizeStyle = "btn-lg";
+					}
+					else
+					{
+						sizeStyle = "";
+					}
+
+					domClass.replace(this.context.coachViewData.button, sizeStyle, "btn-xs btn-sm btn-lg");
+				}
+				else if (propertyName == "outline")
+				{
+					if (propertyValue)
+					{
+						domClass.add(this.context.coachViewData.button, "btn-outline");
+					}
+					else
+					{
+						domClass.remove(this.context.coachViewData.button, "btn-outline");
+					}
+				}
+				else if (propertyName == "ghostMode")
+				{
+					if (propertyValue)
+					{
+						domClass.add(this.context.coachViewData.button, "btn-ghost");
+					}
+					else
+					{
+						domClass.remove(this.context.coachViewData.button, "btn-ghost");
+					}
+				}
+				else if (propertyName == "icon")
+				{
+					if (!this.context.coachViewData.icon) {
+						this.context.coachViewData.icon = domConstruct.create("span");
+						this.context.coachViewData.button.insertBefore(this.context.coachViewData.icon, this.context.coachViewData.button.firstChild);
+					}
+
+					if (this.context.coachViewData.icon) {
+						if (this.context.coachViewData.icon.classes) {
+							this.context.coachViewData.icon.className = "";
+                        }
+
+                        // removing the contents of the icon node
+                        dojo.empty(this.context.coachViewData.icon);
+                        propertyValue = propertyValue && propertyValue.trim();
+						if (propertyValue) {
+                            var newIcon = propertyValue.toLowerCase();
+                            this.context.coachViewData.icon.classes = "btn-label icon";
+
+                            if (newIcon.indexOf("fa-") !== 0 && newIcon.indexOf("ci-") !== 0) {
+                                this.context.coachViewData.icon.classes += " fa fa-" + newIcon;
+                            } else if (newIcon.indexOf("ci-") === 0) {
+                            	// add a new icon since we are clearing the content of the icon node
+                                this.context.coachViewData.icon.appendChild(bpmext.uidesign.svg.getCarbonIcon(newIcon));
+                            } else {
+                                this.context.coachViewData.icon.classes += " fa " + newIcon;
+                            }
+                            domClass.add(this.context.coachViewData.icon, this.context.coachViewData.icon.classes);
+							domClass.add(this.context.coachViewData.button, "btn-labeled");
+						}
+					}
+					this.updateIconLocation(domClass);
+				}
+				else if (propertyName == "width")
+				{
+					this.context.coachViewData.configWidth = propertyValue;
+					this.updateWidth();
+				}
+				else if (propertyName == "iconLocation")
+				{
+					this.context.coachViewData.iconLocation = propertyValue;
+					this.updateIconLocation(domClass);
+				}
+			}
+		));
+	},
+	modelChanged : function (propertyName, propertyValue){
+		var configHelperUri = this.context.getManagedAssetUrl("BPMExt-Core-ConfigHelper.js",this.context.assetType_WEB, "SYSBPMUI");
+		require(["dojo/dom-class", configHelperUri], this.lang.hitch(this, function (domClass, configHelper)
+			{
+				this.context.coachViewData.labelHandler.modelChanged(propertyName, propertyValue);
+				if (propertyName == "width"){
+					if(configHelper.isConfigSet(propertyValue)){
+						this.context.coachViewData.widthSet = true;
+						domClass.add(this.context.coachViewData.containingDiv, "widthSet");
+					} else{
+						this.context.coachViewData.widthSet = false;
+						domClass.remove(this.context.coachViewData.containingDiv, "widthSet");
+					}
+					this.updateWidth();
+				}
+			}
+		));
+	},
+	updateWidth : function(){
+		if(this.context.coachViewData.widthSet)
+		{
+			var widthToSet = "";//config is set, but maybe not on this device size
+			if(this.context.coachViewData.configWidth!=null && this.context.coachViewData.configWidth!=""){
+				this.context.coachViewData.button.style.width = "100%";
+				widthToSet = this.context.coachViewData.configWidth;
+				if(!isNaN(widthToSet))
+					widthToSet = widthToSet + "px";
+			} else{
+				this.context.coachViewData.button.style.width = "auto";//no config set, so it's auto
+			}
+			//in order to override the default behaviour, we need to let the framework run first.  A coach view really shouldn't
+			//be messing with the framework-owned container div, but this is how it currently works unfortunately.
+			setTimeout(lang.hitch(this, function(){
+				this.context.coachViewData.containingDiv.style.width = widthToSet;
+			}), 10);
+
+		}else{
+			this.context.coachViewData.button.style.width = "";
+			this.context.coachViewData.containingDiv.style.width = "";
+		}
+	},
+	updateIconLocation : function (domClass)
+	{
+		var location = this.context.coachViewData.iconLocation;
+		var icon = this.context.coachViewData.icon;
+		var btn = this.context.coachViewData.button;
+
+		if (!btn) {
+			return;
+		}
+
+		if (icon)
+		{
+			if(location === "R")
+			{
+				domClass.remove(btn, "icon-left");
+				domClass.add(btn, "icon-right");
+			}
+			else
+			{
+				domClass.remove(btn, "icon-right");
+				domClass.add(btn, "icon-left");
+			}
+		}
+		else
+		{
+			domClass.remove(btn, "icon-left");
+			domClass.remove(btn, "icon-right");
+		}
+	}
+};

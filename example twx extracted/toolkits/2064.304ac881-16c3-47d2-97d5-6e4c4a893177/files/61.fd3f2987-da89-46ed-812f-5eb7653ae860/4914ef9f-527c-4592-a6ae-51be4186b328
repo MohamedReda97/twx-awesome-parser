@@ -1,0 +1,695 @@
+// *************************************************************************
+//
+// Licensed Materials - Property of IBM
+// 5737-I23
+// Copyright IBM Corporation 2021. All Rights Reserved.
+// U.S. Government Users Restricted Rights:
+// Use, duplication or disclosure restricted by GSA ADP Schedule
+// Contract with IBM Corp.
+//
+// *************************************************************************
+// END COPYRIGHT
+
+/**
+ * @ignore
+ * @instance
+ * @memberof NavigationItem
+ * @method isValid
+ */
+
+/**
+ * @ignore
+ * @instance
+ * @memberof NavigationItem
+ * @method setValid
+ */
+
+/**
+ * @ignore
+ * @instance
+ * @memberof NavigationItem
+ * @method recalculate
+ */
+
+/**
+ * @ignore
+ * @instance
+ * @memberof NavigationItem
+ * @method getData
+ */
+
+/**
+ * @ignore
+ * @instance
+ * @memberof NavigationItem
+ * @method setData
+ */
+
+bpmext_control_InitSiteMenuItem = function (bpmext, domClass, utilities,domConstruct,fastclick) {
+    this._instance = {
+        navButton: null,
+        multiClicks:true,
+        txtNode:null,
+        itemType : null
+    };
+
+    if (!this.constructor.prototype._proto) {
+        this.constructor.prototype._proto = {
+            EVT_ONCLICK : "eventON_CLICK",
+            EVT_ONBOUNDARYEVT : "eventON_BOUNDARYEVT",
+            _setText : function (view, text)
+			{
+				try
+				{
+					
+					var mdt = view.context.options._metadata;
+					var baseTxtDir = mdt.baseTextDirection && mdt.baseTextDirection.get("value") ? mdt.baseTextDirection.get("value") : utilities.BiDi.BASE_TEXT_DIRECTION._default;
+					var genPrefTextDir = view.context.bpm.system.baseTextDirection;
+					var txtNode = view._instance.txtNode;
+
+					if (text != null && text.length != "")
+					{
+						txtNode.textContent = text; //view.context.htmlEscape(text);
+						utilities.BiDi.applyTextDir(txtNode, txtNode.textContent, baseTxtDir, genPrefTextDir);
+					}
+					else
+					{
+						txtNode.textContent = "\u00a0"; //Non-breaking space to prevent button height collapse
+					}
+				}
+				catch (e)
+				{
+					bpmext.log.error("Button._setText() " + bpmext.localization.formatMsg("general", "ERROR") + ": " + e);
+					if(e.stack) {
+						bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+					}
+				}
+			},
+            _setIcon : function(view, icon)
+			{
+				if(view._instance.iconSpan)
+				{
+					view._instance.navButton.removeChild(view._instance.iconSpan);
+					view._instance.iconSpan = null;
+				}
+
+				if(icon != null && icon != "")
+				{
+					var span = document.createElement("span");
+                    var iconClasses = "";
+
+					icon = icon.trim().toLowerCase();
+
+                    if(bpmext.text.startsWith(icon, "ci-")) {
+                        var svgElement = utilities.getCarbonIcon(icon);
+                        if (svgElement) {
+                            span.appendChild(svgElement);
+                            iconClasses = "ci";
+                        }
+                    } else {
+                        if(!bpmext.text.startsWith(icon, "fa-")) {
+                            icon = "fa-" + icon;
+                        }
+                        iconClasses = "fa " + icon;
+                    }
+
+                    domClass.add(span, "btn-label icon " + iconClasses);
+                    domClass.add(view._instance.navButton, "btn-labeled");
+                    domConstruct.place(span, view._instance.navButton, "first");
+                    view._instance.iconSpan = span;
+				}
+				else
+				{
+					domClass.remove(view._instance.navButton, "btn-labeled");
+				}
+				
+				view._proto._setIconLocation(view);
+            },
+            _setIconLocation : function (view)
+			{
+            	try {
+            		var location = view.getIconLocation();
+    				var icon = view._instance.iconSpan;
+    				var btn = view._instance.navButton;
+    				
+    				if (icon) 
+    				{
+    					if(location === "R")
+    					{
+    						domClass.remove(btn, "icon-left");
+    						domClass.add(btn, "icon-right");
+    					}
+    					else
+    					{
+    						domClass.remove(btn, "icon-right");
+    						domClass.add(btn, "icon-left");
+    					}
+    				}
+    				else 
+    				{
+    					domClass.remove(btn, "icon-left");
+    					domClass.remove(btn, "icon-right");
+    				}
+            	} catch (e) {}
+			},
+            _handleVisibility: function (view) {
+            	if (view && view._instance && view._instance.navButton) {
+            		var btn = view._instance.navButton;
+    				var visibility = bpmext.ui.getEffectiveVisibility(view);
+
+    				view.context.setDisplay(visibility != "NONE");
+    				view.context.setVisibility(visibility != "HIDDEN");
+
+    				if (visibility != "NONE")
+    				{
+    					if (visibility == "READONLY")
+    					{
+    						btn.disabled = true;
+    						domClass.add(btn, "disabled");
+    					}
+    					else
+    					{
+    						btn.disabled = false;
+    						domClass.remove(btn, "disabled");
+    					}
+    				}
+            	}
+            },
+
+            _setHelpText : function(view, text){
+				utilities.setHelpText(view, text);
+            },
+            _setLabelVisibility : function (view, flag)
+			{
+				try
+				{
+					if(!view._instance.label)
+						this._createLabel(view);
+
+					view.context.setDisplay(flag == "SHOW", view._instance.label);
+				}
+				catch (e)
+				{
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.error("OutputText._setLabelVisibility() error: " + e);
+					bpmext.log.error("OutputText._setLabelVisibility() " + bpmext.localization.formatMsg("general", "ERROR") + ": " + e);
+					if(e.stack) { 
+						//{#feature: US-1330 Added RT localization}
+						//bpmext.log.error("  Call stack: " + e.stack);
+						bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+					}
+				}
+            },
+            _getListPages : function (view) {
+                var retVal = [];
+                if (view.context.parentView() && view.context.parentView().context) {
+                    listSubs = view.context.parentView().context.subview;
+
+                    Object.keys(listSubs).forEach(function(key) {
+                        if (view.context.parentView().context.getSubview(key) && 
+                            view.context.parentView().context.getSubview(key).length > 0 &&
+                            view.context.parentView().context.getSubview(key)[0].context.options.pageId) {
+                                retVal.push(view.context.parentView().context.getSubview(key)[0].context.options.pageId.get("value"));
+                            }
+                    });
+                }
+
+                return retVal;
+            },
+			_setLabel : function (view, label)
+			{
+				try
+				{
+					if(label)
+					{
+						if(!view._instance.label)
+							this._createLabel(view);
+
+						view._instance.label.innerHTML = view.context.htmlEscape(label);
+						utilities.BiDi.applyTextDir(
+							view._instance.label, 
+							view._instance.label.innerHTML, 
+							view._instance.baseTxtDir, 
+							view._instance.genPrefTextDir
+							);
+					}
+					else
+					{
+						if(view._instance.label)
+						{
+							this._setLabelVisibility(view, "HIDE");
+						}
+					}
+				}
+				catch (e)
+				{
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.error("OutputText._setLabel() error: " + e);
+					bpmext.log.error("OutputText._setLabel() " + bpmext.localization.formatMsg("general", "ERROR") + ": " + e);
+					if(e.stack) { 
+						//{#feature: US-1330 Added RT localization}
+						//bpmext.log.error("  Call stack: " + e.stack);
+						bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+					}
+				}
+			},
+        }
+        
+
+        /*
+        Public control methods *************************************************************
+         */
+        /**
+		 * @instance
+		 * @memberof NavigationItem
+		 * @method setText
+		 * @param {string} text : Text to be set on the navigation item
+		 * @desc Set label text of navigation item
+		 */
+		this.constructor.prototype.setText = function (text)
+		{
+			this.context.options._metadata.label.set("value", text);
+		};
+
+		/**
+		 * @instance
+		 * @memberof NavigationItem
+		 * @method getText
+		 * @desc Get label text of navigation item
+		 * @returns {string}
+		 */
+		this.constructor.prototype.getText = function ()
+		{
+			return this.context.options._metadata.label.get("value");
+		}       
+        /**
+         * @instance
+         * @memberof NavigationItem
+         * @method getType
+         * @desc Get descriptive string representing the type of control
+         * @returns {string}
+         */
+        this.constructor.prototype.getType = function () {
+            return "SiteMenuItem.3";
+        };
+        
+        /**
+		 * @instance
+		 * @memberof NavigationItem
+		 * @method focus
+		 * @desc Set focus on this control
+		 */
+		this.constructor.prototype.focus = function ()
+		{
+			this._instance.navButton.focus();
+        }   
+        
+        /**
+		 * @instance
+		 * @memberof NavigationItem
+		 * @method click
+		 * @desc Programmatically click this navigation item
+		 */
+		this.constructor.prototype.click = function ()
+		{
+			this._instance.navbutton.click();
+        }
+        
+        /**
+         * @instance
+         * @memberof NavigationItem
+         * @method setLabel
+         * @param {string} text : set the label of the navigation item.
+         * @desc Set label for the navigation item
+         */
+        this.constructor.prototype.setLabel = function (text) {
+            this.context.options._metadata.label.set("value", text);
+        };
+
+        /**
+         * @instance
+         * @memberof NavigationItem
+         * @method getLabel
+         * @desc Get label associated with this control
+         * @returns {string}
+         */
+        this.constructor.prototype.getLabel = function () {
+            return this.context.options._metadata.label.get("value");
+        };
+
+        /**
+		 * @instance
+		 * @memberof NavigationItem
+		 * @method setHelpText
+		 * @param {string} helptext Help text for the control
+		 * @desc Set help text for navigation item control
+		 */
+		this.constructor.prototype.setHelpText = function (text)
+		{
+			this.context.options._metadata.helpText.set("value", text);
+		};
+
+		/**
+		 * @instance
+		 * @memberof NavigationItem
+		 * @method getHelpText
+		 * @desc Get help text associated with navigation item control
+		 * @returns {string}
+		 */
+		this.constructor.prototype.getHelpText = function ()
+		{
+			return this.context.options._metadata.helpText.get("value");
+		};
+
+        /**
+         * @instance
+         * @memberof NavigationItem
+         * @method isLabelVisible
+         * @desc Get label visibility for this control
+         * @returns {boolean}
+         */
+        this.constructor.prototype.isLabelVisible = function () {
+            return this.context.options._metadata.labelVisibility.get("value") == "SHOW";
+        };
+
+        /**
+         * @instance
+         * @memberof NavigationItem
+         * @method setLabelVisible
+         * @param {boolean} flag sets the visibility {true | false}
+         * @desc Set label visibility for this control
+         */
+
+        this.constructor.prototype.setLabelVisible = function (flag) {
+            this.context.options._metadata.labelVisibility.set("value", flag ? "SHOW" : "HIDE");
+        };
+
+        /**
+		 * @instance
+		 * @memberof NavigationItem
+		 * @method getIconLocation
+		 * @desc get navigation item icon alignment location
+		 * @return (string)
+		 */
+		this.constructor.prototype.getIconLocation = function ()
+		{
+			return this.context.options.iconLocation.get("value");
+        }
+        /**
+		 * @instance
+		 * @memberof NavigationItem
+		 * @method setIconLocation
+		 * @param {string} direction Indicates the direction of the icon alignment (L - left | R - right)
+		 * @desc Sets the direction of the icon alignment
+		 */
+		this.constructor.prototype.setIconLocation = function (location)
+		{
+			this.context.options.iconLocation.set("value", location);
+			this._proto._setIconLocation(this);
+		}
+		/**
+		 * @instance
+		 * @memberof NavigationItem
+		 * @method addPageToList
+		 * @param {string} pageID : The page ID you want to add to the list of associated page for the navigation item
+		 * @desc Adds page ID to the list of associated page within the navigation item, if page id is on the list, it will not add the item
+		 */
+		this.constructor.prototype.addPageToList = function (pageId)
+		{
+			if (!this.context.options.pageId) 
+				this.context.options.pageId = bpmext.ui.substituteConfigOption(this, "pageId", []);
+			var lstPage = this.context.options.pageId.get("value").items;
+			if (lstPage && lstPage.length > 0) {
+				var found=false;
+				for (var i=0; i<lstPage.length; i++){
+					if (lstPage[i] == pageId) {
+						found=true;
+						break;
+					}
+				}
+				if (!found) {
+					lstPage.push(pageId)
+				}
+			} else {
+				lstPage.push(pageId);
+			}
+			this.context.options.pageId.set("value", lstPage);
+		}
+		/**
+		 * @instance
+		 * @memberof NavigationItem
+		 * @method setExternalURL
+		 * @param {string} targetURL : the url that will be set for the navigation item.
+		 * @desc Sets the target URL for the navigation item.
+		 */
+		this.constructor.prototype.setExternalURL = function (targetURL)
+		{
+			if (!this.context.options.externalURL) 
+				this.context.options.externalURL = bpmext.ui.substituteConfigOption(this, "externalURL", targetURL);
+			else this.context.options.externalURL.set("value", targetURL);
+		}
+		/**
+		 * @instance
+		 * @memberof NavigationItem
+		 * @method getExternalURL
+		 * @desc Get external url assigned to the navigation item
+		 * @returns {string}
+		 */
+		this.constructor.prototype.getExternalURL = function ()
+		{
+			return this.context.options.externalURL.get("value");
+		}
+		/**
+		 * @instance
+		 * @memberof NavigationItem
+		 * @method setItemType
+		 * @param {string} itemType : set the type of navigation item. (page : internal app link, url: external URL
+		 * @desc Sets the type of navigation item (external url or internal app page link).
+		 */
+		this.constructor.prototype.setItemType = function (itemType)
+		{
+			if (!this.context.options.itemType) 
+				this.context.options.itemType = bpmext.ui.substituteConfigOption(this, "itemType", itemType);
+			else this.context.options.itemType.set("value", itemType);
+		}
+		/**
+		 * @instance
+		 * @memberof NavigationItem
+		 * @method getItemType
+		 * @desc Get item type assigned to the navigation item
+		 * @returns {string}
+		 */
+		this.constructor.prototype.getItemType = function ()
+		{
+			return this.context.options.itemType.get("value");
+		}
+		
+        /*
+        Coach NG Lifecycle methods *************************************************************
+         */
+        this.constructor.prototype.load = function () {
+            try {
+                var opts = this.context.options;
+                var mdt = opts._metadata;
+                
+                /* We can set the page id for the binding later 
+                if (!this.context.binding){
+					this.context.binding = bpmext.ui.substituteObject(
+							this,
+							false //default value
+						);
+                }
+                */
+
+                // Set default value for icon
+                if (!opts.icon)
+                    opts.icon = bpmext.ui.substituteConfigOption(this, "icon", null);
+                if (!opts.iconLocation)
+                    bpmext.ui.substituteConfigOption(this, "iconLocation", "L");
+                
+                //create nav item element    
+                this._instance.navButton = document.createElement("button");
+                this._instance.navButton.setAttribute("id", "nav-button-"+this.context.controlidpath);
+                this._instance.navButton.type = "button";
+                this._instance.navButton.setAttribute("role", "button");
+                this._instance.txtNode = document.createTextNode("");
+
+                fastclick.attach(this._instance.navButton);
+                
+                this._proto._setText(this, mdt.label.get("value"));
+                this._proto._setIcon(this, opts.icon.get("value"));
+                
+                domClass.add(this._instance.navButton, "btn btn-ghost");
+
+                this._instance.navButton.appendChild(this._instance.txtNode)
+                this.context.element.appendChild(this._instance.navButton);
+                
+                //Event support 
+				bpmext.ui.registerEventHandlingFunction(this, this._proto.EVT_ONCLICK);
+                bpmext.ui.registerEventHandlingFunction(this, this._proto.EVT_ONBOUNDARYEVT, "status");
+                
+                this._instance.multiClicks = !(opts.preventMultipleClicks ? opts.preventMultipleClicks.get("value") : false);
+
+                var _this = this;
+
+                this._instance.navButton.onclick = function (event) {
+                    
+                    var fireBE = bpmext.ui.executeEventHandlingFunction(_this, _this._proto.EVT_ONCLICK);
+						//Note: The above calls the logic specified on the control's on click event
+						//and captures the value returned by your code (assuming you return a value)
+						if (fireBE)
+						{
+							if (!_this._instance.multiClicks)
+							{
+								_this._instance.navButton.disabled = true;
+								domClass.add(_this._instance.navButton, "disabled");
+							}
+
+							if (_this.context.binding)
+							{
+                                // GOTO?
+								//_this.context.binding.set("value", /* page id? */);
+                            }
+                            if (_this.context.options.itemType){
+                                if (_this.context.options.itemType.get("value") == "url" && _this.context.options.externalURL) {
+                                    window.open(_this.context.options.externalURL.get("value"), "", "width=800,height=600"); 
+                                }
+                            }
+							_this.context.trigger(function (st)
+							{
+								_this._instance.navButton.disabled = false;
+								domClass.remove(_this._instance.navButton, "disabled");
+
+								setTimeout(function(){
+									var _parent =_this.context.parentView().context.element.getElementsByClassName("panel-collapse collapse in");
+									var col_panel = _this.context.parentView().context.element.getElementsByClassName("panel-heading");
+									if (col_panel && col_panel.length > 0) {
+										var col_panel_child = col_panel[0].children;
+										if (col_panel_child && col_panel_child.length > 0) {
+											if (!col_panel_child[0].classList.contains("collapsed")) {
+												col_panel_child[0].classList.add("collapsed");
+											}
+										}
+									}
+									if (_parent && _parent.length > 0) {
+										//collapse folder when clicked
+										_parent[0].classList.remove("in")
+									}
+									bpmext.ui.executeEventHandlingFunction(_this, _this._proto.EVT_ONBOUNDARYEVT, st.status);
+								});
+							}, {callBackForAll : true});
+						}
+                }
+                
+                //Continue here for highlighting --------------------------------
+               
+                var currentPageId = this.context.bpm.system.currentPageInfo.id;
+                
+                if (opts.pageId && opts.pageId.get("value").items && opts.pageId.get("value").items.length > 0) {
+                    var pages = opts.pageId.get("value").items;
+                    for (var ctr=0; ctr < pages.length; ctr++) {
+                        if (pages[ctr] == currentPageId) {
+                            if (this.context.viewid.indexOf("Navigation_Item") == -1) {
+								this.context.parentView().setPageLabel(mdt.label.get("value"));
+                            } else {
+                            	if (this.context.parentView().context.parentView()) {
+                            		this.context.parentView().context.parentView().context.parentView().setPageLabel("<span style='font-size:9pt'>" + _this.context.parentView().context.parentView().context.options._metadata.label.get("value") + "</span><p style='margin:0'>" +_this.context.options._metadata.label.get("value") + "</p",1);
+                                    this.context.parentView().context.parentView().context.element.setAttribute("aria-current", "page");
+                                         
+                                    var __this = this;
+                                    setTimeout(function() {
+    										
+                                            var ac =  __this.context.parentView().context.element.getElementsByClassName("accordion-toggle")[0];
+                                    
+                                            ac.innerHTML = "<span class='subitemButton' style='font-size:9pt; font-weight:bold;white-space: nowrap;'>" +
+                                                           __this.context.parentView().context.parentView().context.options._metadata.label.get("value") + 
+                                                           "</span><p style='margin:0; margin-top:-2px; white-space:nowrap'>" +
+                                                           __this.context.options._metadata.label.get("value") + "</p>";
+                                            ac.style.padding = "0px 35px 0px 20px";
+    										ac.style.border = "none";
+    										
+                                    }, 200);
+                            	}    
+                            }
+                            
+                            this.context.element.children[0].setAttribute("aria-current", "page");
+                            
+                        } else {}
+                    }
+                } 
+                
+                bpmext.ui.loadView(this);
+            } catch (e) {
+                
+                bpmext.log.error(bpmext.localization.formatMsg("general", "ERROR_ONLOAD_EVENT") + " [" + this.context.viewid + "]: " + e);
+                if (e.stack) {
+                    bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+                }
+            }
+        };
+
+        this.constructor.prototype.view = function () {
+            try {
+                this._proto._handleVisibility(this);
+            } catch (e) {
+                
+                bpmext.log.error(bpmext.localization.formatMsg("general", "ERROR_ONVIEW_EVENT") + " [" + this.ui.getAbsoluteName() + "]: " + e);
+                if (e.stack) {
+                    
+                    bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+                }
+            }
+        };
+
+        this.constructor.prototype.change = function (event) {
+            try {
+                if (event.type == "config") {
+                    switch (event.property) {
+                        case "_metadata.label": {
+                        	this._proto._setText(this, event.newVal);
+                            break;
+                        }
+                        case "_metadata.visibility": {
+                            this._proto._handleVisibility(event.newVal);
+                            break;
+                        }
+                        case "iconLocation":
+						{
+							this._proto._setIconLocation(this);
+							break;
+						}
+                        case "icon":
+						{
+							this._proto._setIcon(this, event.newVal);
+							break;
+						}
+                        
+                    }
+                } else {
+                    if(!this._instance.visibilityChangeInProgress === true && event.newVal !== event.oldVal)
+                        event.newVal === true ? this.show() : this.hide();
+                }
+            } catch (e) {
+                bpmext.log.error(bpmext.localization.formatMsg("general", "ERROR_ONCHANGE_EVENT") + " [" + this.ui.getAbsoluteName() + "]: " + e);
+                if (e.stack) {
+                    bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+                }
+            }
+        };
+
+        this.constructor.prototype.validate = function (event) {
+            try {
+                bpmext.ui.updateViewValidationState(this, event);
+            } catch (e) {
+                bpmext.log.error(bpmext.localization.formatMsg("general", "ERROR_ONVALIDATE_EVENT") + " [" + this.ui.getAbsoluteName() + "]: " + e);
+                if (e.stack) {
+                    bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+                }
+            }
+        };
+
+        this.constructor.prototype.unload = function () {
+            bpmext.ui.unloadView(this);
+        };
+    }
+};

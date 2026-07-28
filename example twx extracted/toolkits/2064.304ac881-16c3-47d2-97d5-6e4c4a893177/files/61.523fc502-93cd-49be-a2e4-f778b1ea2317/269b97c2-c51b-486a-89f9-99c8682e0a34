@@ -1,0 +1,1106 @@
+/*
+ * #BEGIN COPYRIGHT
+ *
+ * Licensed Materials - Property of IBM
+ * 5725-C95
+ * (C) Copyright IBM Corporation 2017, 2021. All Rights Reserved.
+ * US Government Users Restricted Rights- Use, duplication or disclosure
+ * restricted by GSA ADP Schedule Contract with IBM Corp.
+ *
+ * #END COPYRIGHT
+ */
+
+/** 
+ *   <tr class=Prop>
+ *     <td class=SectionName colspan=3>Events</td>
+ *   </tr>
+ *   <tr class=Prop>
+ *     <td>On Load:</td>
+ *	   <td colspan = "2">
+ *       <table> 
+ *         <tr class=Prop>
+ *           <td>Description: </td>
+ *           <td>This event is fired when the text area is loaded.</td>
+ *         </tr>
+ *         <tr class=Prop>
+ *           <td>Example: </td>
+ *           <td><pre class="prettyprint"><code>me.setText("Some default text on load.")</code></pre></td>
+ *         </tr>
+ *       </table>
+ *     </td>
+ *   </tr>
+ *   <tr class=Prop>
+ *     <td>On Change:</td>
+ *    <td colspan = "2">
+ *       <table> 
+ *         <tr class=Prop>
+ *           <td>Description: </td>
+ *           <td>This event is fired when the text is changed.</td>
+ *         </tr>
+ *         <tr class=Prop>
+ *           <td>Example: </td>
+ *           <td><pre class="prettyprint"><code>if(newText != oldText){return confirm ("Are you sure you want to change the text area field?");}<code></pre></td>
+ *         </tr>
+ *       </table>
+ *       <table style= "border: 1px solid black; border-collapse: collapse; ">
+ *         <tr  style= "border: 1px solid black; border-collapse: collapse;">
+ *           <th   style= "border: 1px solid black; border-collapse: collapse;padding: 5px;">Context Variables</th>
+ *           <th   style="border: 1px solid black; border-collapse: collapse; padding: 5px;">newText {string}</th>
+ *           <th   style="border: 1px solid black; border-collapse: collapse; padding: 5px;">oldText {string}</th>
+ *         </tr>
+ *       </table>
+ *     </td>
+ *   </tr>
+ *   <tr class=Prop>
+ *     <td>On Focus:</td>
+ *	   <td colspan = "2">
+ *       <table> 
+ *         <tr class=Prop>
+ *           <td>Description: </td>
+ *           <td>This event is fired when the user enters the text area field.</td>
+ *         </tr>
+ *         <tr class=Prop>
+ *           <td>Example: </td>
+ *           <td><pre class="prettyprint"><code>me.setLabelPlacement("T")</code></pre></td>
+ *         </tr>
+ *       </table>
+ *     </td>
+ *   </tr>
+ *   <tr class=Prop>
+ *     <td>On Blur:</td>
+ *     <td colspan = "2">
+ *       <table> 
+ *         <tr class=Prop>
+ *           <td>Description: </td>
+ *           <td>This event is fired when when the user exits the text area field.</td>
+ *         </tr>
+ *         <tr class=Prop>
+ *           <td>Example: </td>
+ *           <td><pre class="prettyprint"><code>me.setLabelPlacement("L")</code></pre></td>
+ *         </tr>
+ *       </table>
+ *     </td>
+ *   </tr>
+ *   <tr class=Prop>
+ *     <td>On Input:</td>
+ *     <td colspan = "2">
+ *       <table> 
+ *         <tr class=Prop>
+ *           <td>Description: </td>
+ *           <td>This event is fired when the user inputs text.</td>
+ *         </tr>
+ *         <tr class=Prop>
+ *           <td>Example: </td>
+ *           <td><pre class="prettyprint"><code>return potential.length<=10;<code></pre></td>
+ *         </tr>
+ *       </table>
+ *       <table style="border: 1px solid black; border-collapse: collapse; ">
+ *         <tr style="border: 1px solid black; border-collapse: collapse;">
+ *           <th style="border: 1px solid black; border-collapse: collapse;padding: 5px;">Context Variables</th>
+ *           <th style="border: 1px solid black; border-collapse: collapse; padding: 5px;">current {string}</th>
+ *           <th style="border: 1px solid black; border-collapse: collapse; padding: 5px;">potential {string}</th>
+ *           <th style="border: 1px solid black; border-collapse: collapse; padding: 5px;">selection {object {start, end} }</th>
+ *           <th style="border: 1px solid black; border-collapse: collapse; padding: 5px;">type {string}</th>
+ *         </tr>
+ *       </table>
+ *     </td>
+ *   </tr>
+ * </table>
+ */
+bpmext_control_InitTextArea = function (bpmext, utilities, domClass, domAttr, domConstruct, domGeometry) {
+	this._instance = {
+		printHelper: ""
+	};
+
+	/* 
+	//Auto-height sizing logic
+	var observe = function (element, event, handler) {
+	        element.addEventListener(event, handler, false);
+	    };
+
+	function initAutoHeight (txtControl) {
+	    var text = txtControl;
+	    
+		function resize () {
+	        text.style.height = 'auto';
+	        text.style.height = text.scrollHeight+'px';
+	    }
+		
+	    //0-timeout to get the already changed text
+	    function delayedResize () {
+	        window.setTimeout(resize, 0);
+	    }
+	    observe(text, 'change',  resize);
+	    observe(text, 'cut',     delayedResize);
+	    observe(text, 'paste',   delayedResize);
+	    observe(text, 'drop',    delayedResize);
+	    observe(text, 'keydown', delayedResize);
+
+	    text.focus();
+	    text.select();
+	    resize();
+	}
+	*/
+
+	if (!this.constructor.prototype._proto) {
+		this.constructor.prototype._proto = {
+			EVT_ONCHANGE: "eventON_CHANGE",
+			EVT_ONINPUT: "eventON_INPUT",
+			EVT_ONFOCUS: "eventON_FOCUS",
+			EVT_ONBLUR: "eventON_BLUR",
+			_setText: function (view, text) {
+				try {
+					if (text == null)
+						text = "";
+
+					view._instance.text.value = text;
+
+					utilities.BiDi.applyTextDir(
+						view._instance.text,
+						view._instance.text.textContent,
+						view._instance.baseTxtDir,
+						view._instance.genPrefTextDir
+					);
+
+					//Update printHelper here
+					view._instance.printHelper.innerHTML = view.context.htmlEscape(text);
+
+					return this._checkContentValid(view);
+				} catch (e) {
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.error("TextArea._setText() error: " + e);
+					bpmext.log.error("TextArea._setText() " + bpmext.localization.formatMsg("general", "ERROR") + ": " + e);
+					if (e.stack) {
+						//{#feature: US-1330 Added RT localization}
+						//bpmext.log.error("  Call stack: " + e.stack);
+						bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+					}
+				}
+			},
+			_getLabelElt: function (view) {
+				if (!view._instance.label)
+					this._createLabel(view);
+
+				return view._instance.label;
+			},
+			_createLabel: function (view) {
+				view._instance.label = document.createElement("span");
+				domClass.add(view._instance.label, "control-label");
+				domConstruct.place(view._instance.label, view._instance.group, "first");
+				domAttr.set(view._instance.label, "id", "textarea-label-" + view.context.controlidpath);
+			},
+			_setLabelVisibility: function (view, flag) {
+				try {
+					if (!view._instance.label)
+						this._createLabel(view);
+
+					view.context.setDisplay(flag == "SHOW", view._instance.label);
+				} catch (e) {
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.error("TextArea._setLabelVisibility() error: " + e);
+					bpmext.log.error("TextArea._setLabelVisibility() " + bpmext.localization.formatMsg("general", "ERROR") + ": " + e);
+					if (e.stack) {
+						//{#feature: US-1330 Added RT localization}
+						//bpmext.log.error("  Call stack: " + e.stack);
+						bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+					}
+				}
+			},
+			_setLabel: function (view, label) {
+				try {
+					if (label) {
+						if (!view._instance.label)
+							this._createLabel(view);
+
+						view._instance.label.innerHTML = view.context.htmlEscape(label);
+						utilities.BiDi.applyTextDir(
+							view._instance.label,
+							view._instance.label.innerHTML,
+							view._instance.baseTxtDir,
+							view._instance.genPrefTextDir
+						);
+					} else {
+						if (view._instance.label) {
+							view._instance.group.removeChild(view._instance.label);
+							delete view._instance.label;
+						}
+					}
+				} catch (e) {
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.error("TextArea._setLabel() error: " + e);
+					bpmext.log.error("TextArea._setLabel() " + bpmext.localization.formatMsg("general", "ERROR") + ": " + e);
+					if (e.stack) {
+						//{#feature: US-1330 Added RT localization}
+						//bpmext.log.error("  Call stack: " + e.stack);
+						bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+					}
+				}
+			},
+			_setPlaceholder: function (view, text) {
+				try {
+					if (text)
+						domAttr.set(view._instance.text, "placeholder", text);
+					else
+						domAttr.remove(view._instance.text, "placeholder");
+				} catch (e) {
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.error("TextArea._setPlaceholder() error: " + e);
+					bpmext.log.error("TextArea._setPlaceholder() " + bpmext.localization.formatMsg("general", "ERROR") + ": " + e);
+					if (e.stack) {
+						//{#feature: US-1330 Added RT localization}
+						//bpmext.log.error("  Call stack: " + e.stack);
+						bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+					}
+				}
+			},
+			_setLabelPlacement: function (view, newVal, oldVal) {
+				if (!oldVal)
+					oldVal = view._instance.oldLblPlc;
+
+				newVal = bpmext.ui.util.normalizeLabelPlacement(newVal, bpmext.ui.util.OPTS_LBL_PLC_CLZ);
+				oldVal = bpmext.ui.util.normalizeLabelPlacement(oldVal, bpmext.ui.util.OPTS_LBL_PLC_CLZ);
+
+				bpmext.ui.util.replaceCSSClass(view._instance.group, bpmext.ui.util.OPTS_LBL_PLC_CLZ, newVal, oldVal);
+				view._instance.oldLblPlc = newVal;
+			},
+			_setLabelWidth: function (view, labelWidth) {
+				if (labelWidth != null && labelWidth != "") {
+					if (!isNaN(labelWidth))
+						labelWidth += "px";
+
+					view._instance.label.style.width = labelWidth;
+					domClass.add(view.context.element, "labelWidth");
+				} else {
+					if (view._instance.label) {
+						view._instance.label.style.width = null;
+					}
+					
+					domClass.remove(view.context.element, "labelWidth");
+				}
+			},
+			_setSizeStyle: function (view, newVal, oldVal) {
+				if (!oldVal)
+					oldVal = view._instance.oldSzStyle;
+
+				newVal = bpmext.ui.util.normalizeSizeStyle(newVal, bpmext.ui.util.OPTS_SZ_STL_CLZ);
+				oldVal = bpmext.ui.util.normalizeSizeStyle(oldVal, bpmext.ui.util.OPTS_SZ_STL_CLZ);
+
+				bpmext.ui.util.replaceCSSClass(view._instance.text, bpmext.ui.util.OPTS_SZ_STL_CLZ, newVal, oldVal);
+				view._instance.oldSzStyle = newVal;
+
+				bpmext.ui.util.propagateUpSizeStyle(view, newVal);
+			},
+			_setWidth: function (view, width) {
+				try {
+					if (width != null && width != "") {
+						if (!isNaN(width))
+							width += "px";
+
+						view.context.element.style.width = width;
+
+						domClass.add(view.context.element, "widthSet");
+					} else {
+						view.context.element.style.width = null;
+
+						domClass.remove(view.context.element, "widthSet");
+					}
+				} catch (e) {
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.error("TextArea._setWidth() error: " + e);
+					bpmext.log.error("TextArea._setWidth() " + bpmext.localization.formatMsg("general", "ERROR") + ": " + e);
+					if (e.stack) {
+						//{#feature: US-1330 Added RT localization}
+						//bpmext.log.error("  Call stack: " + e.stack);
+						bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+					}
+				}
+			},
+			_setHeight: function (view, height) {
+				try {
+					if (height != null && height != "") {
+						if (!isNaN(height))
+							height += "px";
+
+						//view.context.element.style.height = height;
+						view._instance.text.style.height = height;
+					}
+				} catch (e) {
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.error("TextArea._setHeight() error: " + e);
+					bpmext.log.error("TextArea._setHeight() " + bpmext.localization.formatMsg("general", "ERROR") + ": " + e);
+					if (e.stack) {
+						//{#feature: US-1330 Added RT localization}
+						//bpmext.log.error("  Call stack: " + e.stack);
+						bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+					}
+				}
+			},
+			_setTabIndex: function (view, index) {
+				if (index != null)
+					domAttr.set(view._instance.text, "tabindex", index);
+				else
+					domAttr.remove(view._instance.text, "tabindex");
+			},
+			_handleVisibility: function (view) {
+				var vis = utilities.handleVisibility(view.context);
+
+				if (vis != "NONE") {
+					view._instance.text.disabled = (vis === "READONLY");
+					if (!view._instance.label)
+						return;
+					if (vis === "READONLY")
+						domClass.add(view.context.element, "disabled");
+					else
+						domClass.remove(view.context.element, "disabled");
+				}
+
+				// Updates for WAI
+				if (domAttr.has(view._instance.text, "disabled")) {										
+					domAttr.set(view._instance.text, "aria-disabled", "true");
+				} else {
+					domAttr.remove(view._instance.text, "aria-disabled");
+				}
+			},
+			_updateControl: function (view) {
+				var errors = bpmext.ui.getViewValidationErrors(view);
+
+				//Color style
+				var colStyle = errors ? "E" : view.context.options.colorStyle.get("value");
+
+				bpmext.ui.util.replaceCSSClass(view._instance.group, bpmext.ui.util.OPTS_COL_STL_CLZ, colStyle, view._instance.oldColStyle);
+				view._instance.oldColStyle = colStyle;
+
+				//Validation Error Icon
+				if (view._instance.icon2) {
+					bpmext.ui.util.closeTooltip(view._instance.iconTT, view._instance.icon);
+					delete view._instance.iconTT;
+
+					view._instance.input.removeChild(view._instance.icon2);
+					delete view._instance.icon2;
+				}
+
+				if (errors) {
+					domClass.add(view._instance.group, "has-feedback has-error");
+					view._instance.icon2 = document.createElement("span");
+					view._instance.input.appendChild(view._instance.icon2);
+					domClass.add(view._instance.icon2, "fa form-control-feedback fa-exclamation-circle");
+
+					var ttOpts = {
+						horizontalPos: "right",
+						verticalPos: "top",
+						cssClass: "validationError",
+						plainText: false,
+						smartPositioning: true
+					};
+
+					view._instance.iconTT = bpmext.ui.util.showTooltip(
+						view._instance.input,
+						bpmext.ui.util.formatErrors(errors),
+						ttOpts
+					);
+
+					view._instance.errorMessage = document.createElement("div");
+					view._instance.errorMessage.id = view._instance.input.firstElementChild.id + "-error-msg";
+					view._instance.errorMessage.classList.add("hide");
+					view._instance.errorMessage.innerHTML = bpmext.ui.util.formatErrors(errors);
+					view._instance.input.appendChild(view._instance.errorMessage);
+					domAttr.set(view._instance.input.firstElementChild, "aria-describedby", view._instance.errorMessage.id);
+					domAttr.set(view._instance.input.firstElementChild, "aria-invalid", "true");
+				} else {
+					domClass.remove(view._instance.group, "has-feedback has-error");
+					if (view._instance.errorMessage) { view._instance.errorMessage.remove(); }
+					domAttr.remove(view._instance.input.firstElementChild, "aria-describedby");
+					domAttr.remove(view._instance.input.firstElementChild, "aria-invalid");
+				}
+			},
+			_checkContentValid: function (view) {
+				var regex = view.context.options.regExp.get("value");
+				var re = regex ? new RegExp(regex) : null;
+
+				if (re && view._instance.text.value && !re.test(view._instance.text.value)) {
+					//{#feature: US-1330 Added RT localization}
+					bpmext.ui.addViewValidationError(view, "regex", bpmext.localization.formatMsg("general", "INVALID_CONTENT_FORMAT"));
+					return false;
+				} else {
+					bpmext.ui.removeViewValidationError(view, "regex");
+					return true;
+				}
+			},
+			_getSelection: function (node) {
+				var start = 0,
+					end = 0,
+					normalizedValue, range, textInputRange, len, endRange;
+
+				if (typeof node.selectionStart == "number" && typeof node.selectionEnd == "number") {
+					start = node.selectionStart;
+					end = node.selectionEnd;
+				} else {
+					range = document.selection.createRange();
+
+					if (range && range.parentElement() == node) {
+						len = node.value.length;
+						normalizedValue = node.value.replace(/\r\n/g, "\n");
+						textInputRange = node.createTextRange();
+						textInputRange.moveToBookmark(range.getBookmark());
+						endRange = node.createTextRange();
+						endRange.collapse(false);
+
+						if (textInputRange.compareEndPoints("StartToEnd", endRange) > -1)
+							start = end = len;
+						else {
+							start = -textInputRange.moveStart("character", -len);
+							start += normalizedValue.slice(0, start).split("\n").length - 1;
+
+							if (textInputRange.compareEndPoints("EndToEnd", endRange) > -1)
+								end = len;
+							else {
+								end = -textInputRange.moveEnd("character", -len);
+								end += normalizedValue.slice(0, end).split("\n").length - 1;
+							}
+						}
+					}
+				}
+
+				return {
+					"start": start,
+					"end": end
+				};
+			},
+			_createPrintHelper: function (view, textValue) {
+
+				view._instance.printHelper = document.createElement("div");
+				domClass.add(view._instance.printHelper, "print_helper");
+				view._instance.input.appendChild(view._instance.printHelper);
+			},
+			_handleInput: function (view, onInput, text, state, selection, type) {
+				state.potential = text.value;
+				var inputOk = false;
+
+				do {
+					if (onInput) {
+						if (bpmext.log.isDebugging) {
+							bpmext.log.debug(
+								"Handling input: Current=[" + state.current + "]; Potential=[" + state.potential +
+								"]; Selection=[" + selection.start + ", " + selection.end + "]; Type=[" + type + "]",
+								view
+							);
+						}
+
+						if (bpmext.ui.executeEventHandlingFunction(view, view._proto.EVT_ONINPUT, state.current, state.potential, selection, type) === false)
+							break;
+					}
+
+					inputOk = true;
+				}
+				while (false);
+
+				if (!inputOk) {
+					text.value = state.current;
+					bpmext.log.debug("TextArea Control validation failed");
+				} else {
+					state.current = text.value;
+					//Update printHelper here
+					view._instance.printHelper.innerHTML = view.context.htmlEscape(text.value);
+				}
+			},
+			_setHelpText : function(view, text){
+				utilities.setHelpText(view, text);
+			}
+		};
+
+		/*
+		Public control methods *************************************************************
+		 */
+
+		/**
+		 * @instance
+		 * @memberof TextArea
+		 * @method setLabel
+		 * @param {string} label label for the text area
+		 * @desc Set label for text area control
+		 */
+		this.constructor.prototype.setLabel = function (text) {
+			this.context.options._metadata.label.set("value", text);
+		};
+
+		/**
+		 * @instance
+		 * @memberof TextArea
+		 * @method getLabel
+		 * @desc Get label associated with text area control
+		 * @returns {string}
+		 */
+		this.constructor.prototype.getLabel = function () {
+			return this.context.options._metadata.label.get("value");
+		};
+
+		/**
+		 * @instance
+		 * @memberof TextArea
+		 * @method setHelpText
+		 * @param {string} helptext Help text for the control
+		 * @desc Set help text for text area control
+		 */
+		this.constructor.prototype.setHelpText = function (text)
+		{
+			this.context.options._metadata.helpText.set("value", text);
+		};
+
+		/**
+		 * @instance
+		 * @memberof TextArea
+		 * @method getHelpText
+		 * @desc Get help text associated with text area control
+		 * @returns {string}
+		 */
+		this.constructor.prototype.getHelpText = function ()
+		{
+			return this.context.options._metadata.helpText.get("value");
+		};
+
+		/**
+		 * @instance
+		 * @memberof TextArea
+		 * @method setLabelPlacement
+		 * @param {string} placement "T"|"TOP"=Top | "L"|"LEFT"=Left
+		 * @desc Set label placement for control.  NOTE: to avoid ambiguity always set the label placement using "T"|"L"
+		 * @example me.setLabelPlacement("L");
+		 */
+		this.constructor.prototype.setLabelPlacement = function (plc) {
+			this.context.options.labelPlacement.set("value", plc);
+		};
+
+		/**
+		 * @instance
+		 * @memberof TextArea
+		 * @method getLabelPlacement
+		 * @desc Get label placement for control.  NOTE: This always returns the label placement as set, to avoid ambiguity always set the label placement using "T"|"L"
+		 * @returns {string}
+		 * @example if(me.getLabelPlacement == "L"){me.setLabelPlacement("T");}
+		 */
+		this.constructor.prototype.getLabelPlacement = function () {
+			return this.context.options.labelPlacement.get("value");
+		};
+
+		/**
+		 * @instance
+		 * @memberof TextArea
+		 * @method isLabelVisible
+		 * @desc Get label visibility for text area control
+		 * @returns {boolean}
+		 */
+		this.constructor.prototype.isLabelVisible = function () {
+			return this.context.options._metadata.labelVisibility.get("value") == "SHOW";
+		};
+
+		/**
+		 * @instance
+		 * @memberof TextArea
+		 * @method setLabelVisible
+		 * @param {boolean} flag set the visibility of the text area
+		 * @desc Set label visibility for text area control
+		 */
+		this.constructor.prototype.setLabelVisible = function (flag) {
+			this.context.options._metadata.labelVisibility.set("value", flag ? "SHOW" : "HIDE");
+		};
+
+		/**
+		 * @instance
+		 * @memberof TextArea
+		 * @method getLabelWidth
+		 * @desc Get label width of text area control (e.g. 50px, 20%, 2em - omitting the unit assumes px)
+		 * @returns {string}
+		 */
+		this.constructor.prototype.getLabelWidth = function () {
+			return this.context.options.labelWidth.get("value");
+		};
+
+		/**
+		 * @instance
+		 * @memberof TextArea
+		 * @method setLabelWidth
+		 * @param {string} labelWidth Control's label width
+		 * @desc Set label width of text area control (e.g. 50px, 20%, 2em - omitting the unit assumes px)
+		 */
+		this.constructor.prototype.setLabelWidth = function (labelWidth) {
+			this.context.options.labelWidth.set("value", labelWidth);
+		};
+
+		/**
+		 * @instance
+		 * @memberof TextArea
+		 * @method getText
+		 * @desc Get text for text area control
+		 * @returns {string}
+		 */
+		this.constructor.prototype.getText = function () {
+			var res = this.getData();
+			return res == null ? "" : res;
+		};
+
+		/**
+		 * @instance
+		 * @memberof TextArea
+		 * @method setText
+		 * @param {string} text the text in the text area
+		 * @desc Set text for text area control
+		 */
+		this.constructor.prototype.setText = function (text) {
+			this.context.binding.set("value", text);
+		};
+
+		/**
+		 * @instance
+		 * @memberof TextArea
+		 * @method setPlaceholder
+		 * @param {string} text placeholder text
+		 * @desc Set placeholder text for text area control
+		 */
+		this.constructor.prototype.setPlaceholder = function (text) {
+			this.context.options.placeHolder.set("value", text);
+		};
+
+		/**
+		 * @instance
+		 * @memberof TextArea
+		 * @method getPlaceholder
+		 * @desc Get placeholder text associated with text area control
+		 * @returns {string}
+		 */
+		this.constructor.prototype.getPlaceholder = function () {
+			return this.context.options.placeHolder.get("value");
+		};
+
+		/**
+		 * @instance
+		 * @memberof TextArea
+		 * @method setWidth
+		 * @param {string} width width of the control
+		 * @desc Set width of text area control (e.g. 50px, 20%, 2em - omitting the unit assumes px)
+		 */
+		this.constructor.prototype.setWidth = function (width) {
+			this.context.options.width.set("value", width);
+		};
+
+		/**
+		 * @instance
+		 * @memberof TextArea
+		 * @method getWidth
+		 * @desc Get configured width for text area control (including unit)
+		 * @returns {string}
+		 */
+		this.constructor.prototype.getWidth = function () {
+			return this.context.options.width.get("value");
+		};
+
+		/**
+		 * @instance
+		 * @memberof TextArea
+		 * @method setSizeStyle
+		 * @param {string} style "DEFAULT"|"DEF"|"NORMAL"|"D"=Default | "SMALL"|"S"=Small | "LARGE"|"L"=Large
+		 * @desc Sets size style of control.  NOTE: to avoid ambiguity always set the size style using "D"|"S"|"L"
+		 */
+		this.constructor.prototype.setSizeStyle = function (style) {
+			return this.context.options.sizeStyle.set("value", style);
+		};
+
+		/**
+		 * @instance
+		 * @memberof TextArea
+		 * @method getSizeStyle
+		 * @desc Gets size style of control.  NOTE: This always returns the size style as set, to avoid ambiguity always set the size style using "D"|"S"|"L"
+		 * @returns {string}
+		 */
+		this.constructor.prototype.getSizeStyle = function () {
+			return this.context.options.sizeStyle.get("value");
+		};
+
+		/**
+		 * @instance
+		 * @memberof TextArea
+		 * @method setTabIndex
+		 * @param {integer} tabIndex tab indices start at 1 and may be set sparsely
+		 * @desc Sets tab index of text area control
+		 */
+		this.constructor.prototype.setTabIndex = function (tabIndex) {
+			this.context.options.tabIndex.set("value", tabIndex);
+		};
+
+		/**
+		 * @instance
+		 * @memberof TextArea
+		 * @method getTabIndex
+		 * @desc Get tab index for text area control
+		 * @returns {integer}
+		 */
+		this.constructor.prototype.getTabIndex = function () {
+			return domAttr.get(this._instance.text, "tabindex");
+		};
+
+		/**
+		 * @instance
+		 * @memberof TextArea
+		 * @method setValidationExpression
+		 * @param {string} re regular expression
+		 * @desc Set validation (regular) expression of text area control
+		 */
+		this.constructor.prototype.setValidationExpression = function (re) {
+			this.context.options.regExp.set("value", re);
+		};
+
+		/**
+		 * @instance
+		 * @memberof TextArea
+		 * @method getValidationExpression
+		 * @desc Get validation (regular) expression for text area control
+		 * @returns {string}
+		 */
+		this.constructor.prototype.getValidationExpression = function () {
+			return this.context.options.regExp.get("value");
+		};
+
+		/**
+		 * @instance
+		 * @memberof TextArea
+		 * @method focus
+		 * @desc Set focus on this control
+		 */
+		this.constructor.prototype.focus = function () {
+			this._instance.text.focus();
+		};
+
+		/**
+		 * @instance
+		 * @memberof TextArea
+		 * @method getType
+		 * @desc Get descriptive string representing the type of control
+		 * @returns {string}
+		 */
+		this.constructor.prototype.getType = function () {
+			return "textArea.3";
+		};
+
+		//{#feature: US-696 ARIA labeling}
+		this.constructor.prototype._getHTMLInputElement = function () {
+			return this._instance.text; //This is the element that will need its "aria-labelledby" attribute set
+		};
+		//End US-696
+
+
+		/*
+		Coach NG Lifecycle methods *************************************************************
+		 */
+		this.constructor.prototype.load = function () {
+			try {
+				var opts = this.context.options;
+				var mdt = opts._metadata;
+
+				this._instance.baseTxtDir = mdt.baseTextDirection && mdt.baseTextDirection.get("value") ? mdt.baseTextDirection.get("value") : utilities.BiDi.BASE_TEXT_DIRECTION._default;
+				this._instance.genPrefTextDir = this.context.bpm.system.baseTextDirection;
+
+				if (!this.context.binding)
+					this.context.binding = bpmext.ui.substituteObject(this);
+
+				if (!opts.tabIndex)
+					bpmext.ui.substituteConfigOption(this, "tabIndex", null);
+
+				if (!opts.placeHolder)
+					bpmext.ui.substituteConfigOption(this, "placeHolder", null);
+
+				if (!opts.colorStyle)
+					bpmext.ui.substituteConfigOption(this, "colorStyle", "D");
+
+				if (!opts.sizeStyle)
+					bpmext.ui.substituteConfigOption(this, "sizeStyle", "D");
+
+				if (!opts.width)
+					bpmext.ui.substituteConfigOption(this, "width", null);
+
+				if (!opts.height)
+					bpmext.ui.substituteConfigOption(this, "height", null);
+
+				if (!opts.autoHeight)
+					bpmext.ui.substituteConfigOption(this, "autoHeight", false);
+
+				if (!opts.labelPlacement)
+					bpmext.ui.substituteConfigOption(this, "labelPlacement", "T");
+
+				if (!opts.labelWidth)
+					bpmext.ui.substituteConfigOption(this, "labelWidth", null);
+
+				if (!opts.printOverflow)
+					bpmext.ui.substituteConfigOption(this, "printOverflow", false);
+
+				if (!opts.regExp)
+					bpmext.ui.substituteConfigOption(this, "regExp", null);
+
+				this._instance.group = document.createElement("div");
+				domClass.add(this._instance.group, "form-group");
+				this._instance.input = document.createElement("div");
+				domClass.add(this._instance.input, "input");
+
+				this._instance.text = document.createElement("textarea");
+				domClass.add(this._instance.text, "form-control");
+				domAttr.set(this._instance.text, "role", "textbox");
+				domAttr.set(this._instance.text, "aria-labelledby", "textarea-label-" + this.context.controlidpath);
+				domAttr.set(this._instance.text, "aria-multiline", "true");
+				domAttr.set(this._instance.text, "id", "textarea-textarea-" + this.context.controlidpath);
+				//domAttr.set(this._instance.text, "type", "text");
+
+				var view = this;
+				//{#story: 562 Option to print overflow content in the control}
+				if (opts.printOverflow.get("value")) {
+					view._proto._createPrintHelper(view);
+				}
+
+				this._instance.input.appendChild(this._instance.text);
+				this._instance.group.appendChild(this._instance.input);
+				this.context.element.appendChild(this._instance.group);
+
+				bpmext.ui.setupFormulaTriggeredUpdates(
+					this,
+					null,
+					this.getText
+				);
+
+				bpmext.ui.loadView(this);
+
+				this._instance.vc = bpmext.ui.getNearestValidationContainer(view);
+
+				this._proto._setSizeStyle(this, opts.sizeStyle.get("value"));
+				this._proto._setLabelVisibility(this, opts._metadata.labelVisibility.get("value"));
+				this._proto._setLabelPlacement(this, opts.labelPlacement.get("value"));
+				this._proto._setLabel(this, opts._metadata.label.get("value"));
+				this._proto._setLabelWidth(this, opts.labelWidth.get("value"));
+				this._proto._setPlaceholder(this, opts.placeHolder.get("value"));
+				this._proto._setWidth(this, opts.width.get("value"));
+				this._proto._setHeight(this, opts.height.get("value"));
+				if (this._proto._setText(this, this.context.binding.get("value")))
+					this._proto._updateControl(this);
+
+				this._proto._setTabIndex(this, opts.tabIndex.get("value"));
+
+				var tmp = mdt.helpText ? mdt.helpText.get("value") : null;
+				if (tmp && tmp.length > 0)
+				{
+					this._proto._setHelpText(this, tmp);
+				}
+
+				if (opts[this._proto.EVT_ONCHANGE]) {
+					bpmext.ui.registerEventHandlingFunction(this, this._proto.EVT_ONCHANGE, "newText", "oldText");
+				}
+
+				this._instance.text.onchange = function (event) {
+					if (view._proto._checkContentValid(view))
+						view.context.binding.set("value", this.value);
+
+
+				};
+
+				if (opts[this._proto.EVT_ONFOCUS]) {
+					this._instance.text.onfocus = function (event) {
+						bpmext.ui.executeEventHandlingFunction(view, view._proto.EVT_ONFOCUS);
+					};
+
+					bpmext.ui.registerEventHandlingFunction(this, this._proto.EVT_ONFOCUS);
+				}
+
+				if (opts[this._proto.EVT_ONBLUR]) {
+					this._instance.text.onblur = function (event) {
+						bpmext.ui.executeEventHandlingFunction(view, view._proto.EVT_ONBLUR);
+					};
+
+					bpmext.ui.registerEventHandlingFunction(this, this._proto.EVT_ONBLUR);
+				}
+
+				if (opts[this._proto.EVT_ONINPUT]) {
+					var onInput = opts[this._proto.EVT_ONINPUT] != null;
+					var text1 = this._instance.text;
+					var sel;
+					var state = {
+						current: text1.value,
+						potential: void 0
+					};
+
+					var redo;
+					var undo;
+
+					this._instance.text.onkeydown = function (event) {
+						redo = false;
+						undo = false;
+
+						if (event.key === "z" && event.ctrlKey) //Ctrl-Z
+						{
+							redo = true;
+							state.current = text1.value;
+							sel.start = 0;
+							sel.end = 0;
+							setTimeout(function () {
+								view._proto._handleInput(view, onInput, text1, state, sel, "undo");
+							});
+						} else if (event.key === "y" && event.ctrlKey) //Ctrl-Y
+						{
+							undo = true;
+							state.current = text1.value;
+							sel.start = 0;
+							sel.end = 0;
+
+							setTimeout(function () {
+								view._proto._handleInput(view, onInput, text1, state, sel, "redo");
+							});
+						} else {
+							sel = view._proto._getSelection(text1);
+						}
+					};
+
+					this._instance.text.oninput = function (event) {
+						if (redo || undo)
+							return;
+
+						state.potential = text1.value;
+
+						if (state.current != state.potential) {
+							view._proto._handleInput(view, onInput, text1, state, sel, "change");
+						}
+
+						state.potential = null;
+					};
+
+					bpmext.ui.registerEventHandlingFunction(this, this._proto.EVT_ONINPUT, "current", "potential", "selection", "type");
+				}
+
+				bpmext.ui.registerEventHandlingFunction(this, this._proto.EVT_ONSCLICK);
+			} catch (e) {
+				//{#feature: US-1330 Added RT localization}
+				//bpmext.log.error("Error on load event [" + this.context.viewid + "]: " + e);
+				bpmext.log.error(bpmext.localization.formatMsg("general", "ERROR_ONLOAD_EVENT") + " [" + this.context.viewid + "]: " + e);
+				if (e.stack) {
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.error("  Call stack: " + e.stack);
+					bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+				}
+			}
+		};
+
+		this.constructor.prototype.view = function () {
+			try {
+				this._proto._handleVisibility(this);
+			} catch (e) {
+				//{#feature: US-1330 Added RT localization}
+				//bpmext.log.error("Error on view event [" + this.ui.getAbsoluteName() + "]: " + e);
+				bpmext.log.error(bpmext.localization.formatMsg("general", "ERROR_ONVIEW_EVENT") + " [" + this.ui.getAbsoluteName() + "]: " + e);
+				if (e.stack) {
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.error("  Call stack: " + e.stack);
+					bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+				}
+			}
+		};
+
+		this.constructor.prototype.change = function (event) {
+			try {
+				if (event.type == "config") {
+					switch (event.property) {
+						case "_metadata.label": {
+							this._proto._setLabel(this, event.newVal);
+							this._proto._setHelpText(this, this.context.options._metadata.helpText.get("value"));
+							break;
+						}
+						case "_metadata.visibility": {
+							this._proto._handleVisibility(this);
+							break;
+						}
+						case "_metadata.labelVisibility": {
+							this._proto._setLabelVisibility(this, event.newVal);
+							break;
+						}
+						case "_metadata.helpText": {
+							this._proto._setHelpText(this, event.newVal);
+							this._proto._updateControl(this);
+							break;
+						}
+						case "width": {
+							this._proto._setWidth(this, event.newVal);
+							break;
+						}
+						case "height": {
+							this._proto._setHeight(this, event.newVal);
+							break;
+						}
+						case "sizeStyle": {
+							this._proto._setSizeStyle(this, event.newVal, event.oldVal);
+							break;
+						}
+						case "showStatus": {
+							this._proto._setStatusVisible(this, event.newVal);
+							break;
+						}
+						case "tabIndex": {
+							this._proto._setTabIndex(this, event.newVal);
+							break;
+						}
+						case "placeHolder": {
+							this._proto._setPlaceholder(this, event.newVal);
+							break;
+						}
+						case "regExp": {
+							this._proto._checkContentValid(this);
+							break;
+						}
+						case "labelPlacement": {
+							this._proto._setLabelPlacement(this, event.newVal);
+							break;
+						}
+						case "labelWidth": {
+							this._proto._setLabelWidth(this, event.newVal);
+							break;
+						}
+					}
+				} else if (event.insertedInto == event.removedFrom) {
+					this._proto._setText(this, event.newVal);
+
+					if (event.newVal != event.oldVal)
+						bpmext.ui.executeEventHandlingFunction(this, this._proto.EVT_ONCHANGE, event.newVal, event.oldVal);
+				}
+			} catch (e) {
+				//{#feature: US-1330 Added RT localization}
+				//bpmext.log.error("Error on change event [" + this.ui.getAbsoluteName() + "]: " + e);
+				bpmext.log.error(bpmext.localization.formatMsg("general", "ERROR_ONCHANGE_EVENT") + " [" + this.ui.getAbsoluteName() + "]: " + e);
+				if (e.stack) {
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.error("  Call stack: " + e.stack);
+					bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+				}
+			}
+		};
+
+		this.constructor.prototype.validate = function (event) {
+			try {
+				bpmext.ui.updateViewValidationState(this, event);
+
+				this._proto._updateControl(this);
+				if (this._instance.vc)
+					this._instance.vc.validate(event);
+			} catch (e) {
+				//{#feature: US-1330 Added RT localization}
+				//bpmext.log.error("Error on validate event [" + this.ui.getAbsoluteName() + "]: " + e);
+				bpmext.log.error(bpmext.localization.formatMsg("general", "ERROR_ONVALIDATE_EVENT") + " [" + this.ui.getAbsoluteName() + "]: " + e);
+				if (e.stack) {
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.error("  Call stack: " + e.stack);
+					bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+				}
+			}
+		};
+
+		/*
+		this.constructor.prototype.collaboration = function (event)
+		{
+		};
+		*/
+
+		this.constructor.prototype.unload = function () {
+			bpmext.ui.unloadView(this);
+		};
+	}
+};

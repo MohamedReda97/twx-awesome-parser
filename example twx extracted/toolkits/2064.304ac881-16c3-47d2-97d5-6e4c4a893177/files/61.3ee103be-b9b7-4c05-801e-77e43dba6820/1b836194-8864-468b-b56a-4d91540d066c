@@ -1,0 +1,299 @@
+/*
+ * #BEGIN COPYRIGHT
+ *
+ * Licensed Materials - Property of IBM
+ * 5725-C95
+ * (C) Copyright IBM Corporation 2017. All Rights Reserved.
+ * US Government Users Restricted Rights- Use, duplication or disclosure
+ * restricted by GSA ADP Schedule Contract with IBM Corp.
+ *
+ * #END COPYRIGHT
+ */
+
+ /**
+ * @ignore
+ * @instance
+ * @memberof NavigationEvent
+ * @method hide
+ */ 
+ 
+ /**
+ * @ignore
+ * @instance
+ * @memberof NavigationEvent
+ * @method show
+ */ 
+ 
+ /**
+ * @ignore
+ * @instance
+ * @memberof NavigationEvent
+ * @method isVisible
+ */ 
+ 
+ /**
+ * @ignore
+ * @instance
+ * @memberof NavigationEvent
+ * @method setEnabled
+ */ 
+ 
+ /**
+ * @ignore
+ * @instance
+ * @memberof NavigationEvent
+ * @method recalculate
+ */ 
+ 
+ /**
+ * @ignore
+ * @instance
+ * @memberof NavigationEvent
+ * @method isValid
+ */ 
+ 
+ /**
+ * @ignore
+ * @instance
+ * @memberof NavigationEvent
+ * @method setVisible
+ */ 
+ 
+ /**
+ * @ignore
+ * @instance
+ * @memberof NavigationEvent
+ * @method isEnabled
+ */ 
+ 
+ /**
+ * @ignore
+ * @instance
+ * @memberof NavigationEvent
+ * @method isLabelVisible
+ */ 
+ 
+ /**
+ * @ignore
+ * @instance
+ * @memberof NavigationEvent
+ * @method setValid
+ */ 
+  
+ /**
+ * @ignore
+ * @instance
+ * @memberof NavigationEvent
+ * @method setLabelVisible
+ */ 
+  
+ /**
+ * @ignore
+ * @instance
+ * @memberof NavigationEvent
+ * @method setViewEnabled
+ */ 
+  
+ /**
+ * @ignore
+ * @instance
+ * @memberof NavigationEvent
+ * @method setViewVisible
+ */ 
+ 
+ /**
+ * @ignore
+ * @instance
+ * @memberof NavigationEvent
+ * @method getData
+ */ 
+ 
+ /**
+ * @ignore
+ * @instance
+ * @memberof NavigationEvent
+ * @method setData
+ */ 
+
+/** 
+ *   <tr class=Prop>
+ *     <td class=SectionName colspan=3>Events</td>
+ *   </tr>
+ *   <tr class=Prop>
+ *     <td>Onload event:</td>
+ *	   <td colspan = "2">
+ *       <table> 
+ *         <tr class=Prop>
+ *           <td>Description: </td>
+ *           <td>This event is triggered when the NavigationEvent is loaded.</td>
+ *         </tr>
+ *       </table>
+ *     </td>
+ *   </tr>
+ *   <tr class=Prop>
+ *     <td>On Trigger:</td>
+ *	   <td colspan = "2">
+ *       <table> 
+ *         <tr class=Prop>
+ *           <td>Description: </td>
+ *           <td>This event is triggered when the NavigationEvent is Triggered.</td>
+ *         </tr>
+ *         <tr class=Prop>
+ *           <td>Example: </td>
+ *           <td><pre class="prettyprint"><code>console.log("Navigation Event Triggered - exiting coach view.")<code></pre></td>
+ *         </tr>
+ *       </table>
+ *     </td>
+ *   </tr>
+ *   <tr class=Prop>
+ *     <td>On Boundary Event:</td>
+ *	   <td colspan = "2">
+ *       <table> 
+ *         <tr class=Prop>
+ *           <td>Description: </td>
+ *           <td>This event is triggered when the Boundary Event for NavigationEvent is called.  For information on the status context variable see the context.trigger() method in the Knowledge Center.</td>
+ *         </tr>
+ *         <tr class=Prop>
+ *           <td>Example: </td>
+ *           <td><pre class="prettyprint"><code>console.log(status)<code></pre></td>
+ *         </tr>
+ *       </table>
+ *       <table style= "border: 1px solid black; border-collapse: collapse; ">
+ *         <tr  style= "border: 1px solid black; border-collapse: collapse;">
+ *           <th   style= "border: 1px solid black; border-collapse: collapse;padding: 5px;">Context Variables</th>
+ *           <th   style="border: 1px solid black; border-collapse: collapse; padding: 5px;">status</th>
+ *         </tr>
+ *       </table>
+ *     </td>
+ *   </tr>
+ * </table>
+ */
+bpmext_control_InitBoundaryEvent = function(bpmext)
+{
+	if (!this.constructor.prototype._proto)
+	{
+		this.constructor.prototype._proto =
+		{
+			EVT_ONTRIGGER : "eventON_TRIGGER",
+			EVT_ONBOUNDARYEVT : "eventON_BOUNDARYEVT",
+
+			_handleVisibility : function (view)
+			{
+				view.setVisible(false, true);
+			}
+		};
+		
+		/**
+		 * @instance
+		 * @memberof NavigationEvent
+		 * @method setEventData
+		 * @desc Set data associated with the navigation event
+		 * @param [*] eventData Data to add to navigation event
+		 */
+		this.constructor.prototype.setEventData = function(data)
+		{
+			this.context.options.eventData.set("value", data);
+		};
+
+		/**
+		 * @instance
+		 * @memberof NavigationEvent
+		 * @method getEventData
+		 * @desc Get data associated with the navigation event 
+		 */
+		this.constructor.prototype.getEventData = function(data)
+		{
+			return this.context.options.eventData.get("value");
+		};
+		
+		/**
+		 * @instance
+		 * @memberof NavigationEvent
+		 * @method fire
+		 * @param {*} [eventData] Additional data (payload) associated with the navigation event
+		 * @desc Fire the boundary event 
+		 */
+		this.constructor.prototype.fire = function(eventData)
+		{
+			if(typeof eventData != "undefined")
+				this.setEventData(eventData);
+			
+			var fireBE = bpmext.ui.executeEventHandlingFunction(this, this._proto.EVT_ONTRIGGER);
+			if(fireBE)
+			{
+				if (this.context.binding)
+					this.context.binding.set("value", true);
+
+				//{#feature: * Convenience page-level variable added for client-side scripts in client-side Human Services}
+				page.ui.boundaryEvent = this;
+
+				var _this = this;
+
+				this.context.trigger(function (st)
+				{
+					setTimeout(function(){
+						bpmext.ui.executeEventHandlingFunction(_this, _this._proto.EVT_ONBOUNDARYEVT, st.status);
+						
+						//Cannot delete page.ui.boundaryEvent in timeout since the deletion may occur after other triggers have been fired
+						//delete page.ui.boundaryEvent;
+					});
+				}, {callBackForAll : true});				
+			}
+		};
+
+		/**
+		 * @instance
+		 * @memberof NavigationEvent
+		 * @method confirmAndFire
+		 * @param {string} confirmationMessage Text of the confirmation message
+		 * @param {*} [eventData] Additional data (payload) associated with the navigation event
+		 * @desc Fire the boundary event based on the return from the confirmation message
+		 */		
+		this.constructor.prototype.confirmAndFire = function(confirmationMessage, eventData)
+		{
+			if(confirm(confirmationMessage))
+				this.fire(eventData);
+		};
+
+		/**
+		 * @instance
+		 * @memberof NavigationEvent
+		 * @method getType
+		 * @desc Get descriptive string representing the type of control
+		 * @returns {string}
+		 */
+		this.constructor.prototype.getType = function()
+		{
+			return "boundaryEvent.3";
+		};
+		
+		/*
+		Coach NG Lifecycle methods *************************************************************
+		 */
+		this.constructor.prototype.load = function()
+		{
+			bpmext.ui.registerEventHandlingFunction(this, this._proto.EVT_ONTRIGGER);
+			bpmext.ui.registerEventHandlingFunction(this, this._proto.EVT_ONBOUNDARYEVT, "status");
+			
+			if (!this.context.binding)
+				this.context.binding = bpmext.ui.substituteObject(this);
+
+			//{#feature: Allow passing event data (beyond the simple "fired" boolean) with the navigation event}
+			if (!this.context.options.eventData)
+				bpmext.ui.substituteConfigOption(this, "eventData", null);
+			
+			bpmext.ui.loadView(this);
+		};
+
+		this.constructor.prototype.unload = function()
+		{
+			bpmext.ui.unloadView(this);
+		};
+
+		this.constructor.prototype.view = function()
+		{
+			this._proto._handleVisibility(this);
+		};		
+	}
+};
+

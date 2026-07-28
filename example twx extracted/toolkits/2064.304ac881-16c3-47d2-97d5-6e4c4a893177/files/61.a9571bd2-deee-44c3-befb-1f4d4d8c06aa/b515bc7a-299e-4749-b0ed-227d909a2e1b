@@ -1,0 +1,752 @@
+/*
+ * #BEGIN COPYRIGHT
+ *
+ * Licensed Materials - Property of IBM
+ * 5725-C95
+ * (C) Copyright IBM Corporation 2021. All Rights Reserved.
+ * US Government Users Restricted Rights- Use, duplication or disclosure
+ * restricted by GSA ADP Schedule Contract with IBM Corp.
+ *
+ * #END COPYRIGHT
+ */
+
+/**
+ * @ignore
+ * @instance
+ * @memberof Switch
+ * @method isValid
+ */  
+
+/**
+ * @ignore
+ * @instance
+ * @memberof Switch
+ * @method setValid
+ */
+
+/**
+ * @ignore
+ * @instance
+ * @memberof Switch
+ * @method recalculate
+ */
+
+/**
+ * @ignore
+ * @instance
+ * @memberof Switch
+ * @method getData
+ */
+
+/**
+ * @ignore
+ * @instance
+ * @memberof Switch
+ * @method setData
+ */ 
+
+/** 
+ *   <tr class=Prop>
+ *     <td class=SectionName colspan=3>Events</td>
+ *   </tr>
+ *   <tr class=Prop>
+ *     <td>On Load:</td>
+ *     <td colspan="2">
+ *       <table> 
+ *         <tr class=Prop>
+ *           <td>Description: </td>
+ *           <td>Triggers whenever the view is loaded.</td>
+ *         </tr>
+ *         <tr class=Prop>
+ *           <td>Example: </td>
+ *           <td><pre class="prettyprint"><code>me.setChecked(${Checkbox}.isChecked())</code></pre></td>
+ *         </tr>
+ *       </table>
+ *     </td>
+ *   </tr>
+ *   <tr class=Prop>
+ *     <td>On Change:</td>
+ *     <td colspan="2">
+ *       <table> 
+ *         <tr class=Prop>
+ *           <td>Description: </td>
+ *           <td>Triggers when the switch is changed.</td>
+ *         </tr>
+ *         <tr class=Prop>
+ *           <td>Example: </td>
+ *           <td><pre class="prettyprint"><code>${Section2}.setVisible(me.isChecked())</code></pre></td>
+ *         </tr>
+ *       </table>
+ *     </td>
+ *   </tr>
+ * </table>
+ */
+bpmext_control_InitSwitch = function (utilities, bpmext, domClass, domAttr, domConstruct, fastclick)
+{
+	this._instance =
+	{
+		btn : null,
+		switcherSpan : null,
+		multiClicks : true,
+		colorStyle : null,
+		radius : null,
+		switcherSize : null
+	};
+
+	if (!this.constructor.prototype._proto)
+	{
+		this.constructor.prototype._proto =
+		{
+			OPTS_COL_STLZ :
+			{
+				"D" : "",
+				"P": "switcher-primary",
+				"I" : "switcher-info",
+				"S" : "switcher-success",
+				"W" : "switcher-warning",
+				"G" : "switcher-danger"
+			},
+			OPTS_SHP_STLZ :
+			{
+				"D" : "",
+				"S" : "switcher-theme-square",
+				"M" : "switcher-theme-modern"
+			},
+			OPTS_SZ_STLZ :
+			{
+				"D" : "",
+				"L" : "switcher-lg",
+				"S" : "switcher-sm"
+			},
+			EVT_ONCHANGE : "eventON_CHANGE",
+			_replaceClass : function (view, elt, valueMap, newVal, oldVal)
+			{
+				if(newVal != null)
+					newVal = newVal.toUpperCase();
+				
+				if(oldVal != null)
+					oldVal = oldVal.toUpperCase();
+
+				var oldClass = valueMap[oldVal];
+				if(oldClass == null)
+					oldClass = "";
+
+				var newClass = valueMap[newVal];
+				if(newClass == null)
+					newClass = "";
+
+				domClass.replace(elt, newClass, oldClass);
+			},
+			normalizeColorStyle: function(style)
+			{
+				if(!style)
+					style = "D";
+				
+				//{bug: * Respond to both G and E for Danger/Error color styles}
+				if(style == "E")
+					style = "G";
+				
+				style = style.toUpperCase();
+				if(style.length > 1)
+				{
+					switch (style)
+					{
+						case "DEFAULT":
+						case "DEF":
+							style = "D";
+							break;
+						case "SUCCESS":
+							style = "S";
+							break;
+						case "INFO":
+						case "INF":
+							style = "I";
+							break;
+						case "PRIMARY":
+						case "PRI":
+							style = "P";
+							break;
+						case "WARNING":
+						case "WARN":
+							style = "W";
+							break;
+						case "ERROR":
+						case "ERR":
+						case "DANGER":
+							style = "G";
+							break;
+						default:
+							//{#feature: US-1330 Added RT localization}
+							//bpmext.log.warn("Unexpected color style: " + style);
+							bpmext.log.warn(bpmext.localization.formatMsg("general", "COLOR_STYLE_WARNING",style));
+					}
+				}
+
+				return style;
+			},
+			normalizeShapeStyle: function(style)
+			{
+				// OPTS_SHP_STLZ :
+				// {
+					// "D" : "",
+					// "S" : "switcher-theme-square",
+					// "M" : "switcher-theme-modern"
+				// },
+				if(!style)
+					style = "D";
+				
+				style = style.toUpperCase();
+				if(style.length > 1)
+				{
+					switch (style)
+					{
+						case "DEFAULT":
+						case "DEF":
+							style = "D";
+							break;
+						case "S":
+						case "SQUARE":
+							style = "S";
+							break;
+						case "M":
+						case "MODERN":
+							style = "M";
+							break;
+						default:
+							//{#feature: US-1330 Added RT localization}
+							//bpmext.log.warn("Unexpected shape style: " + style);
+							bpmext.log.warn(bpmext.localization.formatMsg("general", "SHAPE_STYLE_WARNING",style));
+					}
+				}
+
+				return style;
+			},
+			_setColorStyle : function (view, newVal, oldVal)
+			{
+				if(!oldVal)
+					oldVal = view._instance.oldLColStl;
+				
+				newVal = this.normalizeColorStyle(newVal);
+				oldVal = this.normalizeColorStyle(oldVal);
+				
+				this._replaceClass(view, view._instance.switcherDiv, this.OPTS_COL_STLZ, newVal, oldVal);
+				view._instance.oldLColStl = newVal;
+			},
+			_setShapeStyle : function (view, newVal, oldVal)
+			{
+				if(!oldVal)
+					oldVal = view._instance.oldLShpStl;
+				
+				newVal = this.normalizeShapeStyle(newVal);
+				oldVal = this.normalizeShapeStyle(oldVal);
+				
+				this._replaceClass(view, view._instance.switcherDiv, this.OPTS_SHP_STLZ, newVal, oldVal);
+				view._instance.oldLShpStl = newVal;
+			},
+			_setSizeStyle : function (view, newVal, oldVal)
+			{
+				if(!oldVal)
+					oldVal = view._instance.oldLSzStl;
+				
+				newVal = bpmext.ui.util.normalizeSizeStyle(newVal, this.OPTS_SZ_STLZ);
+				oldVal = bpmext.ui.util.normalizeSizeStyle(oldVal, this.OPTS_SZ_STLZ);
+				
+				this._replaceClass(view, view._instance.switcherDiv, this.OPTS_SZ_STLZ, newVal, oldVal);
+				view._instance.oldLSzStl = newVal;
+			},
+			_updateSwitchState : function(view)
+			{	
+				var labelType = view.context.options.labelType.get("value");
+				if(view.context.binding.get("value"))
+				{
+					domClass.add(view._instance.switcherDiv, "checked");
+					domAttr.set(view._instance.checkBox, "checked", "checked");
+					domAttr.set(view._instance.checkBox, "aria-checked", "true");		//US-1238
+					domAttr.set(view._instance.switcherWrap, "aria-checked", "true");
+					if (labelType == "I") {
+						domAttr.set(view._instance.switcherWrap, "aria-label", "fa-check");
+					} else {
+						domAttr.set(view._instance.switcherWrap, "aria-labelledby", view._instance.onSw.id);
+					}
+				}
+				else
+				{
+					domClass.remove(view._instance.switcherDiv, "checked");
+					domAttr.remove(view._instance.checkBox, "checked");
+					domAttr.set(view._instance.checkBox, "aria-checked", "false");		//US-1238
+					domAttr.set(view._instance.switcherWrap, "aria-checked", "false");
+					if (labelType == "I") {
+						domAttr.set(view._instance.switcherWrap, "aria-label", "fa-times");
+					} else {
+						domAttr.set(view._instance.switcherWrap, "aria-labelledby", view._instance.offSw.id);
+					}
+				}
+			},
+			_updateSwitchLabels : function(view)
+			{
+				var labelType = view.context.options.labelType.get("value");
+                if (view.context.options.shapeStyle.get("value") !== "M") {
+                    if(labelType == "I")
+                    {
+                        var onLabelCls = view.context.options.onLabel.get("value");                 
+                        onLabelCls = onLabelCls.toLowerCase();
+                        if(!bpmext.text.startsWith(onLabelCls, "fa-"))
+                            onLabelCls = "fa-" + onLabelCls;
+                        
+                        var offLabelCls = view.context.options.offLabel.get("value");                   
+                        offLabelCls = offLabelCls.toLowerCase();
+                        if(!bpmext.text.startsWith(offLabelCls, "fa-"))
+                            offLabelCls = "fa-" + offLabelCls;
+                        
+                        view._instance.onSw.innerHTML = "<span class='fa " + onLabelCls + "'></span>";
+                        view._instance.offSw.innerHTML = "<span class='fa " + offLabelCls + "'></span>";
+                    }
+                    else
+                    {
+                        view._instance.onSw.innerHTML = view.context.htmlEscape(view.context.options.onLabel.get("value"));
+                        view._instance.offSw.innerHTML = view.context.htmlEscape(view.context.options.offLabel.get("value"));
+                    }
+                } else {
+                    view._instance.onSw.innerHTML = "";
+                    view._instance.offSw.innerHTML = "";                    
+                }
+			},
+			_handleVisibility : function (view)
+			{
+				var swD = view._instance.switcherDiv;
+				var visibility = utilities.handleVisibility(view.context, null, null, [swD]);
+
+				if (visibility != "NONE")
+				{
+					var btn = view._instance.checkBox;
+					if (visibility == "READONLY")
+					{
+						domAttr.set(btn, "disabled", "disabled");
+						domClass.add(swD, "disabled");
+						domAttr.set(btn,"aria-disabled","true");		//US-1238
+					}
+					else
+					{
+						btn.disabled = false;
+						domClass.remove(swD, "disabled");
+						domAttr.remove(btn, "disabled");
+						domAttr.set(btn,"aria-disabled","false");		//US-1238
+					}
+				}
+
+				// Updates for WAI
+				if (view._instance.checkBox.disabled) {										
+					domAttr.set(view._instance.checkBox, "aria-disabled", "true");
+				} else {
+					domAttr.remove(view._instance.checkBox, "aria-disabled");
+				}
+			}
+		};
+		
+
+		/*
+		Public control methods *************************************************************
+		 */
+
+		/**
+		 * @instance
+		 * @memberof Switch
+		 * @method setColorStyle
+		 * @param {string} style "DEFAULT"|"DEF"|"D"=Default | PRIMARY"|"P"=Primary | "INFO"|INF"|"I"=Info | "SUCCESS"|"S"=Success | "WARNING"|"WARN"|"W"=Warning | "ERROR"|"ERR"|"DANGER"|"G"=Danger 
+		 * @desc Sets color style of the control.  NOTE: to avoid ambiguity always set the color using "D"|P"|"I"|"S"|"W"|"G"	
+		 */
+		this.constructor.prototype.setColorStyle = function (style)
+		{
+			return this.context.options.colorStyle.set("value", style);
+		};
+
+		//{#feature: * getColorStyle method added}
+		/**
+		 * @instance
+		 * @memberof Switch
+		 * @method getColorStyle
+		 * @desc Gets color style of the control.  NOTE: This always returns the color as set, to avoid ambiguity always set the color using "D"|"P"|"I"|"S"|"W"|"G"
+		 * @returns {string} 
+		 */
+		this.constructor.prototype.getColorStyle = function ()
+		{
+			return this.context.options.colorStyle.get("value");
+		};
+		
+		//{#feature: * setSizeStyle method added}
+		/**
+		 * @instance
+		 * @memberof Switch
+		 * @method setSizeStyle
+		 * @param {string} style "DEFAULT"|"DEF"|"NORMAL"|"D"=Default | "SMALL"|"S"=Small | "LARGE"|"L"=Large
+		 * @desc Sets size style of control.  NOTE: to avoid ambiguity always set the size style using "D"|"S"|"L"
+		 */		
+		this.constructor.prototype.setSizeStyle = function (style)
+		{
+			return this.context.options.sizeStyle.set("value", style);
+		};
+
+		//{#feature: * getSizeStyle method added}
+		/**
+		 * @instance
+		 * @memberof Switch
+		 * @method getSizeStyle
+		 * @desc Gets size style of control.  NOTE: This always returns the size style as set, to avoid ambiguity always set the size style using "D"|"S"|"L"
+		 * @returns {string}
+		 */
+		this.constructor.prototype.getSizeStyle = function ()
+		{
+			return this.context.options.sizeStyle.get("value");
+		};
+		
+		//{#feature: * setShapeStyle method added}
+		/**
+		 * @instance
+		 * @memberof Switch
+		 * @method setShapeStyle
+		 * @param {string} style "DEFAULT"|"DEF"|D"=Default | "Modern"|"M"=Modern | "SQUARE"|"S"=Square 
+		 * @desc Sets shape style of the control.  NOTE: to avoid ambiguity always set the size style using "D"|"S"|"M"
+		 */		
+		this.constructor.prototype.setShapeStyle = function (style)
+		{
+			return this.context.options.shapeStyle.set("value", style);
+		};
+
+		//{#feature: * getShapeStyle method added}
+		/**
+		 * @instance
+		 * @memberof Switch
+		 * @method getShapeStyle
+		 * @desc Gets shape style of the control.  NOTE: This always returns the shape style as set, to avoid ambiguity always set the size style using "D"|"S"|"M"
+		 * @returns {string}
+		 */
+		this.constructor.prototype.getShapeStyle = function ()
+		{
+			return this.context.options.shapeStyle.get("value");
+		};
+
+		/**
+		 * @instance
+		 * @memberof Switch
+		 * @method setOnLabel
+		 * @param {string} label
+		 * @desc Sets the label when the switch is in ON state
+		 */
+		this.constructor.prototype.setOnLabel = function (label)
+		{
+			if(typeof label === "string"){
+				this.context.options.onLabel.set("value", label);
+			}
+		};
+
+		/**
+		 * @instance
+		 * @memberof Switch
+		 * @method getOnLabel
+		 * @desc Gets the label for the ON state of the switch
+		 * @returns {string}
+		 */
+		this.constructor.prototype.getOnLabel = function ()
+		{
+			return this.context.options.onLabel.get("value");
+		};
+
+		/**
+		 * @instance
+		 * @memberof Switch
+		 * @method setOffLabel
+		 * @param {string} label
+		 * @desc Sets the label when the switch is in OFF state
+		 */
+		this.constructor.prototype.setOffLabel = function (label)
+		{
+			if(typeof label === "string"){
+				this.context.options.offLabel.set("value", label);
+			}
+		};
+
+		/**
+		 * @instance
+		 * @memberof Switch
+		 * @method getOffLabel
+		 * @desc Gets the label for the OFF state of the switch
+		 * @returns {string}
+		 */
+		this.constructor.prototype.getOffLabel = function ()
+		{
+			return this.context.options.offLabel.get("value");
+		};
+		
+		/**
+		 * @instance
+		 * @memberof Switch
+		 * @method isChecked
+		 * @desc Get checked state for switch control
+		 * @returns {boolean}
+		 */
+		this.constructor.prototype.isChecked = function ()
+		{
+			var res = this.context.binding.get("value");
+			return res == null ? false : res;
+		};
+
+		/**
+		 * @instance
+		 * @memberof Switch
+		 * @method setChecked
+		 * @param {boolean} checked {true | false}
+		 * @desc Set checked state for switch control
+		 */
+		this.constructor.prototype.setChecked = function (checked)
+		{
+			this.context.binding.set("value", checked);
+		};		
+		
+		/**
+		 * @instance
+		 * @memberof Switch
+		 * @method click
+		 * @desc Programmatically click this switch
+		 */
+		this.constructor.prototype.click = function ()
+		{
+			this._instance.switcherDiv.click();
+		};
+
+		/**
+		 * @instance
+		 * @memberof Switch
+		 * @method getType
+		 * @desc Get descriptive string representing the type of control
+		 * @returns {string}
+		 */
+		this.constructor.prototype.getType = function ()
+		{
+			return "switch.3";
+		};
+		
+		//{#feature: US-696 ARIA labeling}
+		this.constructor.prototype._getHTMLInputElement = function () 
+		{
+			return this._instance.switcherDiv;   //This is the element that will need its "aria-labelledby" attribute set
+		};
+		//End US-696
+		
+		
+		/*
+		Coach NG Lifecycle methods *************************************************************
+		 */
+		this.constructor.prototype.load = function ()
+		{
+			try
+			{
+				var opts = this.context.options;
+				var mdt = opts._metadata;
+
+				if (!this.context.binding)
+					this.context.binding = bpmext.ui.substituteObject(this, null, null, false);				
+
+				if (!opts.colorStyle)
+					opts.colorStyle = bpmext.ui.substituteConfigOption(this, "colorStyle", "D");
+
+				if (!opts.shapeStyle)
+					opts.shapeStyle = bpmext.ui.substituteConfigOption(this, "shapeStyle", "D");
+
+				if (!opts.sizeStyle)
+					opts.sizeStyle = bpmext.ui.substituteConfigOption(this, "sizeStyle", "D");
+
+				if (!opts.labelType)
+					opts.labelType = bpmext.ui.substituteConfigOption(this, "labelType", "T");
+
+				if(opts.labelType.get("value") == "I")
+				{
+					if (!opts.onLabel)
+						opts.onLabel = bpmext.ui.substituteConfigOption(this, "onLabel", "fa-check");
+					
+					if (!opts.offLabel)
+						opts.offLabel = bpmext.ui.substituteConfigOption(this, "offLabel", "fa-times");
+				}
+				else
+				{
+					if (!opts.onLabel) {
+						//{#feature: US-1330 Added RT localization}
+						//opts.onLabel = bpmext.ui.substituteConfigOption(this, "onLabel", "ON");
+						opts.onLabel = bpmext.ui.substituteConfigOption(this, "onLabel", bpmext.localization.formatMsg("general", "ON"));
+					}
+					
+					if (!opts.offLabel) {
+						//{#feature: US-1330 Added RT localization}
+						//opts.offLabel = bpmext.ui.substituteConfigOption(this, "offLabel", "OFF");
+						opts.offLabel = bpmext.ui.substituteConfigOption(this, "offLabel", bpmext.localization.formatMsg("general", "OFF"));
+					}
+				}
+
+				this._instance.switcherDiv = domConstruct.create("div", {
+					"className": "SPARKSwitch switcher"
+				}, this.context.element);
+				
+				fastclick.attach(this._instance.switcherDiv);
+				
+				this._instance.checkBox = domConstruct.create("input", {
+					"type": "checkbox",
+					"role": "checkbox"
+				}, this._instance.switcherDiv);
+
+				this._instance.switcherWrap = domConstruct.create("div", {
+					"className": "switcher-inner switcher-wrapper",
+					"role": "switch",
+					"tabindex": "0",
+					"aria-label": mdt.label.get("value")
+				}, this._instance.switcherDiv);
+
+				this._instance.toggler = domConstruct.create("div", {
+					"id": "switch-toggler-" + this.context.controlidpath,
+					"className": "switcher-toggler"
+				}, this._instance.switcherWrap);
+
+				var switcherLabelWrapper = domConstruct.create("div", {
+					"className": "switcher-label-wrapper"
+				}, this._instance.switcherWrap);
+
+				this._instance.onSw = domConstruct.create("div", {
+					"className": "switcher-state-on"
+				}, switcherLabelWrapper);
+
+				this._instance.offSw = domConstruct.create("div", {
+					"className": "switcher-state-off"
+				}, switcherLabelWrapper);
+
+				//US-1238 :STARTS
+				this._instance._onSwUid="switch-on-" + this.context.controlidpath;
+				this._instance._offSwUid="switch-off-" + this.context.controlidpath;
+				if(opts.labelType.get("value") != "I"){		
+					domAttr.set(this._instance.onSw,"id",this._instance._onSwUid);		
+					domAttr.set(this._instance.offSw,"id",this._instance._offSwUid);
+					domAttr.set(this._instance.checkBox, "aria-labelledby", this._instance._onSwUid + " " + this._instance._offSwUid);
+				}
+				//US-1238 : ENDS
+
+				domClass.add(this._instance.switcherDiv, utilities.getActiveTheme().slice(1, -1));
+				this._proto._updateSwitchLabels(this);
+				this._proto._setColorStyle(this, opts.colorStyle.get("value"));
+				this._proto._setShapeStyle(this, opts.shapeStyle.get("value"));
+				this._proto._setSizeStyle(this, opts.sizeStyle.get("value"));
+
+				if (utilities.getActiveTheme() === '"CARBON"' && opts.sizeStyle.get("value") === "S") {
+					domConstruct.place(utilities.getCarbonIcon("ci-checkmark"), switcherLabelWrapper, "first");
+				}
+
+				bpmext.ui.registerEventHandlingFunction(this, this._proto.EVT_ONCHANGE);
+
+				var view = this;
+				this._instance.switcherDiv.onclick = function (event)
+				{
+					if(!domClass.contains(this, "disabled"))
+						view.context.binding.set("value", !view.context.binding.get("value"));
+				};
+				this._instance.switcherDiv.onkeydown = function (event)
+				{
+					if(event.key === "Enter" || event.key === " " || event.key === "Spacebar") {
+						event.preventDefault();
+						if(!domClass.contains(this, "disabled"))
+						view.context.binding.set("value", !view.context.binding.get("value"));
+					}
+				};
+
+				this._proto._updateSwitchState(this);
+				bpmext.ui.loadView(this);
+			}
+			catch (e)
+			{
+				//{#feature: US-1330 Added RT localization}
+				//bpmext.log.error("Error on load event [" + this.context.viewid + "]: " + e);
+				bpmext.log.error(bpmext.localization.formatMsg("general", "ERROR_ONLOAD_EVENT") + " [" + this.context.viewid + "]: " + e);
+				if(e.stack) { 
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.error("  Call stack: " + e.stack);
+					bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+				}
+			}
+		};
+
+		this.constructor.prototype.view = function ()
+		{
+			try
+			{
+				this._proto._handleVisibility(this);
+			}
+			catch (e)
+			{
+				//{#feature: US-1330 Added RT localization}
+				//bpmext.log.error("Error on view event [" + this.ui.getAbsoluteName() + "]: " + e);
+				bpmext.log.error(bpmext.localization.formatMsg("general", "ERROR_ONVIEW_EVENT") + " [" + this.ui.getAbsoluteName() + "]: " + e);
+				if(e.stack) { 
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.error("  Call stack: " + e.stack);
+					bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+				}
+			}
+		};
+
+		this.constructor.prototype.change = function (event)
+		{
+			try
+			{
+				if (event.type == "config")
+				{
+					switch (event.property)
+					{
+						case "_metadata.visibility":
+						{
+							this._proto._handleVisibility(this);
+							break;
+						}
+						case "colorStyle":
+						{
+							this._proto._setColorStyle(this, event.newVal, event.oldVal);
+							break;
+						}
+						case "shapeStyle":
+						{
+							this._proto._setShapeStyle(this, event.newVal, event.oldVal);
+							break;
+						}
+						case "sizeStyle":
+						{
+							this._proto._setSizeStyle(this, event.newVal, event.oldVal);
+							break;
+						}
+						case "onLabel":
+						case "offLabel":
+						case "labelType":
+						{
+							this._proto._updateSwitchLabels(this);
+							break;
+						}
+					}
+				}
+				else
+				{
+					this._proto._updateSwitchState(this);
+					bpmext.ui.executeEventHandlingFunction(this, this._proto.EVT_ONCHANGE);
+				}
+			}
+			catch (e)
+			{
+				//{#feature: US-1330 Added RT localization}
+				//bpmext.log.error("Error on change event [" + this.ui.getAbsoluteName() + "]: " + e);
+				bpmext.log.error(bpmext.localization.formatMsg("general", "ERROR_ONCHANGE_EVENT") + " [" + this.ui.getAbsoluteName() + "]: " + e);
+				if(e.stack) { 
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.error("  Call stack: " + e.stack);
+					bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+				}
+			}
+		};
+
+		this.constructor.prototype.unload = function ()
+		{
+			bpmext.ui.unloadView(this);
+		};
+	}
+};

@@ -1,0 +1,1048 @@
+/*
+ * #BEGIN COPYRIGHT
+ *
+ * Licensed Materials - Property of IBM
+ * 5725-C95
+ * (C) Copyright IBM Corporation 2017. All Rights Reserved.
+ * US Government Users Restricted Rights- Use, duplication or disclosure
+ * restricted by GSA ADP Schedule Contract with IBM Corp.
+ *
+ * #END COPYRIGHT
+ */
+/** 
+ *   <tr class=Prop>
+ *     <td class=SectionName colspan=3>Events</td>
+ *   </tr>
+ *   <tr class=Prop>
+ *     <td>On Load:</td>
+ *     <td colspan="2">
+ *       <table> 
+ *         <tr class=Prop>
+ *           <td>Description: </td>
+ *           <td>Triggers whenever the view is loaded.</td>
+ *         </tr>
+ *         <tr class=Prop>
+ *           <td>Example: </td>
+ *           <td><pre class="prettyprint"><code>console.log("Button loaded")</code></pre></td>
+ *         </tr>
+ *       </table>
+ *     </td>
+ *   </tr>
+ *   <tr class=Prop>
+ *     <td class=SectionName colspan=3>Articles</td>
+ *   </tr>
+ *   <tr class=Prop>
+ *     <td></td>
+ *     <td><code></code></td>
+ *   </tr>
+ * </table>
+ */
+bpmext_control_InitCaptionBox = function (bpmext, utilities, domClass, domAttr, domConstruct)
+{
+	this._instance = {};
+
+	if (!this.constructor.prototype._proto)
+	{
+		this.constructor.prototype.IS_ADDRESS_INVISIBLE = true;
+		
+		this.constructor.prototype._proto =
+		{
+			OPTS_CAP_PLC : 
+			{
+				"T": "cap-top",
+				"L": "cap-left",
+				"B": "cap-bottom",
+				"R": "cap-right"
+			},
+			OPTS_LBL_PLC_CLZ :
+			{
+				"T": "",
+				"L": "label-left",
+				"B": "",
+				"R": "label-right"
+			},
+			OPTS_LBL_HORIZ_ALIGN :
+			{
+				"L": "hclbl-left",
+				"C": "hclbl-center",
+				"R": "hclbl-right"
+			},
+			OPTS_LBL_VERT_ALIGN :
+			{
+				"T": "vclbl-top",
+				"M": "vclbl-middle",
+				"B": "vclbl-bottom"
+			},
+			OPTS_COL_STLZ :
+			{
+				"H" : "",
+				"D" : "text-default",
+				"M" : "text-muted",
+				"L" : "text-light-gray",
+				"P" : "text-primary",
+				"I" : "text-info",
+				"S" : "text-success",
+				"W" : "text-warning",
+				"G" : "text-danger",
+				"E" : "text-danger"
+			},
+			OPTS_TXS_STLZ :
+			{
+				"D" : "",
+				"R" : "text-slg",
+				"X" : "text-xlg",
+				"G" : "text-lg",
+				"L" : "text-bg",
+				"S" : "text-sm",
+				"M" : "text-xs"
+			},
+			OPTS_TXW_STLZ :
+			{
+				"D" : "",
+				"N" : "text-normal",
+				"S" : "text-slim",
+				"M" : "text-semibold",
+				"B" : "text-bold"
+			},
+			_normalizeCaptionPlacement : function(view, val)
+			{
+				if(!val)
+					val = "T";
+
+				val = val.toUpperCase();
+				if(val.length > 1)
+				{
+					switch (val)
+					{
+						case "TOP":
+							val = "T";
+							break;
+						case "LEFT":
+							val = "L";
+							break;
+						case "BOTTOM":
+							val = "B";
+							break;
+						case "RIGHT":
+							val = "R";
+							break;
+						default:
+							//{#feature: US-1330 Added RT localization}
+							//bpmext.log.warn("Unexpected caption placement: " + val);
+							bpmext.log.warn(bpmext.localization.formatMsg("controlCaptionBox", "CAPBOX_CAPTION_PLACE_WARNING",val));
+					}
+				}
+				else if(!(val in this.OPTS_CAP_PLC))
+				{
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.warn("Unexpected caption placement: " + val);
+					bpmext.log.warn(bpmext.localization.formatMsg("controlCaptionBox", "CAPBOX_CAPTION_PLACE_WARNING",val));
+					val = "T";
+				}
+				
+				return val;
+			},
+			_normalizeHAlign : function(view, val)
+			{
+				if(!val)
+					val = "L";
+
+				val = val.toUpperCase();
+				if(val.length > 1)
+				{
+					switch(val)
+					{
+						case "LEFT":
+							val = "L";
+							break;
+						case "CENTER":
+						case "MIDDLE":
+							val = "C";
+							break;
+						case "RIGHT":
+							val = "R";
+							break;
+						default:
+							//{#feature: US-1330 Added RT localization}
+							//bpmext.log.warn("Unexpected caption horizontal alignment: " + val);
+							bpmext.log.warn(bpmext.localization.formatMsg("controlCaptionBox", "CAPBOX_CAPTION_HALIGN_WARNING",val));
+					}
+				}
+				else if(!(val in this.OPTS_LBL_HORIZ_ALIGN))
+				{
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.warn("Unexpected caption horizontal alignment: " + val);
+					bpmext.log.warn(bpmext.localization.formatMsg("controlCaptionBox", "CAPBOX_CAPTION_HALIGN_WARNING",val));
+					val = "L";
+				}
+
+				return val;
+			},
+			_normalizeVAlign : function(view, val)
+			{
+				if(!val)
+					val = "T";
+
+				val = val.toUpperCase();
+				if(val.length > 1)
+				{
+					switch(val)
+					{
+						case "TOP":
+							val = "T";
+							break;
+						case "CENTER":
+						case "MIDDLE":
+							val = "M";
+							break;
+						case "BOTTOM":
+							val = "B";
+							break;
+						default:
+							//{#feature: US-1330 Added RT localization}
+							//bpmext.log.warn("Unexpected caption vertical alignment: " + val);
+							bpmext.log.warn(bpmext.localization.formatMsg("controlCaptionBox", "CAPBOX_CAPTION_VALIGN_WARNING",val));
+					}
+				}
+				else if(!(val in this.OPTS_LBL_VERT_ALIGN))
+				{
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.warn("Unexpected caption vertical alignment: " + val);
+					bpmext.log.warn(bpmext.localization.formatMsg("controlCaptionBox", "CAPBOX_CAPTION_VALIGN_WARNING",val));
+					val = "T";
+				}
+				
+				return val;
+			},
+			_normalizeSizeStyle: function(sizeStyle)
+			{
+				if(!sizeStyle)
+					sizeStyle = "D";
+				
+				sizeStyle = sizeStyle.toUpperCase();
+				if(sizeStyle.length > 1)
+				{
+					switch (sizeStyle)
+					{
+						case "SUPER-LARGE":
+						case "SUPER LARGE":
+						case "SUPER":
+							sizeStyle = "R";
+							break;
+						case "EXTRA-LARGE":
+						case "EXTRA LARGE":
+						case "EXTRA":
+							sizeStyle = "X";
+							break;
+						case "LARGER":
+							sizeStyle = "G";
+							break;
+						case "LARGE":
+							sizeStyle = "L";
+							break;
+						case "SMALL":
+							sizeStyle = "S";
+							break;
+						case "SMALLER":
+							sizeStyle = "M";
+							break;
+						case "DEF":
+						case "DEFAULT":
+							sizeStyle = "D";
+							break;
+						default:
+							//{#feature: US-1330 Added RT localization}
+							//bpmext.log.warn("Unexpected size style: " + sizeStyle);
+							bpmext.log.warn(bpmext.localization.formatMsg("general", "SIZE_STYLE_WARNING",sizeStyle));
+					}
+				}
+				
+				return sizeStyle;
+			},
+			_normalizeColorStyle: function(style)
+			{
+				if(!style)
+					style = "D";
+				
+				style = style.toUpperCase();
+				if(style.length > 1)
+				{
+					switch (style)
+					{
+						case "DEFAULT":
+						case "DEF":
+							style = "D";
+							break;
+						case "MUTED":
+							style = "M";
+							break;
+						case "LIGHT-GRAY":
+						case "GRAY":
+						case "LIGHTGRAY":
+						case "LIGHT GRAY":
+							style = "L";
+							break;
+						case "SUCCESS":
+							style = "S";
+							break;
+						case "INFO":
+						case "INF":
+							style = "I";
+							break;
+						case "PRIMARY":
+						case "PRI":
+							style = "P";
+							break;
+						case "WARNING":
+						case "WARN":
+							style = "W";
+							break;
+						case "ERROR":
+						case "ERR":
+						case "DANGER":
+							style = "G";
+							break;
+						default:
+							//{#feature: US-1330 Added RT localization}
+							//bpmext.log.warn("Unexpected color style: " + style);
+							bpmext.log.warn(bpmext.localization.formatMsg("general", "COLOR_STYLE_WARNING",style));
+					}
+				}
+
+				return style;
+			},
+			_ensureLabelCreated : function(view)
+			{
+				//view._instance.label = document.createElement("label");
+				//Added for TK-1268 : STARTS
+				view._instance.label = document.createElement("span");
+				//TK-1268 : ENDS
+				domClass.add(view._instance.label, "control-label");
+				
+				//{#feature: US-696 ARIA labeling}
+				if(view._instance.ariaLabelTarget != null)
+				{
+					var lblId = "cpb-lbl-" + view.getUID();
+
+					domAttr.set(view._instance.label, "id", lblId);
+					domAttr.set(view._instance.ariaLabelTarget, "aria-labelledby", lblId);
+				}
+				//End US-696
+			},
+			_setLabelVisibility : function (view, flag)
+			{
+				try
+				{
+					view.context.setDisplay(flag == "SHOW", view._instance.label);
+				}
+				catch (e)
+				{
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.error("CaptionBox._setLabelVisibility() error: " + e);
+					bpmext.log.error("CaptionBox._setLabelVisibility() " + bpmext.localization.formatMsg("general", "ERROR") + ": " + e);
+					if(e.stack) { 
+						//{#feature: US-1330 Added RT localization}
+						//bpmext.log.error("  Call stack: " + e.stack);
+						bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+					}
+				}
+			},
+			_setLabelColorStyle : function (view, newVal, oldVal)
+			{
+				newVal = this._normalizeColorStyle(newVal);
+				oldVal = this._normalizeColorStyle(oldVal);
+				
+				bpmext.ui.util.replaceCSSClass(view._instance.label, this.OPTS_COL_STLZ, newVal, oldVal);
+			},
+			_setLabelSizeStyle : function (view, newVal, oldVal)
+			{
+				newVal = this._normalizeSizeStyle(newVal);
+				oldVal = this._normalizeSizeStyle(oldVal);
+				
+				bpmext.ui.util.replaceCSSClass(view._instance.label, this.OPTS_TXS_STLZ, newVal, oldVal);				
+			},
+			_setLabelWeightStyle : function (view, newVal, oldVal)
+			{
+				//TODO: Normalize weight style
+				bpmext.ui.util.replaceCSSClass(view._instance.label, this.OPTS_TXW_STLZ, newVal, oldVal);
+			},
+			_setLabel : function (view, label)
+			{
+				try
+				{
+					if(label)
+					{	
+						view._instance.label.innerHTML = view.context.htmlEscape(label);
+						utilities.BiDi.applyTextDir(
+							view._instance.label, 
+							view._instance.label.innerHTML, 
+							view._instance.baseTxtDir, 
+							view._instance.genPrefTextDir
+							);
+					}
+					else
+					{
+						view._instance.label.innerHTML = "";
+					}
+				}
+				catch (e)
+				{
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.error("CaptionBox._setLabel() error: " + e);
+					bpmext.log.error("CaptionBox._setLabel() " + bpmext.localization.formatMsg("general", "ERROR") + ": " + e);
+					if(e.stack) { 
+						//{#feature: US-1330 Added RT localization}
+						//bpmext.log.error("  Call stack: " + e.stack);
+						bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+					}
+				}
+			},
+			_setLabelHAlign : function(view, newVal, oldVal)
+			{
+				newVal = this._normalizeHAlign(view, newVal);
+				oldVal = this._normalizeHAlign(view, oldVal);
+
+				bpmext.ui.util.replaceCSSClass(view._instance.label, this.OPTS_LBL_HORIZ_ALIGN, newVal, oldVal);
+			},
+			_setLabelVAlign : function(view, newVal, oldVal)
+			{
+				newVal = this._normalizeVAlign(view, newVal);
+				oldVal = this._normalizeVAlign(view, oldVal);
+
+				bpmext.ui.util.replaceCSSClass(view._instance.group, this.OPTS_LBL_VERT_ALIGN, newVal, oldVal);
+			},
+			_setLabelPlacement : function (view, newVal, oldVal)
+			{
+
+				newVal = this._normalizeCaptionPlacement(view, newVal);
+				oldVal = this._normalizeCaptionPlacement(view, oldVal);
+				
+				var domLoc;
+				
+				switch(newVal)
+				{
+					case "L":
+						domLoc = "first";
+						break;
+					case "B":
+						domLoc = "last";
+						break;
+					case "R":
+						domLoc = "last";
+						break;
+					default:
+					case "T":
+						domLoc = "first";
+						break;
+				}
+
+				domConstruct.place(view._instance.label, view._instance.group, domLoc);
+				bpmext.ui.util.replaceCSSClass(view._instance.group, this.OPTS_LBL_PLC_CLZ, newVal, oldVal);				
+				bpmext.ui.util.replaceCSSClass(view._instance.group, this.OPTS_CAP_PLC, newVal, oldVal);
+			},
+			_setLabelWidth : function (view, labelWidth)
+			{
+				if(labelWidth != null && labelWidth != "")
+				{
+					if(!isNaN(labelWidth))
+						labelWidth += "px";
+					
+					view._instance.label.style.width = labelWidth;
+					domClass.add(view.context.element, "labelWidth");
+				}
+				else {
+					if (view._instance.label) {
+						view._instance.label.style.width = null;
+					}
+					
+					domClass.remove(view.context.element, "labelWidth");
+				}
+					
+			},
+			_setShrinkToContent : function(view)
+			{
+				if(view.context.options.shrinkToContent.get("value"))
+				{
+					domClass.add(view._instance.group, "shrink-to-cnt");
+				}
+				else
+				{
+					domClass.remove(view._instance.group, "shrink-to-cnt");
+				}				
+			},
+			_setWidth : function (view, width)
+			{
+				try
+				{
+					if (width != null && width != "")
+					{
+						if (!isNaN(width))
+							width += "px";
+
+						view.context.element.style.width = width;
+						
+						domClass.add(view.context.element, "widthSet");
+					}
+					else {
+						view.context.element.style.width = null;
+						domClass.remove(view.context.element, "widthSet");
+					}
+				}
+				catch (e)
+				{
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.error("CaptionBox._setWidth() error: " + e);
+					bpmext.log.error("CaptionBox._setWidth() " + bpmext.localization.formatMsg("general", "ERROR") + ": " + e);
+					if(e.stack) { 
+						//{#feature: US-1330 Added RT localization}
+						//bpmext.log.error("  Call stack: " + e.stack);
+						bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+					}
+				}
+			},
+			_normalizeColorStyle: function(style)
+			{
+				if(!style)
+					style = "D";
+				
+				style = style.toUpperCase();
+				if(style.length > 1)
+				{
+					switch (style)
+					{
+						case "DEFAULT":
+						case "DEF":
+							style = "D";
+							break;
+						case "SUCCESS":
+							style = "S";
+							break;
+						case "INFO":
+						case "INF":
+							style = "I";
+							break;
+						case "PRIMARY":
+						case "PRI":
+							style = "P";
+							break;
+						case "WARNING":
+						case "WARN":
+							style = "W";
+							break;
+						case "ERROR":
+						case "ERR":
+						case "DANGER":
+							style = "G";
+							break;
+						default:
+							//{#feature: US-1330 Added RT localization}
+							//bpmext.log.warn("Unexpected color style: " + style);
+							bpmext.log.warn(bpmext.localization.formatMsg("general", "COLOR_STYLE_WARNING",style));
+					}
+				}
+
+				return style;
+			},
+			_handleVisibility : function (view)
+			{
+				var visibility = bpmext.ui.getEffectiveVisibility(view);
+				
+				view.context.setDisplay(visibility != "NONE");
+				view.context.setVisibility(visibility != "HIDDEN");
+			}
+		};
+
+		/*
+		Public control methods *************************************************************
+		 */
+		 
+		/**
+		 * @instance
+		 * @memberof CaptionBox
+		 * @method setLabel
+		 * @param {string} label label text for the control
+		 * @desc Set label for control
+		 */
+		this.constructor.prototype.setLabel = function (text)
+		{
+			this.context.options._metadata.label.set("value", text);
+		};
+
+		/**
+		 * @instance
+		 * @memberof CaptionBox
+		 * @method getLabel
+		 * @desc Get label associated with control
+		 * @returns {string}
+		 */
+		this.constructor.prototype.getLabel = function ()
+		{
+			return this.context.options._metadata.label.get("value");
+		}
+
+		/**
+		 * @instance
+		 * @memberof CaptionBox
+		 * @method setLabelPlacement
+		 * @param {string} placement "T","TOP"=Top | "L","LEFT"=Left | "B","BOTTOM"=Bottom | "R","RIGHT"=Right
+		 * @desc Set label placement for caption box
+		 */
+		this.constructor.prototype.setLabelPlacement = function (plc)
+		{
+			this.context.options.labelPlacement.set("value", plc);
+		};
+
+		/**
+		 * @instance
+		 * @memberof CaptionBox
+		 * @method getLabelPlacement
+		 * @desc Get label/caption placement for the control
+		 * @returns {string} {"T"=Top | "L"=Left}
+		 */
+		this.constructor.prototype.getLabelPlacement = function ()
+		{
+			return this.context.options.labelPlacement.get("value");
+		}
+		
+		/**
+		 * @instance
+		 * @memberof CaptionBox
+		 * @method getLabelWidth
+		 * @desc Get label width of CaptionBox control (e.g. 50px, 20%, 2em - omitting the unit assumes px)
+		 * @returns {string}
+		 */
+		this.constructor.prototype.getLabelWidth = function ()
+		{
+			return this.context.options.labelWidth.get("value");
+		};
+		
+		/**
+		 * @instance
+		 * @memberof CaptionBox
+		 * @method setLabelWidth
+		 * @param {string} labelWidth Control's label width
+		 * @desc Set label width of CaptionBox control (e.g. 50px, 20%, 2em - omitting the unit assumes px)
+		 */
+		this.constructor.prototype.setLabelWidth = function (labelWidth)
+		{
+			this.context.options.labelWidth.set("value", labelWidth);
+		};
+
+		/**
+		 * @instance
+		 * @memberof CaptionBox
+		 * @method setLabelHorizontalAlignment
+		 * @desc Set the horizontal alignment for the label/caption
+		 * @returns {string} {"T"=Top | "C"=Center | "L"=Left}
+		 */
+		this.constructor.prototype.setLabelHorizontalAlignment = function (val)
+		{
+			this.context.options.labelHorizAlign.set("value", val);
+		}
+
+		/**
+		 * @instance
+		 * @memberof CaptionBox
+		 * @method setLabelVerticalAlignment
+		 * @desc Set the veritical alignment for the label/caption
+		 * @returns {string} {"T"=Top | "M"=Middle | "B"=Left}
+		 */
+		this.constructor.prototype.setLabelVerticalAlignment = function (val)
+		{
+			this.context.options.labelVertAlign.set("value", val);
+		}
+		
+		/**
+		 * @instance
+		 * @memberof CaptionBox
+		 * @method setWidth
+		 * @param {string} width width of the input group
+		 * @desc Set width of text control (e.g. 50px, 20%, 2em - omitting the unit assumes px)
+		 */
+		this.constructor.prototype.setWidth = function (width)
+		{
+			this.context.options.width.set("value", width);
+		}
+
+		/**
+		 * @instance
+		 * @memberof CaptionBox
+		 * @method getWidth
+		 * @desc Get configured width for text control (including unit)
+		 * @returns {string}
+		 */	
+		this.constructor.prototype.getWidth = function ()
+		{
+			return this.context.options.width.get("value");
+		}
+
+		/**
+		 * @instance
+		 * @memberof CaptionBox
+		 * @method setLabelColorStyle
+		 * @param {string} style "D"=Default | "M"=Muted | "L"=Light-gray | "P"=Primary | "I"=Info | "S"=Success | "W"=Warning | "G"=Danger
+		 * @desc Sets color style of label/caption
+		 */
+		this.constructor.prototype.setLabelColorStyle = function (style)
+		{
+			this.context.options.labelColorStyle.set("value", style);
+		}
+
+		/**
+		 * @instance
+		 * @memberof CaptionBox
+		 * @method getLabelColorStyle
+		 * @returns {string} "D"=Default | "M"=Muted | "L"=Light-gray | "P"=Primary | "I"=Info | "S"=Success | "W"=Warning | "G"=Danger
+		 * @desc Gets color style of label/caption
+		 */
+		this.constructor.prototype.getLabelColorStyle = function ()
+		{
+			return this.context.options.labelColorStyle.get("value");
+		}
+
+		/**
+		 * @instance
+		 * @memberof CaptionBox
+		 * @method setLabelSizeStyle
+		 * @param {string} style "R","SUPER"=Super large | "X","EXTRA-LARGE"=Extra large | "G","LARGER"=Larger | "L","LARGE"=Large | "S","SMALL"=Small | "M","SMALLER"=Smaller | "D","DEFAULT"=Default
+		 * @desc Sets color style of label/caption
+		 */
+		this.constructor.prototype.setLabelSizeStyle = function (style)
+		{
+			this.context.options.labelSizeStyle.set("value", style);
+		}
+
+		/**
+		 * @instance
+		 * @memberof CaptionBox
+		 * @method getLabelSizeStyle
+		 * @returns {string} "R"=Super large | "X"=Extra large | "G"=Larger | "L"=Large | "S"=Small | "M"=Smaller | "D"=Default
+		 * @desc Gets color style of label/caption
+		 */
+		this.constructor.prototype.getLabelSizeStyle = function ()
+		{
+			return this.context.options.labelSizeStyle.get("value");
+		}
+
+		/**
+		 * @instance
+		 * @memberof CaptionBox
+		 * @method setLabelWeightStyle
+		 * @param {string} style "D"=Default | "N"=Normal | "S"=Slim | "M"=Semi-bold | "B"=Bold
+		 * @desc Sets color style of label/caption
+		 */
+		this.constructor.prototype.setLabelWeightStyle = function (style)
+		{
+			this.context.options.labelWeightStyle.set("value", style);
+		}
+
+		/**
+		 * @instance
+		 * @memberof CaptionBox
+		 * @method getLabelWeightStyle
+		 * @returns {string} "D"=Default | "N"=Normal | "S"=Slim | "M"=Semi-bold | "B"=Bold
+		 * @desc Gets color style of label/caption
+		 */
+		this.constructor.prototype.getLabelWeightStyle = function ()
+		{
+			return this.context.options.labelWeightStyle.get("value");
+		}
+		
+		/**
+		 * @instance
+		 * @memberof CaptionBox
+		 * @method getType
+		 * @desc Get descriptive string representing the type of control
+		 * @returns {string}
+		 */
+		this.constructor.prototype.getType = function ()
+		{
+			return "captionBox.3";
+		}
+		
+		//{#feature: US-696 ARIA labeling}
+		this.constructor.prototype._getHTMLInputElement = function () 
+		{
+			return this._instance.ariaLabelTarget;
+		}
+		//End US-696
+
+		/*
+		Coach NG Lifecycle methods *************************************************************
+		 */
+		this.constructor.prototype.load = function ()
+		{
+			try
+			{
+				var opts = this.context.options;
+				var mdt = opts._metadata;
+
+				this._instance.baseTxtDir = mdt.baseTextDirection && mdt.baseTextDirection.get("value") ? mdt.baseTextDirection.get("value") : utilities.BiDi.BASE_TEXT_DIRECTION._default;
+				this._instance.genPrefTextDir = this.context.bpm.system.baseTextDirection;
+				
+				if (!opts.width)
+					bpmext.ui.substituteConfigOption(this, "width", null);
+
+				if(!opts.labelPlacement)
+					bpmext.ui.substituteConfigOption(this, "labelPlacement", "T");
+
+				if(!opts.labelWidth)
+					bpmext.ui.substituteConfigOption(this, "labelWidth", null);
+		
+				if(!opts.labelColorStyle)
+					bpmext.ui.substituteConfigOption(this, "labelColorStyle", "D");
+
+				if(!opts.labelSizeStyle)
+					bpmext.ui.substituteConfigOption(this, "labelSizeStyle", "D");
+
+				if(!opts.labelWeightStyle)
+					bpmext.ui.substituteConfigOption(this, "labelWeightStyle", "D");
+
+				if(!opts.labelHorizAlign)
+					bpmext.ui.substituteConfigOption(this, "labelHorizAlign", "L");
+
+				if(!opts.labelVertAlign)
+					bpmext.ui.substituteConfigOption(this, "labelVertAlign", "T");
+				
+				if(!opts.shrinkToContent)
+					bpmext.ui.substituteConfigOption(this, "shrinkToContent", false);
+				
+				this._instance.group = this.context.element.querySelector(".form-group");
+				
+				var cBox = bpmext.ui.util.getContentBox(this, this._instance.group);
+				if(!cBox) {
+					//{#feature: US-1330 Added RT localization}
+					//throw new Error("Content Box not found in CaptionBox Coach View");
+					throw new Error(bpmext.localization.formatMsg("controlCaptionBox", "CAPBOX_CBOX_NOT_FOUND"));
+				}
+
+				this._instance.cbox = cBox;
+				domClass.add(this.context.element, "SPARKCapBox");
+				
+				//this._instance.label = document.createElement("label");
+				//Added for TK-1268 : STARTS
+				this._instance.label = document.createElement("span");
+				//TK-1268 : ENDS
+				domClass.add(this._instance.label, "control-label");								
+
+				//this._proto._ensureLabelCreated(this);
+				this._proto._setLabelPlacement(this, opts.labelPlacement.get("value"));
+				this._proto._setLabel(this, opts._metadata.label.get("value"));
+				this._proto._setLabelWidth(this, opts.labelWidth.get("value"));                				
+
+				this._proto._setLabelHAlign(this, opts.labelHorizAlign.get("value"));
+				this._proto._setLabelVAlign(this, opts.labelVertAlign.get("value"));
+
+				this._proto._setLabelColorStyle(this, opts.labelColorStyle.get("value"));
+				this._proto._setLabelSizeStyle(this, opts.labelSizeStyle.get("value"));
+				this._proto._setLabelWeightStyle(this, opts.labelWeightStyle.get("value"));
+				this._proto._setWidth(this, opts.width.get("value"));
+				this._proto._setShrinkToContent(this);
+				
+				var view = this;
+				//Enabling a control with formula support
+				bpmext.ui.setupFormulaTriggeredUpdates(
+					this, 
+					function (expResult)
+					{
+						if (expResult == undefined)
+						{
+							expResult = "";
+						}
+
+						view.setLabel(expResult);
+					},
+					this.getLabel
+				);				
+				
+				bpmext.ui.loadContainer(this);
+				
+				var childNodes = cBox.childNodes;
+				var j = 0;
+				//Added for TK-1268 : STARTS
+				var lblId = "cpb-lbl-" + this.getUID();
+				domAttr.set(this._instance.label, "id", lblId);
+				//TK-1268 : ENDS
+				
+				for(var i = 0; i < childNodes.length; i++)
+				{
+					var childNode = childNodes[i];
+					if(domAttr.has(childNode, "data-viewid"))
+					{
+						j++;
+
+						if(j > 1)
+						{
+							//{#feature: US-1330 Added RT localization}
+							//bpmext.log.warn("This CaptionBox control should only contain one child view - it contains " + childNodes.length);
+							bpmext.log.warn(bpmext.localization.formatMsg("controlCaptionBox", "CAPBOX_CONTROL") + " " + bpmext.localization.formatMsg("general", "ONE_CHILDVIEW_WARNING") + " " + childNodes.length);
+							//bpmext.log.warn("  Only the first view was added");
+							bpmext.log.warn(" " + bpmext.localization.formatMsg("general", "FIRSTVIEW_ADDED_WARNING"));
+							
+							break;
+						}
+						
+						var subV = this.context.createView(childNode);
+						
+						//{#feature: US-696 ARIA labeling}
+						if(subV._getHTMLInputElement){
+							this._instance.ariaLabelTarget = subV._getHTMLInputElement();							
+							domAttr.set(this._instance.ariaLabelTarget, "aria-labelledby", lblId);
+														
+							if(this._instance.ariaLabelTarget.nodeName == "BUTTON" || this._instance.ariaLabelTarget.nodeName == "A")
+								domAttr.remove(this._instance.ariaLabelTarget, "aria-labelledby");
+						}
+						//End US-696
+						
+						subV.context.options._metadata.labelVisibility.set("value", "HIDE");
+						if(!this.context.options._metadata.label.get("value"))
+						{
+							this.context.options._metadata.label.set("value", subV.context.options._metadata.label.get("value"));
+						}
+					}
+				}
+			}
+			catch (e)
+			{
+				//{#feature: US-1330 Added RT localization}
+				//bpmext.log.error("Error on load event [" + this.context.viewid + "]: " + e);
+				bpmext.log.error(bpmext.localization.formatMsg("general", "ERROR_ONLOAD_EVENT") + " [" + this.context.viewid + "]: " + e);
+				if(e.stack) { 
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.error("  Call stack: " + e.stack);
+					bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+				}
+			}
+		};
+
+		this.constructor.prototype.view = function ()
+		{
+			try
+			{
+				this._proto._handleVisibility(this);
+			}
+			catch (e)
+			{
+				//{#feature: US-1330 Added RT localization}
+				//bpmext.log.error("Error on view event [" + this.ui.getAbsoluteName() + "]: " + e);
+				bpmext.log.error(bpmext.localization.formatMsg("general", "ERROR_ONVIEW_EVENT") + " [" + this.ui.getAbsoluteName() + "]: " + e);
+				if(e.stack) { 
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.error("  Call stack: " + e.stack);
+					bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+				}
+			}
+		};
+
+		this.constructor.prototype.change = function (event)
+		{
+			try
+			{
+				if (event.type == "config")
+				{
+					switch (event.property)
+					{
+						case "_metadata.label":
+						{
+							this._proto._setLabel(this, event.newVal);
+							break;
+						}
+						case "_metadata.labelVisibility":
+						{
+							this._proto._setLabelVisibility(this, event.newVal);
+							break;
+						}
+						case "shrinkToContent":
+						{
+							this._proto._setShrinkToContent(this);
+							break;
+						}							
+						case "labelPlacement":
+						{
+							this._proto._setLabelPlacement(this, event.newVal, event.oldVal);
+							break;
+						}
+						case "labelWidth":
+						{
+							this._proto._setLabelWidth(this, event.newVal);
+							break;
+						}						
+						case "labelHorizAlign":
+						{
+							this._proto._setLabelHAlign(this, event.newVal, event.oldVal);
+							break;
+						}						
+						case "labelVertAlign":
+						{
+							this._proto._setLabelVAlign(this, event.newVal, event.oldVal);
+							break;
+						}
+						case "_metadata.visibility":
+						{
+							this._proto._handleVisibility(this);
+							break;
+						}
+						case "width":
+						{
+							this._proto._setWidth(this, event.newVal);
+							break;
+						}
+						case "labelColorStyle":
+						{
+							this._proto._setLabelColorStyle(this, event.newVal, event.oldVal);
+							break;
+						}
+						case "labelSizeStyle":
+						{
+							this._proto._setLabelSizeStyle(this, event.newVal, event.oldVal);
+							break;
+						}
+						case "labelWeightStyle":
+						{
+							this._proto._setLabelWeightStyle(this, event.newVal, event.oldVal);
+							break;
+						}
+					}
+				}
+			}
+			catch (e)
+			{
+				//{#feature: US-1330 Added RT localization}
+				//bpmext.log.error("Error on change event [" + this.ui.getAbsoluteName() + "]: " + e);
+				bpmext.log.error(bpmext.localization.formatMsg("general", "ERROR_ONCHANGE_EVENT") + " [" + this.ui.getAbsoluteName() + "]: " + e);
+				if(e.stack) { 
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.error("  Call stack: " + e.stack);
+					bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+				}
+			}
+		};
+
+		/*
+		this.constructor.prototype.validate = function (event)
+		{
+			try {
+			}
+			catch (e) {
+				//{#feature: US-1330 Added RT localization}
+				//bpmext.log.error("Error on validate event [" + this.ui.getAbsoluteName() + "]: " + e);
+				bpmext.log.error(bpmext.localization.formatMsg("general", "ERROR_ONVALIDATE_EVENT") + " [" + this.ui.getAbsoluteName() + "]: " + e);
+				if(e.stack) { 
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.error("  Call stack: " + e.stack);
+					bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+				}
+			}			
+		};
+		
+		this.constructor.prototype.collaboration = function (event)
+		{
+		};
+		*/
+		
+		this.constructor.prototype.unload = function ()
+		{
+			bpmext.ui.unloadContainer(this);
+		};
+	}
+}

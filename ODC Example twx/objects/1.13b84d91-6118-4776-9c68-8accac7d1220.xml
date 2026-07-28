@@ -1,0 +1,937 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<teamworks>
+    <process id="1.13b84d91-6118-4776-9c68-8accac7d1220" name="Validate Required Documents">
+        <lastModified>1691617598335</lastModified>
+        <lastModifiedBy>heba</lastModifiedBy>
+        <processId>1.13b84d91-6118-4776-9c68-8accac7d1220</processId>
+        <image isNull="true" />
+        <tabGroup isNull="true" />
+        <startingProcessItemId>2025.cdd1a914-bdc8-4021-8b7b-92b60980e33e</startingProcessItemId>
+        <isRootProcess>false</isRootProcess>
+        <processType>12</processType>
+        <isErrorHandlerEnabled>false</isErrorHandlerEnabled>
+        <errorHandlerItemId isNull="true" />
+        <isLoggingVariables>false</isLoggingVariables>
+        <isTransactional>false</isTransactional>
+        <processTimingLevel isNull="true" />
+        <participantRef isNull="true" />
+        <exposedType>0</exposedType>
+        <isTrackingEnabled>true</isTrackingEnabled>
+        <xmlData isNull="true" />
+        <cachingType>false</cachingType>
+        <itemLabel isNull="true" />
+        <cacheLength>0</cacheLength>
+        <mobileReady>false</mobileReady>
+        <sboSyncEnabled>true</sboSyncEnabled>
+        <externalId isNull="true" />
+        <isSecured>false</isSecured>
+        <isAjaxExposed>true</isAjaxExposed>
+        <description isNull="true" />
+        <guid>5dc0cc64-b68e-464d-8434-a3163beaba86</guid>
+        <versionId>317a030d-7fc8-4bf7-97b2-157878cd7c75</versionId>
+        <dependencySummary>&lt;dependencySummary id="bpdid:83e1efe624431d49:-7084ad56:189daab98ba:1462" /&gt;</dependencySummary>
+        <jsonData>{"rootElement":[{"flowElement":[{"parallelMultiple":false,"outgoing":["5d496e4b-f0d1-4614-86d4-bcb697972123"],"isInterrupting":false,"extensionElements":{"nodeVisualInfo":[{"color":"#F8F8F8","width":24,"x":25,"y":80,"declaredType":"TNodeVisualInfo","height":24}]},"name":"Start","declaredType":"startEvent","id":"cd757d0c-2f41-4103-86cc-4c41205fd043"},{"incoming":["caca425c-c42f-4097-80a2-250603001efc"],"extensionElements":{"nodeVisualInfo":[{"color":"#F8F8F8","width":24,"x":650,"y":80,"declaredType":"TNodeVisualInfo","height":24}],"endStateId":["guid:d7a662a99ec79f4c:-60dc945f:189bab22bee:-2d9b"],"saveExecutionContext":[true]},"name":"End","declaredType":"endEvent","id":"9974b2c2-de97-4644-8419-65ab723f2caa"},{"startQuantity":1,"extensionElements":{"nodeVisualInfo":[{"width":95,"x":129,"y":388,"declaredType":"TNodeVisualInfo","height":70}],"ruleSet":[{"rules":[{"name":"rule 1","declaredType":"com.ibm.bpmsdk.model.bpmn20.ibmext.TRule","ruleId":"7dabda14-1430-445d-850f-0b1907e63ded","type":"DECISION_TABLE","locale":"en","decisionTableHash":"5DDtIgN8HwR9Py6LLuvv6BAHwXGacIFeawBgr3vBQvw="}],"declaredType":"com.ibm.bpmsdk.model.bpmn20.ibmext.TRuleSet","locale":"en"}]},"implementation":"##unspecified","name":"Documents Table","isForCompensation":false,"completionQuantity":1,"declaredType":"businessRuleTask","id":"aea18d30-bd2e-49c9-a600-0e01eb7e58be"},{"extensionElements":{"defaultValue":[{"declaredType":"com.ibm.bpmsdk.model.bpmn20.ibmext.TDefaultValue","useDefault":true,"value":"\"\""}]},"itemSubjectRef":"itm.12.db884a3c-c533-44b7-bb2d-47bec8ad4022","name":"result","isCollection":false,"declaredType":"dataObject","id":"2056.e21b4887-4679-4982-8eec-e7461ec20d15"},{"startQuantity":1,"outgoing":["caca425c-c42f-4097-80a2-250603001efc"],"incoming":["99b317f1-7b1f-48ea-8c10-5e7db0627e2e"],"extensionElements":{"nodeVisualInfo":[{"width":95,"x":280,"y":57,"declaredType":"TNodeVisualInfo","height":70}]},"name":"Set Documents List","isForCompensation":false,"completionQuantity":1,"declaredType":"scriptTask","id":"c3b76c6f-98b3-4ce2-bcff-07b7eb91eb1a","scriptFormat":"text\/x-javascript","script":{"content":["tw.local.requiredDocuments = new tw.object.listOf.String();\r\nif (tw.local.result.length &gt; 0) {\r\n\ttw.local.requiredDocuments = tw.local.result.split(\",\")\r\n}"]}},{"targetRef":"9974b2c2-de97-4644-8419-65ab723f2caa","extensionElements":{"sequenceFlowImplementation":[{"fireValidation":"Never","sboSyncEnabled":true,"declaredType":"com.ibm.bpmsdk.model.bpmn20.ibmext.TSequenceFlowImplementation"}],"linkVisualInfo":[{"sourcePortLocation":"rightCenter","showCoachControlLabel":false,"labelPosition":0.0,"targetPortLocation":"leftCenter","declaredType":"TLinkVisualInfo","saveExecutionContext":true,"showLabel":false}]},"name":"To End","declaredType":"sequenceFlow","id":"caca425c-c42f-4097-80a2-250603001efc","sourceRef":"c3b76c6f-98b3-4ce2-bcff-07b7eb91eb1a"},{"startQuantity":1,"outgoing":["99b317f1-7b1f-48ea-8c10-5e7db0627e2e"],"incoming":["5d496e4b-f0d1-4614-86d4-bcb697972123"],"extensionElements":{"nodeVisualInfo":[{"width":95,"x":123,"y":59,"declaredType":"TNodeVisualInfo","height":70}]},"name":"Script Task","isForCompensation":false,"completionQuantity":1,"declaredType":"scriptTask","id":"cdd1a914-bdc8-4021-8b7b-92b60980e33e","scriptFormat":"text\/x-javascript"},{"targetRef":"cdd1a914-bdc8-4021-8b7b-92b60980e33e","extensionElements":{"linkVisualInfo":[{"sourcePortLocation":"rightCenter","showCoachControlLabel":false,"labelPosition":0.0,"targetPortLocation":"leftCenter","declaredType":"TLinkVisualInfo","saveExecutionContext":false,"showLabel":false}]},"name":"To Script Task","declaredType":"sequenceFlow","id":"5d496e4b-f0d1-4614-86d4-bcb697972123","sourceRef":"cd757d0c-2f41-4103-86cc-4c41205fd043"},{"targetRef":"c3b76c6f-98b3-4ce2-bcff-07b7eb91eb1a","extensionElements":{"linkVisualInfo":[{"sourcePortLocation":"rightCenter","showCoachControlLabel":false,"labelPosition":0.0,"targetPortLocation":"leftCenter","declaredType":"TLinkVisualInfo","saveExecutionContext":false,"showLabel":false}]},"name":"To Set Documents List","declaredType":"sequenceFlow","id":"99b317f1-7b1f-48ea-8c10-5e7db0627e2e","sourceRef":"cdd1a914-bdc8-4021-8b7b-92b60980e33e"}],"laneSet":[{"id":"afe8c782-b046-4169-8cc9-17d9b6fe8fe9","lane":[{"flowNodeRef":["cd757d0c-2f41-4103-86cc-4c41205fd043","9974b2c2-de97-4644-8419-65ab723f2caa","aea18d30-bd2e-49c9-a600-0e01eb7e58be","c3b76c6f-98b3-4ce2-bcff-07b7eb91eb1a","cdd1a914-bdc8-4021-8b7b-92b60980e33e"],"extensionElements":{"nodeVisualInfo":[{"color":"#F8F8F8","width":3000,"x":0,"y":0,"declaredType":"TNodeVisualInfo","height":500}]},"name":"System","partitionElementRef":"24.6fd38d02-81cf-48ab-bd42-8ff4c0a1628b","declaredType":"lane","id":"4205cf3f-d404-42a8-8de1-30dadb6d3ad6","otherAttributes":{"{http:\/\/www.ibm.com\/xmlns\/prod\/bpm\/bpmn\/ext\/process\/wle}isSystemLane":"true"}}]}],"isClosed":false,"extensionElements":{"isSecured":[false],"isAjaxExposed":[true],"sboSyncEnabled":[true]},"documentation":[{"textFormat":"text\/plain"}],"name":"Validate Required Documents","declaredType":"process","id":"1.13b84d91-6118-4776-9c68-8accac7d1220","processType":"None","otherAttributes":{"{http:\/\/www.ibm.com\/xmlns\/prod\/bpm\/bpmn\/ext\/process}executionMode":"microflow"},"ioSpecification":{"dataOutput":[{"itemSubjectRef":"itm.12.db884a3c-c533-44b7-bb2d-47bec8ad4022","name":"requiredDocuments","isCollection":true,"id":"2055.e14b7e6f-8f3b-4fa2-ba26-4975d2431248"}],"inputSet":[{"dataInputRefs":["2055.3fd8e212-86fb-49bd-b067-39770ac7ff07","2055.789376b6-6edc-4ab4-ac12-1470f4a6ad44"]}],"outputSet":[{"dataOutputRefs":["2055.e14b7e6f-8f3b-4fa2-ba26-4975d2431248"]}],"dataInput":[{"extensionElements":{"defaultValue":[{"declaredType":"com.ibm.bpmsdk.model.bpmn20.ibmext.TDefaultValue","useDefault":true,"value":"\"Advance Payment\""}]},"itemSubjectRef":"itm.12.db884a3c-c533-44b7-bb2d-47bec8ad4022","name":"requestType","isCollection":false,"id":"2055.3fd8e212-86fb-49bd-b067-39770ac7ff07"},{"extensionElements":{"defaultValue":[{"declaredType":"com.ibm.bpmsdk.model.bpmn20.ibmext.TDefaultValue","useDefault":true,"value":"\"Correspondent\""}]},"itemSubjectRef":"itm.12.db884a3c-c533-44b7-bb2d-47bec8ad4022","name":"documentSource","isCollection":false,"id":"2055.789376b6-6edc-4ab4-ac12-1470f4a6ad44"}]}}],"targetNamespace":"","typeLanguage":"http:\/\/www.w3.org\/2001\/XMLSchema","expressionLanguage":"http:\/\/www.ibm.com\/xmlns\/prod\/bpm\/expression-lang\/javascript"}</jsonData>
+        <field1 isNull="true" />
+        <field2 isNull="true" />
+        <field3>0</field3>
+        <field4 isNull="true" />
+        <field5>false</field5>
+        <clobField1 isNull="true" />
+        <blobField1 isNull="true" />
+        <processParameter name="requestType">
+            <lastModified isNull="true" />
+            <lastModifiedBy isNull="true" />
+            <processParameterId>2055.3fd8e212-86fb-49bd-b067-39770ac7ff07</processParameterId>
+            <processId>1.13b84d91-6118-4776-9c68-8accac7d1220</processId>
+            <parameterType>1</parameterType>
+            <isArrayOf>false</isArrayOf>
+            <classId>b5a7448c-61c1-4e1e-9933-3912eb5c29ad/12.db884a3c-c533-44b7-bb2d-47bec8ad4022</classId>
+            <seq>1</seq>
+            <hasDefault>true</hasDefault>
+            <defaultValue>"Advance Payment"</defaultValue>
+            <isLocked>false</isLocked>
+            <description isNull="true" />
+            <guid>3c2b9d49-e6a1-45d7-8fe1-1c53e3e1d2c6</guid>
+            <versionId>d4dd5036-3c76-4902-823a-5bf93e505ebe</versionId>
+        </processParameter>
+        <processParameter name="documentSource">
+            <lastModified isNull="true" />
+            <lastModifiedBy isNull="true" />
+            <processParameterId>2055.789376b6-6edc-4ab4-ac12-1470f4a6ad44</processParameterId>
+            <processId>1.13b84d91-6118-4776-9c68-8accac7d1220</processId>
+            <parameterType>1</parameterType>
+            <isArrayOf>false</isArrayOf>
+            <classId>b5a7448c-61c1-4e1e-9933-3912eb5c29ad/12.db884a3c-c533-44b7-bb2d-47bec8ad4022</classId>
+            <seq>2</seq>
+            <hasDefault>true</hasDefault>
+            <defaultValue>"Correspondent"</defaultValue>
+            <isLocked>false</isLocked>
+            <description isNull="true" />
+            <guid>1f13a1a1-58f5-40f0-9578-a7daca5b70fe</guid>
+            <versionId>5b87a3be-feaf-4122-aa5c-3128d446c204</versionId>
+        </processParameter>
+        <processParameter name="requiredDocuments">
+            <lastModified isNull="true" />
+            <lastModifiedBy isNull="true" />
+            <processParameterId>2055.e14b7e6f-8f3b-4fa2-ba26-4975d2431248</processParameterId>
+            <processId>1.13b84d91-6118-4776-9c68-8accac7d1220</processId>
+            <parameterType>2</parameterType>
+            <isArrayOf>true</isArrayOf>
+            <classId>b5a7448c-61c1-4e1e-9933-3912eb5c29ad/12.db884a3c-c533-44b7-bb2d-47bec8ad4022</classId>
+            <seq>3</seq>
+            <hasDefault>false</hasDefault>
+            <defaultValue isNull="true" />
+            <isLocked>false</isLocked>
+            <description isNull="true" />
+            <guid>5dcd35d3-d1c2-495b-b5a8-064cbbd15bdb</guid>
+            <versionId>53adbf7b-1652-4ad7-9f14-ad1771007d74</versionId>
+        </processParameter>
+        <processVariable name="result">
+            <lastModified isNull="true" />
+            <lastModifiedBy isNull="true" />
+            <processVariableId>2056.e21b4887-4679-4982-8eec-e7461ec20d15</processVariableId>
+            <description isNull="true" />
+            <processId>1.13b84d91-6118-4776-9c68-8accac7d1220</processId>
+            <namespace>2</namespace>
+            <seq>1</seq>
+            <isArrayOf>false</isArrayOf>
+            <isTransient>false</isTransient>
+            <classId>b5a7448c-61c1-4e1e-9933-3912eb5c29ad/12.db884a3c-c533-44b7-bb2d-47bec8ad4022</classId>
+            <hasDefault>true</hasDefault>
+            <defaultValue>""</defaultValue>
+            <guid>cf9b645a-c357-4f1c-bc86-73633eeeea3e</guid>
+            <versionId>afb0d5b7-d23b-4bbb-8fe6-42f6415d33e9</versionId>
+        </processVariable>
+        <item>
+            <lastModified isNull="true" />
+            <lastModifiedBy isNull="true" />
+            <processItemId>2025.9974b2c2-de97-4644-8419-65ab723f2caa</processItemId>
+            <processId>1.13b84d91-6118-4776-9c68-8accac7d1220</processId>
+            <name>End</name>
+            <tWComponentName>ExitPoint</tWComponentName>
+            <tWComponentId>3008.b047576d-0e57-4453-92ae-a33ccfd02437</tWComponentId>
+            <isLogEnabled>false</isLogEnabled>
+            <isTraceEnabled>false</isTraceEnabled>
+            <traceCategory isNull="true" />
+            <traceLevel isNull="true" />
+            <traceMessage isNull="true" />
+            <traceSymbolTable isNull="true" />
+            <isExecutionContextTraced>false</isExecutionContextTraced>
+            <saveExecutionContext>true</saveExecutionContext>
+            <documentation isNull="true" />
+            <isErrorHandlerEnabled>false</isErrorHandlerEnabled>
+            <errorHandlerItemId isNull="true" />
+            <guid>guid:d7a662a99ec79f4c:-60dc945f:189bab22bee:-2d9b</guid>
+            <versionId>00e403b3-190b-4818-9b3a-40ffc1449674</versionId>
+            <externalServiceRef isNull="true" />
+            <externalServiceOp isNull="true" />
+            <nodeColor isNull="true" />
+            <layoutData x="650" y="80">
+                <errorLink>
+                    <controlPoints />
+                    <showEndState>false</showEndState>
+                    <showName>false</showName>
+                </errorLink>
+            </layoutData>
+            <TWComponent>
+                <lastModified isNull="true" />
+                <lastModifiedBy isNull="true" />
+                <exitPointId>3008.b047576d-0e57-4453-92ae-a33ccfd02437</exitPointId>
+                <haltProcess>false</haltProcess>
+                <guid>f60640ec-8566-4872-a233-85d6ed49887b</guid>
+                <versionId>0068411c-b65d-43fc-aa91-bd664a548830</versionId>
+            </TWComponent>
+        </item>
+        <item>
+            <lastModified isNull="true" />
+            <lastModifiedBy isNull="true" />
+            <processItemId>2025.cdd1a914-bdc8-4021-8b7b-92b60980e33e</processItemId>
+            <processId>1.13b84d91-6118-4776-9c68-8accac7d1220</processId>
+            <name>Script Task</name>
+            <tWComponentName>Script</tWComponentName>
+            <tWComponentId>3011.fd4e4b97-af3a-4a02-a467-8e6e38c32b59</tWComponentId>
+            <isLogEnabled>false</isLogEnabled>
+            <isTraceEnabled>false</isTraceEnabled>
+            <traceCategory isNull="true" />
+            <traceLevel isNull="true" />
+            <traceMessage isNull="true" />
+            <traceSymbolTable isNull="true" />
+            <isExecutionContextTraced>false</isExecutionContextTraced>
+            <saveExecutionContext>false</saveExecutionContext>
+            <documentation isNull="true" />
+            <isErrorHandlerEnabled>false</isErrorHandlerEnabled>
+            <errorHandlerItemId isNull="true" />
+            <guid>guid:83e1efe624431d49:-7084ad56:189daab98ba:1461</guid>
+            <versionId>815f9801-06fe-481c-86ec-6a5dcae46265</versionId>
+            <externalServiceRef isNull="true" />
+            <externalServiceOp isNull="true" />
+            <nodeColor isNull="true" />
+            <layoutData x="123" y="59">
+                <errorLink>
+                    <controlPoints />
+                    <showEndState>false</showEndState>
+                    <showName>false</showName>
+                </errorLink>
+            </layoutData>
+            <TWComponent>
+                <lastModified isNull="true" />
+                <lastModifiedBy isNull="true" />
+                <scriptId>3011.fd4e4b97-af3a-4a02-a467-8e6e38c32b59</scriptId>
+                <scriptTypeId>2</scriptTypeId>
+                <isActive>false</isActive>
+                <script isNull="true" />
+                <isRule>false</isRule>
+                <guid>fbcdcf49-8e38-4ef0-9dac-55f0a8859c90</guid>
+                <versionId>a4e4dcf0-1e87-4825-bcb7-03b6bb95c11b</versionId>
+            </TWComponent>
+        </item>
+        <item>
+            <lastModified isNull="true" />
+            <lastModifiedBy isNull="true" />
+            <processItemId>2025.c3b76c6f-98b3-4ce2-bcff-07b7eb91eb1a</processItemId>
+            <processId>1.13b84d91-6118-4776-9c68-8accac7d1220</processId>
+            <name>Set Documents List</name>
+            <tWComponentName>Script</tWComponentName>
+            <tWComponentId>3011.932a335f-d475-4c4c-aeb0-7eb57621ce41</tWComponentId>
+            <isLogEnabled>false</isLogEnabled>
+            <isTraceEnabled>false</isTraceEnabled>
+            <traceCategory isNull="true" />
+            <traceLevel isNull="true" />
+            <traceMessage isNull="true" />
+            <traceSymbolTable isNull="true" />
+            <isExecutionContextTraced>false</isExecutionContextTraced>
+            <saveExecutionContext>false</saveExecutionContext>
+            <documentation isNull="true" />
+            <isErrorHandlerEnabled>false</isErrorHandlerEnabled>
+            <errorHandlerItemId isNull="true" />
+            <guid>guid:d7a662a99ec79f4c:-60dc945f:189bab22bee:-2d9d</guid>
+            <versionId>89482553-8bcb-4242-8ff0-a56c6032ac92</versionId>
+            <externalServiceRef isNull="true" />
+            <externalServiceOp isNull="true" />
+            <nodeColor isNull="true" />
+            <layoutData x="280" y="57">
+                <errorLink>
+                    <controlPoints />
+                    <showEndState>false</showEndState>
+                    <showName>false</showName>
+                </errorLink>
+            </layoutData>
+            <TWComponent>
+                <lastModified isNull="true" />
+                <lastModifiedBy isNull="true" />
+                <scriptId>3011.932a335f-d475-4c4c-aeb0-7eb57621ce41</scriptId>
+                <scriptTypeId>2</scriptTypeId>
+                <isActive>true</isActive>
+                <script>tw.local.requiredDocuments = new tw.object.listOf.String();&#xD;
+if (tw.local.result.length &gt; 0) {&#xD;
+	tw.local.requiredDocuments = tw.local.result.split(",")&#xD;
+}</script>
+                <isRule>false</isRule>
+                <guid>0a71443a-8d26-4f21-b2ac-82ce9975dc18</guid>
+                <versionId>ea033c2b-0eff-4a6d-96f7-a6b8f43633fd</versionId>
+            </TWComponent>
+        </item>
+        <item>
+            <lastModified isNull="true" />
+            <lastModifiedBy isNull="true" />
+            <processItemId>2025.aea18d30-bd2e-49c9-a600-0e01eb7e58be</processItemId>
+            <processId>1.13b84d91-6118-4776-9c68-8accac7d1220</processId>
+            <name>Documents Table</name>
+            <tWComponentName>ILOGDecision</tWComponentName>
+            <tWComponentId>3026.ff734d5a-7b06-4aa9-8b3c-724229d27832</tWComponentId>
+            <isLogEnabled>false</isLogEnabled>
+            <isTraceEnabled>false</isTraceEnabled>
+            <traceCategory isNull="true" />
+            <traceLevel isNull="true" />
+            <traceMessage isNull="true" />
+            <traceSymbolTable isNull="true" />
+            <isExecutionContextTraced>false</isExecutionContextTraced>
+            <saveExecutionContext>false</saveExecutionContext>
+            <documentation isNull="true" />
+            <isErrorHandlerEnabled>false</isErrorHandlerEnabled>
+            <errorHandlerItemId isNull="true" />
+            <guid>guid:d7a662a99ec79f4c:-60dc945f:189bab22bee:-2d9c</guid>
+            <versionId>fe9401fb-904f-4246-a50a-2d82f5835607</versionId>
+            <externalServiceRef isNull="true" />
+            <externalServiceOp isNull="true" />
+            <nodeColor isNull="true" />
+            <layoutData x="129" y="388">
+                <errorLink>
+                    <controlPoints />
+                    <showEndState>false</showEndState>
+                    <showName>false</showName>
+                </errorLink>
+            </layoutData>
+            <TWComponent>
+                <lastModified isNull="true" />
+                <lastModifiedBy isNull="true" />
+                <iLogDecisionId>3026.ff734d5a-7b06-4aa9-8b3c-724229d27832</iLogDecisionId>
+                <definition>&lt;iLogDecision&gt;
+  &lt;rule&gt;
+    &lt;name&gt;rule 1&lt;/name&gt;
+    &lt;ruleId&gt;7dabda14-1430-445d-850f-0b1907e63ded&lt;/ruleId&gt;
+    &lt;DT xmlns="http://schemas.ilog.com/Rules/7.0/DecisionTable" Version="7.0"&gt;
+      &lt;Body&gt;
+        &lt;Properties&gt;
+          &lt;Property Name="UI.MediaType"&gt;&lt;![CDATA[Web]]&gt;&lt;/Property&gt;
+        &lt;/Properties&gt;
+        &lt;Structure&gt;
+          &lt;ConditionDefinitions&gt;
+            &lt;ConditionDefinition Id="C0"&gt;
+              &lt;ExpressionDefinition&gt;
+                &lt;Text&gt;&lt;![CDATA[requestType contains &lt;a string&gt;]]&gt;&lt;/Text&gt;
+              &lt;/ExpressionDefinition&gt;
+            &lt;/ConditionDefinition&gt;
+            &lt;ConditionDefinition Id="C2"&gt;
+              &lt;ExpressionDefinition&gt;
+                &lt;Text&gt;&lt;![CDATA[documentSource is one of &lt;strings&gt;]]&gt;&lt;/Text&gt;
+              &lt;/ExpressionDefinition&gt;
+            &lt;/ConditionDefinition&gt;
+          &lt;/ConditionDefinitions&gt;
+          &lt;ActionDefinitions&gt;
+            &lt;ActionDefinition Id="A0"&gt;
+              &lt;ExpressionDefinition&gt;
+                &lt;Text&gt;&lt;![CDATA[set result to &lt;a string&gt;]]&gt;&lt;/Text&gt;
+              &lt;/ExpressionDefinition&gt;
+            &lt;/ActionDefinition&gt;
+          &lt;/ActionDefinitions&gt;
+        &lt;/Structure&gt;
+        &lt;Contents&gt;
+          &lt;Partition DefId="C0"&gt;
+            &lt;Condition&gt;
+              &lt;Expression&gt;
+                &lt;Param&gt;&lt;![CDATA["Advance Payment"]]&gt;&lt;/Param&gt;
+              &lt;/Expression&gt;
+              &lt;Partition DefId="C2"&gt;
+                &lt;Condition&gt;
+                  &lt;Expression&gt;
+                    &lt;Param&gt;&lt;![CDATA[{ "Correspondent","Exporter","Importer" }]]&gt;&lt;/Param&gt;
+                  &lt;/Expression&gt;
+                  &lt;ActionSet&gt;
+                    &lt;Action DefId="A0"&gt;
+                      &lt;Expression&gt;
+                        &lt;Param&gt;&lt;![CDATA["Customer Request,Invoice"]]&gt;&lt;/Param&gt;
+                      &lt;/Expression&gt;
+                    &lt;/Action&gt;
+                  &lt;/ActionSet&gt;
+                &lt;/Condition&gt;
+              &lt;/Partition&gt;
+            &lt;/Condition&gt;
+            &lt;Condition&gt;
+              &lt;Expression&gt;
+                &lt;Param&gt;&lt;![CDATA["ICAP"]]&gt;&lt;/Param&gt;
+              &lt;/Expression&gt;
+              &lt;Partition DefId="C2"&gt;
+                &lt;Condition&gt;
+                  &lt;Expression&gt;
+                    &lt;Param&gt;&lt;![CDATA[{ "Correspondent","Exporter","Importer" }]]&gt;&lt;/Param&gt;
+                  &lt;/Expression&gt;
+                  &lt;ActionSet&gt;
+                    &lt;Action DefId="A0"&gt;
+                      &lt;Expression&gt;
+                        &lt;Param&gt;&lt;![CDATA["Customer Request,Invoice,Transport document"]]&gt;&lt;/Param&gt;
+                      &lt;/Expression&gt;
+                    &lt;/Action&gt;
+                  &lt;/ActionSet&gt;
+                &lt;/Condition&gt;
+              &lt;/Partition&gt;
+            &lt;/Condition&gt;
+            &lt;Condition&gt;
+              &lt;Expression&gt;
+                &lt;Param&gt;&lt;![CDATA["IDC Acknowledgement"]]&gt;&lt;/Param&gt;
+              &lt;/Expression&gt;
+              &lt;Partition DefId="C2"&gt;
+                &lt;Condition&gt;
+                  &lt;Expression&gt;
+                    &lt;Param&gt;&lt;![CDATA[{ "Correspondent","Exporter","Importer" }]]&gt;&lt;/Param&gt;
+                  &lt;/Expression&gt;
+                  &lt;ActionSet&gt;
+                    &lt;Action DefId="A0"&gt;
+                      &lt;Expression&gt;
+                        &lt;Param&gt;&lt;![CDATA["Correspondent cover letter,Invoice,Transport document"]]&gt;&lt;/Param&gt;
+                      &lt;/Expression&gt;
+                    &lt;/Action&gt;
+                  &lt;/ActionSet&gt;
+                &lt;/Condition&gt;
+              &lt;/Partition&gt;
+            &lt;/Condition&gt;
+            &lt;Condition&gt;
+              &lt;Expression&gt;
+                &lt;Param&gt;&lt;![CDATA["IDC Execution"]]&gt;&lt;/Param&gt;
+              &lt;/Expression&gt;
+              &lt;Partition DefId="C2"&gt;
+                &lt;Condition&gt;
+                  &lt;Expression&gt;
+                    &lt;Param&gt;&lt;![CDATA[{ "Correspondent" }]]&gt;&lt;/Param&gt;
+                  &lt;/Expression&gt;
+                  &lt;ActionSet&gt;
+                    &lt;Action DefId="A0"&gt;
+                      &lt;Expression&gt;
+                        &lt;Param&gt;&lt;![CDATA["Customer Request,Correspondent cover letter,Invoice,Transport document"]]&gt;&lt;/Param&gt;
+                      &lt;/Expression&gt;
+                    &lt;/Action&gt;
+                  &lt;/ActionSet&gt;
+                &lt;/Condition&gt;
+              &lt;/Partition&gt;
+            &lt;/Condition&gt;
+            &lt;Condition&gt;
+              &lt;Expression&gt;
+                &lt;Param&gt;&lt;![CDATA["IDC Execution Completion"]]&gt;&lt;/Param&gt;
+              &lt;/Expression&gt;
+              &lt;Partition DefId="C2"&gt;
+                &lt;Condition&gt;
+                  &lt;Expression&gt;
+                    &lt;Param&gt;&lt;![CDATA[{ "Correspondent" }]]&gt;&lt;/Param&gt;
+                  &lt;/Expression&gt;
+                  &lt;ActionSet&gt;
+                    &lt;Action DefId="A0"&gt;
+                      &lt;Expression&gt;
+                        &lt;Param&gt;&lt;![CDATA["Customer Request,Correspondent cover letter,Invoice,Transport document"]]&gt;&lt;/Param&gt;
+                      &lt;/Expression&gt;
+                    &lt;/Action&gt;
+                  &lt;/ActionSet&gt;
+                &lt;/Condition&gt;
+              &lt;/Partition&gt;
+            &lt;/Condition&gt;
+            &lt;Condition&gt;
+              &lt;Expression&gt;
+                &lt;Param&gt;&lt;![CDATA["IDC Execution"]]&gt;&lt;/Param&gt;
+              &lt;/Expression&gt;
+              &lt;Partition DefId="C2"&gt;
+                &lt;Condition&gt;
+                  &lt;Expression&gt;
+                    &lt;Param&gt;&lt;![CDATA[{ "Exporter", "Importer" }]]&gt;&lt;/Param&gt;
+                  &lt;/Expression&gt;
+                  &lt;ActionSet&gt;
+                    &lt;Action DefId="A0"&gt;
+                      &lt;Expression&gt;
+                        &lt;Param&gt;&lt;![CDATA["Customer Request,Invoice,Transport document"]]&gt;&lt;/Param&gt;
+                      &lt;/Expression&gt;
+                    &lt;/Action&gt;
+                  &lt;/ActionSet&gt;
+                &lt;/Condition&gt;
+              &lt;/Partition&gt;
+            &lt;/Condition&gt;
+            &lt;Condition&gt;
+              &lt;Expression&gt;
+                &lt;Param&gt;&lt;![CDATA["IDC Execution Completion"]]&gt;&lt;/Param&gt;
+              &lt;/Expression&gt;
+              &lt;Partition DefId="C2"&gt;
+                &lt;Condition&gt;
+                  &lt;Expression&gt;
+                    &lt;Param&gt;&lt;![CDATA[{ "Exporter", "Importer" }]]&gt;&lt;/Param&gt;
+                  &lt;/Expression&gt;
+                  &lt;ActionSet&gt;
+                    &lt;Action DefId="A0"&gt;
+                      &lt;Expression&gt;
+                        &lt;Param&gt;&lt;![CDATA["Customer Request,Invoice,Transport document"]]&gt;&lt;/Param&gt;
+                      &lt;/Expression&gt;
+                    &lt;/Action&gt;
+                  &lt;/ActionSet&gt;
+                &lt;/Condition&gt;
+              &lt;/Partition&gt;
+            &lt;/Condition&gt;
+            &lt;Condition&gt;
+              &lt;Expression&gt;
+                &lt;Param&gt;&lt;![CDATA["IDC Payment"]]&gt;&lt;/Param&gt;
+              &lt;/Expression&gt;
+              &lt;Partition DefId="C2"&gt;
+                &lt;Condition&gt;
+                  &lt;Expression&gt;
+                    &lt;Param&gt;&lt;![CDATA[{ "Correspondent","Exporter","Importer" }]]&gt;&lt;/Param&gt;
+                  &lt;/Expression&gt;
+                  &lt;ActionSet&gt;
+                    &lt;Action DefId="A0"&gt;
+                      &lt;Expression&gt;
+                        &lt;Param&gt;&lt;![CDATA["Customer Request"]]&gt;&lt;/Param&gt;
+                      &lt;/Expression&gt;
+                    &lt;/Action&gt;
+                  &lt;/ActionSet&gt;
+                &lt;/Condition&gt;
+              &lt;/Partition&gt;
+            &lt;/Condition&gt;
+          &lt;/Partition&gt;
+        &lt;/Contents&gt;
+      &lt;/Body&gt;
+      &lt;Resources DefaultLocale="en_US"&gt;
+        &lt;ResourceSet Locale="en"&gt;
+          &lt;Data Name="Definitions(C0)#HeaderText"&gt;&lt;![CDATA[Request Type]]&gt;&lt;/Data&gt;
+          &lt;Data Name="Definitions(A0)#Width"&gt;&lt;![CDATA[80]]&gt;&lt;/Data&gt;
+          &lt;Data Name="Definitions(C2)#HeaderText"&gt;&lt;![CDATA[Document Source]]&gt;&lt;/Data&gt;
+          &lt;Data Name="Definitions(C0)#Width"&gt;&lt;![CDATA[80]]&gt;&lt;/Data&gt;
+          &lt;Data Name="Definitions(C2)#Width"&gt;&lt;![CDATA[227]]&gt;&lt;/Data&gt;
+        &lt;/ResourceSet&gt;
+      &lt;/Resources&gt;
+    &lt;/DT&gt;
+    &lt;locale&gt;en&lt;/locale&gt;
+    &lt;type&gt;DECISION_TABLE&lt;/type&gt;
+  &lt;/rule&gt;
+  &lt;locale&gt;en&lt;/locale&gt;
+&lt;/iLogDecision&gt;</definition>
+                <guid>b4144945-99ba-45fd-a66b-2b5762bfdce8</guid>
+                <versionId>e3a28b9d-54e3-4557-a70f-6abd554cbaf0</versionId>
+            </TWComponent>
+        </item>
+        <startingProcessItemId>2025.cdd1a914-bdc8-4021-8b7b-92b60980e33e</startingProcessItemId>
+        <errorHandlerItemId isNull="true" />
+        <layoutData noConversion="true">
+            <errorLink>
+                <controlPoints />
+                <showEndState>false</showEndState>
+                <showName>false</showName>
+            </errorLink>
+        </layoutData>
+        <startPoint>
+            <layoutData x="25" y="80">
+                <errorLink>
+                    <controlPoints />
+                    <showEndState>false</showEndState>
+                    <showName>false</showName>
+                </errorLink>
+            </layoutData>
+        </startPoint>
+        <startLink>
+            <fromPort locationId="rightCenter" portType="1" />
+            <toPort locationId="leftCenter" portType="2" />
+            <layoutData>
+                <controlPoints />
+                <showEndState>false</showEndState>
+                <showName>false</showName>
+            </layoutData>
+        </startLink>
+        <bpmn2Model>
+            <ns16:definitions xmlns:ns16="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:ns2="http://www.ibm.com/xmlns/prod/bpm/bpmn/ext/trackinggroup" xmlns:ns3="http://www.ibm.com/xmlns/prod/bpm/bpmn/ext/process" xmlns:ns4="http://www.ibm.com/xmlns/prod/bpm/bpmn/ext/process/wle" xmlns:ns5="http://www.ibm.com/xmlns/prod/bpm/bpmn/ext/process/case" xmlns:ns6="http://www.ibm.com/bpm/Extensions" xmlns:ns7="http://www.ibm.com/xmlns/prod/bpm/uca" xmlns:ns8="http://www.ibm.com/xmlns/prod/bpm/bpmn/ext/team" xmlns:ns9="http://www.ibm.com/xmlns/bpmnx/20100524/v1/BusinessVocabulary" xmlns:ns10="http://www.omg.org/spec/DD/20100524/DI" xmlns:ns11="http://www.omg.org/spec/DD/20100524/DC" xmlns:ns12="http://www.omg.org/spec/BPMN/20100524/BPMNDI" xmlns:ns13="http://www.ibm.com/xmlns/prod/bpm/graph" xmlns:ns14="http://www.ibm.com/xmlns/prod/bpm/bpmn/ext/process/auth" xmlns:ns15="http://www.ibm.com/xmlns/prod/bpm/bpmn/ext/extservice" xmlns:ns17="http://www.ibm.com/bpm/processappsettings" xmlns:ns18="http://www.ibm.com/xmlns/links" xmlns:ns19="http://www.ibm.com/bpm/CoachDesignerNG" xmlns:ns20="http://www.ibm.com/xmlns/tagging" xmlns:ns21="http://www.ibm.com/bpm/uitheme" xmlns:ns22="http://www.ibm.com/bpm/coachview" targetNamespace="" expressionLanguage="http://www.ibm.com/xmlns/prod/bpm/expression-lang/javascript" typeLanguage="http://www.w3.org/2001/XMLSchema">
+                
+                
+                <ns16:process name="Validate Required Documents" id="1.13b84d91-6118-4776-9c68-8accac7d1220" ns3:executionMode="microflow">
+                    
+                    
+                    <ns16:documentation textFormat="text/plain" />
+                    
+                    
+                    <ns16:extensionElements>
+                        
+                        
+                        <ns3:sboSyncEnabled>true</ns3:sboSyncEnabled>
+                        
+                        
+                        <ns3:isSecured>false</ns3:isSecured>
+                        
+                        
+                        <ns3:isAjaxExposed>true</ns3:isAjaxExposed>
+                        
+                    
+                    </ns16:extensionElements>
+                    
+                    
+                    <ns16:ioSpecification>
+                        
+                        
+                        <ns16:dataInput name="requestType" itemSubjectRef="itm.12.db884a3c-c533-44b7-bb2d-47bec8ad4022" isCollection="false" id="2055.3fd8e212-86fb-49bd-b067-39770ac7ff07">
+                            
+                            
+                            <ns16:extensionElements>
+                                
+                                
+                                <ns3:defaultValue useDefault="true">"Advance Payment"</ns3:defaultValue>
+                                
+                            
+                            </ns16:extensionElements>
+                            
+                        
+                        </ns16:dataInput>
+                        
+                        
+                        <ns16:dataInput name="documentSource" itemSubjectRef="itm.12.db884a3c-c533-44b7-bb2d-47bec8ad4022" isCollection="false" id="2055.789376b6-6edc-4ab4-ac12-1470f4a6ad44">
+                            
+                            
+                            <ns16:extensionElements>
+                                
+                                
+                                <ns3:defaultValue useDefault="true">"Correspondent"</ns3:defaultValue>
+                                
+                            
+                            </ns16:extensionElements>
+                            
+                        
+                        </ns16:dataInput>
+                        
+                        
+                        <ns16:dataOutput name="requiredDocuments" itemSubjectRef="itm.12.db884a3c-c533-44b7-bb2d-47bec8ad4022" isCollection="true" id="2055.e14b7e6f-8f3b-4fa2-ba26-4975d2431248" />
+                        
+                        
+                        <ns16:inputSet>
+                            
+                            
+                            <ns16:dataInputRefs>2055.3fd8e212-86fb-49bd-b067-39770ac7ff07</ns16:dataInputRefs>
+                            
+                            
+                            <ns16:dataInputRefs>2055.789376b6-6edc-4ab4-ac12-1470f4a6ad44</ns16:dataInputRefs>
+                            
+                        
+                        </ns16:inputSet>
+                        
+                        
+                        <ns16:outputSet>
+                            
+                            
+                            <ns16:dataOutputRefs>2055.e14b7e6f-8f3b-4fa2-ba26-4975d2431248</ns16:dataOutputRefs>
+                            
+                        
+                        </ns16:outputSet>
+                        
+                    
+                    </ns16:ioSpecification>
+                    
+                    
+                    <ns16:laneSet id="afe8c782-b046-4169-8cc9-17d9b6fe8fe9">
+                        
+                        
+                        <ns16:lane name="System" partitionElementRef="24.6fd38d02-81cf-48ab-bd42-8ff4c0a1628b" id="4205cf3f-d404-42a8-8de1-30dadb6d3ad6" ns4:isSystemLane="true">
+                            
+                            
+                            <ns16:extensionElements>
+                                
+                                
+                                <ns13:nodeVisualInfo x="0" y="0" width="3000" height="500" color="#F8F8F8" />
+                                
+                            
+                            </ns16:extensionElements>
+                            
+                            
+                            <ns16:flowNodeRef>cd757d0c-2f41-4103-86cc-4c41205fd043</ns16:flowNodeRef>
+                            
+                            
+                            <ns16:flowNodeRef>9974b2c2-de97-4644-8419-65ab723f2caa</ns16:flowNodeRef>
+                            
+                            
+                            <ns16:flowNodeRef>aea18d30-bd2e-49c9-a600-0e01eb7e58be</ns16:flowNodeRef>
+                            
+                            
+                            <ns16:flowNodeRef>c3b76c6f-98b3-4ce2-bcff-07b7eb91eb1a</ns16:flowNodeRef>
+                            
+                            
+                            <ns16:flowNodeRef>cdd1a914-bdc8-4021-8b7b-92b60980e33e</ns16:flowNodeRef>
+                            
+                        
+                        </ns16:lane>
+                        
+                    
+                    </ns16:laneSet>
+                    
+                    
+                    <ns16:startEvent isInterrupting="false" parallelMultiple="false" name="Start" id="cd757d0c-2f41-4103-86cc-4c41205fd043">
+                        
+                        
+                        <ns16:extensionElements>
+                            
+                            
+                            <ns13:nodeVisualInfo x="25" y="80" width="24" height="24" color="#F8F8F8" />
+                            
+                        
+                        </ns16:extensionElements>
+                        
+                        
+                        <ns16:outgoing>5d496e4b-f0d1-4614-86d4-bcb697972123</ns16:outgoing>
+                        
+                    
+                    </ns16:startEvent>
+                    
+                    
+                    <ns16:endEvent name="End" id="9974b2c2-de97-4644-8419-65ab723f2caa">
+                        
+                        
+                        <ns16:extensionElements>
+                            
+                            
+                            <ns13:nodeVisualInfo x="650" y="80" width="24" height="24" color="#F8F8F8" />
+                            
+                            
+                            <ns4:saveExecutionContext>true</ns4:saveExecutionContext>
+                            
+                            
+                            <ns3:endStateId>guid:d7a662a99ec79f4c:-60dc945f:189bab22bee:-2d9b</ns3:endStateId>
+                            
+                        
+                        </ns16:extensionElements>
+                        
+                        
+                        <ns16:incoming>caca425c-c42f-4097-80a2-250603001efc</ns16:incoming>
+                        
+                    
+                    </ns16:endEvent>
+                    
+                    
+                    <ns16:businessRuleTask implementation="##unspecified" name="Documents Table" id="aea18d30-bd2e-49c9-a600-0e01eb7e58be">
+                        
+                        
+                        <ns16:extensionElements>
+                            
+                            
+                            <ns13:nodeVisualInfo x="129" y="388" width="95" height="70" />
+                            
+                            
+                            <ns3:ruleSet>
+                                
+                                
+                                <ns3:locale>en</ns3:locale>
+                                
+                                
+                                <ns3:rules>
+                                    
+                                    
+                                    <ns3:ruleId>7dabda14-1430-445d-850f-0b1907e63ded</ns3:ruleId>
+                                    
+                                    
+                                    <ns3:name>rule 1</ns3:name>
+                                    
+                                    
+                                    <ns3:type>DECISION_TABLE</ns3:type>
+                                    
+                                    
+                                    <ns3:decisionTableDefinition>&lt;?xml version="1.0" encoding="UTF-8"?&gt;&lt;DT xmlns="http://schemas.ilog.com/Rules/7.0/DecisionTable" Version="7.0"&gt;&lt;Body&gt;&lt;Properties&gt;&lt;Property Name="UI.MediaType"&gt;&lt;![CDATA[Web]]&gt;&lt;/Property&gt;&lt;/Properties&gt;&lt;Structure&gt;&lt;ConditionDefinitions&gt;&lt;ConditionDefinition Id="C0"&gt;&lt;ExpressionDefinition&gt;&lt;Text&gt;&lt;![CDATA[requestType contains &lt;a string&gt; ]]&gt;&lt;/Text&gt;&lt;/ExpressionDefinition&gt;&lt;/ConditionDefinition&gt;&lt;ConditionDefinition Id="C2"&gt;&lt;ExpressionDefinition&gt;&lt;Text&gt;&lt;![CDATA[documentSource is one of &lt;strings&gt; ]]&gt;&lt;/Text&gt;&lt;/ExpressionDefinition&gt;&lt;/ConditionDefinition&gt;&lt;/ConditionDefinitions&gt;&lt;ActionDefinitions&gt;&lt;ActionDefinition Id="A0"&gt;&lt;ExpressionDefinition&gt;&lt;Text&gt;&lt;![CDATA[set result to &lt;a string&gt; 
+]]&gt;&lt;/Text&gt;&lt;/ExpressionDefinition&gt;&lt;/ActionDefinition&gt;&lt;/ActionDefinitions&gt;&lt;/Structure&gt;&lt;Contents&gt;&lt;Partition DefId="C0"&gt;&lt;Condition&gt;&lt;Expression&gt;&lt;Param&gt;&lt;![CDATA["Advance Payment"]]&gt;&lt;/Param&gt;&lt;/Expression&gt;&lt;Partition DefId="C2"&gt;&lt;Condition&gt;&lt;Expression&gt;&lt;Param&gt;&lt;![CDATA[{ "Correspondent","Exporter","Importer" }]]&gt;&lt;/Param&gt;&lt;/Expression&gt;&lt;ActionSet&gt;&lt;Action DefId="A0"&gt;&lt;Expression&gt;&lt;Param&gt;&lt;![CDATA["Customer Request,Invoice"]]&gt;&lt;/Param&gt;&lt;/Expression&gt;&lt;/Action&gt;&lt;/ActionSet&gt;&lt;/Condition&gt;&lt;/Partition&gt;&lt;/Condition&gt;&lt;Condition&gt;&lt;Expression&gt;&lt;Param&gt;&lt;![CDATA["ICAP"]]&gt;&lt;/Param&gt;&lt;/Expression&gt;&lt;Partition DefId="C2"&gt;&lt;Condition&gt;&lt;Expression&gt;&lt;Param&gt;&lt;![CDATA[{ "Correspondent","Exporter","Importer" }]]&gt;&lt;/Param&gt;&lt;/Expression&gt;&lt;ActionSet&gt;&lt;Action DefId="A0"&gt;&lt;Expression&gt;&lt;Param&gt;&lt;![CDATA["Customer Request,Invoice,Transport document"]]&gt;&lt;/Param&gt;&lt;/Expression&gt;&lt;/Action&gt;&lt;/ActionSet&gt;&lt;/Condition&gt;&lt;/Partition&gt;&lt;/Condition&gt;&lt;Condition&gt;&lt;Expression&gt;&lt;Param&gt;&lt;![CDATA["IDC Acknowledgement"]]&gt;&lt;/Param&gt;&lt;/Expression&gt;&lt;Partition DefId="C2"&gt;&lt;Condition&gt;&lt;Expression&gt;&lt;Param&gt;&lt;![CDATA[{ "Correspondent","Exporter","Importer" }]]&gt;&lt;/Param&gt;&lt;/Expression&gt;&lt;ActionSet&gt;&lt;Action DefId="A0"&gt;&lt;Expression&gt;&lt;Param&gt;&lt;![CDATA["Correspondent cover letter,Invoice,Transport document"]]&gt;&lt;/Param&gt;&lt;/Expression&gt;&lt;/Action&gt;&lt;/ActionSet&gt;&lt;/Condition&gt;&lt;/Partition&gt;&lt;/Condition&gt;&lt;Condition&gt;&lt;Expression&gt;&lt;Param&gt;&lt;![CDATA["IDC Execution"]]&gt;&lt;/Param&gt;&lt;/Expression&gt;&lt;Partition DefId="C2"&gt;&lt;Condition&gt;&lt;Expression&gt;&lt;Param&gt;&lt;![CDATA[{ "Correspondent" }]]&gt;&lt;/Param&gt;&lt;/Expression&gt;&lt;ActionSet&gt;&lt;Action DefId="A0"&gt;&lt;Expression&gt;&lt;Param&gt;&lt;![CDATA["Customer Request,Correspondent cover letter,Invoice,Transport document"]]&gt;&lt;/Param&gt;&lt;/Expression&gt;&lt;/Action&gt;&lt;/ActionSet&gt;&lt;/Condition&gt;&lt;/Partition&gt;&lt;/Condition&gt;&lt;Condition&gt;&lt;Expression&gt;&lt;Param&gt;&lt;![CDATA["IDC Execution Completion"]]&gt;&lt;/Param&gt;&lt;/Expression&gt;&lt;Partition DefId="C2"&gt;&lt;Condition&gt;&lt;Expression&gt;&lt;Param&gt;&lt;![CDATA[{ "Correspondent" }]]&gt;&lt;/Param&gt;&lt;/Expression&gt;&lt;ActionSet&gt;&lt;Action DefId="A0"&gt;&lt;Expression&gt;&lt;Param&gt;&lt;![CDATA["Customer Request,Correspondent cover letter,Invoice,Transport document"]]&gt;&lt;/Param&gt;&lt;/Expression&gt;&lt;/Action&gt;&lt;/ActionSet&gt;&lt;/Condition&gt;&lt;/Partition&gt;&lt;/Condition&gt;&lt;Condition&gt;&lt;Expression&gt;&lt;Param&gt;&lt;![CDATA["IDC Execution"]]&gt;&lt;/Param&gt;&lt;/Expression&gt;&lt;Partition DefId="C2"&gt;&lt;Condition&gt;&lt;Expression&gt;&lt;Param&gt;&lt;![CDATA[{ "Exporter", "Importer" }]]&gt;&lt;/Param&gt;&lt;/Expression&gt;&lt;ActionSet&gt;&lt;Action DefId="A0"&gt;&lt;Expression&gt;&lt;Param&gt;&lt;![CDATA["Customer Request,Invoice,Transport document"]]&gt;&lt;/Param&gt;&lt;/Expression&gt;&lt;/Action&gt;&lt;/ActionSet&gt;&lt;/Condition&gt;&lt;/Partition&gt;&lt;/Condition&gt;&lt;Condition&gt;&lt;Expression&gt;&lt;Param&gt;&lt;![CDATA["IDC Execution Completion"]]&gt;&lt;/Param&gt;&lt;/Expression&gt;&lt;Partition DefId="C2"&gt;&lt;Condition&gt;&lt;Expression&gt;&lt;Param&gt;&lt;![CDATA[{ "Exporter", "Importer" }]]&gt;&lt;/Param&gt;&lt;/Expression&gt;&lt;ActionSet&gt;&lt;Action DefId="A0"&gt;&lt;Expression&gt;&lt;Param&gt;&lt;![CDATA["Customer Request,Invoice,Transport document"]]&gt;&lt;/Param&gt;&lt;/Expression&gt;&lt;/Action&gt;&lt;/ActionSet&gt;&lt;/Condition&gt;&lt;/Partition&gt;&lt;/Condition&gt;&lt;Condition&gt;&lt;Expression&gt;&lt;Param&gt;&lt;![CDATA["IDC Payment"]]&gt;&lt;/Param&gt;&lt;/Expression&gt;&lt;Partition DefId="C2"&gt;&lt;Condition&gt;&lt;Expression&gt;&lt;Param&gt;&lt;![CDATA[{ "Correspondent","Exporter","Importer" }]]&gt;&lt;/Param&gt;&lt;/Expression&gt;&lt;ActionSet&gt;&lt;Action DefId="A0"&gt;&lt;Expression&gt;&lt;Param&gt;&lt;![CDATA["Customer Request"]]&gt;&lt;/Param&gt;&lt;/Expression&gt;&lt;/Action&gt;&lt;/ActionSet&gt;&lt;/Condition&gt;&lt;/Partition&gt;&lt;/Condition&gt;&lt;/Partition&gt;&lt;/Contents&gt;&lt;/Body&gt;&lt;Resources DefaultLocale="en_US"&gt;&lt;ResourceSet Locale="en"&gt;&lt;Data Name="Definitions(C0)#HeaderText"&gt;&lt;![CDATA[Request Type]]&gt;&lt;/Data&gt;&lt;Data Name="Definitions(A0)#Width"&gt;&lt;![CDATA[80]]&gt;&lt;/Data&gt;&lt;Data Name="Definitions(C2)#HeaderText"&gt;&lt;![CDATA[Document Source]]&gt;&lt;/Data&gt;&lt;Data Name="Definitions(C0)#Width"&gt;&lt;![CDATA[80]]&gt;&lt;/Data&gt;&lt;Data Name="Definitions(C2)#Width"&gt;&lt;![CDATA[227]]&gt;&lt;/Data&gt;&lt;/ResourceSet&gt;&lt;/Resources&gt;&lt;/DT&gt;</ns3:decisionTableDefinition>
+                                    
+                                    
+                                    <ns3:decisionTableHash>5DDtIgN8HwR9Py6LLuvv6BAHwXGacIFeawBgr3vBQvw=</ns3:decisionTableHash>
+                                    
+                                    
+                                    <ns3:locale>en</ns3:locale>
+                                    
+                                
+                                </ns3:rules>
+                                
+                            
+                            </ns3:ruleSet>
+                            
+                        
+                        </ns16:extensionElements>
+                        
+                    
+                    </ns16:businessRuleTask>
+                    
+                    
+                    <ns16:dataObject itemSubjectRef="itm.12.db884a3c-c533-44b7-bb2d-47bec8ad4022" isCollection="false" name="result" id="2056.e21b4887-4679-4982-8eec-e7461ec20d15">
+                        
+                        
+                        <ns16:extensionElements>
+                            
+                            
+                            <ns3:defaultValue useDefault="true">""</ns3:defaultValue>
+                            
+                        
+                        </ns16:extensionElements>
+                        
+                    
+                    </ns16:dataObject>
+                    
+                    
+                    <ns16:scriptTask scriptFormat="text/x-javascript" name="Set Documents List" id="c3b76c6f-98b3-4ce2-bcff-07b7eb91eb1a">
+                        
+                        
+                        <ns16:extensionElements>
+                            
+                            
+                            <ns13:nodeVisualInfo x="280" y="57" width="95" height="70" />
+                            
+                        
+                        </ns16:extensionElements>
+                        
+                        
+                        <ns16:incoming>99b317f1-7b1f-48ea-8c10-5e7db0627e2e</ns16:incoming>
+                        
+                        
+                        <ns16:outgoing>caca425c-c42f-4097-80a2-250603001efc</ns16:outgoing>
+                        
+                        
+                        <ns16:script>tw.local.requiredDocuments = new tw.object.listOf.String();&#xD;
+if (tw.local.result.length &gt; 0) {&#xD;
+	tw.local.requiredDocuments = tw.local.result.split(",")&#xD;
+}</ns16:script>
+                        
+                    
+                    </ns16:scriptTask>
+                    
+                    
+                    <ns16:sequenceFlow sourceRef="c3b76c6f-98b3-4ce2-bcff-07b7eb91eb1a" targetRef="9974b2c2-de97-4644-8419-65ab723f2caa" name="To End" id="caca425c-c42f-4097-80a2-250603001efc">
+                        
+                        
+                        <ns16:extensionElements>
+                            
+                            
+                            <ns3:sequenceFlowImplementation sboSyncEnabled="true" />
+                            
+                            
+                            <ns13:linkVisualInfo>
+                                
+                                
+                                <ns13:sourcePortLocation>rightCenter</ns13:sourcePortLocation>
+                                
+                                
+                                <ns13:targetPortLocation>leftCenter</ns13:targetPortLocation>
+                                
+                                
+                                <ns13:showLabel>false</ns13:showLabel>
+                                
+                                
+                                <ns13:showCoachControlLabel>false</ns13:showCoachControlLabel>
+                                
+                                
+                                <ns13:labelPosition>0.0</ns13:labelPosition>
+                                
+                                
+                                <ns13:saveExecutionContext>true</ns13:saveExecutionContext>
+                                
+                            
+                            </ns13:linkVisualInfo>
+                            
+                        
+                        </ns16:extensionElements>
+                        
+                    
+                    </ns16:sequenceFlow>
+                    
+                    
+                    <ns16:scriptTask scriptFormat="text/x-javascript" name="Script Task" id="cdd1a914-bdc8-4021-8b7b-92b60980e33e">
+                        
+                        
+                        <ns16:extensionElements>
+                            
+                            
+                            <ns13:nodeVisualInfo x="123" y="59" width="95" height="70" />
+                            
+                        
+                        </ns16:extensionElements>
+                        
+                        
+                        <ns16:incoming>5d496e4b-f0d1-4614-86d4-bcb697972123</ns16:incoming>
+                        
+                        
+                        <ns16:outgoing>99b317f1-7b1f-48ea-8c10-5e7db0627e2e</ns16:outgoing>
+                        
+                    
+                    </ns16:scriptTask>
+                    
+                    
+                    <ns16:sequenceFlow sourceRef="cd757d0c-2f41-4103-86cc-4c41205fd043" targetRef="cdd1a914-bdc8-4021-8b7b-92b60980e33e" name="To Script Task" id="5d496e4b-f0d1-4614-86d4-bcb697972123">
+                        
+                        
+                        <ns16:extensionElements>
+                            
+                            
+                            <ns13:linkVisualInfo>
+                                
+                                
+                                <ns13:sourcePortLocation>rightCenter</ns13:sourcePortLocation>
+                                
+                                
+                                <ns13:targetPortLocation>leftCenter</ns13:targetPortLocation>
+                                
+                                
+                                <ns13:showLabel>false</ns13:showLabel>
+                                
+                                
+                                <ns13:showCoachControlLabel>false</ns13:showCoachControlLabel>
+                                
+                                
+                                <ns13:labelPosition>0.0</ns13:labelPosition>
+                                
+                                
+                                <ns13:saveExecutionContext>false</ns13:saveExecutionContext>
+                                
+                            
+                            </ns13:linkVisualInfo>
+                            
+                        
+                        </ns16:extensionElements>
+                        
+                    
+                    </ns16:sequenceFlow>
+                    
+                    
+                    <ns16:sequenceFlow sourceRef="cdd1a914-bdc8-4021-8b7b-92b60980e33e" targetRef="c3b76c6f-98b3-4ce2-bcff-07b7eb91eb1a" name="To Set Documents List" id="99b317f1-7b1f-48ea-8c10-5e7db0627e2e">
+                        
+                        
+                        <ns16:extensionElements>
+                            
+                            
+                            <ns13:linkVisualInfo>
+                                
+                                
+                                <ns13:sourcePortLocation>rightCenter</ns13:sourcePortLocation>
+                                
+                                
+                                <ns13:targetPortLocation>leftCenter</ns13:targetPortLocation>
+                                
+                                
+                                <ns13:showLabel>false</ns13:showLabel>
+                                
+                                
+                                <ns13:showCoachControlLabel>false</ns13:showCoachControlLabel>
+                                
+                                
+                                <ns13:labelPosition>0.0</ns13:labelPosition>
+                                
+                                
+                                <ns13:saveExecutionContext>false</ns13:saveExecutionContext>
+                                
+                            
+                            </ns13:linkVisualInfo>
+                            
+                        
+                        </ns16:extensionElements>
+                        
+                    
+                    </ns16:sequenceFlow>
+                    
+                
+                </ns16:process>
+                
+            
+            </ns16:definitions>
+        </bpmn2Model>
+        <link name="To Set Documents List">
+            <lastModified isNull="true" />
+            <lastModifiedBy isNull="true" />
+            <processLinkId>2027.99b317f1-7b1f-48ea-8c10-5e7db0627e2e</processLinkId>
+            <processId>1.13b84d91-6118-4776-9c68-8accac7d1220</processId>
+            <description isNull="true" />
+            <fromProcessItemId>2025.cdd1a914-bdc8-4021-8b7b-92b60980e33e</fromProcessItemId>
+            <endStateId>Out</endStateId>
+            <toProcessItemId>2025.c3b76c6f-98b3-4ce2-bcff-07b7eb91eb1a</toProcessItemId>
+            <guid>f874c7c0-815b-4f19-9ad1-042addcfc574</guid>
+            <versionId>45c91051-8162-4b5b-8fe3-b07b0116a77f</versionId>
+            <layoutData>
+                <controlPoints />
+                <showEndState>false</showEndState>
+                <showName>false</showName>
+            </layoutData>
+            <fromItemPort locationId="rightCenter" portType="1" />
+            <toItemPort locationId="leftCenter" portType="2" />
+            <fromProcessItemId>2025.cdd1a914-bdc8-4021-8b7b-92b60980e33e</fromProcessItemId>
+            <toProcessItemId>2025.c3b76c6f-98b3-4ce2-bcff-07b7eb91eb1a</toProcessItemId>
+        </link>
+        <link name="To End">
+            <lastModified isNull="true" />
+            <lastModifiedBy isNull="true" />
+            <processLinkId>2027.caca425c-c42f-4097-80a2-250603001efc</processLinkId>
+            <processId>1.13b84d91-6118-4776-9c68-8accac7d1220</processId>
+            <description isNull="true" />
+            <fromProcessItemId>2025.c3b76c6f-98b3-4ce2-bcff-07b7eb91eb1a</fromProcessItemId>
+            <endStateId>Out</endStateId>
+            <toProcessItemId>2025.9974b2c2-de97-4644-8419-65ab723f2caa</toProcessItemId>
+            <guid>21fcdca8-52e6-4a18-b1d1-92abef0141cb</guid>
+            <versionId>7b0c5fbf-ed88-4f56-8312-c0f779ad9686</versionId>
+            <layoutData>
+                <controlPoints />
+                <showEndState>false</showEndState>
+                <showName>false</showName>
+            </layoutData>
+            <fromItemPort locationId="rightCenter" portType="1" />
+            <toItemPort locationId="leftCenter" portType="2" />
+            <fromProcessItemId>2025.c3b76c6f-98b3-4ce2-bcff-07b7eb91eb1a</fromProcessItemId>
+            <toProcessItemId>2025.9974b2c2-de97-4644-8419-65ab723f2caa</toProcessItemId>
+        </link>
+    </process>
+</teamworks>
+

@@ -1,0 +1,365 @@
+/*
+ * #BEGIN COPYRIGHT
+ *
+ * Licensed Materials - Property of IBM
+ * 5725-C95
+ * (C) Copyright IBM Corporation 2017. All Rights Reserved.
+ * US Government Users Restricted Rights- Use, duplication or disclosure
+ * restricted by GSA ADP Schedule Contract with IBM Corp.
+ *
+ * #END COPYRIGHT
+ */
+
+var mixObject = {
+    createPreview:function(containingDiv, labelText, callback){
+		var bpmextUri = this.context.getManagedAssetUrl("BPMExt-Core-Designer.js", this.context.assetType_WEB, "SYSBPMUI");
+		require(["dojo/dom-style", "dojo/dom-construct", "dojo/dom-class", "dojo/dom-attr", "dojo/dom", bpmextUri], this.lang.hitch(this, function(domStyle, domConstruct, domClass, domAttr, dom, bpmext){
+			bpmext.uidesign.css.ensureGeneralStylesLoaded(this);
+			bpmext.uidesign.css.ensureSparkUIClass(containingDiv);
+			this.context.coachViewData.containingDiv = containingDiv;
+			
+			var tempID;
+			while(true) {
+				tempID = dojox.uuid.generateRandomUuid();
+				if(this.context.coachViewData.containingDiv.querySelector("div[data-temp-id='" + tempID + "']") == null)
+					break;
+			}
+			this.context.coachViewData.labelVisibility = null;
+			this.context.coachViewData.showLabel = null;
+			
+			this.context.coachViewData.containingDiv.setAttribute("data-temp-id", tempID);
+			this.context.coachViewData.root = this.context.coachViewData.containingDiv.querySelector("div[data-temp-id='" + tempID + "'] > .DesignSectionRoot");
+			this.context.coachViewData.outerDiv = this.context.coachViewData.root;
+			this.context.coachViewData.label = this.context.coachViewData.containingDiv.querySelector("div[data-temp-id='" + tempID + "']  .control-label");
+			this.context.coachViewData.innerDiv = this.context.coachViewData.containingDiv.querySelector("div[data-temp-id='" + tempID + "'] .menu");
+			this.context.coachViewData.contentBoxDiv = this.context.coachViewData.containingDiv.querySelector("div[data-temp-id='" + tempID + "']  .DesignContentBox");
+
+			this.context.coachViewData.openPopupMenuBtn = this.context.coachViewData.containingDiv.querySelector("div[data-temp-id='" + tempID + "']  .designMenuButton");
+			var popupMenuPaletteImage  = this.context.getManagedAssetUrl("BPMExt-Control-PopupMenu-Palette.png", this.context.assetType_WEB, "SYSBPMUI");
+			domAttr.set(this.context.coachViewData.openPopupMenuBtn, "style", "width:19px;height:19px;background-image :url('"+popupMenuPaletteImage+"');background-repeat:no-repeat;");
+			
+			var _this = this;
+			bpmext.uidesign.loadLocalization(this, function(){
+				domAttr.set(_this.context.coachViewData.openPopupMenuBtn, "title", bpmext.localization.formatMsg("controlPopupMenu", "OPEN_POPUP"));
+			});
+			
+			this.context.coachViewData.labelTextDom = document.createTextNode(labelText);
+			this.context.coachViewData.containingDiv.removeAttribute("data-temp-id");
+			this.context.coachViewData.label.appendChild(this.context.coachViewData.labelTextDom);
+						
+			this.context.coachViewData.updateHorizontalPosition = this.lang.hitch(this, function(value){
+				var horizontalPos;
+				if(this.context.coachViewData.popupMenu){
+					if(value == "R"){
+						horizontalPos = "rightHMnAlign";
+					} else {
+						horizontalPos = "";
+					}
+					domClass.replace(this.context.coachViewData.innerDiv, horizontalPos, "rightHMnAlign");
+				}
+			});
+
+			this.context.coachViewData.updateVerticalPosition = this.lang.hitch(this, function(value){
+				var verticalPos;
+				if(this.context.coachViewData.popupMenu){
+					if(value == "T"){
+						verticalPos = "top";
+					} else {
+						verticalPos = "bottom";
+					}
+					domClass.replace(this.context.coachViewData.innerDiv, verticalPos, "top bottom");
+				}
+			});
+			
+			this.context.coachViewData.openPopupMenuBtn.onclick = this.lang.hitch(this, function(e){
+				if(this.context.coachViewData.popupMenu){
+					domStyle.set(this.context.coachViewData.popupMenu, "display", "block");
+				}
+			});
+			
+			//Defect#283855 - START
+			var blurHandler = function(event){
+				//event.stopPropagation(); //Defect#335142
+				var _this = this;
+				setTimeout(function(){
+					if(!dom.isDescendant(document.activeElement, _this.context.coachViewData.containingDiv)){
+						domStyle.set(_this.context.coachViewData.popupMenu, "display", "none");
+					}
+				}, 150);
+			};
+			this.context.coachViewData.containingDiv.addEventListener('blur', blurHandler.bind(this), true);
+			//Defect#283855 - END
+			
+			callback();
+		}));	
+    },
+	
+    propertyChanged:function(propertyName, propertyValue){
+		var configHelperUri = this.context.getManagedAssetUrl("BPMExt-Core-ConfigHelper.js",this.context.assetType_WEB, "SYSBPMUI");
+		require(["dojo/dom-style", "dojo/dom-class",  "dojo/dom-construct", configHelperUri], this.lang.hitch(this, function(domStyle, domClass, domConstruct, configHelper){
+			
+			this.context.coachViewData.createPopupMenuNode = this.lang.hitch(this, function(){
+				this.context.coachViewData.popupMenu = domConstruct.create("div");
+				domClass.add(this.context.coachViewData.popupMenu, "dropdown-menu");
+				
+				this.context.coachViewData.disablerDiv = domConstruct.create("div");
+				domClass.add(this.context.coachViewData.disablerDiv, "disabler hidden");
+				this.context.coachViewData.popupMenu.appendChild(this.context.coachViewData.disablerDiv);
+
+				domStyle.set(this.context.coachViewData.popupMenu, "display", "none");
+				domClass.add(this.context.coachViewData.innerDiv, "open");
+				this.context.coachViewData.innerDiv.appendChild(this.context.coachViewData.popupMenu);
+			});
+			
+			this.context.coachViewData.deletePopupMenuNode = this.lang.hitch(this, function(){
+				if(this.context.coachViewData.popupMenu){
+					this.context.coachViewData.innerDiv.removeChild(this.context.coachViewData.popupMenu);
+					this.context.coachViewData.popupMenu = undefined;
+				}
+			});
+
+			if(!this.context.coachViewData.popupMenu){
+				this.context.coachViewData.createPopupMenuNode();
+			}
+
+			if(propertyName == "@style"){
+				var width = configHelper.getResponsiveConfigOptionValue(this, "@width");
+				var minWidth = configHelper.getResponsiveConfigOptionValue(this, "@minWidth");
+				if(!!width || !!minWidth || this.context.coachViewData.width) {
+					this.context.coachViewData.containingDiv.style.width =  minWidth || this.context.coachViewData.width || width;
+				} else {
+					this.context.coachViewData.containingDiv.style.width = "";
+				}
+			} else if(propertyName == "labelPlacement"){
+				var labelPlacement;
+				if(propertyValue == "L"){
+					labelPlacement = "label-left";
+				} else {
+					labelPlacement = "";
+				}
+				domClass.replace(this.context.coachViewData.outerDiv, labelPlacement, "label-left");
+			} else if(propertyName ==  "@helpText"){
+				//TODO:
+			} else if(propertyName ==  "@labelVisibility"){
+				this.context.coachViewData.labelVisibility = propertyValue;
+				this.updateLabelViz();
+			} else if(propertyName == "showLabel"){
+				this.context.coachViewData.showLabel = propertyValue;
+				this.updateLabelViz();
+			} else if(propertyName == "castShadow"){
+				if(propertyValue == "true" || propertyValue == true){
+					domClass.add(this.context.coachViewData.popupMenu, "menu-shadow");
+				} else {
+					domClass.remove(this.context.coachViewData.popupMenu, "menu-shadow");
+				}
+			} else if(propertyName == "menuSticky"){
+				if(propertyValue == "true" || propertyValue == true){
+					this.context.coachViewData.innerDiv.onclick = this.lang.hitch(this, function(e){
+						if(this.context.coachViewData.popupMenu){
+							domStyle.set(this.context.coachViewData.popupMenu, "display", "block");
+						}
+					});
+				} else {
+					this.context.coachViewData.innerDiv.onclick = this.lang.hitch(this, function(e){
+						if(this.context.coachViewData.popupMenu){
+							domStyle.set(this.context.coachViewData.popupMenu, "display", "none");
+						}
+					});
+				}
+			} else if(propertyName == "width"){
+				this.context.coachViewData.width = propertyValue;
+				if(!!propertyValue) {
+					this.context.coachViewData.containingDiv.style.width = isNaN(propertyValue) ? propertyValue : (propertyValue+"px");
+				} else {
+					this.context.coachViewData.containingDiv.style.width = "";
+				}
+            } else if (propertyName == "labelWidth") {
+                if (propertyValue) {
+                    this.context.coachViewData.label.style.width = isNaN(propertyValue) ? propertyValue : (propertyValue + "px");
+                    domClass.add(this.context.coachViewData.containingDiv, "labelWidth");
+                } else {
+                    this.context.coachViewData.label.style.width = "";
+                    domClass.remove(this.context.coachViewData.containingDiv, "labelWidth");
+                }
+			} else if(propertyName == "horizAlign"){
+				this.context.coachViewData.updateHorizontalPosition(propertyValue);
+			} else if(propertyName == "vertAlign"){
+				this.context.coachViewData.updateVerticalPosition(propertyValue);
+			} else if(propertyName == "menuItems"){
+				domConstruct.empty(this.context.coachViewData.popupMenu);
+				
+				var json_data = null;
+				json_data = JSON.parse(propertyValue);
+				var result = [];
+				for(var i in json_data)
+					result.push(json_data[i]);
+
+				var tbl = document.createElement("TABLE");
+				domClass.add(tbl, "inner");
+				this.context.coachViewData.popupMenu.appendChild(tbl);
+				
+				for(var index=0; index < result.length; index++){
+					if(result[index].itemType == "L"){
+						var tr = document.createElement("TR");
+						domClass.add(tr, "mnTextItem");
+						tr.setAttribute("id", "myTr");
+						tbl.appendChild(tr);
+
+						var td1 = document.createElement("TD");
+						domClass.add(td1, "mnLabel");
+						var link = domConstruct.create("a", { href: "javascript:void(0)" }, td1);
+						var icon = document.createElement("i");
+						domClass.add(icon, "dropdown-icon fa ");
+						domClass.add(icon, "fa-"+result[index].icon);
+						var itemTxt = document.createTextNode(result[index].itemText);
+						domStyle.set(icon, "margin-right", "10px");
+						link.appendChild(icon);
+						link.appendChild(itemTxt);
+						td1.appendChild(link);
+						tr.appendChild(td1);
+						
+						var td2 = document.createElement("TD");
+						domClass.add(td2, "mnBadge");
+						var badgeTxt = document.createElement("SPAN");
+						badgeTxt.innerHTML = result[index].badgeText;
+						domClass.add(badgeTxt, "mnBadge");
+						
+						var shapeStyle;
+						var colorStyle;
+						if(result[index].badgeShape == "S"){
+							shapeStyle = "label";
+							if(result[index].badgeColor == "P"){
+								colorStyle = "label-primary";
+							} else if(result[index].badgeColor == "I"){
+								colorStyle = "label-info";
+							} else if(result[index].badgeColor == "S"){
+								colorStyle = "label-success";
+							} else if(result[index].badgeColor == "W"){
+								colorStyle = "label-warning";
+							} else if(result[index].badgeColor == "G"){
+								colorStyle = "label-danger";
+							} else {
+								colorStyle = "";
+							}
+							domClass.replace(badgeTxt, colorStyle, "label-primary label-info label-success label-warning label-danger");
+						} else if(result[index].badgeShape == "R"){
+							shapeStyle = "badge";
+							if(result[index].badgeColor == "P"){
+								colorStyle = "badge-primary";
+							} else if(result[index].badgeColor == "I"){
+								colorStyle = "badge-info";
+							} else if(result[index].badgeColor == "S"){
+								colorStyle = "badge-success";
+							} else if(result[index].badgeColor == "W"){
+								colorStyle = "badge-warning";
+							} else if(result[index].badgeColor == "G"){
+								colorStyle = "badge-danger";
+							} else {
+								colorStyle = "";
+							}
+							domClass.replace(badgeTxt, colorStyle, "badge-primary badge-info badge-success badge-warning badge-danger");
+						} 
+						domClass.replace(badgeTxt, shapeStyle, "label badge");
+						td2.appendChild(badgeTxt);
+						
+						if(result[index].badgeShape == "N"){
+							td1.setAttribute("colspan", "2");
+						} else {
+							tr.appendChild(td2);
+						}
+					} else if(result[index].itemType == "S"){
+						var tr1 = document.createElement("TR");
+						tr1.setAttribute("id", "myTr1");
+						tbl.appendChild(tr1);
+						
+						var td1 = document.createElement("TD");
+						domClass.add(td1, "divider");
+						td1.setAttribute("colspan", "2");
+						
+						var div1 = document.createElement("TD");
+						domClass.add(div1, "divider");
+						div1.style = "height:1px;background-color:#e5e5e5;";
+						
+						td1.appendChild(div1);
+						tr1.appendChild(td1);
+					} else if(result[index].itemType == "H"){
+						var tr1 = document.createElement("TR");
+						tr1.setAttribute("id", "myTr2");
+						tbl.appendChild(tr1);
+						
+						var td1 = document.createElement("TD");
+						domClass.add(td1, "dropdown-header");
+						td1.innerHTML = result[index].itemText;
+						
+						td1.setAttribute("colspan", "2");
+						tr1.appendChild(td1);
+					}
+				}
+
+				if(result.length == 0){
+					domConstruct.empty(this.context.coachViewData.popupMenu);
+					var tbl1 = document.createElement("TABLE");
+					domClass.add(tbl1, "inner");
+					this.context.coachViewData.popupMenu.appendChild(tbl1);
+					
+					for(var count=1; count<=3 ; count++){
+						var tr1 = document.createElement("TR");
+						domClass.add(tr1, "mnTextItem");
+						tr1.setAttribute("id", "myTr3");
+						tbl1.appendChild(tr1);
+						var td1 = document.createElement("TD");
+						domClass.add(td1, "mnLabel");
+						var link = domConstruct.create("a", { href: "javascript:void(0)" }, td1);
+						var icon = document.createElement("i");
+						domClass.add(icon, "dropdown-icon fa ");
+						if(count ==2){
+							domClass.add(icon, "fa-bell");
+						}else{
+							domClass.add(icon, "fa-gear");
+						}
+						var cmd1 = document.createTextNode("Item "+count);
+						icon.style = "margin-right:10px;";
+						link.appendChild(icon);
+						link.appendChild(cmd1);
+						td1.appendChild(link);
+						tr1.appendChild(td1);
+						var td2 = document.createElement("TD");
+						domClass.add(td2, "mnBadge");
+						var badgeTxt = document.createElement("SPAN");
+						badgeTxt.innerHTML = "I"+count;
+						if(count ==2){
+							domClass.add(badgeTxt, "mnBadge badge badge-danger");
+						}else{
+							domClass.add(badgeTxt, "mnBadge label label-info");
+						}
+						td2.appendChild(badgeTxt);
+						tr1.appendChild(td2);
+					}
+				}
+			}
+		}));
+	},
+	updateLabelViz:function(){
+		//only show label if both effective values are to show it
+		var show1 = true;//default label visibility from framework
+		if(this.context.coachViewData.labelVisibility == "HIDE"){
+			show1 = false;
+		}
+
+		var show2 = false;//default for config option
+		if(this.context.coachViewData.showLabel == "true" || this.context.coachViewData.showLabel == true){
+			show2 = true;
+		}
+		
+		if(show1 && show2){
+			this.context.coachViewData.label.style.display = "";
+		} else {
+			this.context.coachViewData.label.style.display = "none";
+		}
+	},
+	modelChanged: function(propertyName, propertyValue) {
+		if(propertyName == "@label") {
+			this.context.coachViewData.labelTextDom.data = propertyValue;
+		}
+	}
+};

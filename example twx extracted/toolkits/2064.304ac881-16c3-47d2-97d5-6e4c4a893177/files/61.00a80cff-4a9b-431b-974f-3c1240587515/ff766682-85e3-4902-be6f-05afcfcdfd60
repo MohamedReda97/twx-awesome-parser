@@ -1,0 +1,1178 @@
+/*
+ * #BEGIN COPYRIGHT
+ *
+ * Licensed Materials - Property of IBM
+ * 5725-C95
+ * (C) Copyright IBM Corporation 2017, 2021. All Rights Reserved.
+ * US Government Users Restricted Rights- Use, duplication or disclosure
+ * restricted by GSA ADP Schedule Contract with IBM Corp.
+ *
+ * #END COPYRIGHT
+ */
+
+/**
+ *   <tr class=Prop>
+ *     <td class=SectionName colspan=3>Events</td>
+ *   </tr>
+ *   <tr class=Prop>
+ *     <td>On Load:</td>
+ *     <td colspan="2">
+ *       <table>
+ *         <tr class=Prop>
+ *           <td>Description: </td>
+ *           <td>Triggers whenever the view is loaded.</td>
+ *         </tr>
+ *         <tr class=Prop>
+ *           <td>Example: </td>
+ *           <td><pre class="prettyprint"><code>me.focus()</code></pre></td>
+ *         </tr>
+ *       </table>
+ *     </td>
+ *   </tr>
+ *   <tr class=Prop>
+ *     <td>On Change:</td>
+ *     <td colspan="2">
+ *       <table>
+ *         <tr class=Prop>
+ *           <td>Description: </td>
+ *           <td>Triggers when the data bound to this control changes.</td>
+ *         </tr>
+ *         <tr class=Prop>
+ *           <td>Example: </td>
+ *           <td><pre class="prettyprint"><code>me.setValid(me.getText(), "Input is required")</code></pre></td>
+ *         </tr>
+ *       </table>
+ *       <table style="border: 1px solid black; border-collapse: collapse; ">
+ *         <tr style="border: 1px solid black; border-collapse: collapse;">
+ *           <th style="border: 1px solid black; border-collapse: collapse;padding: 5px;">Context Variables</th>
+ *           <th style="border: 1px solid black; border-collapse: collapse; padding: 5px;">newText {string}</th>
+ *           <th style="border: 1px solid black; border-collapse: collapse; padding: 5px;">oldText {string}</th>
+ *         </tr>
+ *       </table>
+ *     </td>
+ *   </tr>
+ *   <tr class=Prop>
+ *     <td>On Focus:</td>
+ *     <td colspan="2">
+ *       <table>
+ *         <tr class=Prop>
+ *           <td>Description: </td>
+ *           <td>Triggers when the view gains focus.</td>
+ *         </tr>
+ *         <tr class=Prop>
+ *           <td>Example: </td>
+ *           <td><pre class="prettyprint"><code>me.setHeight("500px")</code></pre></td>
+ *         </tr>
+ *       </table>
+ *     </td>
+ *   </tr>
+ *   <tr class=Prop>
+ *     <td>On Blur:</td>
+ *     <td colspan="2">
+ *       <table>
+ *         <tr class=Prop>
+ *           <td>Description: </td>
+ *           <td>Triggers when teh view loses focus.</td>
+ *         </tr>
+ *         <tr class=Prop>
+ *           <td>Example: </td>
+ *           <td><pre class="prettyprint"><code>me.setHeight("150px")</code></pre></td>
+ *         </tr>
+ *       </table>
+ *     </td>
+ *   </tr>
+ * </table>
+ */
+bpmext_control_InitTextEditor = function (bpmext, utilities, domClass, domAttr, domConstruct, domGeometry, locale, fastclick, texteditor) {
+	this._instance = {};
+
+	/*
+	//Auto-height sizing logic
+	var observe = function (element, event, handler) {
+	element.addEventListener(event, handler, false);
+	};
+
+	function initAutoHeight (txtControl) {
+	var text = txtControl;
+
+	function resize () {
+	text.style.height = 'auto';
+	text.style.height = text.scrollHeight+'px';
+	}
+
+	//0-timeout to get the already changed text
+	function delayedResize () {
+	window.setTimeout(resize, 0);
+	}
+	observe(text, 'change',  resize);
+	observe(text, 'cut',     delayedResize);
+	observe(text, 'paste',   delayedResize);
+	observe(text, 'drop',    delayedResize);
+	observe(text, 'keydown', delayedResize);
+
+	text.focus();
+	text.select();
+	resize();
+	}
+	 */
+
+	if (!this.constructor.prototype._proto) {
+		this.constructor.prototype._proto = {
+			EVT_ONLOAD : "eventON_LOAD",
+			EVT_ONCHANGE : "eventON_CHANGE",
+			EVT_ONFOCUS : "eventON_FOCUS",
+			EVT_ONBLUR : "eventON_BLUR",
+			_setText : function (view, text) {
+				try {
+					if (text == null)
+						text = "";
+
+					if (view._instance.textEditorControl) {
+						view._instance.textEditorControl.setContent(text);
+					}
+				} catch (e) {
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.error("TextEditor._setText() error: " + e);
+					bpmext.log.error("TextEditor._setText() " + bpmext.localization.formatMsg("general", "ERROR") + ": " + e);
+					if(e.stack) { 
+						//{#feature: US-1330 Added RT localization}
+						//bpmext.log.error("  Call stack: " + e.stack);
+						bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+					}
+				}
+			},
+			_getText : function (view) {
+				var toReturn;
+				if (view._instance.textEditorControl) {
+					toReturn = view._instance.textEditorControl.getContent();
+				}
+				return toReturn;
+			},
+			_getLabelElt : function (view) {
+				if (!view._instance.label)
+					this._createLabel(view);
+
+				return view._instance.label;
+			},
+			_createLabel : function (view) {
+				view._instance.label = document.createElement("label");
+				domClass.add(view._instance.label, "control-label");
+				// domConstruct.place(view._instance.label, view._instance.group, "first");
+				view._instance.header.appendChild(view._instance.label);
+				domAttr.set(view._instance.label, "for", view._instance.text.id);
+			},
+			_setLabelVisibility : function (view, flag) {
+				try {
+					if (!view._instance.label)
+						this._createLabel(view);
+
+					view.context.setDisplay(flag == "SHOW", view._instance.label);
+				} catch (e) {
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.error("TextEditor._setLabelVisibility() error: " + e);
+					bpmext.log.error("TextEditor._setLabelVisibility() " + bpmext.localization.formatMsg("general", "ERROR") + ": " + e);
+					if(e.stack) { 
+						//{#feature: US-1330 Added RT localization}
+						//bpmext.log.error("  Call stack: " + e.stack);
+						bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+					}
+				}
+			},
+			_setLabel : function (view, label) {
+				try {
+					if (label) {
+						if (!view._instance.label)
+							this._createLabel(view);
+
+						view._instance.label.innerHTML = view.context.htmlEscape(label);
+						utilities.BiDi.applyTextDir(
+							view._instance.label,
+							view._instance.label.innerHTML,
+							view._instance.baseTxtDir,
+							view._instance.genPrefTextDir);
+					} else {
+						if (view._instance.label) {
+							view._instance.group.removeChild(view._instance.label);
+							delete view._instance.label;
+						}
+					}
+				} catch (e) {
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.error("TextEditor._setLabel() error: " + e);
+					bpmext.log.error("TextEditor._setLabel() " + bpmext.localization.formatMsg("general", "ERROR") + ": " + e);
+					if(e.stack) { 
+						//{#feature: US-1330 Added RT localization}
+						//bpmext.log.error("  Call stack: " + e.stack);
+						bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+					}
+				}
+			},
+			_setHelpText : function (view, text)
+			{
+				utilities.setHelpText(view, text);
+			},
+			_setWidth : function (view, width) {
+				try {
+					var container = view._instance.textEditorControl ? view._instance.textEditorControl.getContainer() : undefined;
+					if (width != null && width != "") {
+						if (!isNaN(width))
+							width += "px";
+
+						if (container) {
+							container.style.width = width;
+						}
+
+						domClass.add(view.context.element, "widthSet");
+					} else {
+						if (container) {
+							container.style.width = null;
+						}
+
+						domClass.remove(view.context.element, "widthSet");
+					}
+				} catch (e) {
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.error("TextEditor._setWidth() error: " + e);
+					bpmext.log.error("TextEditor._setWidth() " + bpmext.localization.formatMsg("general", "ERROR") + ": " + e);
+					if(e.stack) { 
+						//{#feature: US-1330 Added RT localization}
+						//bpmext.log.error("  Call stack: " + e.stack);
+						bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+					}
+				}
+			},
+			_setHeight : function (view, height) {
+				try {
+					if (height != null && height != "") {
+						if (!isNaN(height))
+							height += "px";
+
+						var container = view._instance.textEditorControl ? view._instance.textEditorControl.getContentAreaContainer() : undefined;
+						if (container && container.firstChild) {
+							container.firstChild.style.height = height;
+						}
+					}
+				} catch (e) {
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.error("TextEditor._setHeight() error: " + e);
+					bpmext.log.error("TextEditor._setHeight() " + bpmext.localization.formatMsg("general", "ERROR") + ": " + e);
+					if(e.stack) { 
+						//{#feature: US-1330 Added RT localization}
+						//bpmext.log.error("  Call stack: " + e.stack);
+						bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+					}
+				}
+			},
+			_setTabIndex : function (view, index) {
+				if (index != null) {
+					var container = view._instance.textEditorControl ? view._instance.textEditorControl.getContentAreaContainer() : undefined;
+					if (container && container.firstChild) {
+						domAttr.set(container.firstChild, "tabindex", index);
+					}
+				} else
+					domAttr.remove(view._instance.text, "tabindex");
+			},
+			_handleVisibility : function (view) {
+				var visibility = bpmext.ui.getEffectiveVisibility(view);
+
+				if (visibility != "NONE") {
+					var readonly = false;
+					if (visibility == "READONLY") {
+						readonly = true;
+						// domClass.remove(view._instance.disabler, "hidden");
+					}
+					// else {
+						// domClass.add(view._instance.disabler, "hidden");
+					// }
+
+					if (view._instance.textEditorControl) {
+						view._instance.textEditorControl.setMode(readonly ? "readonly" : "design");
+					}
+				}
+
+				//{#bug: BG-444 Improper visibility behavior}
+				var vis = utilities.handleVisibility(view.context);
+				if (view._instance.textEditorControl && (vis == "NONE" || vis == "HIDDEN")) {
+					view._instance.textEditorControl.notificationManager.close();
+				}
+			},
+			_updateControl : function (view) {
+				if(!view._instance.infoWrapper) {
+					view._instance.infoWrapper = document.createElement("span");
+					domClass.add(view._instance.infoWrapper, "info-wrapper");
+					view._instance.header.appendChild(view._instance.infoWrapper);
+				}
+					
+				var errors = bpmext.ui.getViewValidationErrors(view);
+
+				//Color style
+				var colStyle = errors ? "E" : "D";
+
+				bpmext.ui.util.replaceCSSClass(view._instance.group, bpmext.ui.util.OPTS_COL_STL_CLZ, colStyle, view._instance.oldColStyle);
+				view._instance.oldColStyle = colStyle;
+
+				//Validation Error Icon
+				if (view._instance.icon) {
+					bpmext.ui.util.closeTooltip(view._instance.iconTT, view._instance.icon);
+					delete view._instance.iconTT;
+
+					view._instance.infoWrapper.removeChild(view._instance.validation);
+					delete view._instance.icon;
+                    delete view._instance.validation;
+				}
+
+				if (errors) {
+					view._instance.validation = document.createElement("span");
+					domClass.add(view._instance.validation, "validation");
+
+					view._instance.icon = document.createElement("i");
+					domAttr.set(view._instance.icon, "tabindex", 0);
+					domClass.add(view._instance.icon, "fa fa-fw fa-exclamation-circle validationIcon");
+
+					view._instance.validation.appendChild(view._instance.icon);
+
+					view._instance.infoWrapper.appendChild(view._instance.validation);
+					
+					var ttOpts = {
+						horizontalPos : "left",
+						verticalPos : "top",
+						cssClass : "validationError",
+						plainText : false,
+						smartPositioning: true
+					};
+
+					view._instance.iconTT = bpmext.ui.util.showTooltip(
+							view._instance.icon,
+							bpmext.ui.util.formatErrors(errors),
+							ttOpts);
+				} else {
+					domClass.remove(view._instance.group, "has-feedback has-error");
+				}
+			},
+			_setStatusBarVis : function (view, vis) {
+				for (var i = 0; i < view._instance.textEditorControl.editorContainer.childNodes[0].childNodes.length; i++) {
+					if (domClass.contains(view._instance.textEditorControl.editorContainer.childNodes[0].childNodes[i], "mce-statusbar"))
+						domClass.toggle(view._instance.textEditorControl.editorContainer.childNodes[0].childNodes[i], "hidden", !vis);
+				}
+			},
+			_getSelection : function (node) {
+				var start = 0,
+				end = 0,
+				normalizedValue,
+				range,
+				textInputRange,
+				len,
+				endRange;
+
+				if (typeof node.selectionStart == "number" && typeof node.selectionEnd == "number") {
+					start = node.selectionStart;
+					end = node.selectionEnd;
+				} else {
+					range = document.selection.createRange();
+
+					if (range && range.parentElement() == node) {
+						len = node.value.length;
+						normalizedValue = node.value.replace(/\r\n/g, "\n");
+						textInputRange = node.createTextRange();
+						textInputRange.moveToBookmark(range.getBookmark());
+						endRange = node.createTextRange();
+						endRange.collapse(false);
+
+						if (textInputRange.compareEndPoints("StartToEnd", endRange) > -1)
+							start = end = len;
+						else {
+							start = -textInputRange.moveStart("character", -len);
+							start += normalizedValue.slice(0, start).split("\n").length - 1;
+
+							if (textInputRange.compareEndPoints("EndToEnd", endRange) > -1)
+								end = len;
+							else {
+								end = -textInputRange.moveEnd("character", -len);
+								end += normalizedValue.slice(0, end).split("\n").length - 1;
+							}
+						}
+					}
+				}
+
+				return {
+					"start" : start,
+					"end" : end
+				};
+			},
+			_normalizeColorMap : function (view, colorMap) {
+				var res = [];
+
+				var rows = view.context.options.colorRows.get("value");
+				var cols = view.context.options.colorCols.get("value");
+				var numColors = rows * cols - 1;
+
+				for (var i = 0; i < numColors && i < colorMap.length; i++) {
+					if (colorMap[i].value.charAt(0) === '#') {
+						res.push(colorMap[i].value.substring(1));
+					} else {
+						res.push(colorMap[i].value);
+					}
+					res.push(colorMap[i].name);
+				}
+
+				return res;
+			},
+			
+            //284612: Add NL Strings
+			_addNLStrings : function(editor) {
+			    //update menu items recursivley
+			    var updateMenuItem = function(menu) {
+			       if (!!menu.text) {
+			           var title = bpmext.localization.formatMsg("controlTextEditor", menu.text.toUpperCase().replace(/ /g, "_").replace(/\//g,""));
+			           if (!!title && title != "" && title.indexOf("MESSAGE[") != 0) {
+			             menu.text = title;  
+			           }
+			           
+			       }
+			       var item;
+		           if (!!menu.menu) {
+		               if (!!menu.menu.items) {
+		                   for (item=0; item < menu.menu.items.length; item++) {
+                               updateMenuItem(menu.menu.items[item]);
+		                   }
+		               } else {
+	                       for (item in menu.menu) {
+	                           updateMenuItem(menu.menu[item]);
+	                       }
+		               }
+		           }
+			    };
+			    
+			    var item;
+			    for (item in editor.menuItems) {
+			        updateMenuItem(editor.menuItems[item]);
+			    }
+			    
+			    //Buttons
+			    var toolbar = editor.theme.panel.settings.items[0].items[1].items[0]; 
+                //Undo-Redo
+                toolbar.items[0].items[0].settings.tooltip = bpmext.localization.formatMsg("controlTextEditor", "UNDO");
+                toolbar.items[0].items[1].settings.tooltip = bpmext.localization.formatMsg("controlTextEditor", "REDO");
+                //Formats
+                toolbar.items[1].items[0].settings.text = bpmext.localization.formatMsg("controlTextEditor", "FORMATS");
+                //Bold-Italic
+                toolbar.items[2].items[0].settings.tooltip = bpmext.localization.formatMsg("controlTextEditor", "BOLD");
+                toolbar.items[2].items[1].settings.tooltip = bpmext.localization.formatMsg("controlTextEditor", "ITALIC");
+                //Text Alignment
+                toolbar.items[3].items[0].settings.tooltip = bpmext.localization.formatMsg("controlTextEditor", "ALIGN_LEFT");
+                toolbar.items[3].items[1].settings.tooltip = bpmext.localization.formatMsg("controlTextEditor", "ALIGN_CENTER");
+                toolbar.items[3].items[2].settings.tooltip = bpmext.localization.formatMsg("controlTextEditor", "ALIGN_RIGHT");
+                toolbar.items[3].items[3].settings.tooltip = bpmext.localization.formatMsg("controlTextEditor", "JUSTIFY");
+                //Bullets
+                toolbar.items[4].items[0].settings.tooltip = bpmext.localization.formatMsg("controlTextEditor", "BULLET_LIST");
+                toolbar.items[4].items[0].settings.menu[0].text = bpmext.localization.formatMsg("controlTextEditor", "DEFAULT");
+                toolbar.items[4].items[0].settings.menu[1].text = bpmext.localization.formatMsg("controlTextEditor", "CIRCLE");
+                toolbar.items[4].items[0].settings.menu[2].text = bpmext.localization.formatMsg("controlTextEditor", "DISC");
+                toolbar.items[4].items[0].settings.menu[3].text = bpmext.localization.formatMsg("controlTextEditor", "SQUARE");
+                //Numbered List
+                toolbar.items[4].items[1].settings.tooltip = bpmext.localization.formatMsg("controlTextEditor", "NUMBERED_LIST");
+                toolbar.items[4].items[1].settings.menu[0].text = bpmext.localization.formatMsg("controlTextEditor", "DEFAULT");
+                toolbar.items[4].items[1].settings.menu[1].text = bpmext.localization.formatMsg("controlTextEditor", "LOWER_ALPHA");
+                toolbar.items[4].items[1].settings.menu[2].text = bpmext.localization.formatMsg("controlTextEditor", "LOWER_GREEK");
+                toolbar.items[4].items[1].settings.menu[3].text = bpmext.localization.formatMsg("controlTextEditor", "LOWER_ROMAN");
+                toolbar.items[4].items[1].settings.menu[4].text = bpmext.localization.formatMsg("controlTextEditor", "UPPER_ALPHA");
+                toolbar.items[4].items[1].settings.menu[5].text = bpmext.localization.formatMsg("controlTextEditor", "UPPER_ROMAN");
+                //Indent
+                toolbar.items[4].items[2].settings.tooltip = bpmext.localization.formatMsg("controlTextEditor", "DECREASE_INDENT");
+                toolbar.items[4].items[3].settings.tooltip = bpmext.localization.formatMsg("controlTextEditor", "INCREASE_INDENT");
+                //Link
+                toolbar.items[5].items[0].settings.tooltip = bpmext.localization.formatMsg("controlTextEditor", "INSERT_EDIT_LINK");
+                toolbar.items[5].items[1].settings.tooltip = bpmext.localization.formatMsg("controlTextEditor", "INSERT_EDIT_IMAGE");
+                //Colors
+                toolbar.items[6].items[0].settings.tooltip = bpmext.localization.formatMsg("controlTextEditor", "TEXT_COLOR");
+                toolbar.items[6].items[1].settings.tooltip = bpmext.localization.formatMsg("controlTextEditor", "BACKGROUND_COLOR");
+			}
+		};
+
+		/*
+		Public control methods *************************************************************
+		 */
+
+		/**
+		 * @instance
+		 * @memberof TextEditor
+		 * @method setLabel
+		 * @param {string} label Label for the text editor
+		 * @desc Set label for text editor control
+		 */
+		this.constructor.prototype.setLabel = function (text) {
+			this.context.options._metadata.label.set("value", text);
+		};
+
+		/**
+		 * @instance
+		 * @memberof TextEditor
+		 * @method getLabel
+		 * @desc Get label associated with text editor control
+		 * @returns {string}
+		 */
+		this.constructor.prototype.getLabel = function () {
+			return this.context.options._metadata.label.get("value");
+		};
+
+		/**
+		 * @instance
+		 * @memberof TextEditor
+		 * @method isLabelVisible
+		 * @desc Get label visibility for text editor control
+		 * @returns {boolean}
+		 */
+		this.constructor.prototype.isLabelVisible = function () {
+			return this.context.options._metadata.labelVisibility.get("value") == "SHOW";
+		};
+
+		/**
+		 * @instance
+		 * @memberof TextEditor
+		 * @method setLabelVisible
+		 * @param {boolean} flag Set to <code>true</code> to make the label visible.
+		 * @desc Set label visibility for text editor control
+		 */
+		this.constructor.prototype.setLabelVisible = function (flag) {
+			this.context.options._metadata.labelVisibility.set("value", flag ? "SHOW" : "HIDE");
+		};
+
+		/**
+		 * @instance
+		 * @memberof TextEditor
+		 * @method getText
+		 * @desc Get text for text editor control
+		 * @returns {string}
+		 */
+		this.constructor.prototype.getText = function () {
+			var res = this.getData();
+			return res == null ? "" : res;
+		};
+
+		/**
+		 * @instance
+		 * @memberof TextEditor
+		 * @method setText
+		 * @param {string} text Text to be set in the editor
+		 * @desc Set text for text editor control
+		 */
+		this.constructor.prototype.setText = function (text) {
+			this.context.binding.set("value", text);
+		};
+
+		/**
+		 * @instance
+		 * @memberof TextEditor
+		 * @method setWidth
+		 * @param {string} width editor width
+		 * @desc Set width of text editor control (e.g. 50px, 20%, 2em - omitting the unit assumes px)
+		 */
+		this.constructor.prototype.setWidth = function (width) {
+			this.context.options.width.set("value", width);
+		};
+
+		/**
+		 * @instance
+		 * @memberof TextEditor
+		 * @method getWidth
+		 * @desc Get configured width for text editor control (including unit)
+		 * @returns {string}
+		 */
+		this.constructor.prototype.getWidth = function () {
+			return this.context.options.width.get("value");
+		};
+
+		/**
+		 * @instance
+		 * @memberof TextEditor
+		 * @method setHeight
+		 * @param {string} height Editor height
+		 * @desc Set height of text editor control (e.g. 50px, 20%, 2em - omitting the unit assumes px)
+		 */
+		this.constructor.prototype.setHeight = function (height) {
+			this.context.options.height.set("value", height);
+		};
+
+		/**
+		 * @instance
+		 * @memberof TextEditor
+		 * @method getHeight
+		 * @desc Get configured height for text editor control (including unit)
+		 * @returns {string}
+		 */
+		this.constructor.prototype.getHeight = function () {
+			return this.context.options.height.get("value");
+		};
+
+		/**
+		 * @instance
+		 * @memberof TextEditor
+		 * @method setTabIndex
+		 * @param {integer} tabIndex Tab indices start at 1 and may be set sparsely
+		 * @desc Sets tab index of text editor control
+		 */
+		this.constructor.prototype.setTabIndex = function (tabIndex) {
+			this.context.options.tabIndex.set("value", tabIndex);
+		};
+
+		/**
+		 * @instance
+		 * @memberof TextEditor
+		 * @method getTabIndex
+		 * @desc Get tab index for text editor control
+		 * @returns {integer}
+		 */
+		this.constructor.prototype.getTabIndex = function () {
+			//{#bug: 408 fixed getTabIndex by checking the context option, instead of the dom attribute}
+			return this.context.options.tabIndex.get("value");
+		};
+
+		/**
+		 * @instance
+		 * @memberof TextEditor
+		 * @method setStatusBarVisibility
+		 * @param {boolean} vis Set to <code>true</code> to show status bar
+		 * @desc Sets tab index of text editor control
+		 */
+		this.constructor.prototype.setStatusBarVisibility = function (vis) {
+			this.context.options.showStatus.set("value", vis);
+		};
+
+		/**
+		 * @instance
+		 * @memberof TextEditor
+		 * @method getStatusBarVisibility
+		 * @desc Get the current visibility of the status bar
+		 * @returns {boolean}
+		 */
+		this.constructor.prototype.getStatusBarVisibility = function () {
+			return this.context.options.showStatus.get("value");
+		};
+
+		/**
+		 * @instance
+		 * @memberof TextEditor
+		 * @method focus
+		 * @desc Set focus on this control
+		 */
+		this.constructor.prototype.focus = function () {
+			//BG-1238 focus to editable area
+			this._instance.textEditorControl.focus();
+			//this._instance.text.focus();
+		};
+
+		/**
+		 * @instance
+		 * @memberof TextEditor
+		 * @method getType
+		 * @desc Get descriptive string representing the type of control
+		 * @returns {string}
+		 */
+		this.constructor.prototype.getType = function () {
+			return "TextEditor.3";
+		};
+
+		/**
+		 * @instance
+		 * @memberof TextEditor
+		 * @method setHelpText
+		 * @param {string} helptext Help text for the control
+		 * @desc Set help text for the control
+		 */
+		this.constructor.prototype.setHelpText = function (text) {
+			this.context.options._metadata.helpText.set("value", text);
+		};
+
+		/**
+		 * @instance
+		 * @memberof TextEditor
+		 * @method getHelpText
+		 * @desc Get help text associated with the control
+		 * @returns {string}
+		 */
+		this.constructor.prototype.getHelpText = function () {
+			return this.context.options._metadata.helpText.get("value");
+		};
+
+		/*
+		Coach NG Lifecycle methods *************************************************************
+		 */
+		this.constructor.prototype.load = function () {
+			try {
+				thiz = this;
+				var opts = this.context.options;
+				var mdt = opts._metadata;
+
+				this._instance.baseTxtDir = mdt.baseTextDirection && mdt.baseTextDirection.get("value") ? mdt.baseTextDirection.get("value") : utilities.BiDi.BASE_TEXT_DIRECTION._default;
+				this._instance.genPrefTextDir = this.context.bpm.system.baseTextDirection;
+
+				if (!this.context.binding)
+					this.context.binding = bpmext.ui.substituteObject(this);
+
+				if (!opts.tabIndex)
+					bpmext.ui.substituteConfigOption(this, "tabIndex", null);
+
+				if (!opts.showStatus)
+					bpmext.ui.substituteConfigOption(this, "showStatus", false);
+
+				if (!opts.width)
+					bpmext.ui.substituteConfigOption(this, "width", null);
+
+				if (!opts.height)
+					bpmext.ui.substituteConfigOption(this, "height", null);
+
+				if (!opts.colorMap)
+					bpmext.ui.substituteConfigOption(this, "colorMap", []);
+
+				if (!opts.colorCols)
+					bpmext.ui.substituteConfigOption(this, "colorCols", 8);
+
+				if (!opts.colorRows)
+					bpmext.ui.substituteConfigOption(this, "colorRows", 5);
+
+				// if(!opts.labelPlacement)
+				// bpmext.ui.substituteConfigOption(this, "labelPlacement", "T");
+
+				this._instance.group = document.createElement("div");
+				domClass.add(this._instance.group, "form-group");
+
+				this._instance.header = document.createElement("div");
+				domClass.add(this._instance.header, "header");
+
+				this._instance.input = document.createElement("div");
+				domClass.add(this._instance.input, "input SPARKTextEditor");
+
+				// this._instance.disabler = bpmext.ui.util.createDisabler(this, this._instance.input);
+
+				this._instance.text = document.createElement("textarea");
+				domClass.add(this._instance.text, "form-control");
+
+				this._instance.textAreaID = "TextEditor_" + this.context.element.id;
+				domAttr.set(this._instance.text, "id", this._instance.textAreaID);
+				fastclick.attach(this._instance.text);
+
+				var init_instance_callback = dojo.hitch(this, function () {
+					if (tinymce.activeEditor) {
+						var text = this.context.binding.get("value");
+						//284612: Add NL Strings
+						this._proto._addNLStrings(tinymce.activeEditor);
+						if (text) {
+							tinymce.activeEditor.setContent(text);
+							var content = tinymce.activeEditor.getContent();
+							//tinymce usually adds "<p>" wrapping tags to the string value,
+							// so we need to update the binding immediately in order for the onchange to work properly
+							// this fixes bug 228 in Axosoft: Text Editor- Cursor returns to beginning of text block
+							if (content != text) {
+								this.context.binding.set("value", content);
+							}
+						}
+						this._instance.textEditorControl = tinymce.get(this._instance.textAreaID);
+
+						//Add form-control class
+						this._instance.textEditorControl.editorContainer.classList.add("form-control");
+
+						var tmp = mdt.helpText ? mdt.helpText.get("value") : null;
+						if (tmp && tmp.length > 0)
+						{
+							this._proto._setHelpText(this, tmp);
+						}
+						
+						this._proto._setStatusBarVis(this, this.context.options.showStatus.get("value"));
+						//{#bug: 385 changed when _setTabIndex is called, as it was being called too early before for indices to set correctly}
+						this._proto._setTabIndex(this, this.context.options.tabIndex.get("value"));
+
+						this._proto._handleVisibility(this);
+					}
+				});
+
+				var onchange = dojo.hitch(this, function (event) {
+					var oldValue = this.context.binding.get("value");
+					var newValue = event.target.getContent();
+
+					if (oldValue != newValue) {
+						this.context.binding.set("value", newValue);
+					}
+				});
+
+				var onchangeSetup = function (editor) {
+					editor.on('blur', onchange);
+
+					if (opts[view._proto.EVT_ONFOCUS]) {
+						editor.on('focus', function (e) {
+							bpmext.ui.executeEventHandlingFunction(view, view._proto.EVT_ONFOCUS);
+						});
+
+						bpmext.ui.registerEventHandlingFunction(view, view._proto.EVT_ONFOCUS);
+					}
+
+					if (opts[view._proto.EVT_ONBLUR]) {
+						editor.on('blur', function (e) {
+							bpmext.ui.executeEventHandlingFunction(view, view._proto.EVT_ONBLUR);
+						});
+
+						bpmext.ui.registerEventHandlingFunction(view, view._proto.EVT_ONBLUR);
+					}
+				};
+
+				var width = opts.width.get("value");
+				var height = opts.height.get("value");
+				var tabIndex = opts.tabIndex.get("value");
+				var textcolorMap;
+
+				if (opts.colorMap.get("value").items && opts.colorMap.get("value").items.length > 0) {
+					textcolorMap = this._proto._normalizeColorMap(this, opts.colorMap.get("value").items);
+				} else {
+					textcolorMap = [{
+							value : "000000",
+							name : bpmext.localization.formatMsg("controlTextEditor","COLOR_BLACK")
+						}, {
+							value : "993300",
+							name : bpmext.localization.formatMsg("controlTextEditor","COLOR_BURNT_ORANGE")
+						}, {
+							value : "333300",
+							name : bpmext.localization.formatMsg("controlTextEditor","COLOR_DARK_OLIVE")
+						}, {
+							value : "003300",
+							name : bpmext.localization.formatMsg("controlTextEditor","COLOR_DARK_GREEN")
+						}, {
+							value : "003366",
+							name : bpmext.localization.formatMsg("controlTextEditor","COLOR_DARK_AZURE")
+						}, {
+							value : "000080",
+							name : bpmext.localization.formatMsg("controlTextEditor","COLOR_NAVY_BLUE")
+						}, {
+							value : "333399",
+							name : bpmext.localization.formatMsg("controlTextEditor","COLOR_INDIGO")
+						}, {
+							value : "333333",
+							name : bpmext.localization.formatMsg("controlTextEditor","COLOR_VERY_DARK_GRAY")
+						}, {
+							value : "800000",
+							name : bpmext.localization.formatMsg("controlTextEditor","COLOR_MAROON")
+						}, {
+							value : "FF6600",
+							name : bpmext.localization.formatMsg("controlTextEditor","COLOR_ORANGE")
+						}, {
+							value : "808000",
+							name : bpmext.localization.formatMsg("controlTextEditor","COLOR_OLIVE")
+						}, {
+							value : "008000",
+							name : bpmext.localization.formatMsg("controlTextEditor","COLOR_GREEN")
+						}, {
+							value : "008080",
+							name : bpmext.localization.formatMsg("controlTextEditor","COLOR_TEAL")
+						}, {
+							value : "0000FF",
+							name : bpmext.localization.formatMsg("controlTextEditor","COLOR_BLUE")
+						}, {
+							value : "666699",
+							name : bpmext.localization.formatMsg("controlTextEditor","COLOR_GRAYISH_BLUE")
+						}, {
+							value : "808080",
+							name : bpmext.localization.formatMsg("controlTextEditor","COLOR_GRAY")
+						}, {
+							value : "FF0000",
+							name : bpmext.localization.formatMsg("controlTextEditor","COLOR_RED")
+						}, {
+							value : "FF9900",
+							name : bpmext.localization.formatMsg("controlTextEditor","COLOR_AMBER")
+						}, {
+							value : "99CC00",
+							name : bpmext.localization.formatMsg("controlTextEditor","COLOR_YELLOW_GREEN")
+						}, {
+							value : "339966",
+							name : bpmext.localization.formatMsg("controlTextEditor","COLOR_SEA_GREEN")
+						}, {
+							value : "33CCCC",
+							name : bpmext.localization.formatMsg("controlTextEditor","COLOR_TURQUOISE")
+						}, {
+							value : "3366FF",
+							name : bpmext.localization.formatMsg("controlTextEditor","COLOR_ROYAL_BLUE")
+						}, {
+							value : "800080",
+							name : bpmext.localization.formatMsg("controlTextEditor","COLOR_PURPLE")
+						}, {
+							value : "999999",
+							name : bpmext.localization.formatMsg("controlTextEditor","COLOR_MEDIUM_GRAY")
+						}, {
+							value : "FF00FF",
+							name : bpmext.localization.formatMsg("controlTextEditor","COLOR_MAGENTA")
+						}, {
+							value : "FFCC00",
+							name : bpmext.localization.formatMsg("controlTextEditor","COLOR_GOLD")
+						}, {
+							value : "FFFF00",
+							name : bpmext.localization.formatMsg("controlTextEditor","COLOR_YELLOW")
+						}, {
+							value : "00FF00",
+							name : bpmext.localization.formatMsg("controlTextEditor","COLOR_LIME")
+						}, {
+							value : "00FFFF",
+							name : bpmext.localization.formatMsg("controlTextEditor","COLOR_AQUA")
+						}, {
+							value : "00CCFF",
+							name : bpmext.localization.formatMsg("controlTextEditor","COLOR_SKY_BLUE")
+						}, {
+							value : "993366",
+							name : bpmext.localization.formatMsg("controlTextEditor","COLOR_RED_VIOLET")
+						}, {
+							value : "FFFFFF",
+							name : bpmext.localization.formatMsg("controlTextEditor","COLOR_WHITE")
+						}, {
+							value : "FF99CC",
+							name : bpmext.localization.formatMsg("controlTextEditor","COLOR_PINK")
+						}, {
+							value : "FFCC99",
+							name : bpmext.localization.formatMsg("controlTextEditor","COLOR_PEACH")
+						}, {
+							value : "FFFF99",
+							name : bpmext.localization.formatMsg("controlTextEditor","COLOR_LIGHT_YELLOW")
+						}, {
+							value : "CCFFCC",
+							name : bpmext.localization.formatMsg("controlTextEditor","COLOR_PALE_GREEN")
+						}, {
+							value : "CCFFFF",
+							name : bpmext.localization.formatMsg("controlTextEditor","COLOR_PALE_CYAN")
+						}, {
+							value : "99CCFF",
+							name : bpmext.localization.formatMsg("controlTextEditor","COLOR_LIGHT_SKY_BLUE")
+						}, {
+							value : "CC99FF",
+							name : bpmext.localization.formatMsg("controlTextEditor","COLOR_PLUM")
+						}
+					];
+					textcolorMap = this._proto._normalizeColorMap(this, textcolorMap);
+				}
+
+				this._instance.input.appendChild(this._instance.text);
+				this._instance.group.appendChild(this._instance.header);
+				this._instance.group.appendChild(this._instance.input);
+				this.context.element.appendChild(this._instance.group);
+				
+				var initOptions = {
+					//{#bug: BG-764 Loading issue when in Deferred Section}
+					//selector : "#" + this.context.element.id + " textarea",
+					target: this._instance.text,
+					plugins : [
+						"advlist autolink lists link image charmap print preview anchor",
+						"searchreplace visualblocks code fullscreen",
+						"insertdatetime media table contextmenu paste textcolor colorpicker"
+					],
+					toolbar : "insertfile undo redo | styleselect | bold italic | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image | forecolor backcolor",
+					resize : false,
+					skin : 'lightgray',
+					init_instance_callback : init_instance_callback,
+					setup : onchangeSetup,
+					menu : {
+						//file: {title: "File", items: "print"},
+						edit : {
+							title : bpmext.localization.formatMsg("controlTextEditor","EDIT"),
+							items : "undo redo | cut copy paste pastetext | selectall | searchreplace"
+						},
+						insert : {
+							title : bpmext.localization.formatMsg("controlTextEditor","INSERT"),
+							items : "media image link | charmap anchor insertdatetime"
+						},
+						view : {
+							title : bpmext.localization.formatMsg("controlTextEditor","VIEW"),
+							items : "visualblocks visualaid | fullscreen" //"visualblocks visualaid | preview fullscreen"
+						},
+						format : {
+							title : bpmext.localization.formatMsg("controlTextEditor","FORMAT"),
+							items : "bold italic underline strikethrough superscript subscript | formats | removeformat"
+						},
+						table : {
+							title : bpmext.localization.formatMsg("controlTextEditor","TABLE"),
+							items : "inserttable tableprops deletetable | cell row column"
+						},
+						tools : {
+							title : bpmext.localization.formatMsg("controlTextEditor","TOOLS"),
+							items : "code"
+						}
+					},
+					textcolor_map : textcolorMap,
+					textcolor_cols : this.context.options.colorCols.get("value"),
+					textcolor_rows : this.context.options.colorRows.get("value"),
+					body_id : "texteditor-tinymce-body-"+this.context.controlidpath,
+					//statusbar: this.context.options.showStatus.get("value")
+					insertdatetime_formats: ["short", "%R", "%H:%M:%S", "%Y-%m-%d"],
+					link_context_toolbar: true
+				};
+
+				var getDirection = function (element) {
+					var result = null;
+					if (element) {
+						if (window.getComputedStyle) {
+							result = window.getComputedStyle(element, null).direction;
+						} else if (element.currentStyle) {
+							result = element.currentStyle.direction;
+						}
+					}
+
+					return result;
+				};
+
+				if (getDirection(document.body) == "rtl" &&
+					domClass.contains(document.body, "CoachViewRTL")) {
+					initOptions.plugins.push("directionality");
+					initOptions.directionality = "rtl";
+				}
+
+				if (width) {
+					initOptions.width = width;
+				}
+
+				if (height) {
+					initOptions.height = height;
+				}
+
+				//{#bug: BG-764 Loading issue when in Deferred Section}
+				this._instance.initOptions = initOptions;	// saving options to use in view.
+				
+				this._proto._setLabelVisibility(this, opts._metadata.labelVisibility.get("value"));
+				this._proto._setLabel(this, opts._metadata.label.get("value"));
+				this._proto._setWidth(this, opts.width.get("value"));
+
+				bpmext.ui.setupFormulaTriggeredUpdates(
+					this,
+					null,
+					this.getText);
+
+				bpmext.ui.loadView(this);
+
+				this._instance.vc = bpmext.ui.getNearestValidationContainer(view);
+
+				var view = this;
+				if (opts[this._proto.EVT_ONCHANGE]) {
+					bpmext.ui.registerEventHandlingFunction(this, this._proto.EVT_ONCHANGE, "newText", "oldText");
+				}
+			} catch (e) {
+				//{#feature: US-1330 Added RT localization}
+				//bpmext.log.error("Error on load event [" + this.context.viewid + "]: " + e);
+				bpmext.log.error(bpmext.localization.formatMsg("general", "ERROR_ONLOAD_EVENT") + " [" + this.context.viewid + "]: " + e);
+				if(e.stack) { 
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.error("  Call stack: " + e.stack);
+					bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+				}
+			}
+		};
+
+		this.constructor.prototype.view = function () {
+			try {
+				var view = this;
+				
+				if(!this._instance.tinymce)
+				{
+					tinymce.init(view._instance.initOptions);
+					this._instance.tinymce = true;
+				}
+				
+				if(view._instance.textEditorControl) {
+					this._proto._handleVisibility(this);
+				}
+				//this._proto._setTabIndex(this, this.context.options.tabIndex.get("value"));
+			} catch (e) {
+				//{#feature: US-1330 Added RT localization}
+				//bpmext.log.error("Error on view event [" + this.ui.getAbsoluteName() + "]: " + e);
+				bpmext.log.error(bpmext.localization.formatMsg("general", "ERROR_ONVIEW_EVENT") + " [" + this.ui.getAbsoluteName() + "]: " + e);
+				if(e.stack) { 
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.error("  Call stack: " + e.stack);
+					bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+				}
+			}
+		};
+
+		this.constructor.prototype.change = function (event) {
+			try {
+				if (event.type == "config") {
+					switch (event.property) {
+					case "_metadata.label": {
+							this._proto._setLabel(this, event.newVal);
+							this._proto._setHelpText(this, this.context.options._metadata.helpText.get("value"));
+							break;
+						}
+					case "_metadata.visibility": {
+							this._proto._handleVisibility(this);
+							break;
+						}
+					case "_metadata.labelVisibility": {
+							this._proto._setLabelVisibility(this, event.newVal);
+							break;
+						}
+                    case "_metadata.helpText":
+                    {
+						this._proto._setHelpText(this, event.newVal);
+                        this._proto._updateControl(this);
+                        break;
+                    }
+					case "width": {
+							this._proto._setWidth(this, event.newVal);
+							break;
+						}
+					case "height": {
+							this._proto._setHeight(this, event.newVal);
+							break;
+						}
+					case "tabIndex": {
+							this._proto._setTabIndex(this, event.newVal);
+							break;
+						}
+					case "showStatus": {
+							this._proto._setStatusBarVis(this, event.newVal);
+							break;
+						}
+					}
+				} else if (event.insertedInto == event.removedFrom) {
+					if (event.newVal != event.oldVal) {
+						this._proto._setText(this, event.newVal);
+
+						bpmext.ui.executeEventHandlingFunction(this, this._proto.EVT_ONCHANGE, event.newVal, event.oldVal);
+					}
+				}
+			} catch (e) {
+				//{#feature: US-1330 Added RT localization}
+				//bpmext.log.error("Error on change event [" + this.ui.getAbsoluteName() + "]: " + e);
+				bpmext.log.error(bpmext.localization.formatMsg("general", "ERROR_ONCHANGE_EVENT") + " [" + this.ui.getAbsoluteName() + "]: " + e);
+				if(e.stack) { 
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.error("  Call stack: " + e.stack);
+					bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+				}
+			}
+		};
+
+		this.constructor.prototype.validate = function (event) {
+			try {
+				bpmext.ui.updateViewValidationState(this, event);
+
+				this._proto._updateControl(this);
+				if (this._instance.vc)
+					this._instance.vc.validate(event);
+			} catch (e) {
+				//{#feature: US-1330 Added RT localization}
+				//bpmext.log.error("Error on validate event [" + this.ui.getAbsoluteName() + "]: " + e);
+				bpmext.log.error(bpmext.localization.formatMsg("general", "ERROR_ONVALIDATE_EVENT") + " [" + this.ui.getAbsoluteName() + "]: " + e);
+				if(e.stack) { 
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.error("  Call stack: " + e.stack);
+					bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+				}
+			}
+		};
+
+		/*
+		this.constructor.prototype.collaboration = function (event){
+		};
+		 */
+
+		this.constructor.prototype.unload = function () {
+			bpmext.ui.unloadView(this);
+
+			if (this._instance.textEditorControl) {
+				this._instance.textEditorControl.notificationManager.close();
+			}
+		};
+	}
+};

@@ -1,0 +1,772 @@
+/*
+ * #BEGIN COPYRIGHT
+ *
+ * Licensed Materials - Property of IBM
+ * 5725-C95
+ * (C) Copyright IBM Corporation 2017. All Rights Reserved.
+ * US Government Users Restricted Rights- Use, duplication or disclosure
+ * restricted by GSA ADP Schedule Contract with IBM Corp.
+ *
+ * #END COPYRIGHT
+ */
+
+/**
+ * @ignore
+ * @instance
+ * @memberof CollapsiblePanel
+ * @method isValid
+ */  
+
+/**
+ * @ignore
+ * @instance
+ * @memberof CollapsiblePanel
+ * @method setValid
+ */
+
+/**
+ * @ignore
+ * @instance
+ * @memberof CollapsiblePanel
+ * @method recalculate
+ */
+
+/**
+ * @ignore
+ * @instance
+ * @memberof CollapsiblePanel
+ * @method getData
+ */
+
+/**
+ * @ignore
+ * @instance
+ * @memberof CollapsiblePanel
+ * @method setData
+ */ 
+
+/** 
+ *   <tr class=Prop>
+ *     <td class=SectionName colspan=3>Events</td>
+ *   </tr>
+ *   <tr class=Prop>
+ *     <td>On Load:</td>
+ *     <td colspan="2">
+ *       <table> 
+ *         <tr class=Prop>
+ *           <td>Description: </td>
+ *           <td>Triggers whenever the view is loaded.</td>
+ *         </tr>
+ *         <tr class=Prop>
+ *           <td>Example: </td>
+ *           <td><pre class="prettyprint"><code>if(me.isExpand()){me.collapse();}</code></pre></td>
+ *         </tr>
+ *       </table>
+ *     </td>
+ *   </tr>
+ *   <tr class=Prop>
+ *     <td>On Expand:</td>
+ *     <td colspan="2">
+ *       <table> 
+ *         <tr class=Prop>
+ *           <td>Description: </td>
+ *           <td>Triggers when the control expands.</td>
+ *         </tr>
+ *         <tr class=Prop>
+ *           <td>Example: </td>
+ *           <td><pre class="prettyprint"><code>me.setColorStyle("S")</code></pre></td>
+ *         </tr>
+ *       </table>
+ *     </td>
+ *   </tr>
+ *   <tr class=Prop>
+ *     <td>On Collapse:</td>
+ *     <td colspan="2">
+ *       <table> 
+ *         <tr class=Prop>
+ *           <td>Description: </td>
+ *           <td>Triggers when the control collapses.</td>
+ *         </tr>
+ *         <tr class=Prop>
+ *           <td>Example: </td>
+ *           <td><pre class="prettyprint"><code>me.setColorStyle("");${CollapsiblePanel1}.expand()</code></pre></td>
+ *         </tr>
+ *       </table>
+ *     </td>
+ *   </tr>
+ * </table>
+ */
+bpmext_control_InitCollapsiblePanel = function (utilities, bpmext, domClass, domAttr, domConstruct, fastclick)
+{
+	this._instance =
+	{
+	};
+
+	if (!this.constructor.prototype._proto)
+	{
+		this.constructor.prototype.IS_ADDRESS_INVISIBLE = true;
+		this.constructor.prototype._proto =
+		{
+			EVT_ONEXPAND : "eventON_EXPAND",
+			EVT_ONCOLLAPSE : "eventON_COLLAPSE",
+			//{#feature: * Added support for Primary header/border color}
+			OPTS_COL_CLZ : {
+				"D" : "",
+				"P" : "panel-group-primary",
+				"I" : "panel-group-info",
+				"S" : "panel-group-success",
+				"W" : "panel-group-warning",
+				"G" : "panel-group-danger",
+				"E" : "panel-group-danger"
+			},
+			_handleVisibility: function(view)
+			{
+				try {
+					var visibility = utilities.handleVisibility(view.context, null, null, null, null, false);
+				} catch (e) {
+					bpmext.log.error("CollapsiblePanel._handleVisibility() " + bpmext.localization.formatMsg("general", "ERROR") + ": " + e);
+					if(e.stack) {
+						bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+					}
+				}
+			},
+			_normalizeColorStyle: function(style)
+			{
+				if(!style)
+					style = "D";
+				
+				style = style.toUpperCase();
+				
+				if(style == "E")
+					style = "G";
+				
+				if(style.length > 1)
+				{
+					switch (style)
+					{
+						case "DEFAULT":
+						case "DEF":
+							style = "D";
+							break;
+						case "PRI":
+						case "PRIMARY":
+							style = "P";
+							break;
+						case "SUCCESS":
+							style = "S";
+							break;
+						case "INFO":
+						case "INF":
+							style = "I";
+							break;
+						case "WARNING":
+						case "WARN":
+							style = "W";
+							break;
+						case "ERROR":
+						case "ERR":
+						case "DANGER":
+							style = "G";
+							break;
+						default:
+							//{#feature: US-1330 Added RT localization}
+							//bpmext.log.warn("Unexpected color style: " + style);
+							bpmext.log.warn(bpmext.localization.formatMsg("general", "COLOR_STYLE_WARNING",style));
+					}
+				}
+
+				return style;
+			},
+			_setChevronIcon: function (view) {
+				if (utilities.getActiveTheme() !== '"CARBON"') {
+					return;
+				}
+
+				var icon = utilities.getCarbonIcon("ci-chevron-up");
+				icon.setAttribute("class", icon.getAttribute("class") + " ci-chevron-up");
+				view._instance.headingAnchor.appendChild(icon);
+			},
+			_setColorStyle : function (view, newVal, oldVal)
+			{
+				if(!oldVal)
+					oldVal = view._instance.oldColStyle;
+
+				newVal = this._normalizeColorStyle(newVal);
+				oldVal = this._normalizeColorStyle(oldVal);
+				
+				bpmext.ui.util.replaceCSSClass(view.context.element, this.OPTS_COL_CLZ, newVal, oldVal);
+				view._instance.oldColStyle = newVal;
+			},
+			_setWidth : function (view, width)
+			{
+				try
+				{
+					if (width != null && width != "")
+					{
+						if (!isNaN(width))
+							width += "px";
+
+						view.context.element.style.width = width;
+					}
+				}
+				catch (e)
+				{
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.error("CollapsiblePanel._setWidth() error: " + e);
+					bpmext.log.error("CollapsiblePanel._setWidth() " + bpmext.localization.formatMsg("general", "ERROR") + ": " + e);
+					if(e.stack) { 
+						//{#feature: US-1330 Added RT localization}
+						//bpmext.log.error("  Call stack: " + e.stack);
+						bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+					}
+				}
+			},
+			_setHeight : function (view, height)
+			{
+				try
+				{
+					//{#bug: * Fixed height setting issues for collapsible panel}
+					if(view.isExpanded())
+					{
+						if (height != null && height != "")
+						{
+							if (!isNaN(height))
+								height += "px";
+
+							view._instance.panelCollapse.style.height = height;
+							domClass.add(view.context.element, "heightSpec");
+						}
+						else
+						{
+							//{#bug: * Reset collapsible panel height if height not specified}
+							view._instance.panelCollapse.style.height = "";
+							domClass.remove(view.context.element, "heightSpec");
+						}
+					}
+				}
+				catch (e)
+				{
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.error("CollapsiblePanel._setHeight() error: " + e);
+					bpmext.log.error("CollapsiblePanel._setHeight() " + bpmext.localization.formatMsg("general", "ERROR") + ": " + e);
+					if(e.stack) { 
+						//{#feature: US-1330 Added RT localization}
+						//bpmext.log.error("  Call stack: " + e.stack);
+						bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+					}
+				}
+			},
+			_setTitle : function (view)
+			{
+				var labelViz = view.context.options._metadata.labelVisibility.get("value");
+				var label = labelViz == "HIDE" ? null : view.context.options._metadata.label.get("value");
+				
+				view._instance.title.innerHTML = ((label != null && label != "") ? view.context.htmlEscape(label) : "&nbsp;");
+				utilities.BiDi.applyTextDir(
+					view._instance.title, 
+					view._instance.title.textContent, 
+					view._instance.baseTxtDir, 
+					view._instance.genPrefTextDir
+					);
+			},
+			_setPanelGroup : function (view)
+			{
+				var panelGroup = view.context.options.panelGroup.get("value");
+				
+				if(view._instance.collapseEventTopic != null)
+				{
+					bpmext.ui.removeEventSubscription(view._instance.collapseEventTopic, view);
+					delete view._instance.collapseEventTopic;
+				}
+				
+				if(panelGroup != null)
+				{
+					view._instance.collapseEventTopic = "PNL_Collapse_" + panelGroup;
+					bpmext.ui.addEventSubscription(
+						view._instance.collapseEventTopic,
+						function(eventName, panelName)
+						{
+							if(panelName != view.ui.getAbsoluteName())
+								view.collapse();
+						},
+						view
+						);
+				}
+			},
+			_setHelpText: function(view, text){
+				utilities.setHelpText(view, text);
+			}
+		};
+		
+
+		/*
+		Public control methods *************************************************************
+		 */
+
+		//{#feature: * Added get/setTitle methods to Collapsible Panel}
+		/**
+		 * @instance
+		 * @memberof CollapsiblePanel
+		 * @method setTitle
+		 * @param {string} title Section title
+		 * @desc Set title of section
+		 */
+		this.constructor.prototype.setTitle = function (title)
+		{
+			this.context.options._metadata.label.set("value", title);
+		};
+
+		/**
+		 * @instance
+		 * @memberof CollapsiblePanel
+		 * @method getTitle
+		 * @desc Get title for section
+		 * @returns {string}
+		 */	
+		this.constructor.prototype.getTitle = function (title)
+		{
+			return this.context.options._metadata.label.get("value");
+		};
+		 
+		/**
+		 * @instance
+		 * @memberof CollapsiblePanel
+		 * @method setWidth
+		 * @param {string} width the width of the panel
+		 * @desc Set width of section (e.g. 50px, 20%, 2em - omitting the unit assumes px)
+		 */
+		this.constructor.prototype.setWidth = function (width)
+		{
+			this.context.options.width.set("value", width);
+		};
+
+		/**
+		 * @instance
+		 * @memberof CollapsiblePanel
+		 * @method getWidth
+		 * @desc Get configured width for section (including unit)
+		 * @returns {string}
+		 */	
+		this.constructor.prototype.getWidth = function ()
+		{
+			return this.context.options.width.get("value");
+		};
+
+		/**
+		 * @instance
+		 * @memberof CollapsiblePanel
+		 * @method collapse
+		 * @desc Collapse the panel programmatically
+		 */	
+		this.constructor.prototype.collapse = function ()
+		{	
+			if(this.isExpanded())
+			{
+				this._instance.panelCollapse.style.height = this._instance.panelCollapse.scrollHeight + "px";
+				domClass.replace(this._instance.panelCollapse, "collapsing", "collapse in");
+				domClass.add(this._instance.panelCollapse.parentNode, "collapsed");
+
+				var view = this;
+				setTimeout(function(){
+					view._instance.panelCollapse.style.height = 0;
+					domClass.add(view._instance.headingAnchor, "collapsed");
+					domAttr.set(view._instance.headingAnchor, "aria-expanded", "false");
+
+					setTimeout(function()
+					{
+						domClass.replace(view._instance.panelCollapse, "collapse", "collapsing");
+						
+						try
+						{
+							bpmext.ui.executeEventHandlingFunction(view, view._proto.EVT_ONCOLLAPSE);
+						}
+						catch(e)
+						{
+							//{#feature: US-1330 Added RT localization}
+							//bpmext.log.error("Error on event 'on collapse' [" + view.ui.getAbsoluteName() + "]: " + e);
+							bpmext.log.error(bpmext.localization.formatMsg("general", "ERROR_ONCOLLAPSE_EVENT") + " [" + view.ui.getAbsoluteName() + "]: " + e);
+							if(e.stack) { 
+								//{#feature: US-1330 Added RT localization}
+								//bpmext.log.error("  Call stack: " + e.stack);
+								bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+							}								
+						}
+						view._instance.handleEventRunning = false;
+					}, 350 //Length of CSS transition duration (0.35s)
+					);							
+				}, 50);
+			}
+		};
+		
+		/**
+		 * @instance
+		 * @memberof CollapsiblePanel
+		 * @method expand
+		 * @desc Expand the panel programmatically
+		 */	
+		this.constructor.prototype.expand = function ()
+		{
+			if(!this.isExpanded())
+			{
+				domClass.replace(this._instance.panelCollapse, "collapsing", "collapse in");
+
+				if(this._instance.collapseEventTopic != null)
+					bpmext.ui.publishEvent(this._instance.collapseEventTopic, this.ui.getAbsoluteName());
+
+				var view = this;
+				var height = view.context.options.height.get("value");
+				if (height != null && height != "")
+				{
+					if (!isNaN(height))
+						height += "px";
+				}
+				else
+					height = null;
+
+				setTimeout(function(){
+					if(height != null)
+						view._instance.panelCollapse.style.height = height;
+					else
+						view._instance.panelCollapse.style.height = view._instance.panelCollapse.scrollHeight + "px";
+					
+					domClass.remove(view._instance.headingAnchor, "collapsed");
+
+					setTimeout(function(){
+						domClass.replace(view._instance.panelCollapse, "collapse in", "collapsing");							
+						domClass.remove(view._instance.panelCollapse.parentNode, "collapsed");
+
+						if(height != null)
+							view._instance.panelCollapse.style.height = height;
+						else
+							view._instance.panelCollapse.style.height = "auto";
+						
+						try
+						{
+							bpmext.ui.executeEventHandlingFunction(view, view._proto.EVT_ONEXPAND);
+						}
+						catch(e)
+						{
+							//{#feature: US-1330 Added RT localization}
+							//bpmext.log.error("Error on event 'on expand' [" + view.ui.getAbsoluteName() + "]: " + e);
+							bpmext.log.error(bpmext.localization.formatMsg("general", "ERROR_ONEXPAND_EVENT") + " [" + view.ui.getAbsoluteName() + "]: " + e);
+							if(e.stack) { 
+								//{#feature: US-1330 Added RT localization}
+								//bpmext.log.error("  Call stack: " + e.stack);
+								bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+							}							
+						}
+						view._instance.handleEventRunning = false;
+					}, 350 //Length of CSS transition duration (0.35s)
+					);
+				}, 50);
+			}
+		};
+
+		/**
+		 * @instance
+		 * @memberof CollapsiblePanel
+		 * @method getColorStyle
+		 * @desc Get the color style of the panel.
+		 */	
+		this.constructor.prototype.getColorStyle = function ()
+		{
+			return this.context.options.colorStyle.get("value");
+		};
+
+		/**
+		 * @instance
+		 * @memberof CollapsiblePanel
+		 * @method setColorStyle
+		 * @param {string} style "DEFAULT"|"DEF"|"D"=Default | "INFO"|INF"|"I"=Info | "PRIMARY"|"P"=Primary | "SUCCESS"|"S"=Success | "WARNING"|"WARN"|"W"=Warning | "DANGER"|"ERROR"|"ERR"|"G"=Danger
+		 * @desc Set the color style of the panel.  NOTE: to avoid ambiguity always set the color using "D"|"I"|"P"|"S"|"W"|"G"
+		 */	
+		this.constructor.prototype.setColorStyle = function (style)
+		{
+			this.context.options.colorStyle.set("value", style);
+		};
+		
+		/**
+		 * @instance
+		 * @memberof CollapsiblePanel
+		 * @method isExpanded
+		 * @desc Returns whether or not the panel is expanded
+		 * @returns {boolean}
+		 */	
+		this.constructor.prototype.isExpanded = function ()
+		{
+			return domClass.contains(this._instance.panelCollapse, "in")
+		};
+
+		/**
+		 * @instance
+		 * @memberof CollapsiblePanel
+		 * @method getType
+		 * @desc Get descriptive string representing the type of control
+		 * @returns {string}
+		 */
+		this.constructor.prototype.getType = function ()
+		{
+			return "collapsiblePanel.3";
+		};
+
+		/**
+		 * @instance
+		 * @memberof CollapsiblePanel
+		 * @method setHelpText
+		 * @param {string} helptext Help text for the control
+		 * @desc Set help text for the control
+		 */
+		this.constructor.prototype.setHelpText = function (text)
+		{
+			this.context.options._metadata.helpText.set("value", text);
+		};
+
+		/**
+		 * @instance
+		 * @memberof CollapsiblePanel
+		 * @method getHelpText
+		 * @desc Get help text associated with the control
+		 * @returns {string}
+		 */
+		this.constructor.prototype.getHelpText = function ()
+		{
+			return this.context.options._metadata.helpText.get("value");
+		};
+		
+		
+		
+		/*
+		Coach NG Lifecycle methods *************************************************************
+		 */
+		this.constructor.prototype.load = function ()
+		{
+			try
+			{
+				bpmext.ui.registerEventHandlingFunction(this, this._proto.EVT_ONEXPAND);
+				bpmext.ui.registerEventHandlingFunction(this, this._proto.EVT_ONCOLLAPSE);
+
+				var opts = this.context.options;
+				var mdt = opts._metadata;
+
+				this._instance.baseTxtDir = mdt.baseTextDirection && mdt.baseTextDirection.get("value") ? mdt.baseTextDirection.get("value") : utilities.BiDi.BASE_TEXT_DIRECTION._default;
+				this._instance.genPrefTextDir = this.context.bpm.system.baseTextDirection;
+
+				if (!opts.width)
+					bpmext.ui.substituteConfigOption(this, "width", ""); //"100%"
+
+				if(!opts.initiallyCollapsed)
+					bpmext.ui.substituteConfigOption(this, "initiallyCollapsed", false);
+
+				if (!opts.height)
+					bpmext.ui.substituteConfigOption(this, "height", "");
+					
+				if (!opts.colorStyle)
+					bpmext.ui.substituteConfigOption(this, "colorStyle", "D");
+				
+				if (!opts.panelGroup)
+					bpmext.ui.substituteConfigOption(this, "panelGroup", null);
+				
+				domClass.add(this.context.element, "panel-group");
+				
+				var panel = this.context.element.querySelector(".panel");
+				var panelHeading = this.context.element.querySelector(".panel-heading");
+				domClass.add(panelHeading, utilities.getActiveTheme().slice(1, -1));
+				this._instance.headingAnchor = this.context.element.querySelector(".accordion-toggle");
+				this._instance.panelCollapse = this.context.element.querySelector(".panel-collapse");
+				this._instance.title = document.createElement("span");
+				this._instance.headingAnchor.appendChild(this._instance.title);
+				
+				fastclick.attach(this._instance.headingAnchor);
+				
+				if(!opts.initiallyCollapsed.get("value")){
+					domClass.add(this._instance.panelCollapse, "in");
+					domAttr.set(this._instance.headingAnchor, "aria-expanded", "true");					//US-1236
+					domAttr.set(this._instance.panelCollapse, "aria-hidden", "false");	//US-1236
+				} else{
+					domClass.add(this._instance.headingAnchor, "collapsed");
+					domClass.add(this._instance.panelCollapse.parentNode, "collapsed");
+					domAttr.set(this._instance.headingAnchor, "aria-expanded", "false");				//US-1236
+					domAttr.set(this._instance.panelCollapse, "aria-hidden", "true");	//US-1236
+				}
+				
+				var view = this;
+				/* US-1236 : STARTS */
+				var handleEvent = function(event) {
+					//check if keydown is space or enter
+					if (!!event && event.type === "keydown" && !(event.key === "Enter" || event.key === " " || event.key === "Spacebar")) {
+						return;
+					}
+					event.stopPropagation();
+					event.preventDefault();
+					
+					if(!view._instance.handleEventRunning && (event.type === "click" || (event.type === "keydown" && (event.key === "Enter" || event.key === " " || event.key === "Spacebar")))){
+						view._instance.handleEventRunning = true;
+						if(view.isExpanded()) {	
+							view.collapse();
+							domAttr.set(view._instance.panelCollapse, "aria-hidden", "true");
+							domAttr.set(view._instance.headingAnchor, "aria-expanded", "false");							
+						} else {
+							view.expand();
+							domAttr.set(view._instance.panelCollapse, "aria-hidden", "false");
+							domAttr.set(view._instance.headingAnchor, "aria-expanded", "true");
+				}
+					}
+				};
+				
+				this._instance.headingAnchor.addEventListener("click", handleEvent.bind(this), false);
+				this._instance.headingAnchor.addEventListener("keydown", handleEvent.bind(this), false);
+				/* US-1236 : ENDS */
+				this._proto._setChevronIcon(this);
+				this._proto._setTitle(this);
+				this._proto._setColorStyle(this, opts.colorStyle.get("value"));
+				this._proto._setWidth(this, opts.width.get("value"));				
+				this._proto._setHeight(this, opts.height.get("value"));
+
+				var tmp = mdt.helpText ? mdt.helpText.get("value") : null;
+				if (tmp && tmp.length > 0) {
+					this._proto._setHelpText(this, tmp);
+				}
+
+				//{#feature: * Enabling Collapsible Panel header with formula support}
+				bpmext.ui.setupFormulaTriggeredUpdates(
+					this, 
+					function (expResult)
+					{
+						if (expResult == undefined)
+						{
+							expResult = "";
+						}
+
+						view.setTitle(expResult);
+					},
+					this.getTitle
+				);
+				
+				bpmext.ui.loadContainer(this);
+				/* US-1236 : STARTS */
+				var label = this.context.options._metadata.label.get("value");
+				if(label != null && label != ""){
+					var lblId = "collapsiblepanel-header-" + view.context.controlidpath;
+					domAttr.set(this._instance.headingAnchor, "id", lblId);
+				}
+				var cpnlDataId = "cpnlData-id-" + view.getUID();
+				domAttr.set(this._instance.panelCollapse, "id", cpnlDataId);
+				domAttr.set(this._instance.headingAnchor, "aria-controls", cpnlDataId);
+				/* US-1236 : ENDS */
+
+				this._proto._setPanelGroup(this);
+				
+				
+			}
+			catch (e)
+			{
+				//{#feature: US-1330 Added RT localization}
+				//bpmext.log.error("Error on load event [" + this.context.viewid + "]: " + e);
+				bpmext.log.error(bpmext.localization.formatMsg("general", "ERROR_ONLOAD_EVENT") + " [" + this.context.viewid + "]: " + e);
+				if(e.stack) { 
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.error("  Call stack: " + e.stack);
+					bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+				}
+			}
+		};
+
+		this.constructor.prototype.view = function ()
+		{
+			try
+			{
+				this._proto._handleVisibility(this);
+			}
+			catch (e)
+			{
+				//{#feature: US-1330 Added RT localization}
+				//bpmext.log.error("Error on view event [" + this.ui.getAbsoluteName() + "]: " + e);
+				bpmext.log.error(bpmext.localization.formatMsg("general", "ERROR_ONVIEW_EVENT") + " [" + this.ui.getAbsoluteName() + "]: " + e);
+				if(e.stack) { 
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.error("  Call stack: " + e.stack);
+					bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+				}
+			}
+		};
+
+		this.constructor.prototype.change = function (event)
+		{
+			try
+			{
+				if (event.type == "config")
+				{
+					switch (event.property)
+					{
+						case "_metadata.labelVisibility":
+						{
+							this.view();
+							break;
+						}
+						case "_metadata.visibility":
+						{
+							this.view();
+							break;
+						}
+						//{#feature: * Added ability to dynamically set title}
+						case "_metadata.label":
+						{
+							this._proto._setTitle(this);
+							//BG-1244 added missing break statement
+							break;
+						}
+						case "_metadata.helpText":
+						{
+							this._proto._setHelpText(this, event.newVal);
+							break;
+						}	
+						case "width":
+						{
+							this._proto._setWidth(this, event.newVal);
+							break;
+						}
+						case "height":
+						{
+							this._proto._setHeight(this, event.newVal);
+							break;
+						}
+						case "colorStyle":
+						{
+							this._proto._setColorStyle(this, event.newVal, event.oldVal);
+							break;
+						}
+						case "panelGroup":
+						{
+							this._proto._setPanelGroup(this);
+							break;
+						}
+					}
+				}
+			}
+			catch (e)
+			{
+				//{#feature: US-1330 Added RT localization}
+				//bpmext.log.error("Error on change event [" + this.ui.getAbsoluteName() + "]: " + e);
+				bpmext.log.error(bpmext.localization.formatMsg("general", "ERROR_ONCHANGE_EVENT") + " [" + this.ui.getAbsoluteName() + "]: " + e);
+				if(e.stack) { 
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.error("  Call stack: " + e.stack);
+					bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+				}
+			}
+		};
+
+		/*
+		this.constructor.prototype.validate = function (event)
+		{};
+
+		this.constructor.prototype.collaboration = function (event)
+		{};
+		*/
+		
+		this.constructor.prototype.unload = function ()
+		{
+			bpmext.ui.unloadContainer(this);
+		};
+	}
+};

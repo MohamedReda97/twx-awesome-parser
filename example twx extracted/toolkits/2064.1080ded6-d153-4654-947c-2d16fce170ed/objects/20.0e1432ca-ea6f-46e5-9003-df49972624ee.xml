@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<teamworks>
+    <layout id="20.0e1432ca-ea6f-46e5-9003-df49972624ee" name="Default ScoreBoard Layout">
+        <lastModified>1361369073512</lastModified>
+        <lastModifiedBy>Internal TW Admin user</lastModifiedBy>
+        <layoutId>20.0e1432ca-ea6f-46e5-9003-df49972624ee</layoutId>
+        <metaDataLabel isNull="true" />
+        <metaDataUI isNull="true" />
+        <type>HTML</type>
+        <url isNull="true" />
+        <documentType>scoreboard</documentType>
+        <imageUrl>scoreboard_images/SB_R1.gif</imageUrl>
+        <layoutData>&lt;script src="/teamworks/script/javascript.js" type="text/javascript"&gt;&lt;/script&gt;
+&lt;#
+   var allReports = scoreboard.getReports();
+#&gt;
+
+&lt;h1&gt;&lt;#= scoreboard.reportTitle #&gt;&lt;/h1&gt;
+
+&lt;#
+if (allReports != null &amp;&amp; allReports.length &gt; 0) {
+    for(var i = 0; i &lt; allReports.length; i++) {
+        out += "&lt;div id=\"report" + i + "\"&gt;\r\n";
+        out += allReports[i].displayDefaultPage();
+        out += "&lt;/div&gt;\r\n\r\n";
+    }
+}
+#&gt;
+
+&lt;script&gt;init()&lt;/script&gt;
+</layoutData>
+        <description>A ScoreBoard Layout that shows the default page of all reports associated with a ScoreBoard.</description>
+        <guid>guid:2214d41009da2f1b:9fd086:10655b17634:-7f87</guid>
+        <versionId>7956ceff-902e-44e3-b519-633d7ada807b</versionId>
+        <layoutParam name="NumberOfAlerts">
+            <lastModified isNull="true" />
+            <lastModifiedBy isNull="true" />
+            <layoutParamId>2023.f0e8c08c-34cd-4520-bff4-76664634d6bd</layoutParamId>
+            <layoutId>20.0e1432ca-ea6f-46e5-9003-df49972624ee</layoutId>
+            <value>0</value>
+            <type isNull="true" />
+            <seq isNull="true" />
+            <guid>guid:197d4ddc90fc5427:-1c619ffe:11def1582ed:-7f16</guid>
+            <versionId>9314aa80-37b9-4dd0-b2e4-9eb863bff0a5</versionId>
+        </layoutParam>
+        <layoutParam name="NumberOfReports">
+            <lastModified isNull="true" />
+            <lastModifiedBy isNull="true" />
+            <layoutParamId>2023.b0fa94ae-e8df-471c-9622-bfe3bfa7a009</layoutParamId>
+            <layoutId>20.0e1432ca-ea6f-46e5-9003-df49972624ee</layoutId>
+            <value>1</value>
+            <type isNull="true" />
+            <seq isNull="true" />
+            <guid>guid:197d4ddc90fc5427:-1c619ffe:11def1582ed:-7f18</guid>
+            <versionId>decf14c4-99a4-49ed-a6fb-26ebe73bddf4</versionId>
+        </layoutParam>
+    </layout>
+</teamworks>
+

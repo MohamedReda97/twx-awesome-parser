@@ -1,0 +1,281 @@
+/*
+ * #BEGIN COPYRIGHT
+ *
+ * Licensed Materials - Property of IBM
+ * 5725-C95
+ * (C) Copyright IBM Corporation 2017, 2021. All Rights Reserved.
+ * US Government Users Restricted Rights- Use, duplication or disclosure
+ * restricted by GSA ADP Schedule Contract with IBM Corp.
+ *
+ * #END COPYRIGHT
+ */
+
+var mixObject = {
+	createPreview:function(containingDiv, labelText, callback){
+		var bpmextUri = this.context.getManagedAssetUrl("BPMExt-Core-Designer.js", this.context.assetType_WEB, "SYSBPMUI");
+		var configHelperUri = this.context.getManagedAssetUrl("BPMExt-Core-ConfigHelper.js",this.context.assetType_WEB, "SYSBPMUI");
+		require([ "dojo/dom-construct", "dojo/dom-class", "dojo/dom-attr", "dojo/dom-style", bpmextUri, configHelperUri], this.lang.hitch(this, function(domConstruct, domClass, domAttr, domStyle, bpmext, configHelper){
+			bpmext.uidesign.css.ensureGlyphsLoaded(this);
+			bpmext.uidesign.css.ensureSparkUIClass(containingDiv);
+			
+			var ssCss = ".Single_Select > .form-group > .input::after {\n" +
+				"	display: inline-block;\n" +
+				"	font-family: FontAwesome;\n" +
+				"	font-style: normal;\n" +
+				"	font-weight: 400;\n" +
+				"	line-height: 1;\n" +
+				"	-webkit-font-smoothing: antialiased;\n" +
+				"	-moz-osx-font-smoothing: grayscale;\n" +
+				"	font-size: 15px;\n" +
+				"	content: '\\f0d7';\n" +
+				"	position: absolute;\n" +
+				"	top: 50%;\n" +
+				"	right: 12px;\n" +
+				"	transform: translateY(-50%);\n" +
+				"	-webkit-transform: translateY(-50%);\n" +
+				"	-moz-transform: translateY(-50%);\n" +
+				"	-ms-transform: translateY(-50%);\n" +
+				"	z-index: 5;\n" +
+				"	cursor: default;\n" +
+				"	pointer-events: none;\n" +
+				"}\n" + 
+				'@-moz-document url-prefix() {.Single_Select > .form-group > .input:before {position:absolute;content:" ";border-bottom-right-radius:1px;border-top-right-radius:1px;' +
+				'bottom:1px;right:1px;top:1px;width:20px;z-index:4;pointer-events:none;}};'
+			
+			bpmext.uidesign.css.ensureStyleLoaded(this, "SingleSelect", ssCss);
+
+			this.context.coachViewData.containingDiv = containingDiv;
+			this.context.coachViewData.formGroupDiv = domConstruct.create("div");
+			
+			this.context.coachViewData.labelTextDom = document.createTextNode(labelText);
+			this.context.coachViewData.label = domConstruct.create("label");
+			domClass.add(this.context.coachViewData.label, "control-label");
+			this.context.coachViewData.label.appendChild(this.context.coachViewData.labelTextDom);
+			
+			this.context.coachViewData.inputDiv = domConstruct.create("div");
+			domClass.add(this.context.coachViewData.inputDiv, "input");
+
+			this.context.coachViewData.select = domConstruct.create("select");
+			domClass.add(this.context.coachViewData.select, "form-control");
+			domAttr.set(this.context.coachViewData.select, "id", "SSelect_" + this.context.modelData.layoutItemIdPath);
+			dojo.attr(this.context.coachViewData.select, "role", "listbox");
+			//Disable drop down behavior
+			domStyle.set(this.context.coachViewData.select, "pointer-events", "none");
+			domStyle.set(this.context.coachViewData.select, "cursor", "default");
+			
+			this.context.coachViewData.option = domConstruct.create("option");
+			domAttr.set(this.context.coachViewData.option, "selected", "selected");
+			dojo.attr(this.context.coachViewData.option, "role", "option");
+			domAttr.set(this.context.coachViewData.option, "disabled", "disabled");
+			domStyle.set(this.context.coachViewData.option, "display", "none");
+			this.context.coachViewData.select.appendChild(this.context.coachViewData.option);
+			
+			this.context.coachViewData.staticList = null;
+			this.context.coachViewData.itemLookupMode = null;
+			
+			this.context.coachViewData.inputDiv.appendChild(this.context.coachViewData.select);
+			
+			//this.context.coachViewData.containingDiv.appendChild(this.context.coachViewData.style);
+			domConstruct.place(this.context.coachViewData.formGroupDiv, this.context.coachViewData.containingDiv);
+			domClass.add(this.context.coachViewData.formGroupDiv, "form-group");
+			this.context.coachViewData.formGroupDiv.appendChild(this.context.coachViewData.label);
+			this.context.coachViewData.formGroupDiv.appendChild(this.context.coachViewData.inputDiv);
+
+			this.context.coachViewData.select.onfocus = this.lang.hitch(this, function(){
+				if(this.context.coachViewData.select.contains(this.context.coachViewData.option)){
+					this.context.coachViewData.select.removeChild(this.context.coachViewData.option);
+				}
+			});
+			
+			this.context.coachViewData.select.onblur = this.lang.hitch(this, function(){
+				if(this.context.coachViewData.placeHolderText != null && this.context.coachViewData.placeHolderText != undefined){
+					domClass.add(this.context.coachViewData.select, "placeHolder");
+					if(!this.context.coachViewData.select.contains(this.context.coachViewData.option)){
+						this.context.coachViewData.select.appendChild(this.context.coachViewData.option);
+					}
+				}
+			});
+			
+			this.context.coachViewData.labelHandler = bpmext.uidesign.createLabelHandler(this.context.coachViewData.labelTextDom, this.context.coachViewData.label, this.context.coachViewData.containingDiv, false, false);
+			//this.updateListItems();
+			//Init the config section to hide any options that are not relevant to the current selections
+			this.configurationOptionVisiblity = null;
+			this.initializeConfigurationOptionVisibility(configHelper);
+			callback();
+		}));	
+	},
+	getLabelDomElement:function(){
+		return this.context.coachViewData.label;
+	},
+	propertyChanged:function(propertyName, propertyValue){
+		var configHelperUri = this.context.getManagedAssetUrl("BPMExt-Core-ConfigHelper.js",this.context.assetType_WEB, "SYSBPMUI");
+		require(["dojo/dom-style", "dojo/dom-class", "dojo/dom-construct", "dojo/dom-attr", configHelperUri], this.lang.hitch(this, function(domStyle, domClass, domConstruct, domAttr, configHelper){
+			this.context.coachViewData.labelHandler.propertyChanged(propertyName, propertyValue);
+			if(propertyName == "@style"){
+				var width = configHelper.getResponsiveConfigOptionValue(this, "@width");
+				var minWidth = configHelper.getResponsiveConfigOptionValue(this, "@minWidth");
+				if(!!width || !!minWidth || this.width) {
+					this.context.coachViewData.containingDiv.style.width =  minWidth || this.width || width;
+				} else {
+					this.context.coachViewData.containingDiv.style.width = "";
+				}
+			} else if(propertyName == "labelPlacement"){
+				var labelPlacement;
+				if(propertyValue == "L"){
+					labelPlacement = "label-left";
+				} else {
+					labelPlacement = "";
+				}
+				domClass.replace(this.context.coachViewData.formGroupDiv, labelPlacement, "label-left");
+			} else if(propertyName == "sizeStyle"){
+				var sizeStyle;
+				if(propertyValue == "L"){
+					sizeStyle = "input-lg";
+				} else if(propertyValue == "S"){
+					sizeStyle = "input-sm";
+				} else {
+					sizeStyle = "";
+				}
+				domClass.replace(this.context.coachViewData.select, sizeStyle, "input-sm input-lg");
+			} else if(propertyName == "width"){
+				this.width = propertyValue;
+				if(!!propertyValue) {
+					this.context.coachViewData.containingDiv.style.width = isNaN(propertyValue) ? propertyValue : (propertyValue+"px");
+				} else {
+					this.context.coachViewData.containingDiv.style.width = "";
+				}
+            } else if (propertyName == "labelWidth") {
+                if (propertyValue) {
+                    this.context.coachViewData.label.style.width = isNaN(propertyValue) ? propertyValue : (propertyValue + "px");
+                    domClass.add(this.context.coachViewData.containingDiv, "labelWidth");
+                } else {
+                    this.context.coachViewData.label.style.width = "";
+                    domClass.remove(this.context.coachViewData.containingDiv, "labelWidth");
+                }
+			} else if(propertyName == "placeHolder"){
+				this.context.coachViewData.placeHolderText = propertyValue;
+				this.context.coachViewData.option.innerHTML = propertyValue;
+				if (propertyValue != null && propertyValue != undefined) {
+					domClass.add(this.context.coachViewData.select, "placeHolder");
+				} else {
+					domClass.remove(this.context.coachViewData.select, "placeHolder");
+				}
+				//this.context.coachViewData.select.style.color = "#bdbdbd";
+				//this.updateListItems();
+			} else if(propertyName == "staticList"){
+				var json_data = null;
+				var result = [];
+				try{
+					json_data = JSON.parse(propertyValue);
+					for(var i in json_data){
+						result.push([json_data[i].value]);
+					}
+				}catch(exc){
+					//bad json, ignore
+				}
+				this.context.coachViewData.staticList = result;
+				//this.updateListItems();
+			} else if(propertyName == "itemLookupMode"){
+				//update the config tab to hide any options that should not be shown
+				this.setConfigurationOptionVisibility(this.getOptionVisibility(propertyValue));
+				if (this.updateConfigurationOptionVisibility) {
+					this.updateConfigurationOptionVisibility()
+				};
+				this.context.coachViewData.itemLookupMode = propertyValue;
+				//this.updateListItems();
+		    }
+		}));
+    },
+    updateListItems:function(){
+    	require(["dojo/dom-construct", "dojo/dom-attr"], this.lang.hitch(this, function(domConstruct, domAttr){
+	    	//Empty the Select Option List
+			domConstruct.empty(this.context.coachViewData.select);
+			//Re-add first option
+			this.context.coachViewData.select.appendChild(this.context.coachViewData.option);
+			
+			var items = null;
+			//use static list if it exists and mode is static list
+			if(this.context.coachViewData.itemLookupMode=="L" && this.context.coachViewData.staticList && this.context.coachViewData.staticList.length>0){
+				items = this.context.coachViewData.staticList;
+			}else{
+				items = [];
+				items.push("Lorem");
+				items.push("Ipsum");
+				items.push("Dolor");
+				items.push("Sit");
+				items.push("Amet");
+			}
+			
+			for(var j=0; j <=items.length; j++){
+				var newOpt = domConstruct.create("option");	
+				dojo.attr(newOpt, "role", "option");
+				dojo.attr(newOpt, "aria-selected", "false");
+				domAttr.set(newOpt, "value", j);
+				domAttr.set(newOpt, "innerHTML", items[j]);
+				if(items[j] != undefined)
+					this.context.coachViewData.select.appendChild(newOpt);
+			}
+		}));
+    },
+	modelChanged: function(propertyName, propertyValue) {
+		this.context.coachViewData.labelHandler.modelChanged(propertyName, propertyValue);
+	},
+
+	//Init the config section to hide any options that are not relevant to the current selections
+	initializeConfigurationOptionVisibility: function(configHelper) {
+		var visibility, value = "E";
+		var configOptionValue = configHelper.getConfigOptionValue(this, "itemLookupMode");
+		if (configOptionValue != undefined) {
+			value = configOptionValue;
+		}
+		visibility = this.getOptionVisibility(value);
+		
+		this.setConfigurationOptionVisibility(visibility);
+	},
+	setConfigurationOptionVisibility: function(visibility) {
+		this.configurationOptionVisibility = visibility;
+	},
+	getConfigurationOptionVisibility: function() {
+		return this.configurationOptionVisibility;
+	},
+	getOptionVisibility: function(value) {
+		var visibility;
+		
+		switch(value) {
+			case "B": 
+				visibility = {"itemService": {visible: false},
+							 "inputData": {visible: false},
+			 				 "disableAutoCall": {visible: false},
+							 "itemList": {visible: true},
+							 "staticList": {visible: false}
+							};
+				break;
+			case "L": 
+				visibility = {"itemService": {visible: false},
+			 				"inputData": {visible: false},
+			 				"disableAutoCall": {visible: false},
+			 				"itemList": {visible: false},
+			 				"staticList": {visible: true}
+		  					};
+				break;
+			case "S": 
+				visibility = {"itemService": {visible: true},
+							 "inputData": {visible: true},
+			 				 "disableAutoCall": {visible: true},
+							 "itemList": {visible: false},
+							 "staticList": {visible: false}
+							};
+				break;
+			case "E":
+		    default:
+				visibility = {"itemService": {visible: false},
+			 				"inputData": {visible: false},
+			 				"disableAutoCall": {visible: false},
+			 				"itemList": {visible: false},
+			 				"staticList": {visible: false}
+							};
+			  break;
+		}
+		return visibility;
+	}
+};

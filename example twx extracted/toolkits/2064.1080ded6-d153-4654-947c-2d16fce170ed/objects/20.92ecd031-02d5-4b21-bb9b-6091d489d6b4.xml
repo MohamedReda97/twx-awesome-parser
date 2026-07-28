@@ -1,0 +1,231 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<teamworks>
+    <layout id="20.92ecd031-02d5-4b21-bb9b-6091d489d6b4" name="Simple Pie Chart">
+        <lastModified>1361369073512</lastModified>
+        <lastModifiedBy>Internal TW Admin user</lastModifiedBy>
+        <layoutId>20.92ecd031-02d5-4b21-bb9b-6091d489d6b4</layoutId>
+        <metaDataLabel isNull="true" />
+        <metaDataUI isNull="true" />
+        <type>PROPS</type>
+        <url isNull="true" />
+        <documentType>chart</documentType>
+        <imageUrl isNull="true" />
+        <layoutData>
+&lt;# var msg = tw.resource.toolkit.TWSYS.ChartMessages; #&gt;
+
+chart {
+	3D : "true";
+	antiAliasing : "true";
+	antiAliasingText : "true";
+	backgroundPaint : "#ffffffff";
+	border : "@#border12";
+	header : "@#label9";
+	labels[0] : "&lt;#= msg.getChartDefString("chart.SimplePie.slice1.label") #&gt;";
+	labels[1] : "&lt;#= msg.getChartDefString("chart.SimplePie.slice2.label") #&gt;";
+	labels[2] : "&lt;#= msg.getChartDefString("chart.SimplePie.slice3.label") #&gt;";
+	legendPosition : "South";
+	legendVisible : "true";
+	name : "&lt;#= msg.getChartDefString("chart.SimplePie.name") #&gt;";
+	opaque : "true";
+	preferredSize : "200,175";
+	sampleSeries[0] : "Pie_Chart_Data,15,60,25:PIE";
+	type : "PIE";
+}
+
+chart3DView {
+	depth : "15";
+	rotation : "-420.0";
+}
+
+chartLegend {
+	antiAliasing : "true";
+	antiAliasingText : "true";
+	border : "@#border11";
+	followChartResize : "true";
+	paintingBackground : "false";
+	title : "OFF";
+}
+
+point {
+	color2 : "#ff000000";
+	stroke : "@=stroke1";
+}
+
+point[index=="0"] {
+	color1 : "@=color2";
+}
+
+point[index=="1"] {
+	color1 : "@=color3";
+}
+
+point[index=="2"] {
+	color1 : "@=color4";
+}
+
+series[index="0"] {
+	annotation : "@#labelAnno5";
+	explodedSegments : "30.0,0.0,0.0";
+	labeling : "Percent";
+	labelLayout : "Centered";
+}
+
+Subobject#border10 {
+	bottom : "2";
+	class : "javax.swing.border.EmptyBorder(top,left,bottom,right)";
+	left : "2";
+	right : "2";
+	top : "2";
+}
+
+Subobject#border11 {
+	bottom : "1";
+	class : "javax.swing.border.EmptyBorder(top,left,bottom,right)";
+	left : "1";
+	right : "1";
+	top : "1";
+}
+
+Subobject#border12 {
+	bottom : "1";
+	class : "javax.swing.border.EmptyBorder(top,left,bottom,right)";
+	left : "1";
+	right : "1";
+	top : "1";
+}
+
+Subobject#border8 {
+	bottom : "2";
+	class : "javax.swing.border.EmptyBorder(top,left,bottom,right)";
+	left : "2";
+	right : "2";
+	top : "2";
+}
+
+Subobject#color2 {
+	adapting : "true";
+	class : "ilog.views.util.java2d.IlvLinearGradientPaint(start,end,stops,colors,spreadMethod,colorSpace,transform,adapting)";
+	colors[0] : "#FFdc143c";
+	colors[1] : "#FFffc0cb";
+	colorSpace : "SRGB";
+	end : "0.5,0.0";
+	spreadMethod : "PAD";
+	start : "0.5,1.0";
+	stops[0] : "0.0";
+	stops[1] : "1.0";
+}
+
+Subobject#color3 {
+	adapting : "true";
+	class : "ilog.views.util.java2d.IlvLinearGradientPaint(start,end,stops,colors,spreadMethod,colorSpace,transform,adapting)";
+	colors[0] : "#FF87C0E8";
+	colors[1] : "#FFC5DFF4";
+	colorSpace : "SRGB";
+	end : "0.5,0.0";
+	spreadMethod : "PAD";
+	start : "0.5,1.0";
+	stops[0] : "0.0";
+	stops[1] : "1.0";
+}
+
+Subobject#color4 {
+	adapting : "true";
+	class : "ilog.views.util.java2d.IlvLinearGradientPaint(start,end,stops,colors,spreadMethod,colorSpace,transform,adapting)";
+	colors[0] : "#FFFEC658";
+	colors[1] : "#FFFEEDCC";
+	colorSpace : "SRGB";
+	end : "0.5,0.0";
+	spreadMethod : "PAD";
+	start : "0.5,1.0";
+	stops[0] : "0.0";
+	stops[1] : "1.0";
+}
+
+Subobject#label7 {
+	border : "@#border8";
+	class : "ilog.views.chart.swing.IlvJLabel";
+	font : "SansSerif-12";
+	foreground : "#ff000000";
+	horizontalAlignment : "0";
+	text : "&lt;#= msg.getChartDefString("chart.SimplePie.header") #&gt;";
+}
+
+Subobject#label9 {
+	border : "@#border10";
+	class : "ilog.views.chart.swing.IlvJLabel";
+	font : "SansSerif-12";
+	foreground : "#ff000000";
+	horizontalAlignment : "0";
+	text : "&lt;#= msg.getChartDefString("chart.SimplePie.header") #&gt;";
+}
+
+Subobject#labelAnno5 {
+	class : "ilog.views.chart.graphic.IlvDataLabelAnnotation(labelRenderer)";
+	labelRenderer : "@#labelRenderer6";
+}
+
+Subobject#labelRenderer6 {
+	class : "ilog.views.chart.IlvLabelRenderer";
+	color : "#ff000000";
+	font : "SansSerif-12";
+}
+
+Subobject#stroke1 {
+	class : "java.awt.BasicStroke(lineWidth,endCap,lineJoin,miterLimit,dashArray,dashPhase)";
+	dashPhase : "0.0";
+	endCap : "0";
+	lineJoin : "2";
+	lineWidth : "0";
+	miterLimit : "3.732051";
+}
+</layoutData>
+        <description isNull="true" />
+        <guid>guid:948579733943e104:28e4a9e:107e9266638:-7ecb</guid>
+        <versionId>2aa9f140-4c51-47e1-9789-20487d730c4f</versionId>
+        <layoutParam name="ChartPieSeries">
+            <lastModified isNull="true" />
+            <lastModifiedBy isNull="true" />
+            <layoutParamId>2023.78f8be6a-7bf5-40d7-91f6-03963f762061</layoutParamId>
+            <layoutId>20.92ecd031-02d5-4b21-bb9b-6091d489d6b4</layoutId>
+            <value>1</value>
+            <type isNull="true" />
+            <seq isNull="true" />
+            <guid>guid:197d4ddc90fc5427:-1c619ffe:11def1582ed:-7ed6</guid>
+            <versionId>067a895e-233e-47fe-9ba6-d374b3128e60</versionId>
+        </layoutParam>
+        <layoutParam name="ChartType">
+            <lastModified isNull="true" />
+            <lastModifiedBy isNull="true" />
+            <layoutParamId>2023.840c7041-aa6e-4ed3-83e9-1a61ef5b89df</layoutParamId>
+            <layoutId>20.92ecd031-02d5-4b21-bb9b-6091d489d6b4</layoutId>
+            <value>Pie Chart</value>
+            <type isNull="true" />
+            <seq isNull="true" />
+            <guid>guid:197d4ddc90fc5427:-1c619ffe:11def1582ed:-7edc</guid>
+            <versionId>1a6d0167-0852-4fbb-afb3-523fc7d17943</versionId>
+        </layoutParam>
+        <layoutParam name="ChartBarSeries">
+            <lastModified isNull="true" />
+            <lastModifiedBy isNull="true" />
+            <layoutParamId>2023.5ef6cc2d-36e6-42db-b971-02d1758151b4</layoutParamId>
+            <layoutId>20.92ecd031-02d5-4b21-bb9b-6091d489d6b4</layoutId>
+            <value>0</value>
+            <type isNull="true" />
+            <seq isNull="true" />
+            <guid>guid:197d4ddc90fc5427:-1c619ffe:11def1582ed:-7eda</guid>
+            <versionId>3347db55-cb9b-4657-84a8-ed124ef9d4e5</versionId>
+        </layoutParam>
+        <layoutParam name="ChartLineSeries">
+            <lastModified isNull="true" />
+            <lastModifiedBy isNull="true" />
+            <layoutParamId>2023.f5630a54-5658-486a-a1f0-a2ee28be6bd4</layoutParamId>
+            <layoutId>20.92ecd031-02d5-4b21-bb9b-6091d489d6b4</layoutId>
+            <value>0</value>
+            <type isNull="true" />
+            <seq isNull="true" />
+            <guid>guid:197d4ddc90fc5427:-1c619ffe:11def1582ed:-7ed8</guid>
+            <versionId>6c4a0258-9d98-4f3c-a83b-4c772c12af7a</versionId>
+        </layoutParam>
+    </layout>
+</teamworks>
+

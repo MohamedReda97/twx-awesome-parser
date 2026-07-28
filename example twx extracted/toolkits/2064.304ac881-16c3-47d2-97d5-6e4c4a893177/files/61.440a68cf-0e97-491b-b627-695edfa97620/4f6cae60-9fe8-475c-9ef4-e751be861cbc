@@ -1,0 +1,256 @@
+/*
+ * #BEGIN COPYRIGHT
+ *
+ * Licensed Materials - Property of IBM
+ * 5725-C95
+ * (C) Copyright IBM Corporation 2017. All Rights Reserved.
+ * US Government Users Restricted Rights- Use, duplication or disclosure
+ * restricted by GSA ADP Schedule Contract with IBM Corp.
+ *
+ * #END COPYRIGHT
+ */
+
+/**
+ * @ignore
+ * @instance
+ * @memberof ExitSafeguard
+ * @method isValid
+ */  
+
+/**
+ * @ignore
+ * @instance
+ * @memberof ExitSafeguard
+ * @method setValid
+ */
+
+/**
+ * @ignore
+ * @instance
+ * @memberof ExitSafeguard
+ * @method recalculate
+ */
+
+/**
+ * @ignore
+ * @instance
+ * @memberof ExitSafeguard
+ * @method setEnabled
+ */  
+
+/**
+ * @ignore
+ * @instance
+ * @memberof ExitSafeguard
+ * @method hide
+ */
+
+/**
+ * @ignore
+ * @instance
+ * @memberof ExitSafeguard
+ * @method show
+ */ 
+
+/**
+ * @ignore
+ * @instance
+ * @memberof ExitSafeguard
+ * @method isVisible
+ */  
+
+/**
+ * @ignore
+ * @instance
+ * @memberof ExitSafeguard
+ * @method getData
+ */
+
+/**
+ * @ignore
+ * @instance
+ * @memberof ExitSafeguard
+ * @method setData
+ */ 
+
+/**
+ * @ignore
+ * @instance
+ * @memberof ExitSafeguard
+ * @method isLabelVisible
+ */
+
+/**
+ * @ignore
+ * @instance
+ * @memberof ExitSafeguard
+ * @method setLabelVisible
+ */ 
+
+/**
+ * @ignore
+ * @instance
+ * @memberof ExitSafeguard
+ * @method setVisible
+ */  
+
+/**
+ * </table>
+ */
+bpmext_control_InitExitSafeguard = function(bpmext, ready)
+{
+	if (!this.constructor.prototype._proto)
+	{
+		this.constructor.prototype._proto =
+		{
+
+		}
+
+		/**
+		 * @instance
+		 * @memberof ExitSafeguard
+		 * @method isExitChallenged
+		 * @desc Return whether or not exit is challenged by default
+		 * @returns {boolean}
+		 */	
+		this.constructor.prototype.isExitChallenged = function()
+		{
+			return this.context.options.challengeByDefault.get("value");
+		}
+
+		/**
+		 * @instance
+		 * @memberof ExitSafeguard
+		 * @method setExitChallenged
+		 * @param {boolean} flag Set to true to challenge exit by default
+		 * @desc Set whether or not an exit is challenged by default
+		 */	
+		this.constructor.prototype.setExitChallenged = function(flag)
+		{
+			this.context.options.challengeByDefault.set("value", flag);
+		}
+
+		/**
+		 * @instance
+		 * @memberof ExitSafeguard
+		 * @method getChallengeMessage
+		 * @desc Gets the message that will be displayed when challenging an exit
+		 * @returns {string}
+		 */
+		this.constructor.prototype.getChallengeMessage = function()
+		{
+			return this.context.options.message.get("value");
+		}
+
+		/**
+		 * @instance
+		 * @memberof ExitSafeguard
+		 * @method setChallengeMessage
+		 * @param {string} msg Message to be displayed
+		 * @desc Sets the message that will be displayed when challenging an exit
+		 */
+		this.constructor.prototype.setChallengeMessage = function(msg)
+		{
+			this.context.options.message.set("value", msg);
+		}
+
+		/**
+		 * @instance
+		 * @memberof ExitSafeguard
+		 * @method getType
+		 * @desc Get descriptive string representing the type of control/section
+		 * @returns {string}
+		 */	
+		this.constructor.prototype.getType = function()
+		{
+			return "exitSafegard.3";
+		}		
+		
+		/*
+		Coach NG Lifecycle methods *************************************************************
+		 */
+		this.constructor.prototype.load = function()
+		{
+			try
+			{
+				var opts = this.context.options;
+				if (!opts.challengeByDefault)
+					bpmext.ui.substituteConfigOption(this, "challengeByDefault", false);
+
+				//{#feature: US-1330 Added RT localization}
+				/*
+				if (!opts.message)
+					bpmext.ui.substituteConfigOption(
+						this, 
+						"message", 
+						"Closing the form without using buttons impacts performance of the BPM system"
+						);
+				*/
+				if (!opts.message)
+					bpmext.ui.substituteConfigOption(
+						this, 
+						"message", 
+						bpmext.localization.formatMsg("controlExitSafeguard", "ESG_CONFIG_MESSAGE")
+						);
+				
+				(function(window, view, opts) {
+					ready(function()
+					{
+						if(window.onbeforeunload)
+						{
+							window.__onbeforeunload = window.onbeforeunload; //Can't use addEventListener reliably because order of invocation is critical
+							window.onbeforeunload = function(event)
+							{
+								if(opts.challengeByDefault.get("value"))
+								{
+									event.returnValue = opts.message.get("value");
+									return event.returnValue;
+								}
+								else
+								{
+									if(window.__onbeforeunload)
+										window.__onbeforeunload(event);
+								}
+							}
+						}
+						else
+						{
+							window.onbeforeunload = function(event)
+							{
+								if(opts.challengeByDefault.get("value"))
+								{
+									event.returnValue = opts.message.get("value");
+									return event.returnValue;
+								}
+							}
+						}
+					});				
+				})(window, this, opts);
+
+				bpmext.ui.loadView(this);
+			}
+			catch (e)
+			{
+				//{#feature: US-1330 Added RT localization}
+				//bpmext.log.error("Error on load event [" + this.context.viewid + "]: " + e);
+				bpmext.log.error(bpmext.localization.formatMsg("general", "ERROR_ONLOAD_EVENT") + " [" + this.context.viewid + "]: " + e);
+				if(e.stack) { 
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.error("  Call stack: " + e.stack);
+					bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+				}
+			}
+		};
+		
+		this.constructor.prototype.unload = function()
+		{
+			bpmext.ui.unloadView(this);
+		};
+		
+		this.constructor.prototype.view = function()
+		{
+		
+		};		
+	}
+};
+

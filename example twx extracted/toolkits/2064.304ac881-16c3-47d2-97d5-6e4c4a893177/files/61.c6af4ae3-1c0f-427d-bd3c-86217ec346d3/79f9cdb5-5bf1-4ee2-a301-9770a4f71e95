@@ -1,0 +1,1819 @@
+/*
+ * #BEGIN COPYRIGHT
+ *
+ * Licensed Materials - Property of IBM
+ * 5725-C95
+ * (C) Copyright IBM Corporation 2017, 2021. All Rights Reserved.
+ * US Government Users Restricted Rights- Use, duplication or disclosure
+ * restricted by GSA ADP Schedule Contract with IBM Corp.
+ *
+ * #END COPYRIGHT
+ */
+
+/** 
+ *   <tr class=Prop>
+ *     <td class=SectionName colspan=3>Events</td>
+ *   </tr>
+ *   <tr class=Prop>
+ *     <td>On Load:</td>
+ *     <td colspan="2">
+ *       <table> 
+ *         <tr class=Prop>
+ *           <td>Description: </td>
+ *           <td>This event is triggered when the  value is changed.</td>
+ *         </tr>
+ *         <tr class=Prop>
+ *           <td>Example: </td>
+ *           <td><pre class="prettyprint"><code>me.setValue(0.00);<code></pre></td>
+ *         </tr>
+ *       </table>
+ *     </td>
+ *   </tr>
+ *   <tr class=Prop>
+ *     <td>On Change:</td>
+ *     <td colspan="2">
+ *       <table> 
+ *         <tr class=Prop>
+ *           <td>Description: </td>
+ *           <td>This event is triggered when the value is changed.</td>
+ *         </tr>
+ *         <tr class=Prop>
+ *           <td>Example: </td>
+ *           <td><pre class="prettyprint"><code>${Decimal1}.setValue(oldValue); ${Decimal2}.setValue(newValue);<code></pre></td>
+ *         </tr>
+ *       </table>
+ *       <table style="border: 1px solid black; border-collapse: collapse;">
+ *         <tr style="border: 1px solid black; border-collapse: collapse;">
+ *           <th style="border: 1px solid black; border-collapse: collapse;padding: 5px;">Context Variables</th>
+ *           <th style="border: 1px solid black; border-collapse: collapse; padding: 5px;">newValue {decimal}</th>
+ *           <th style="border: 1px solid black; border-collapse: collapse; padding: 5px;">oldValue {decimal}</th>
+ *         </tr>
+ *       </table>
+ *     </td>
+ *   </tr>
+ *   <tr class=Prop>
+ *     <td>On Focus:</td>
+ *     <td colspan="2">
+ *       <table> 
+ *         <tr class=Prop>
+ *           <td>Description: </td>
+ *           <td>This event is triggered the control receives the focus.</td>
+ *         </tr>
+ *         <tr class=Prop>
+ *           <td>Example: </td>
+ *           <td><pre class="prettyprint"><code>${Tooltip1}.setTooltipVisible(true)<code></pre></td>
+ *         </tr>
+ *       </table>
+ *     </td>
+ *   </tr>
+ *   <tr class=Prop>
+ *     <td>On Blur:</td>
+ *     <td colspan="2">
+ *       <table> 
+ *         <tr class=Prop>
+ *           <td>Description: </td>
+ *           <td>This event is triggered the control loses the focus.</td>
+ *         </tr>
+ *         <tr class=Prop>
+ *           <td>Example: </td>
+ *           <td><pre class="prettyprint"><code>${Tooltip1}.setTooltipVisible(false);<code></pre></td>
+ *         </tr>
+ *       </table>
+ *     </td>
+ *   </tr>
+ *   <tr class=Prop>
+ *     <td>On Format:</td>
+ *     <td colspan="2">
+ *       <table> 
+ *         <tr class=Prop>
+ *           <td>Description: </td>
+ *           <td>This event can be used to give values more custom formatting. The formatting in the control is based on the <code>return</code> value of the statement</td>
+ *         </tr>
+ *         <tr class=Prop>
+ *           <td>Example: </td>
+ *           <td><pre class="prettyprint"><code>var neg = me.getValue() < 0; if (neg){return "(" + formattedValue + ")"}<code></pre></td>
+ *         </tr>
+ *       </table>
+ *       <table style="border: 1px solid black; border-collapse: collapse;">
+ *         <tr style="border: 1px solid black; border-collapse: collapse;">
+ *           <th style="border: 1px solid black; border-collapse: collapse;padding: 5px;">Context Variables</th>
+ *           <th style="border: 1px solid black; border-collapse: collapse; padding: 5px;">value {decimal}</th>
+ *           <th style="border: 1px solid black; border-collapse: collapse; padding: 5px;">formatted {string}</th>
+ *           <th style="border: 1px solid black; border-collapse: collapse; padding: 5px;">format {object}</th>
+ *         </tr>
+ *         <tr style= "border: 1px solid black; border-collapse: collapse;">
+ *           <td rowspan="5" style= "border: 1px solid black; border-collapse: collapse;padding: 5px;">Properties</td>
+ *           <td style="color: black; font-weight: normal; border: 1px solid black; border-collapse: collapse;padding: 5px;"></td>
+ *           <td style="color: black; font-weight: normal; border: 1px solid black; border-collapse: collapse;padding: 5px;"></td>
+ *           <td style="color: black; font-weight: normal; border: 1px solid black; border-collapse: collapse;padding: 5px;">prefix</td>
+ *         </tr>
+ *         <tr style="border: 1px solid black; border-collapse: collapse;">
+ *           <td style="color: black; font-weight: normal; border: 1px solid black; border-collapse: collapse;padding: 5px;"></td>
+ *           <td style="color: black; font-weight: normal; border: 1px solid black; border-collapse: collapse;padding: 5px;"></td>
+ *           <td style="color: black; font-weight: normal; border: 1px solid black; border-collapse: collapse;padding: 5px;">postfix</td>
+ *         </tr>
+ *         <tr style="border: 1px solid black; border-collapse: collapse;">
+ *           <td style="color: black; font-weight: normal; border: 1px solid black; border-collapse: collapse;padding: 5px;"></td>
+ *           <td style="color: black; font-weight: normal; border: 1px solid black; border-collapse: collapse;padding: 5px;"></td>
+ *           <td style="color: black; font-weight: normal; border: 1px solid black; border-collapse: collapse;padding: 5px;">thousandsSeparator</td>
+ *         </tr>
+ *         <tr style="border: 1px solid black; border-collapse: collapse;">
+ *           <td style="color: black; font-weight: normal; border: 1px solid black; border-collapse: collapse;padding: 5px;"></td>
+ *           <td style="color: black; font-weight: normal; border: 1px solid black; border-collapse: collapse;padding: 5px;"></td>
+ *           <td style="color: black; font-weight: normal; border: 1px solid black; border-collapse: collapse;padding: 5px;">decimalSeparator</td>
+ *         </tr>
+ *         <tr style="border: 1px solid black; border-collapse: collapse;">
+ *           <td style="color: black; font-weight: normal; border: 1px solid black; border-collapse: collapse;padding: 5px;"></td>
+ *           <td style="color: black; font-weight: normal; border: 1px solid black; border-collapse: collapse;padding: 5px;"></td>
+ *           <td style="color: black; font-weight: normal; border: 1px solid black; border-collapse: collapse;padding: 5px;">decimalPlaces</td>
+ *         </tr>
+ *       </table>
+ *     </td>
+ *   </tr>
+ * </table>
+ */
+bpmext_control_InitDecimal = function (bpmext, utilities, domClass, domAttr, domConstruct, domGeometry, decimal, i18n, numberHelper, currencyHelper)
+{
+    this._instance = {
+        //BG-1189 declaring state variable for access through instance
+        state : {}
+    };
+    
+    if (!this.constructor.prototype._proto)
+    {
+        //Init i18n bundle
+        i18nBundle = i18n ? i18n.getLocalization("dojo.cldr", "number", i18n.normalizeLocale()) : {localeThousandsSeparator : ""};
+
+        this.constructor.prototype._proto =
+        {
+            //Locale and currency formatting setup
+            localeThousandsSeparator : i18nBundle.group,
+            localeDecimalSeparator : i18nBundle.decimal,
+            localeDecimalFormatPattern : i18nBundle.decimalFormat,
+            localeCurrencyFormatPattern: i18nBundle.currencyFormat,
+
+            MIME_PLAIN_TEXT: "text/plain",
+            //BG-948 support for IE11 clipboard data
+            IE_PLAIN_TEXT: "Text",
+            
+            SKIP_VALIDATION_RESET: false,  // bg 465
+            EVT_ONCHANGE : "eventON_CHANGE",
+            EVT_ONFOCUS : "eventON_FOCUS",
+            EVT_ONBLUR : "eventON_BLUR",
+            EVT_ONFORMAT : "eventON_FORMAT",
+            
+            //{#bug:876 - Setting default thousands and decimal separator to be locale default}
+            
+            DEF_DECIMAL_SEP : i18nBundle.decimal,
+            DEF_THOUSANDS_SEP : i18nBundle.group, 
+            DEF_PREFIX_VALUE : "", //TODO Use locale data for default???
+            DEF_POSTFIX_VALUE : "", //TODO Use locale data for default???
+            DEF_DECIMAL_PLACES : 0,
+            extractNumber: function(str, signed)
+            {
+                var res = "";
+                var signPos = -1;
+                var firstNPos = -1;
+                
+                for(var i = 0; i < str.length; i++)
+                {
+                    var c = str[i].trim();
+                    
+                    if(c == "-" && signPos == -1)
+                        signPos = i;
+                    
+                    if(c.length > 0 && !isNaN(c))
+                    {
+                        if(firstNPos == -1)
+                            firstNPos = i;
+
+                        res += c;
+                    }
+                }
+                
+                if(signed && res.length > 0 && signPos > -1 && signPos < firstNPos)
+                    res = "-" + res;
+                
+                return res;
+            },
+            parseNumericVal: function(view, data)
+            {
+                var decimalSep = view._instance.decSep;
+                var res = Number.NaN;
+                var negative = false;
+                
+                if(data.length > 0)
+                {
+                    var intPart;
+                    var decPart;
+                    var pos1 = data.lastIndexOf(decimalSep);
+                    
+                    if(pos1 != -1)
+                    {
+                        if(pos1 <= data.length -1)
+                            decPart = data.substring(pos1 + 1);
+                        else
+                            decPart = null;
+                            
+                        intPart = data.substring(0, pos1);
+                    }
+                    else
+                    {
+                        decPart = null;
+                        intPart = data;
+                    }
+                    
+                    var num = intPart != null ? this.extractNumber(intPart, true) : "0";
+                    
+                    if(decimal && decPart != null) //Only append decimal part for a decimal control
+                    {
+                        decPart = this.extractNumber(decPart, false);
+                        
+                        if(decPart.length > 0)
+                            num += "." + decPart;
+                    }
+                    
+                    if(num.length > 0)
+                        res = Number(num);
+                }
+
+                return res;
+            },          
+            _formatInput : function (view, val, saveVal)
+            {
+                var goodInput = false;
+                var prefix = view.context.options.prefix.get("value");
+                var postfix = view.context.options.postfix.get("value");
+                var decimalSep = view.context.options.decimalSep.get("value");
+                var decimalPlaces = view.context.options.decimalPlaces.get("value");
+                var hideThousandsSeparator = view.context.options.hideThousandsSeparator.get("value");
+                var thousandsSep = hideThousandsSeparator ? "" : view.context.options.thousandsSep.get("value");
+                
+                do
+                {
+                    if(val == null)
+                        break;
+
+                    if(typeof val == "string")
+                        val = bpmext.text.trim(val);
+                    else
+                        val = "" + val;
+                    
+                    if(val.length == 0)
+                        break;
+                    
+                    var numVal = val.replace(view._instance.decSep, ".");
+                    
+                    if(isNaN(numVal))
+                        break;
+
+                    numVal = Number(numVal);
+
+                    if(saveVal)
+                    {
+                        domAttr.set(view._instance.text, "data-uval", numVal); 
+                        domAttr.set(view._instance.text, "data-lval", val); 
+                    }
+                    
+                    view._instance.tmpNumVal = numVal;
+                    view._instance.tmpLocVal = val;
+                    
+                    if(view._instance.text != document.activeElement)
+                    {
+                        var fVal = bpmext.number.format(
+                            numVal, 
+                            decimalPlaces,
+                            view._instance.decSep,
+                            thousandsSep
+                            );
+
+                        var ffVal = null;
+                        
+                        if(view._instance._onFormatFn)
+                        {
+                            //{#feature: * event-driven formatting of numeric value}
+                            var format = {
+                                prefix: prefix, 
+                                postfix: postfix,
+                                thousandsSeparator: thousandsSep,
+                                decimalSeparator: decimalSep,
+                                decimalPlaces: decimalPlaces
+                            };
+                            
+                            ffVal = view._instance._onFormatFn.execute(
+                                numVal, //value
+                                fVal, //formattedValue
+                                format//format
+                                );                      
+                        }
+                        
+                        //var fVal2 = ffVal == null ? (prefix + fVal + postfix) : ffVal;
+                        var fVal2;
+                        var currency = view.context.options.currency;
+                        
+                        if (currency) 
+                        {
+                            currency = view.context.options.currency.get("value");
+                            currency = (currency !== "NONE") ? currency : "";
+                        }
+                        else
+                        {
+                            currency = "";
+                        }
+                        
+                        // null changed to undefined jmac
+//                      if (ffVal !== null) {                       
+                        if((ffVal !== null) && (ffVal !== undefined))
+                        {
+                            fVal2 = ffVal;
+                        }
+                        else if(currency !== "")
+                        {
+                            var currencySymbol = view.context.options.currencySymbol.get("value"); 
+                            var constraints = currencyHelper._mixInDefaults(dojo.mixin({currency: currency}, { exponent: false }));
+                            
+                            if (currencySymbol != null) 
+                            {
+                                constraints.symbol = currencySymbol;
+                            }
+                            
+                            if (decimalPlaces === 0) 
+                            {
+                                constraints.fractional = false;
+                            }
+                            else
+                            {
+                                constraints.places = decimalPlaces;
+                            }
+                            
+                            if (hideThousandsSeparator)
+                            {
+                                constraints.pattern = this.localeCurrencyFormatPattern.replace(i18nBundle.group, "");
+                            }
+                            
+                            fVal2 = currencyHelper.format(numVal, constraints);
+                        }
+                        else if((view.context.options.numericFormatting === undefined) || (view.context.options.numericFormatting.get("value") === "custom"))
+                        {
+                            fVal2 = prefix + fVal + postfix;
+                        }
+                        else
+                        {
+                            var constraints = {exponent: false };
+                            
+                            if (decimalPlaces === 0)
+                            {
+                                constraints.fractional = false;
+                            }
+                            else
+                            {
+                                constraints.places = decimalPlaces;
+                            }
+                            
+                            if(hideThousandsSeparator)
+                            {
+                                constraints.pattern = this.localeDecimalFormatPattern.replace(i18nBundle.group, "");
+                            }
+                                                        
+                            fVal2 = prefix + numberHelper.format(numVal, constraints) + postfix;
+                        }
+
+                        if(fVal2 === "null")
+                        {
+                            fVal2 = "";
+                        }
+                        else
+                        {
+                            view._instance.text.value = fVal2;
+                            //BG-1189 setting current state when programmatically setting input value
+                            view._instance.state.current = fVal2;
+                        }
+                    }
+                    else //If the decimal control has the focus
+                    {
+                        //Do no formatting
+                    }
+                    
+                    goodInput = true;
+                }
+                while(false);
+
+                if(!goodInput)
+                {
+                    view._instance.text.value = "";
+                    //BG-1189 setting current state when programmatically setting input value
+                    view._instance.state.current = "";
+                    domAttr.remove(view._instance.text, "data-uval");
+                    domAttr.remove(view._instance.text, "data-lval");
+                    
+                    delete view._instance.tmpNumVal;
+                    delete view._instance.tmpLocVal;
+                }
+            
+                return goodInput;                   
+            },
+            _setValue : function (view, numVal)
+            {
+                var locVal = numVal;
+                
+                if(locVal != null && view._instance.decSep != ".")
+                    locVal = ("" + locVal).replace(".", view._instance.decSep);
+                
+                try
+                {
+                    if(!view._instance._noFmt)
+                        this._formatInput(view, locVal, true);
+                    
+                    return this._checkContentValid(view);
+                }
+                catch (e)
+                {
+                    //{#feature: US-1330 Added RT localization}
+                    //bpmext.log.error("Decimal._setValue() error: " + e);
+                    bpmext.log.error("Decimal._setValue() " + bpmext.localization.formatMsg("general", "ERROR") + ": " + e);
+                    if(e.stack) { 
+                        //{#feature: US-1330 Added RT localization}
+                        //bpmext.log.error("  Call stack: " + e.stack);
+                        bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+                    }
+                }
+            },
+            _getLabelElt : function (view)
+            {
+                if(!view._instance.label)
+                    this._createLabel(view);
+                
+                return view._instance.label;
+            },
+            _createLabel : function (view)
+            {
+                view._instance.label = document.createElement("span");
+                domClass.add(view._instance.label, "control-label");
+                domConstruct.place(view._instance.label, view._instance.group, "first");
+                domAttr.set(view._instance.label, "for", view._instance.text.id);
+                domAttr.set(view._instance.label, "id", "decimal-label-" + view.context.controlidpath);
+                domAttr.set(view._instance.text, "aria-labelledby", view._instance.label.id);
+            },
+            _setLabelVisibility : function (view, flag)
+            {
+                try
+                {
+                    if(!view._instance.label)
+                        this._createLabel(view);
+
+                    view.context.setDisplay(flag == "SHOW", view._instance.label);
+                }
+                catch (e)
+                {
+                    //{#feature: US-1330 Added RT localization}
+                    //bpmext.log.error("Decimal._setLabelVisibility() error: " + e);
+                    bpmext.log.error("Decimal._setLabelVisibility() " + bpmext.localization.formatMsg("general", "ERROR") + ": " + e);
+                    if(e.stack) { 
+                        //{#feature: US-1330 Added RT localization}
+                        //bpmext.log.error("  Call stack: " + e.stack);
+                        bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+                    }
+                }
+            },
+            _setLabel : function (view, label)
+            {
+                try
+                {
+                    if(label)
+                    {
+                        if(!view._instance.label)
+                            this._createLabel(view);
+
+                        view._instance.label.innerHTML = view.context.htmlEscape(label);
+                        utilities.BiDi.applyTextDir(
+                            view._instance.label, 
+                            view._instance.label.innerHTML, 
+                            view._instance.baseTxtDir, 
+                            view._instance.genPrefTextDir
+                            );
+                    }
+                    else
+                    {
+                        if(view._instance.label)
+                        {
+                            view._instance.group.removeChild(view._instance.label);
+                            delete view._instance.label;
+                        }
+                    }
+                }
+                catch (e)
+                {
+                    //{#feature: US-1330 Added RT localization}
+                    //bpmext.log.error("Decimal._setLabel() error: " + e);
+                    bpmext.log.error("Decimal._setLabel() " + bpmext.localization.formatMsg("general", "ERROR") + ": " + e);
+                    if(e.stack) { 
+                        //{#feature: US-1330 Added RT localization}
+                        //bpmext.log.error("  Call stack: " + e.stack);
+                        bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+                    }
+                }
+            },
+            _setHelpText : function (view, text)
+			{
+				utilities.setHelpText(view, text);
+			},
+            _setPlaceholder : function (view, text)
+            {
+                try
+                {
+                    if(text)
+                        domAttr.set(view._instance.text, "placeholder", text);
+                    else
+                        domAttr.remove(view._instance.text, "placeholder");
+                }
+                catch (e)
+                {
+                    //{#feature: US-1330 Added RT localization}
+                    //bpmext.log.error("Decimal._setPlaceholder() error: " + e);
+                    bpmext.log.error("Decimal._setPlaceholder() " + bpmext.localization.formatMsg("general", "ERROR") + ": " + e);
+                    if(e.stack) { 
+                        //{#feature: US-1330 Added RT localization}
+                        //bpmext.log.error("  Call stack: " + e.stack);
+                        bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+                    }
+                }
+            },
+            _setLabelPlacement : function (view, newVal, oldVal)
+            {
+                if(!oldVal)
+                    oldVal = view._instance.oldLblPlc;
+                
+                newVal = bpmext.ui.util.normalizeLabelPlacement(newVal, bpmext.ui.util.OPTS_LBL_PLC_CLZ);
+                oldVal = bpmext.ui.util.normalizeLabelPlacement(oldVal, bpmext.ui.util.OPTS_LBL_PLC_CLZ);
+                
+                bpmext.ui.util.replaceCSSClass(view._instance.group, bpmext.ui.util.OPTS_LBL_PLC_CLZ, newVal, oldVal);
+                view._instance.oldLblPlc = newVal;
+            },
+            _setLabelWidth : function (view, labelWidth)
+			{
+				if(labelWidth != null && labelWidth != "")
+				{
+					if(!isNaN(labelWidth))
+						labelWidth += "px";
+					
+					view._instance.label.style.width = labelWidth;
+					domClass.add(view.context.element, "labelWidth");
+				}
+				else {
+					if (view._instance.label) {
+						view._instance.label.style.width = null;
+                    }
+                    
+					domClass.remove(view.context.element, "labelWidth");
+                }
+					
+			},
+            _setSizeStyle : function (view, newVal, oldVal)
+            {
+                if(!oldVal)
+                    oldVal = view._instance.oldSzStyle;
+
+                newVal = bpmext.ui.util.normalizeSizeStyle(newVal, bpmext.ui.util.OPTS_SZ_STL_CLZ);
+                oldVal = bpmext.ui.util.normalizeSizeStyle(oldVal, bpmext.ui.util.OPTS_SZ_STL_CLZ);
+                
+                bpmext.ui.util.replaceCSSClass(view._instance.text, bpmext.ui.util.OPTS_SZ_STL_CLZ, newVal, oldVal);
+                view._instance.oldSzStyle = newVal;
+                
+                bpmext.ui.util.propagateUpSizeStyle(view, newVal);
+            },
+            _setWidth : function (view, width)
+            {
+                try
+                {
+                    if (width != null && width != "")
+                    {
+                        if (!isNaN(width))
+                            width += "px";
+
+                        view.context.element.style.width = width;
+                        
+                        domClass.add(view.context.element, "widthSet");
+                    }
+                    else {
+                        view.context.element.style.width = null;
+
+                        domClass.remove(view.context.element, "widthSet");
+                    }
+                }
+                catch (e)
+                {
+                    //{#feature: US-1330 Added RT localization}
+                    //bpmext.log.error("Decimal._setWidth() error: " + e);
+                    bpmext.log.error("Decimal._setWidth() " + bpmext.localization.formatMsg("general", "ERROR") + ": " + e);
+                    if(e.stack) { 
+                        //{#feature: US-1330 Added RT localization}
+                        //bpmext.log.error("  Call stack: " + e.stack);
+                        bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+                    }
+                }
+            },
+            _setTabIndex : function (view, index)
+            {
+                if(index != null)
+                    domAttr.set(view._instance.text, "tabindex", index);
+                else
+                    domAttr.remove(view._instance.text, "tabindex");
+            },
+            _handleVisibility : function (view)
+            {
+                var visibility = utilities.handleVisibility(view.context);
+                
+                if(visibility == "REQUIRED") {
+                    view._instance.text.setAttribute("aria-required", true);
+                } else {
+                    view._instance.text.setAttribute("aria-required", false);
+                }
+                
+                if (visibility != "NONE") {
+                    view._instance.text.disabled = (visibility === "READONLY");
+                    if (!view._instance.label)
+                        return;
+                    if (visibility === "READONLY")
+                        domClass.add(view.context.element, "disabled");
+                    else
+                        domClass.remove(view.context.element, "disabled");
+                }
+
+                // Updates for WAI
+                if (domAttr.has(view._instance.text, "disabled")) {										
+                    domAttr.set(view._instance.text, "aria-disabled", "true");
+                } else {					
+                    domAttr.remove(view._instance.text, "aria-disabled");
+                }
+            },
+            _updateControl : function (view)
+            {
+                var errors = bpmext.ui.getViewValidationErrors(view);
+                
+                //Color style
+                var colStyle = errors ? "E" : view.context.options.colorStyle.get("value");
+                
+                bpmext.ui.util.replaceCSSClass(view._instance.group, bpmext.ui.util.OPTS_COL_STL_CLZ, colStyle, view._instance.oldColStyle);
+                view._instance.oldColStyle = colStyle;
+                
+                //Validation Error Icon
+                if(view._instance.icon)
+                {
+                    bpmext.ui.util.closeTooltip(view._instance.iconTT, view._instance.icon);
+                    delete view._instance.iconTT;
+                    
+                    view._instance.input.removeChild(view._instance.icon);
+                    delete view._instance.icon;
+                }
+                
+                if(errors)
+                {
+                    domClass.add(view._instance.group, "has-feedback has-error");
+                    view._instance.icon = document.createElement("span");
+                    view._instance.input.appendChild(view._instance.icon);
+                    domClass.add(view._instance.icon, "fa form-control-feedback fa-exclamation-circle");
+                    
+                    var ttOpts = {
+                            horizontalPos: "right", 
+                            verticalPos: "top", 
+                            cssClass: "validationError",
+                            plainText: false,
+                            smartPositioning: true
+                        };
+                    
+                    view._instance.iconTT = bpmext.ui.util.showTooltip(
+                        view._instance.input, 
+                        bpmext.ui.util.formatErrors(errors), 
+                        ttOpts
+                        );
+
+                    view._instance.errorMessage = document.createElement("div");
+                    view._instance.errorMessage.id = view._instance.input.firstElementChild.id + "-error-msg";
+                    view._instance.errorMessage.classList.add("hide");
+                    view._instance.errorMessage.innerHTML = bpmext.ui.util.formatErrors(errors);
+                    view._instance.input.appendChild(view._instance.errorMessage);
+                    domAttr.set(view._instance.input.firstElementChild, "aria-describedby", view._instance.errorMessage.id);
+                    domAttr.set(view._instance.input.firstElementChild, "aria-invalid", "true");
+                }
+                else
+                {
+                    domClass.remove(view._instance.group, "has-feedback has-error");
+                    if (view._instance.errorMessage) { view._instance.errorMessage.remove(); }
+					domAttr.remove(view._instance.input.firstElementChild, "aria-describedby");
+					domAttr.remove(view._instance.input.firstElementChild, "aria-invalid");
+                }
+            },
+            _checkContentValid : function (view, currentVal)
+            {
+                var val = !!currentVal ? currentVal : domAttr.get(view._instance.text, "data-uval");
+                
+                if(val != null && val != "" && isNaN(val))
+                {
+                	bpmext.ui.addViewValidationError(view, "numeric", bpmext.localization.formatMsg("general", "INVALID_CONTENT_FORMAT"));
+                    return false;
+                }
+                else if ( !decimal && (view.context.bindingType() == "Integer")  && ( (val < -2147483648) || (val > 2147483647) ))
+                {
+                    bpmext.ui.addViewValidationError(view, "numeric", bpmext.localization.formatMsg("controlDecimal", "OUT_OF_RANGE_FOR_INT", val));
+                    return false;                   
+                }
+                else if (decimal && (view.context.bindingType() == "Decimal") && ( (val < -90000000000000) || (val > 90000000000000) ))
+                {
+                    bpmext.ui.addViewValidationError(view, "numeric", bpmext.localization.formatMsg("controlDecimal", "OUT_OF_RANGE_FOR_DEC", val));
+                    return false;                   
+                } else
+                {
+                    bpmext.ui.removeViewValidationError(view, "numeric");
+                    return true;
+                }
+            },
+            _getSelection : function(node) 
+            {
+                var start = 0, end = 0, normalizedValue, range, textInputRange, len, endRange;
+
+                if(typeof node.selectionStart == "number" && typeof node.selectionEnd == "number") 
+                {
+                    start = node.selectionStart;
+                    end = node.selectionEnd;
+                }
+                else 
+                {
+                    range = document.selection.createRange();
+
+                    if(range && range.parentElement() == node) 
+                    {
+                        len = node.value.length;
+                        normalizedValue = node.value.replace(/\r\n/g, "\n");
+                        textInputRange = node.createTextRange();
+                        textInputRange.moveToBookmark(range.getBookmark());
+                        endRange = node.createTextRange();
+                        endRange.collapse(false);
+
+                        if (textInputRange.compareEndPoints("StartToEnd", endRange) > -1) 
+                            start = end = len;
+                        else 
+                        {
+                            start = -textInputRange.moveStart("character", -len);
+                            start += normalizedValue.slice(0, start).split("\n").length - 1;
+
+                            if (textInputRange.compareEndPoints("EndToEnd", endRange) > -1) 
+                                end = len;
+                            else 
+                            {
+                                end = -textInputRange.moveEnd("character", -len);
+                                end += normalizedValue.slice(0, end).split("\n").length - 1;
+                            }
+                        }
+                    }
+                }
+
+                return {"start": start, "end": end};
+            },
+            _getCaretPosition : function(ctrl) 
+            {
+                var caretPos = 0;
+                //IE Support
+                if (document.selection) 
+                {
+                    ctrl.focus ();
+                    var Sel = document.selection.createRange ();
+
+                    Sel.moveStart ('character', -ctrl.value.length);
+
+                    caretPos = Sel.text.length;
+                }
+                //Rest of the world...
+                else if (ctrl.selectionStart || ctrl.selectionStart == '0')
+                    caretPos = ctrl.selectionStart;
+
+                return (caretPos);
+            },
+            _setCaretPosition: function(ctrl, pos)
+            {
+                if(ctrl.setSelectionRange)
+                {
+                    ctrl.focus();
+                    ctrl.setSelectionRange(pos,pos);
+                }
+                else if (ctrl.createTextRange) 
+                {
+                    var range = ctrl.createTextRange();
+                    range.collapse(true);
+                    range.moveEnd('character', pos);
+                    range.moveStart('character', pos);
+                    range.select();
+                }
+            },
+            _handleInput : function (view, onInput, text, state, selection, type)
+            {
+                var inputOk = false;
+
+                state.potential = text.value;
+
+                do
+                {
+                    if(onInput)
+                    {
+                        if(/ /m.test(state.potential))
+                            break;
+
+                        var tmp = state.potential;
+                        
+                        if(view._instance.decSep != "." && tmp.indexOf(".") != -1)
+                            break;
+                        
+                        tmp = tmp.replace(view._instance.decSep, ".");
+
+                        //if(state.potential != "-" && isNaN(state.potential))
+                        //if(state.potential != "-" && isNaN(tmp))
+                        if(tmp != "-" && tmp != "-." && tmp != "." && isNaN(tmp))
+                            break;
+                    
+                        if(decimal)
+                        {
+                            var count = 0, pos = -1;
+                            
+                            for(;;)
+                            {
+                                pos = state.potential.indexOf(view._instance.decSep, pos + 1);
+                                if(pos != -1)
+                                    count++;
+                                else
+                                    break;
+                            } 
+                            
+                            if(count > 1)
+                                break;
+                        }
+                        else
+                        {
+                            if(state.potential.indexOf(view._instance.decSep) != -1)
+                                break;
+                        }
+                    }
+
+                    view._instance.tmpLocVal = state.potential;
+                    view._instance.tmpNumVal = Number(view._instance.tmpLocVal.replace(view._instance.decSep, "."));
+                    
+                    inputOk = true;
+                }
+                while(false);
+                
+                if(!inputOk)
+                {
+                    //save caret position
+                    var pos = this._getCaretPosition(text);
+                    if(pos > 0)
+                        pos -= 1;
+                    
+                    /* {#bug: 428 Fixed control populating with 'undefined' if the first attempted character is a space} */
+                    //replace bad text with valid text
+                    if (view._instance.tmpLocVal) {
+                        state.current = text.value = view._instance.tmpLocVal;
+                    } else {
+                        state.current = text.value = "";
+                    }
+                    
+                    //restore caret position
+                    this._setCaretPosition(text, pos);
+                }
+                else
+                {
+                    state.current = view._instance.tmpLocVal = text.value;
+                    view._instance.tmpNumVal = Number(view._instance.tmpLocVal.replace(view._instance.decSep, "."));
+                }
+                
+                return inputOk;
+            }
+        };
+
+        /*
+        Public control methods *************************************************************
+         */
+         
+        /**
+         * @instance
+         * @memberof Decimal
+         * @method setLabel
+         * @param {string} label set the label name
+         * @desc Set label for this control
+         */
+        this.constructor.prototype.setLabel = function (text)
+        {
+            this.context.options._metadata.label.set("value", text);
+        };
+
+        /**
+         * @instance
+         * @memberof Decimal
+         * @method getLabel
+         * @desc Get label associated with this control
+         * @returns {string}
+         */
+        this.constructor.prototype.getLabel = function ()
+        {
+            return this.context.options._metadata.label.get("value");
+        };
+        
+        /**
+         * @instance
+         * @memberof Decimal
+         * @method setLabelPlacement
+         * @param {string} placement
+         * @param {string} placement "T"|"TOP"=Top | "L"|"LEFT"=Left 
+         * @desc Set label placement for control.  NOTE: to avoid ambiguity always set the label placement using "T"|"L"
+         * @example me.setLabelPlacement("L")
+         */
+        this.constructor.prototype.setLabelPlacement = function (plc)
+        {
+            this.context.options.labelPlacement.set("value", plc);
+        };
+
+        /**
+         * @instance
+         * @memberof Decimal
+         * @method getLabelPlacement
+         * @desc Get label placement for control.  NOTE: This always returns the label placement as set, to avoid ambiguity always set the label placement using "T"|"L"
+         * @returns {string} 
+         */
+        this.constructor.prototype.getLabelPlacement = function ()
+        {
+            return this.context.options.labelPlacement.get("value");
+        };
+
+        /**
+         * @instance
+         * @memberof Decimal
+         * @method isLabelVisible
+         * @desc Get label visibility for this control
+         * @returns {boolean}
+         */
+        this.constructor.prototype.isLabelVisible = function ()
+        {
+            return this.context.options._metadata.labelVisibility.get("value") == "SHOW";
+        };
+
+        /**
+         * @instance
+         * @memberof Decimal
+         * @method setLabelVisible
+         * @param {boolean} flag sets the visibility {true | false}
+         * @desc Set label visibility for this control
+         */
+        this.constructor.prototype.setLabelVisible = function (flag)
+        {
+            this.context.options._metadata.labelVisibility.set("value", flag ? "SHOW" : "HIDE");
+        };      
+        
+        /**
+		 * @instance
+		 * @memberof Decimal
+		 * @method getLabelWidth
+		 * @desc Get label width of Decimal control (e.g. 50px, 20%, 2em - omitting the unit assumes px)
+		 * @returns {string}
+		 */
+		this.constructor.prototype.getLabelWidth = function ()
+		{
+			return this.context.options.labelWidth.get("value");
+		};
+		
+		/**
+		 * @instance
+		 * @memberof Decimal
+		 * @method setLabelWidth
+		 * @param {string} labelWidth Control's label width
+		 * @desc Set label width of Decimal control (e.g. 50px, 20%, 2em - omitting the unit assumes px)
+		 */
+		this.constructor.prototype.setLabelWidth = function (labelWidth)
+		{
+			this.context.options.labelWidth.set("value", labelWidth);
+		};
+        
+        /**
+         * @instance
+         * @memberof Decimal
+         * @method getValue
+         * @desc Get value currently in control
+         * @returns {number}
+         */
+        this.constructor.prototype.getValue = function ()
+        {
+            //{#bug: BG-895 Deleting rows on Table causes issues with combination of getSibling() and SUM}
+            if(!this.context.binding)
+            {
+                var val = domAttr.get(this._instance.text, "data-uval");
+                
+                if(val != null && !isNaN(val))
+                    this.setValue(val); //TODO Determine if setting value for getValue OK
+            }
+            var res = this.context.binding.get("value");
+            return res == null ? 0 : Number(res);
+        };
+
+        /**
+         * @instance
+         * @memberof Decimal
+         * @method setValue
+         * @param {number} val Value to set in control
+         * @desc Process the input parameter value into a JavaScript number using Number() and set the value for the view.
+         */
+        this.constructor.prototype.setValue = function (val)
+        {
+            //{#bug: BG-895 Deleting rows on Table causes issues with combination of getSibling() and SUM}
+            if(!this.context.binding)
+                this.context.binding = bpmext.ui.substituteObject(this);
+            try {
+                var locVal = val;
+                
+                if(locVal != null && this._instance.decSep != ".") {
+                    locVal = ("" + locVal).replace(this._instance.decSep, ".");
+                }
+                
+                val = Number(locVal);
+            } catch(e) {}
+            
+            this.context.binding.set("value", val);
+        };
+
+        /**
+         * @instance
+         * @memberof Decimal
+         * @method setPlaceholder
+         * @param {string} text sets placeholder text
+         * @desc Set placeholder text for this control
+         */
+        this.constructor.prototype.setPlaceholder = function (text)
+        {
+            this.context.options.placeHolder.set("value", text);
+        };
+
+        /**
+         * @instance
+         * @memberof Decimal
+         * @method getPlaceholder
+         * @desc Get placeholder text associated with this control
+         * @returns {string}
+         */
+        this.constructor.prototype.getPlaceholder = function ()
+        {
+            return this.context.options.placeHolder.get("value");
+        };       
+        
+        /**
+         * @instance
+         * @memberof Decimal
+         * @method setWidth
+         * @param {string} width sets the width of the control
+         * @desc Set width of this control (e.g. 50px, 20%, 2em - omitting the unit assumes px)
+         */
+        this.constructor.prototype.setWidth = function (width)
+        {
+            this.context.options.width.set("value", width);
+        };
+
+        /**
+         * @instance
+         * @memberof Decimal
+         * @method getWidth
+         * @desc Get configured width for this control (including unit)
+         * @returns {string}
+         */ 
+        this.constructor.prototype.getWidth = function ()
+        {
+            return this.context.options.width.get("value");
+        };
+
+        /**
+         * @instance
+         * @memberof Decimal
+         * @method setSizeStyle
+         * @param {string} style "DEFAULT"|"DEF"|"NORMAL"|"D"=Default | "SMALL"|"S"=Small | "LARGE"|"L"=Large 
+         * @desc Sets size style of the control.  NOTE: to avoid ambiguity always set the size style using "D"|"S"|"L"
+         */     
+        this.constructor.prototype.setSizeStyle = function (style)
+        {
+            return this.context.options.sizeStyle.set("value", style);
+        };
+
+        /**
+         * @instance
+         * @memberof Decimal
+         * @method getSizeStyle
+         * @desc Gets size style of the control.  NOTE: This always returns the size style as set, to avoid ambiguity always set the size style using "D"|"S"|"L"
+         * @returns {string} 
+         */     
+        this.constructor.prototype.getSizeStyle = function ()
+        {
+            return this.context.options.sizeStyle.get("value");
+        };
+
+        //{#feature: * added get/setTextColor methods}
+        /**
+         * @instance
+         * @memberof Decimal
+         * @method setTextColor
+         * @param {string} textColor Color of input when formatted (all valid css values accepted - e.g. red, #ff0000, rgb(255,0,0))
+         * @desc Sets color of characters in control
+         */
+        this.constructor.prototype.setTextColor = function (textColor)
+        {
+            if(textColor == null)
+                textColor = "inherit";
+            
+            this._instance.text.style.color = textColor;
+        };
+        
+        /**
+         * @instance
+         * @memberof Decimal
+         * @method getTextColor
+         * @desc Gets color of characters in control
+         * @returns {string} Color of characters in control
+         */
+        this.constructor.prototype.getTextColor = function ()
+        {
+            var textColor = this._instance.text.style.color;
+
+            if(textColor == "inherit")
+                textColor = null;
+            
+            return textColor;
+        };
+        
+        /**
+         * @instance
+         * @memberof Decimal
+         * @method setTabIndex
+         * @param {integer} tabIndex Tab indices start at 1 and may be set sparsely
+         * @desc Sets tab index of this control
+         */
+        this.constructor.prototype.setTabIndex = function (tabIndex)
+        {
+            this.context.options.tabIndex.set("value", tabIndex);
+        };
+
+        /**
+         * @instance
+         * @memberof Decimal
+         * @method getTabIndex
+         * @desc Get tab index for this control
+         * @returns {integer}
+         */
+        this.constructor.prototype.getTabIndex = function ()
+        {
+            return domAttr.get(this._instance.text, "tabindex");
+        };
+        
+        /**
+         * @instance
+         * @memberof Decimal
+         * @method focus
+         * @desc Set focus on this control
+         */
+        this.constructor.prototype.focus = function ()
+        {
+            this._instance.text.focus();
+        };
+        
+        /**
+         * @instance
+         * @memberof Decimal
+         * @method getType
+         * @desc Get descriptive string representing the type of control
+         * @returns {string}
+         */
+        this.constructor.prototype.getType = function ()
+        {
+            return  (decimal ? "decimal.3" : "integer.3");
+        };
+        
+        //{#feature: US-696 ARIA labeling}
+        this.constructor.prototype._getHTMLInputElement = function () 
+        {
+            return this._instance.text;  //This is the element that will need its "aria-labelledby" attribute set
+        };
+        //End US-696
+
+        /**
+		 * @instance
+		 * @memberof Decimal
+		 * @method setHelpText
+		 * @param {string} helptext Help text for the control
+		 * @desc Set help text for the control
+		 */
+		this.constructor.prototype.setHelpText = function (text) {
+			this.context.options._metadata.helpText.set("value", text);
+		};
+
+		/**
+		 * @instance
+		 * @memberof Decimal
+		 * @method getHelpText
+		 * @desc Get help text associated with the control
+		 * @returns {string}
+		 */
+		this.constructor.prototype.getHelpText = function () {
+			return this.context.options._metadata.helpText.get("value");
+		};
+        
+        /*
+        Coach NG Lifecycle methods *************************************************************
+         */
+        this.constructor.prototype.load = function ()
+        {
+            try
+            {
+                var opts = this.context.options;
+                var mdt = opts._metadata;
+
+                this._instance.baseTxtDir = mdt.baseTextDirection && mdt.baseTextDirection.get("value") ? mdt.baseTextDirection.get("value") : utilities.BiDi.BASE_TEXT_DIRECTION._default;
+                this._instance.genPrefTextDir = this.context.bpm.system.baseTextDirection;
+                
+                if (!this.context.binding)
+                    this.context.binding = bpmext.ui.substituteObject(this);
+
+                if (!opts.tabIndex)
+                    bpmext.ui.substituteConfigOption(this, "tabIndex", null);
+                    
+                if (!opts.placeHolder)
+                    bpmext.ui.substituteConfigOption(this, "placeHolder", null);
+                    
+                if (!opts.colorStyle)
+                    bpmext.ui.substituteConfigOption(this, "colorStyle", "D");
+
+                if (!opts.sizeStyle)
+                    bpmext.ui.substituteConfigOption(this, "sizeStyle", "D");
+
+                if (!opts.width)
+                    bpmext.ui.substituteConfigOption(this, "width", null);
+
+                if(!opts.labelPlacement)
+                    bpmext.ui.substituteConfigOption(this, "labelPlacement", "T");
+                
+                if(!opts.labelWidth)
+					bpmext.ui.substituteConfigOption(this, "labelWidth", null);
+                
+                if(!opts.decimalSep)
+                    bpmext.ui.substituteConfigOption(this, "decimalSep", this._proto.DEF_DECIMAL_SEP);
+                
+                if(!opts.thousandsSep)
+                    bpmext.ui.substituteConfigOption(this, "thousandsSep", this._proto.DEF_THOUSANDS_SEP);
+                    
+                if(!opts.hideThousandsSeparator)
+                    bpmext.ui.substituteConfigOption(this, "hideThousandsSeparator", false);
+
+                if(!opts.decimalPlaces)
+                    bpmext.ui.substituteConfigOption(this, "decimalPlaces", decimal ? this._proto.DEF_DECIMAL_PLACES : null);
+
+                if(!opts.prefix)
+                    bpmext.ui.substituteConfigOption(this, "prefix", this._proto.DEF_PREFIX_VALUE);
+
+                if(!opts.postfix)
+                    bpmext.ui.substituteConfigOption(this, "postfix", this._proto.DEF_POSTFIX_VALUE);
+                    
+                if(!opts.currencySymbol)
+                    bpmext.ui.substituteConfigOption(this, "currencySymbol", null);
+
+                this._instance.decSep = (opts.decimalSep.get("value").length != 1 ? this._proto.DEF_DECIMAL_SEP : opts.decimalSep.get("value"));
+                
+                this._instance.group = document.createElement("div");
+                domClass.add(this._instance.group, "form-group");
+                this._instance.input = document.createElement("div");
+                domClass.add(this._instance.input, "input");
+                
+                this._instance.text = document.createElement("input");
+                domClass.add(this._instance.text, "form-control");
+                domAttr.set(this._instance.text, "id", "decimal-input-" + this.context.controlidpath);
+                domAttr.set(this._instance.text, "type", "text");
+                domAttr.set(this._instance.text, "role", "textbox");
+                this._instance.input.appendChild(this._instance.text);
+                this._instance.group.appendChild(this._instance.input);
+                this.context.element.appendChild(this._instance.group);
+
+                var view = this;
+
+                bpmext.ui.setupFormulaTriggeredUpdates(
+                    this,
+                    function (expResult)
+                    {
+                        if (expResult == undefined)
+                        {
+                            expResult = 0;
+                        }
+
+                        view.setValue(expResult);
+                    },
+                    this.getValue
+                    );              
+                
+                bpmext.ui.loadView(this);
+
+                this._instance.vc = bpmext.ui.getNearestValidationContainer(view);
+                
+                this._proto._setSizeStyle(this, opts.sizeStyle.get("value"));
+                this._proto._setLabelVisibility(this, opts._metadata.labelVisibility.get("value"));
+                this._proto._setLabelPlacement(this, opts.labelPlacement.get("value"));
+                this._proto._setLabel(this, opts._metadata.label.get("value"));
+				this._proto._setLabelWidth(this, opts.labelWidth.get("value"));                
+                this._proto._setPlaceholder(this, opts.placeHolder.get("value"));
+                this._proto._setWidth(this, opts.width.get("value"));
+
+                if(opts[this._proto.EVT_ONFORMAT])
+                {
+                    bpmext.ui.registerEventHandlingFunction(this, this._proto.EVT_ONFORMAT, "value", "formattedValue", "format");//, "valid");
+                    this._instance._onFormatFn = bpmext.ui.getEventHandlingFunction(this, this._proto.EVT_ONFORMAT);
+
+                }
+
+                if(this._proto._setValue(this, this.context.binding.get("value")))
+                    this._proto._updateControl(this);
+                
+                var tmp = mdt.helpText ? mdt.helpText.get("value") : null;
+				if (tmp && tmp.length > 0)
+				{
+					this._proto._setHelpText(this, tmp);
+				}
+                
+                this._proto._setTabIndex(this, opts.tabIndex.get("value"));
+                                
+                if(opts[this._proto.EVT_ONCHANGE])
+                {
+                    bpmext.ui.registerEventHandlingFunction(this, this._proto.EVT_ONCHANGE, "newValue", "oldValue");
+
+                    this._instance.text.onchange = function (event) {
+                        if (view._proto._checkContentValid(view)) {
+                            var val = this.value;
+                            try {
+                                var locVal = val;
+                                
+                                if(locVal != null && view._instance.decSep != ".") {
+                                    locVal = ("" + locVal).replace(view._instance.decSep, ".");
+                                }
+                                
+                                val = Number(locVal);
+                            } catch(e) {}
+                            view.context.binding.set("value", Number(val));
+                        } else {
+                            var origBindingVal = view.context.binding.get("value");
+                            //the entered value is not valid, so reset the value to the previous good value
+                            view._proto._formatInput(view, origBindingVal, true);
+                            this.value = origBindingVal;
+                        }
+                    };
+                }
+
+                this._instance.text.onfocus = function(event)
+                {
+                    var val = domAttr.get(this, "data-lval");
+                    
+                    if(val != null)
+                    {
+                        this.value = val;
+
+                        //{#bug: * Worked around IE bug that moves the cursor to the beginning of the input on focus}
+                        if(this.createTextRange) 
+                        {
+                            var r = this.createTextRange();
+                            r.moveStart("character", this.value.length);
+                            r.select();
+                        }
+                    }
+                    
+                    if(opts[view._proto.EVT_ONFOCUS])
+                        bpmext.ui.executeEventHandlingFunction(view, view._proto.EVT_ONFOCUS);
+                };               
+
+                if(opts[this._proto.EVT_ONFOCUS]){
+                    bpmext.ui.registerEventHandlingFunction(this, this._proto.EVT_ONFOCUS);
+                }
+                
+                if(opts[this._proto.EVT_ONBLUR])
+                    bpmext.ui.registerEventHandlingFunction(this, this._proto.EVT_ONBLUR);
+
+                this._instance.text.onblur = function(event)
+                {
+                    var origBindingVal = view.context.binding.get("value");
+                    
+                    view._proto._formatInput(view, view._instance.tmpLocVal, true);
+                    
+/*                  Bug-894 - Moved below code underneath catch
+                    if(opts[view._proto.EVT_ONBLUR])
+                        bpmext.ui.executeEventHandlingFunction(view, view._proto.EVT_ONBLUR);
+*/
+
+                    view._instance._noFmt = true;
+                    
+                    try
+                    {
+                        if(view._proto._checkContentValid(view))    
+                        {
+                            var tmpNum = this.getAttribute("data-uval");
+                            
+                            if (tmpNum != null)
+                                tmpNum = Number(tmpNum);
+                            
+                            view.context.binding.set("value", tmpNum);
+                        } else {
+                            //the entered value is not valid, so reset the value to the previous good value
+                            view._proto._formatInput(view, origBindingVal, true);
+                            this.value = origBindingVal;
+                        }
+                    }
+                    catch(ex) {}
+
+                   delete view._instance._noFmt;
+
+                    //BG-894 Moved code
+                    if(opts[view._proto.EVT_ONBLUR])
+                        bpmext.ui.executeEventHandlingFunction(view, view._proto.EVT_ONBLUR);
+                    
+                };
+
+                if(true)
+                {
+                    var onInput = true;
+                    var text1 = this._instance.text;
+                    var view = this;
+                    var sel;
+
+                    //BG-1189 accessing state variable as member of instance
+                    view._instance.state.current = this._instance.tmpNumVal;
+                    view._instance.state.potential = void(0);
+                    /*var state = {
+                            current : text1.value,
+                            potential : void 0
+                            };*/
+                        
+                    var redo;
+                    var undo;                   
+
+                    //Defect#303997 - On IE pressing ENTER does not fire change event
+                    var ie = utilities.isIE();
+                    
+                    this._instance.text.onkeydown = function(event)
+                    {
+                        //console.log("onkeydown: " + event);
+                        //{#bug: BG-254 space character erroneously allowed when field pre-populated}
+                        if(event.key === " " || event.key === "Spacebar")
+                        {
+                            event.preventDefault();
+                            return false;
+                        }
+
+                        redo = false;
+                        undo = false;
+
+                        if (event.key === "z" && event.ctrlKey) //Ctrl-Z
+                        {
+                            redo = true;
+                            //BG-1189 accessing state variable as member of instance
+                            view._instance.state.current = "" + Number(text1.value);
+                            //state.current = text1.value;
+                            sel.start = 0;
+                            sel.end = 0;
+                            setTimeout(function(){
+                                //BG-1189 accessing state variable as member of instance
+                                view._proto._handleInput(view, onInput, text1, view._instance.state, sel, "undo");
+                                //view._proto._handleInput(view, onInput, text1, state, sel, "undo");
+                            });
+                        }
+                        else if(event.key === "y" && event.ctrlKey) //Ctrl-Y
+                        {
+                            undo = true;
+                            //BG-1189 accessing state variable as member of instance
+                            view._instance.state.current = "" + Number(text1.value);
+                            //state.current = "" + Number(text1.value);
+                            sel.start = 0;
+                            sel.end = 0;
+                            
+                            setTimeout(function(){
+                                //BG-1189 accessing state variable as member of instance
+                                view._proto._handleInput(view, onInput, text1, view._instance.state, sel, "redo");
+                                //view._proto._handleInput(view, onInput, text1, state, sel, "redo");
+                            });
+                        }
+                        else if(event.key === "Delete" || event.key === "Backspace") //backspace or delete, if there is a selection
+                        {
+                            sel = view._proto._getSelection(text1);
+                            
+                            if (!!sel && sel.end != sel.start) {
+                                setTimeout(function(){
+                                  //BG-1189 accessing state variable as member of instance
+                                    view._proto._handleInput(view, onInput, text1, view._instance.state, sel, "change");
+                                });
+                            }
+                        }
+                        else if (ie && ie <=11 && event.key === "Enter" && event.target === view._instance.text) {
+                            view._instance.text.onchange();
+                        }
+                        else
+                        {
+                            sel = view._proto._getSelection(text1);
+                        }
+                    };
+                    
+                    this._instance.text.oninput = function(event)
+                    {
+                        //console.log("oninput: " + event);
+                        if(redo || undo)
+                            return;
+
+                        //BG-1189 accessing state variable as member of instance
+                        view._instance.state.potential = text1.value;
+                        //state.potential = text1.value;
+
+                        //if(state.current != state.potential)
+                        if(view._instance.state.current != view._instance.state.potential)
+                            view._proto._handleInput(view, onInput, text1, view._instance.state, sel, "change");
+                        //view._proto._handleInput(view, onInput, text1, state, sel, "change");
+                        else
+                            view._instance.tmpNumVal = view._instance.state.potential;
+                            //view._instance.tmpNumVal = state.potential;
+
+                        view._instance.state.potential = null;
+                        //state.potential = null;
+                    }
+
+                    this._instance.text.onpaste = function(event)
+                    {
+                        //console.log("onpaste: " + event);
+
+                        //BG-947 prevent paste in disabled control
+                        if (!view._instance.text.disabled)
+                        {
+                            var data;
+                            if(event.clipboardData)
+                            {
+                                if(event.clipboardData.types.length > 0)
+                                {
+                                    for(var i = 0; i < event.clipboardData.types.length; i++)
+                                    {
+                                        if(event.clipboardData.types[i] == view._proto.MIME_PLAIN_TEXT)
+                                        {
+                                            data = event.clipboardData.getData(view._proto.MIME_PLAIN_TEXT);
+                                            break;
+                                            //Moved to if(data)
+                                        }
+                                    }
+                                }
+                            } 
+                            else if (window.clipboardData)
+                            {
+                                //BG-948 support for IE11 clipboard data
+                                data = window.clipboardData.getData(view._proto.IE_PLAIN_TEXT);
+                            }
+                            
+                            //BG-948 moved from for loop, support for IE11 clipboard data
+                            if (data != null)
+                            {
+                                data = data.trim();
+                                var curVal = this.value;
+                                var sel = view._proto._getSelection(this);
+                                
+                                if(sel != null)
+                                {
+                                    var part1 = curVal.substring(0, sel.start);
+                                    var part2 = curVal.substring(sel.end);
+
+                                    data = part1 + data + part2;
+                                }
+                                
+                                var res = view._proto.parseNumericVal(view, data);
+
+                                if(!isNaN(res) && view._proto._checkContentValid(view, res))
+                                {
+                                    view.setValue(Number(res));
+                                        
+                                    var locVal = "" + res;
+                                        
+                                    if(view._instance.decSep != ".")
+                                        locVal = locVal.replace(".", view._instance.decSep);
+                                        
+                                    view._instance.text.value = locVal;
+                                    //BG-1189 setting current state when programmatically setting input value
+                                    view._instance.state.current =  locVal;
+                                    event.preventDefault();
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            catch (e)
+            {
+                //{#feature: US-1330 Added RT localization}
+                //bpmext.log.error("Error on load event [" + this.context.viewid + "]: " + e);
+                bpmext.log.error(bpmext.localization.formatMsg("general", "ERROR_ONLOAD_EVENT") + " [" + this.context.viewid + "]: " + e);
+                if(e.stack) { 
+                    //{#feature: US-1330 Added RT localization}
+                    //bpmext.log.error("  Call stack: " + e.stack);
+                    bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+                }
+            }
+        };
+
+        this.constructor.prototype.view = function ()
+        {
+            try
+            {
+                this._proto._handleVisibility(this);
+            }
+            catch (e)
+            {
+                //{#feature: US-1330 Added RT localization}
+                //bpmext.log.error("Error on view event [" + this.ui.getAbsoluteName() + "]: " + e);
+                bpmext.log.error(bpmext.localization.formatMsg("general", "ERROR_ONVIEW_EVENT") + " [" + this.ui.getAbsoluteName() + "]: " + e);
+                if(e.stack) { 
+                    //{#feature: US-1330 Added RT localization}
+                    //bpmext.log.error("  Call stack: " + e.stack);
+                    bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+                }
+            }
+        };
+
+        this.constructor.prototype.change = function (event)
+        {
+            bpmext.log.debug("event.newVal [" + event.newVal + "] is of type " + typeof event.newVal +
+                "-- event.oldVal [" +  event.oldVal + "] is of type " + typeof event.oldVal);
+
+            try
+            {
+                if (event.type == "config")
+                {
+                    switch (event.property)
+                    {
+                        case "_metadata.label":
+                        {
+                            this._proto._setLabel(this, event.newVal);
+                            this._proto._setHelpText(this, this.context.options._metadata.helpText.get("value"));
+                            break;
+                        }
+                        case "_metadata.visibility":
+                        {
+                            this._proto._handleVisibility(this);
+                            break;
+                        }
+                        case "_metadata.labelVisibility":
+                        {
+                            this._proto._setLabelVisibility(this, event.newVal);
+                            break;
+                        }
+                        case "_metadata.helpText":
+                        {
+							this._proto._setHelpText(this, event.newVal);
+                            this._proto._updateControl(this);
+                            break;
+                        }
+                        case "width":
+                        {
+                            this._proto._setWidth(this, event.newVal);
+                            break;
+                        }
+                        case "sizeStyle":
+                        {
+                            this._proto._setSizeStyle(this, event.newVal, event.oldVal);
+                            break;
+                        }
+                        case "tabIndex":
+                        {
+                            this._proto._setTabIndex(this, event.newVal);
+                            break;
+                        }
+                        case "placeHolder":
+                        {
+                            this._proto._setPlaceholder(this, event.newVal);
+                            break;
+                        }
+                        case "labelPlacement":
+                        {
+                            this._proto._setLabelPlacement(this, event.newVal);
+                            break;
+                        }
+						case "labelWidth":
+						{
+							this._proto._setLabelWidth(this, event.newVal);
+							break;
+						}                        
+                        //{bug:587 allow for config options to immediatly update the displayed value.}
+                        case "decimalSep":
+                        {
+                            var tmpDecSep =  event.newVal != null ? event.newVal.trim() : this._proto.DEF_DECIMAL_SEP;
+                            this._instance.decSep = tmpDecSep.length > 0 ? tmpDecSep : this._proto.DEF_DECIMAL_SEP;
+                            this._proto._formatInput(this, this.context.binding.get("value"))
+                            break;
+                        }
+                        case "decimalPlaces":
+                        {
+                            this.context.options.decimalPlaces.set("value", event.newVal != null ? event.newVal : this._proto.DEF_DECIMAL_PLACES);
+                            this._proto._formatInput(this, this.context.binding.get("value"));
+                            break;
+                        }
+                        case "thousandsSep":
+                        {
+                            this.context.options.thousandsSep.set("value", event.newVal != null && event.newVal.length > 0 ? event.newVal[0] : this._proto.DEF_THOUSANDS_SEP);
+                            this._proto._formatInput(this, this.context.binding.get("value"));
+                            break;
+                        }
+                        case "prefix":
+                        {
+                            this.context.options.prefix.set("value", event.newVal != null && event.newVal.length > 0 ? event.newVal : this._proto.DEF_PREFIX_VALUE);
+                            this._proto._formatInput(this, this.context.binding.get("value"));
+                            break;
+                        }
+                        case "postfix":
+                        {
+                            this.context.options.postfix.set("value", event.newVal != null && event.newVal.length > 0 ? event.newVal : this._proto.DEF_POSTFIX_VALUE);
+                            this._proto._formatInput(this, this.context.binding.get("value"));
+                            break;
+                        }
+                    }
+                }
+                else if(event.insertedInto == event.removedFrom)
+                {
+                    if (this._proto.SKIP_VALIDATION_RESET == false)
+                        this.setValid(true);
+                    // {#bug 465 Integer bound must be valid 32bit signed number}
+                    if (    (!this._proto.SKIP_VALIDATION_RESET) && (!decimal) && ( this.context.bindingType() == "Integer" ) &&
+                            ( (event.newVal < -2147483648) || (event.newVal > 2147483647) )  )
+                    {
+                        //{#feature: US-1330 Added RT localization}
+                        //this.setValid(false,event.newVal + " out of range for type Integer");
+                        this.setValid(false, bpmext.localization.formatMsg("controlDecimal", "OUT_OF_RANGE_FOR_INT", event.newVal));
+                        this._proto.SKIP_VALIDATION_RESET = true;
+                        this.context.binding.set("value", Number(event.oldVal));
+                    }
+                    // {#bug 794 Decimal bound must be in range -90000000000000 to +90000000000000}
+                    else if (   (!this._proto.SKIP_VALIDATION_RESET) && (decimal) && ( this.context.bindingType() == "Decimal" ) &&
+                            ( (event.newVal < -90000000000000) || (event.newVal > 90000000000000) )  )
+                    {
+                        //{#feature: US-1330 Added RT localization}
+                        //this.setValid(false,event.newVal + " out of range for type Decimal");
+                        this.setValid(false, bpmext.localization.formatMsg("controlDecimal", "OUT_OF_RANGE_FOR_DEC", event.newVal));
+                        this._proto.SKIP_VALIDATION_RESET = true;
+                        this.context.binding.set("value", Number(event.oldVal));
+                    }                   
+                    else
+                    {
+                        this._proto._setValue(this, event.newVal);
+//                      if (this._proto.SKIP_VALIDATION_RESET == false)
+//                          this.setValid(true);
+                        this._proto.SKIP_VALIDATION_RESET = false;
+                        if(event.newVal != event.oldVal)
+                            bpmext.ui.executeEventHandlingFunction(this, this._proto.EVT_ONCHANGE, event.newVal, event.oldVal);
+                            
+                        if(this.isBound())
+                            this.propagateUpValueChange(event); //Update repeating parent's data if in repeating parent
+                        
+                        //Let subscribers know this control's value has changed
+                        bpmext.ui.broadcastExpressionTrigger(this, bpmext.ui.PHASE_NORMAL); 
+                    }
+                }
+            }
+            catch (e)
+            {
+                //{#feature: US-1330 Added RT localization}
+                //bpmext.log.error("Error on change event [" + this.ui.getAbsoluteName() + "]: " + e);
+                bpmext.log.error(bpmext.localization.formatMsg("general", "ERROR_ONCHANGE_EVENT") + " [" + this.ui.getAbsoluteName() + "]: " + e);
+                if(e.stack) { 
+                    //{#feature: US-1330 Added RT localization}
+                    //bpmext.log.error("  Call stack: " + e.stack);
+                    bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+                }
+            }
+        };
+
+        this.constructor.prototype.validate = function (event)
+        {
+            try
+            {
+                bpmext.ui.updateViewValidationState(this, event);
+
+                this._proto._updateControl(this);
+                if(this._instance.vc)
+                    this._instance.vc.validate(event);
+            }
+            catch (e)
+            {
+                //{#feature: US-1330 Added RT localization}
+                //bpmext.log.error("Error on validate event [" + this.ui.getAbsoluteName() + "]: " + e);
+                bpmext.log.error(bpmext.localization.formatMsg("general", "ERROR_ONVALIDATE_EVENT") + " [" + this.ui.getAbsoluteName() + "]: " + e);
+                if(e.stack) { 
+                    //{#feature: US-1330 Added RT localization}
+                    //bpmext.log.error("  Call stack: " + e.stack);
+                    bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+                }
+            }           
+        };
+
+        /*
+        this.constructor.prototype.collaboration = function (event)
+        {
+        };
+        */
+        
+        this.constructor.prototype.unload = function ()
+        {
+            bpmext.ui.unloadView(this);
+        };
+    }
+}

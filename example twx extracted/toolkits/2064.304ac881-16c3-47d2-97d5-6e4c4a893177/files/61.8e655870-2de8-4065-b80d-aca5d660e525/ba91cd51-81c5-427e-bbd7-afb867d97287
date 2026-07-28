@@ -1,0 +1,1057 @@
+/*
+ * #BEGIN COPYRIGHT
+ *
+ * Licensed Materials - Property of IBM
+ * 5725-C95
+ * (C) Copyright IBM Corporation 2017, 2019. All Rights Reserved.
+ * US Government Users Restricted Rights- Use, duplication or disclosure
+ * restricted by GSA ADP Schedule Contract with IBM Corp.
+ *
+ * #END COPYRIGHT
+ */
+
+/*
+Instructions:
+------------
+1) Prereqs: Your control in PD should _at least_ have the following entries in AMD Dependencies:
+- com.ibm.bpm.coach.controls/utilities --> utilities
+- com.ibm.bpm.coach.controls/utilities --> bpmext
+...Add more AMD dependencies to fit the needs of your control
+
+2) Rename the function below from bpmext_control_InitButton to bpmext_control_Init<Your control name>,
+for example: bpmext_control_InitDateTime
+
+3) Change the function parameters to match the objects in your AMD Dependencies
+
+4) Change the function call in the control's Inline Javascript section to match the function and
+parameters specified below - for example from:
+bpmext_control_InitButton.call(this, bpmext, utilities);
+...to:
+bpmext_control_InitDateTime.call(this, utilities, bpmext, domClass, domConstruct);
+...note how the function is invoked using call(), and the "this", "utilities", and "bpmext"
+parameters are always passed
+
+General Notes:
+-------------
+The control logic below makes use of a _proto and an _instance object. They sort of work like
+local namespaces to reduce the risk of name collision if IBM decides to add more functions and
+attributes at the top level of their Coach View class
+ */
+
+/**
+ * @ignore
+ * @instance
+ * @memberof Button
+ * @method isValid
+ */
+
+/**
+ * @ignore
+ * @instance
+ * @memberof Button
+ * @method setValid
+ */
+
+/**
+ * @ignore
+ * @instance
+ * @memberof Button
+ * @method isLabelVisible
+ */
+
+/**
+ * @ignore
+ * @instance
+ * @memberof Button
+ * @method setLabelVisible
+ */
+
+/**
+ * @ignore
+ * @instance
+ * @memberof Button
+ * @method recalculate
+ */
+
+/**
+ * @ignore
+ * @instance
+ * @memberof Button
+ * @method getData
+ */
+
+/**
+ * @ignore
+ * @instance
+ * @memberof Button
+ * @method setData
+ */
+
+/**
+ *   <tr class=Prop>
+ *     <td class=SectionName colspan=3>Events</td>
+ *   </tr>
+ *   <tr class=Prop>
+ *     <td>On Load:</td>
+ *     <td colspan="2">
+ *       <table>
+ *         <tr class=Prop>
+ *           <td>Description: </td>
+ *           <td>Triggers whenever the view is loaded.</td>
+ *         </tr>
+ *         <tr class=Prop>
+ *           <td>Example: </td>
+ *           <td><pre class="prettyprint"><code>console.log("Button loaded")</code></pre></td>
+ *         </tr>
+ *       </table>
+ *     </td>
+ *   </tr>
+ *   <tr class=Prop>
+ *     <td>On Click:</td>
+ *     <td colspan="2">
+ *       <table>
+ *         <tr class=Prop>
+ *           <td>Description: </td>
+ *           <td>Triggers when button is clicked, before navigating away from page. If evaluated expression returns false, the click will not fire a boundary event.</td>
+ *         </tr>
+ *         <tr class=Prop>
+ *           <td>Example: </td>
+ *           <td><pre class="prettyprint"><code>return ${Text1}.isValid();</code></pre></td>
+ *         </tr>
+ *       </table>
+ *     </td>
+ *   </tr>
+ *   <tr class=Prop>
+ *     <td>On Boundary Event:</td>
+ *     <td colspan="2">
+ *       <table>
+ *         <tr class=Prop>
+ *           <td>Description: </td>
+ *           <td>Triggers upon reaching a Stay On Page event after a boundary event is fired through this control.  For information on the status context variable see the context.trigger() method in the Knowledge Center.</td>
+ *         </tr>
+ *         <tr class=Prop>
+ *           <td>Example: </td>
+ *           <td><pre class="prettyprint"><code>alert("Stay on Page status '" + status + "'")<code></pre></td>
+ *         </tr>
+ *       </table>
+ *       <table style="border: 1px solid black; border-collapse: collapse; ">
+ *         <tr style="border: 1px solid black; border-collapse: collapse;">
+ *           <th style="border: 1px solid black; border-collapse: collapse;padding: 5px;">Context Variables</th>
+ *           <th style="border: 1px solid black; border-collapse: collapse; padding: 5px;">status {string}</th>
+ *         </tr>
+ *       </table>
+ *     </td>
+ *   </tr>
+ * </table>
+ */
+bpmext_control_InitButton = function (utilities, bpmext, domClass, domAttr, domConstruct, fastclick)
+{
+	/*
+	Instance-specific "PRIVATE" data
+	We use _instance so as to keep the number of attributes and functions visible at the main
+	object level to a minimum. If we don't do that, people will see all kinds of extra
+	functions and attributes at the main object level and assume it is ok to use them.
+
+	We'll need to tell users/developers that anything under _instance is private and should
+	not be accessed/called outide of the control.
+	 */
+	this._instance =
+	{
+		btn : null,
+		txtNode : null,
+		iconSpan : null,
+		multiClicks : true,
+		colorStyle : null,
+		shapeStyle : null,
+		sizeStyle : null
+	};
+
+	if (!this.constructor.prototype._proto)
+	{
+		/*
+		Prototype-specific "PRIVATE" data - this is common to ALL instances of this control.
+
+		We use _proto so as to keep the number of attributes and functions visible at the main
+		object level to a minimum. If we don't do that, people will see all kinds of extra
+		functions and attributes at the main object level and assume it is ok to use them.
+
+		We'll need to tell users/developers that anything under _proto is private and should
+		not be accessed/called ouside of the control.
+		 */
+		this.constructor.prototype._proto =
+		{
+			//Declarations for "private" constant values & structures
+			OPTS_COL_STLZ :
+			{
+				"D" : "",
+				"P": "btn-primary",
+				"I" : "btn-info",
+				"S" : "btn-success",
+				"W" : "btn-warning",
+				"G" : "btn-danger",
+				//#{bug: * CSS class mapping fixed for "error" color style}
+				"E" : "btn-danger",
+				"B" : "btn-dark",
+			},
+			OPTS_SHP_STLZ :
+			{
+				"D" : "",
+				"R" : "btn-rounded",
+				"F" : "btn-flat"
+			},
+			OPTS_SZ_STLZ :
+			{
+				"D" : "",
+				"L" : "btn-lg",
+				"S" : "btn-sm",
+				"X" : "btn-xs"
+			},
+			EVT_ONCLICK : "eventON_CLICK",
+			EVT_ONBOUNDARYEVT : "eventON_BOUNDARYEVT",
+			//Declarations for "private" functions
+			_setText : function (view, text)
+			{
+				//In here, "this" refers to the "_proto" object, which is why we need to
+				//pass a "view" reference to the Coach View
+
+				try
+				{
+					//Example of accessing Coach View instance attributes and functions
+					var mdt = view.context.options._metadata;
+					var baseTxtDir = mdt.baseTextDirection && mdt.baseTextDirection.get("value") ? mdt.baseTextDirection.get("value") : utilities.BiDi.BASE_TEXT_DIRECTION._default;
+					var genPrefTextDir = view.context.bpm.system.baseTextDirection;
+					var txtNode = view._instance.txtNode;
+
+					if (text != null && text.length != "")
+					{
+						txtNode.textContent = text; //view.context.htmlEscape(text);
+						utilities.BiDi.applyTextDir(txtNode, txtNode.textContent, baseTxtDir, genPrefTextDir);
+					}
+					else
+					{
+						txtNode.textContent = "\u00a0"; //Non-breaking space to prevent button height collapse
+					}
+				}
+				catch (e)
+				{
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.error("Button._setText() error: " + e);
+					bpmext.log.error("Button._setText() " + bpmext.localization.formatMsg("general", "ERROR") + ": " + e);
+					if(e.stack) {
+						//{#feature: US-1330 Added RT localization}
+						//bpmext.log.error("  Call stack: " + e.stack);
+						bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+					}
+				}
+			},
+			_setHelpText : function (view, text)
+			{
+				try
+				{
+					var mdt = view.context.options._metadata;
+					var btn = view._instance.btn;
+
+					if (text != null && text.length != "")
+					{
+						btn.title = text;
+					}
+					else
+					{
+						btn.title = null;
+					}
+				}
+				catch (e)
+				{
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.error("Button._setHelpText() error: " + e);
+					bpmext.log.error("Button._setHelpText() " + bpmext.localization.formatMsg("general", "ERROR") + ": " + e);
+					if(e.stack) {
+						//{#feature: US-1330 Added RT localization}
+						//bpmext.log.error("  Call stack: " + e.stack);
+						bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+					}
+				}
+			},
+			_setWidth : function (view, width)
+			{
+				try
+				{
+					if (width != null && width != "")
+					{
+						if (!isNaN(width))
+							width += "px";
+
+						view.context.element.style.width = width;
+
+						domClass.add(view.context.element, "widthSet");
+					}
+					else
+					{
+						view.context.element.style.width = null;
+						domClass.remove(view.context.element, "widthSet");
+					}
+				}
+				catch (e)
+				{
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.error("Button._setWidth() error: " + e);
+					bpmext.log.error("Button._setWidth() " + bpmext.localization.formatMsg("general", "ERROR") + ": " + e);
+					if(e.stack) {
+						//{#feature: US-1330 Added RT localization}
+						//bpmext.log.error("  Call stack: " + e.stack);
+						bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+					}
+				}
+			},
+			_replaceClass : function (view, valueMap, newVal, oldVal)
+			{
+				if(newVal != null)
+					newVal = newVal.toUpperCase();
+
+				if(oldVal != null)
+					oldVal = oldVal.toUpperCase();
+
+				var oldClass = valueMap[oldVal];
+				if(oldClass == null)
+					oldClass = "";
+
+				var newClass = valueMap[newVal];
+				if(newClass == null)
+					newClass = "";
+
+				domClass.replace(view._instance.btn, newClass, oldClass);
+			},
+			_setColorStyle : function (view, newVal, oldVal)
+			{
+				oldVal = bpmext.ui.util.normalizeColorStyle(oldVal,this.OPTS_COL_STLZ);
+				newVal = bpmext.ui.util.normalizeColorStyle(newVal,this.OPTS_COL_STLZ);
+				newVal = bpmext.ui.util.normalizeColorStyle(newVal,this.OPTS_COL_STLZ);
+				this._replaceClass(view, this.OPTS_COL_STLZ, newVal, oldVal);
+			},
+			_normalizeShapeStyle : function(val)
+			{
+				if(!val)
+					val = "D";
+
+				val = val.toUpperCase();
+				if(val.length > 1)
+				{
+					switch(val)
+					{
+						case "DEFAULT":
+						//{#bug: * Removed warning "Unexpected shape style value: DEF"}
+						case "DEF":
+						case "D":
+							val = "D";
+							break;
+						case "ROUND":
+						case "ROUNDED":
+							val = "R";
+							break;
+						case "FLAT":
+							val = "F";
+							break;
+						default:
+							//{#feature: US-1330 Added RT localization}
+							//bpmext.log.warn("Unexpected shape style value: " + val);
+							bpmext.log.warn(bpmext.localization.formatMsg("controlButton", "BTN_SHAPE_STYLE_WARNING", val));
+					}
+				}
+
+				return val;
+			},
+			_setShapeStyle : function (view, newVal, oldVal)
+			{
+				newVal = this._normalizeShapeStyle(newVal);
+				oldVal = this._normalizeShapeStyle(oldVal);
+
+				this._replaceClass(view, this.OPTS_SHP_STLZ, newVal, oldVal);
+			},
+			_setSizeStyle : function (view, newVal, oldVal)
+			{
+				//{#bug: BG-252 Normalized size style for Button}
+				newVal = bpmext.ui.util.normalizeSizeStyle(newVal,this.OPTS_SZ_STLZ);
+				oldVal = bpmext.ui.util.normalizeSizeStyle(oldVal,this.OPTS_SZ_STLZ);
+
+				this._replaceClass(view, this.OPTS_SZ_STLZ, newVal, oldVal);
+			},
+			_setOutline : function(view, outline)
+			{
+				var fn = outline ? domClass.add : domClass.remove;
+				fn(view._instance.btn, "btn-outline");
+			},
+			_setGhostMode : function(view, ghostMode)
+			{
+				var fn = ghostMode ? domClass.add : domClass.remove;
+				fn(view._instance.btn, "btn-ghost");
+			},
+			_setIcon : function(view, icon)
+			{
+				if(view._instance.iconSpan)
+				{
+					view._instance.btn.removeChild(view._instance.iconSpan);
+					view._instance.iconSpan = null;
+				}
+
+				if(icon != null && icon != "")
+				{
+					var span = document.createElement("span");
+                    var iconClasses = "";
+
+					icon = icon.trim().toLowerCase();
+
+                    if(bpmext.text.startsWith(icon, "ci-")) {
+                        var svgElement = utilities.getCarbonIcon(icon);
+                        if (svgElement) {
+                            span.appendChild(svgElement);
+                            iconClasses = "ci";
+                        }
+                    } else {
+                        if(!bpmext.text.startsWith(icon, "fa-")) {
+                            icon = "fa-" + icon;
+                        }
+                        iconClasses = "fa " + icon;
+                    }
+
+                    domClass.add(span, "btn-label icon " + iconClasses);
+                    domClass.add(view._instance.btn, "btn-labeled");
+                    domConstruct.place(span, view._instance.btn, "first");
+                    view._instance.iconSpan = span;
+				}
+				else
+				{
+					domClass.remove(view._instance.btn, "btn-labeled");
+				}
+				
+				view._proto._setIconLocation(view);
+			},
+			_handleVisibility : function (view)
+			{
+				var btn = view._instance.btn;
+				var visibility = bpmext.ui.getEffectiveVisibility(view);
+
+				view.context.setDisplay(visibility != "NONE");
+				view.context.setVisibility(visibility != "HIDDEN");
+
+				if (visibility != "NONE")
+				{
+					if (visibility == "READONLY")
+					{
+						btn.disabled = true;
+						domClass.add(btn, "disabled");
+					}
+					else
+					{
+						btn.disabled = false;
+						domClass.remove(btn, "disabled");
+					}
+				}
+
+				// Updates for WAI
+				if (btn.disabled) {										
+					domAttr.set(btn, "aria-disabled", "true");
+				} else {					
+					domAttr.remove(btn, "aria-disabled");
+				}
+			},
+			_setTabIndex : function (view, index)
+			{
+				if(index != null)
+					domAttr.set(view._instance.btn, "tabindex", index);
+				else
+					domAttr.remove(view._instance.btn, "tabindex");
+			},
+			_setIconLocation : function (view)
+			{
+				var location = view.getIconLocation();
+				var icon = view._instance.iconSpan;
+				var btn = view._instance.btn;
+				
+				if (icon) 
+				{
+					if(location === "R")
+					{
+						domClass.remove(btn, "icon-left");
+						domClass.add(btn, "icon-right");
+					}
+					else
+					{
+						domClass.remove(btn, "icon-right");
+						domClass.add(btn, "icon-left");
+					}
+				}
+				else 
+				{
+					domClass.remove(btn, "icon-left");
+					domClass.remove(btn, "icon-right");
+				}
+			}
+		};
+
+
+		/*
+		Public control methods *************************************************************
+		 */
+
+		/**
+		 * @instance
+		 * @memberof Button
+		 * @method setText
+		 * @param {string} text Text to be set on the button
+		 * @desc Set text of button
+		 */
+		this.constructor.prototype.setText = function (text)
+		{
+			this.context.options._metadata.label.set("value", text);
+		};
+
+		/**
+		 * @instance
+		 * @memberof Button
+		 * @method getText
+		 * @desc Get text of button
+		 * @returns {string}
+		 */
+		this.constructor.prototype.getText = function ()
+		{
+			return this.context.options._metadata.label.get("value");
+		}
+
+		/**
+		 * @instance
+		 * @memberof Button
+		 * @method setHelpText
+		 * @param {string} text Rollover text to be set
+		 * @desc Set help text for button
+		 */
+		this.constructor.prototype.setHelpText = function (text)
+		{
+			this.context.options._metadata.helpText.set("value", text);
+		}
+
+		/**
+		 * @instance
+		 * @memberof Button
+		 * @method getHelpText
+		 * @desc Get help text for button
+		 * @returns {string}
+		 */
+		this.constructor.prototype.getHelpText = function ()
+		{
+			return this.context.options._metadata.helpText.get("value");
+		}
+
+		/**
+		 * @instance
+		 * @memberof Button
+		 * @method setWidth
+		 * @param {string} width Button width
+		 * @desc Set width of button (e.g. 50px, 20%, 2em - omitting the unit assumes px)
+		 */
+		this.constructor.prototype.setWidth = function (width)
+		{
+			this.context.options.width.set("value", width);
+		}
+
+		/**
+		 * @instance
+		 * @memberof Button
+		 * @method getWidth
+		 * @desc Get configured width for button (including unit)
+		 * @returns {string}
+		 */
+		this.constructor.prototype.getWidth = function ()
+		{
+			return this.context.options.width.get("value");
+		}
+
+		/**
+		 * @instance
+		 * @memberof Button
+		 * @method setIcon
+		 * @param {string} icon See {@link http://fontawesome.io/icons Font Awesome} for a comprehensive list of icons. Refer to the knowledge center for the latest Font Awesome version.
+		 * @desc Sets icon to display on the button
+		 */
+		this.constructor.prototype.setIcon = function (icon)
+		{
+			return this.context.options.icon.set("value", icon);
+		}
+
+		/**
+		 * @instance
+		 * @memberof Button
+		 * @method setColorStyle
+		 * @param {string} style "DEFAULT"|"DEF"|"D"=Default | "PRIMARY"|"PRI"|"P"=Primary | "INFO"|INF"|"I"=Info | "SUCCESS"|"S"=Success | "WARNING"|"WARN"|"W"=Warning | "DANGER"|ERROR|ERR"|"E"|"G"=Danger | "BLACK"|BLACK|"BLK"|"B"|"B"=Black
+     	 * @desc Sets color style of button.  NOTE: to avoid ambiguity always set the color using "D"|"P"|"I"|"S"|"W"|"E"|"B"
+		 */
+		this.constructor.prototype.setColorStyle = function (style)
+		{
+			this.context.options.colorStyle.set("value", style);
+		}
+
+		/**
+		 * @instance
+		 * @memberof Button
+		 * @method getColorStyle
+		 * @desc Gets color style of button.  NOTE: This always returns the color as set, to avoid ambiguity always set the color using "D"|"P"|"I"|"S"|"W"|"E"
+		 * @returns {string}
+		 */
+		this.constructor.prototype.getColorStyle = function ()
+		{
+			return this.context.options.colorStyle.get("value");
+		}
+
+		/**
+		 * @instance
+		 * @memberof Button
+		 * @method setShapeStyle
+		 * @param {string} style "Default"|"D"=Default | "ROUNDED"|ROUND"|"R"=Rounded | "FLAT"|"F"=Flat
+		 * @desc Sets shape style of button.  NOTE: to avoid ambiguity always set the shape style using "D"|"R"|"F"
+		 */
+		this.constructor.prototype.setShapeStyle = function (style)
+		{
+			return this.context.options.shapeStyle.set("value", style);
+		}
+
+		//{#feature: * getShapeStyle method added}
+		/**
+		 * @instance
+		 * @memberof Button
+		 * @method getShapeStyle
+		 * @desc Gets shape style of button.  NOTE: This always returns the shape style as set, to avoid ambiguity always set the shape style using "D"|"R"|"F"
+		 * @returns {string}
+		 */
+		this.constructor.prototype.getShapeStyle = function ()
+		{
+			return this.context.options.shapeStyle.get("value");
+		}
+
+		/**
+		 * @instance
+		 * @memberof Button
+		 * @method setSizeStyle
+		 * @param {string} style "DEFAULT"|"DEF"|"NORMAL"|"D"=Default | "SMALL"|"S"=Small | "LARGE"|"L"=Large | "EXTRA-SMALL"|"X-SMALL"|"XS"|"X"=X-small
+		 * @desc Sets size style of button.  NOTE: to avoid ambiguity always set the size style using "D"|"S"|"L"|"X"
+		 */
+		this.constructor.prototype.setSizeStyle = function (style)
+		{
+			return this.context.options.sizeStyle.set("value", style);
+		}
+
+		//{#feature: * getSizeStyle method added}
+		/**
+		 * @instance
+		 * @memberof Button
+		 * @method getSizeStyle
+		 * @desc Gets size style of button.  NOTE: This always returns the size style as set, to avoid ambiguity always set the size style using "D"|"S"|"L"|"X"
+		 * @returns {string}
+		 */
+		this.constructor.prototype.getSizeStyle = function ()
+		{
+			return this.context.options.sizeStyle.get("value");
+		}
+
+		/**
+		 * @instance
+		 * @memberof Button
+		 * @method setOutline
+		 * @param {boolean} outline {true | false}
+		 * @desc Sets outline style of button
+		 */
+		this.constructor.prototype.setOutline = function (outline)
+		{
+			return this.context.options.outline.set("value", outline);
+		}
+		
+		/**
+		 * @instance
+		 * @memberof Button
+		 * @method setGhost
+		 * @param {boolean} ghostMode {true | false}
+		 * @desc Sets ghost style of button
+		 */
+		this.constructor.prototype.setGhostMode = function (ghostMode)
+		{
+			return this.context.options.ghostMode.set("value", ghostMode);
+		}
+
+		/**
+		 * @instance
+		 * @memberof Button
+		 * @method click
+		 * @desc Programmatically click this button
+		 */
+		this.constructor.prototype.click = function ()
+		{
+			this._instance.btn.click();
+		}
+
+		/**
+		 * @instance
+		 * @memberof Button
+		 * @method setTabIndex
+		 * @param {integer} tabIndex Tab indices start at 1 and may be set sparsely
+		 * @desc Sets tab index of Button control
+		 */
+		this.constructor.prototype.setTabIndex = function (tabIndex)
+		{
+			this.context.options.tabIndex.set("value", tabIndex);
+		}
+
+		/**
+		 * @instance
+		 * @memberof Button
+		 * @method getTabIndex
+		 * @desc Get tab index for Button control
+		 * @returns {integer}
+		 */
+		this.constructor.prototype.getTabIndex = function ()
+		{
+			return this.context.options.tabIndex.get("value");
+		}
+		
+		/**
+		 * @instance
+		 * @memberof Button
+		 * @method setIconLocation
+		 * @param {string} direction Indicates the direction of the icon alignment (L - left | R - right)
+		 * @desc Sets the direction of the icon alignment
+		 */
+		this.constructor.prototype.setIconLocation = function (location)
+		{
+			this.context.options.iconLocation.set("value", location);
+		}
+		
+		/**
+		 * @instance
+		 * @memberof Button
+		 * @method getIconLocation
+		 * @desc get button icon alignment location
+		 * @return (string)
+		 */
+		this.constructor.prototype.getIconLocation = function ()
+		{
+			return this.context.options.iconLocation.get("value");
+		}
+
+		/**
+		 * @instance
+		 * @memberof Button
+		 * @method focus
+		 * @desc Set focus on this control
+		 */
+		this.constructor.prototype.focus = function ()
+		{
+			this._instance.btn.focus();
+		}
+
+		/**
+		 * @instance
+		 * @memberof Button
+		 * @method getType
+		 * @desc Get descriptive string representing the type of control
+		 * @returns {string}
+		 */
+		this.constructor.prototype.getType = function ()
+		{
+			return "button.3";
+		}
+
+		//{#feature: US-696 ARIA labeling}
+		this.constructor.prototype._getHTMLInputElement = function ()
+		{
+			return this._instance.btn;   //This is the element that will need its "aria-labelledby" attribute set
+		}
+		//End US-696
+
+		//{#feature: US-696 ARIA Accessibility}
+		this.constructor.prototype._getTriggerElement = function ()
+		{
+			return this._instance.btn; //This is the element which is referred in Popup Menu for adding WAI-ARIA Accessibility Roles
+		}
+		//End US-696
+
+		/*
+		Coach NG Lifecycle methods *************************************************************
+		 */
+		this.constructor.prototype.load = function ()
+		{
+			try
+			{
+				var opts = this.context.options;
+				var mdt = opts._metadata;
+
+				//Good practice to make life easier: If binding is not set make it easy to
+				//use with SPARK
+				if (!this.context.binding)
+				{
+					this.context.binding = bpmext.ui.substituteObject(
+							this,
+							false //default value
+						);
+				}
+
+				//Good practice to make life easier: If a config option is not defined/set, make it
+				//easy to use with SPARK
+				if (!opts.colorStyle)
+				{
+					opts.colorStyle = bpmext.ui.substituteConfigOption(
+							this,
+							"colorStyle",
+							"DEF" //default value
+						);
+				}
+
+				if (!opts.shapeStyle)
+					opts.shapeStyle = bpmext.ui.substituteConfigOption(this, "shapeStyle", "DEF");
+
+				if (!opts.sizeStyle)
+					opts.sizeStyle = bpmext.ui.substituteConfigOption(this, "sizeStyle", "DEF");
+
+				if (!opts.outline)
+					opts.outline = bpmext.ui.substituteConfigOption(this, "outline", false);
+				
+				if (!opts.ghostMode)
+					opts.ghostMode = bpmext.ui.substituteConfigOption(this, "ghostMode", false);
+
+				if (!opts.width)
+					opts.width = bpmext.ui.substituteConfigOption(this, "width", null);
+
+				if (!opts.icon)
+					opts.icon = bpmext.ui.substituteConfigOption(this, "icon", null);
+
+				if (!opts.tabIndex)
+					bpmext.ui.substituteConfigOption(this, "tabIndex", null);
+				
+				if (!opts.iconLocation)
+					bpmext.ui.substituteConfigOption(this, "iconLocation", "L");
+
+				this._instance.btn = document.createElement("button");
+				this._instance.btn.setAttribute("id", "button-button-"+this.context.controlidpath);
+				//{#feature: TK-306 Work around weird IE11 update bug with Enter key the default button type is submit which causes some versions of IE11 problems}
+				this._instance.btn.type = "button";
+                this._instance.btn.setAttribute("role", "button");
+				this._instance.txtNode = document.createTextNode("");
+
+				fastclick.attach(this._instance.btn);
+
+				domClass.add(this._instance.btn, "btn");
+
+				this._proto._setText(this, mdt.label.get("value"));
+				this._proto._setWidth(this, opts.width.get("value"));
+				this._proto._setColorStyle(this, opts.colorStyle.get("value"));
+				this._proto._setShapeStyle(this, opts.shapeStyle.get("value"));
+				this._proto._setSizeStyle(this, opts.sizeStyle.get("value"));
+				this._proto._setOutline(this, opts.outline.get("value"));
+				this._proto._setGhostMode(this, opts.ghostMode.get("value"));
+				this._proto._setIcon(this, opts.icon.get("value"));
+				this._proto._setTabIndex(this, opts.tabIndex.get("value"));
+
+				var tmp = mdt.helpText ? mdt.helpText.get("value") : null;
+				if (tmp && tmp.length > 0)
+				{
+					this._proto._setHelpText(this, tmp);
+				}
+
+				this._instance.btn.appendChild(this._instance.txtNode);
+				this.context.element.appendChild(this._instance.btn);
+
+				//Event support - for example, support the onclick event
+				bpmext.ui.registerEventHandlingFunction(this, this._proto.EVT_ONCLICK);
+				bpmext.ui.registerEventHandlingFunction(this, this._proto.EVT_ONBOUNDARYEVT, "status");
+				//Note: Later in the logic of this control, the event can be triggered through:
+				//  bpmext.ui.executeEventHandlingFunction(this, "eventON_CLICK");
+
+
+				this._instance.multiClicks = !(opts.preventMultipleClicks ? opts.preventMultipleClicks.get("value") : false);
+
+				var _this = this;
+
+				this._instance.btn.onclick = function (event)
+				{
+					if (!_this._instance.btn.disabled)
+					{
+						//Example of triggering the onClick event for Button:
+						var fireBE = bpmext.ui.executeEventHandlingFunction(_this, _this._proto.EVT_ONCLICK);
+						//Note: The above calls the logic specified on the control's on click event
+						//and captures the value returned by your code (assuming you return a value)
+						if (fireBE)
+						{
+							if (!_this._instance.multiClicks)
+							{
+								_this._instance.btn.disabled = true;
+								domClass.add(_this._instance.btn, "disabled");
+							}
+
+							if (_this.context.binding)
+							{
+								// {#bug: * changed to match IBM button behaviour}
+								_this.context.binding.set("value", true);
+							}
+
+							_this.context.trigger(function (st)
+							{
+								_this._instance.btn.disabled = false;
+								domClass.remove(_this._instance.btn, "disabled");
+
+								setTimeout(function(){
+									bpmext.ui.executeEventHandlingFunction(_this, _this._proto.EVT_ONBOUNDARYEVT, st.status);
+								});
+							}, {callBackForAll : true});
+						}
+					}
+				}
+
+				//**Note: To compute the value of this control through a formula, this control MUST have a
+				//String option named "expression" as the formula placeholder
+
+				//Enabling a control with formula support
+				bpmext.ui.setupFormulaTriggeredUpdates(
+					this,
+					function (expResult) //Function to be called when the formula for this control is computed
+					{
+						if (expResult == undefined)
+						{
+							expResult = "";
+						}
+
+						_this.setText(expResult); //In this case, the button's label updates based on the result of the formula expression
+					},
+					this.getText //Getter method pointer to be called when this control is referenced with @{control-id} in formulas
+				);
+
+				//Register this Coach View instance as an SPARK control
+				bpmext.ui.loadView(this);
+			}
+			catch (e)
+			{
+				//{#feature: US-1330 Added RT localization}
+				//bpmext.log.error("Error on load event [" + this.context.viewid + "]: " + e);
+				bpmext.log.error(bpmext.localization.formatMsg("general", "ERROR_ONLOAD_EVENT") + " [" + this.context.viewid + "]: " + e);
+				if(e.stack) {
+						//{#feature: US-1330 Added RT localization}
+						//bpmext.log.error("  Call stack: " + e.stack);
+						bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+					}
+			}
+		};
+
+		this.constructor.prototype.view = function ()
+		{
+			try
+			{
+				this._proto._handleVisibility(this);
+			}
+			catch (e)
+			{
+				//{#feature: US-1330 Added RT localization}
+				//bpmext.log.error("Error on view event [" + this.ui.getAbsoluteName() + "]: " + e);
+				bpmext.log.error(bpmext.localization.formatMsg("general", "ERROR_ONVIEW_EVENT") + " [" + this.ui.getAbsoluteName() + "]: " + e);
+				if(e.stack) {
+						//{#feature: US-1330 Added RT localization}
+						//bpmext.log.error("  Call stack: " + e.stack);
+						bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+					}
+			}
+		};
+
+		this.constructor.prototype.change = function (event)
+		{
+			try
+			{
+				if (event.type == "config")
+				{
+					switch (event.property)
+					{
+						case "_metadata.label":
+						{
+							this._proto._setText(this, event.newVal);
+
+							//Let formula subscribers know this control has changed
+
+							//If this control is formula-support enabled, broadcastExpressionTrigger will trigger
+							//whatever formula dependency chains that are associated with this control...
+							//
+							//broadcastExpressionTrigger() can be called for ANY changes in the control, or only
+							//for specific situations to make formula-based updates less chatty
+							bpmext.ui.broadcastExpressionTrigger(this);
+						}
+						case "_metadata.visibility":
+						{
+							this._proto._handleVisibility(this);
+							break;
+						}
+						case "_metadata.helpText":
+						{
+							this._proto._setHelpText(this, event.newVal);
+							break;
+						}
+						case "width":
+						{
+							this._proto._setWidth(this, event.newVal);
+							break;
+						}
+						case "colorStyle":
+						{
+							this._proto._setColorStyle(this, event.newVal, event.oldVal);
+							break;
+						}
+						case "shapeStyle":
+						{
+							this._proto._setShapeStyle(this, event.newVal, event.oldVal);
+							break;
+						}
+						case "sizeStyle":
+						{
+							this._proto._setSizeStyle(this, event.newVal, event.oldVal);
+							break;
+						}
+						case "outline":
+						{
+							this._proto._setOutline(this, event.newVal);
+							break;
+						}
+						case "ghostMode":
+						{
+							this._proto._setGhostMode(this, event.newVal);
+							break;
+						}
+						case "icon":
+						{
+							this._proto._setIcon(this, event.newVal);
+							break;
+						}
+						case "iconLocation":
+						{
+							this._proto._setIconLocation(this);
+							break;
+						}
+					}
+				}
+			}
+			catch (e)
+			{
+				//{#feature: US-1330 Added RT localization}
+				//bpmext.log.error("Error on change event [" + this.ui.getAbsoluteName() + "]: " + e);
+				bpmext.log.error(bpmext.localization.formatMsg("general", "ERROR_ONCHANGE_EVENT") + " [" + this.ui.getAbsoluteName() + "]: " + e);
+				if(e.stack) {
+						//{#feature: US-1330 Added RT localization}
+						//bpmext.log.error("  Call stack: " + e.stack);
+						bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+					}
+			}
+		};
+
+		this.constructor.prototype.validate = function (event)
+		{};
+
+		this.constructor.prototype.collaboration = function (event)
+		{};
+
+		this.constructor.prototype.unload = function ()
+		{
+			//Deregister this Coach View instance from SPARK
+			bpmext.ui.unloadView(this);
+		};
+	}
+}

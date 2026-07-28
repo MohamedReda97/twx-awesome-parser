@@ -1,0 +1,253 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<teamworks>
+    <layout id="20.49ac9154-36d9-4334-bccb-e4cf6fb6ee9e" name="Simple Line Chart">
+        <lastModified>1361369073512</lastModified>
+        <lastModifiedBy>Internal TW Admin user</lastModifiedBy>
+        <layoutId>20.49ac9154-36d9-4334-bccb-e4cf6fb6ee9e</layoutId>
+        <metaDataLabel isNull="true" />
+        <metaDataUI isNull="true" />
+        <type>PROPS</type>
+        <url isNull="true" />
+        <documentType>chart</documentType>
+        <imageUrl isNull="true" />
+        <layoutData>
+&lt;# var msg = tw.resource.toolkit.TWSYS.ChartMessages; #&gt;
+
+chart {
+	antiAliasing : "true";
+	antiAliasingText : "true";
+	backgroundPaint : "#ffffffff";
+	border : "@#border12";
+	header : "@#label9";
+	legendPosition : "Absolute";
+	legendVisible : "true";
+	name : "&lt;#= msg.getChartDefString("chart.SimpleLine.name") #&gt;";
+	opaque : "true";
+	preferredSize : "600,250";
+	renderingType : "COMBO";
+	sampleSeries[0] : "&lt;#= msg.getChartDefString("chart.SimpleLine.lineSet1.text") #&gt;,35,35,35,35,35:LINE";
+	sampleSeries[1] : "&lt;#= msg.getChartDefString("chart.SimpleLine.lineSet2.text") #&gt;,20,30,45,30,40:LINE";
+	type : "CARTESIAN";
+	XGridVisible : "false";
+	YGridVisible : "true";
+}
+
+chartGrid {
+	fill : "true";
+	majorPaint : "#FFedf2f6";
+	majorStroke : "@=stroke8";
+}
+
+chartLegend {
+	antiAliasing : "true";
+	antiAliasingText : "true";
+	border : "@#border11";
+	followChartResize : "true";
+	font : "SansSerif,12";
+	foreground : "dimgrey";
+	location : "75,35";
+	paintingBackground : "false";
+}
+
+chartScale[axisIndex="-1"] {
+	autoDataRange : "true";
+	foreground : "#ff000000";
+	labelColor : "#ff000000";
+	labelFont : "SansSerif-10";
+	labelRotation : "0";
+	majorTickVisible : "true";
+	title : "&lt;#= msg.getChartDefString("chart.SimpleLine.bottomAxis.title") #&gt;";
+	titleColor : "#ff000000";
+	titleRotation : "-0.0";
+}
+
+chartScale[axisIndex="-1"] axis {
+	autoVisibleRange : "true";
+}
+
+
+
+chartScale[axisIndex="0"] {
+	autoDataRange : "true";
+	foreground : "#FF4580b4";
+	labelColor : "#FF4580b4";
+	labelFont : "SansSerif-10";
+	labelFormat : "@+format7";
+	labelRotation : "0";
+	majorTickVisible : "true";
+	title : "&lt;#= msg.getChartDefString("chart.SimpleLine.leftAxis.title") #&gt;";
+	titleColor : "#FF4580b4";
+	titleRotation : "-90.0";
+}
+
+chartScale[axisIndex="0"] axis {
+	autoVisibleRange : "true";
+}
+
+
+
+series[index="0"] {
+	color1 : "#ffff0000";
+	color2 : "#ffff0000";
+	marker : "CIRCLE";
+	markerSize : "7";
+	renderingType : "POLYLINE";
+	stroke : "@#stroke1";
+}
+
+series[index="1"] {
+	color1 : "@=color3";
+	color2 : "#ff0000ff";
+	marker : "CIRCLE";
+	markerSize : "7";
+	renderingType : "AREA";
+	stroke : "@#stroke2";
+}
+
+Subobject#border10 {
+	bottom : "2";
+	class : "javax.swing.border.EmptyBorder(top,left,bottom,right)";
+	left : "2";
+	right : "2";
+	top : "2";
+}
+
+Subobject#border11 {
+	bottom : "1";
+	class : "javax.swing.border.EmptyBorder(top,left,bottom,right)";
+	left : "1";
+	right : "1";
+	top : "1";
+}
+
+Subobject#border12 {
+	bottom : "1";
+	class : "javax.swing.border.EmptyBorder(top,left,bottom,right)";
+	left : "1";
+	right : "1";
+	top : "1";
+}
+
+Subobject#border5 {
+	bottom : "2";
+	class : "javax.swing.border.EmptyBorder(top,left,bottom,right)";
+	left : "2";
+	right : "2";
+	top : "2";
+}
+
+Subobject#color3 {
+	adapting : "true";
+	class : "ilog.views.util.java2d.IlvLinearGradientPaint(start,end,stops,colors,spreadMethod,colorSpace,transform,adapting)";
+	colors[0] : "#99C5DFF4";
+	colors[1] : "#99C5DFF4";
+	colorSpace : "SRGB";
+	end : "0.5,0.0";
+	spreadMethod : "PAD";
+	start : "0.5,1.0";
+	stops[0] : "0.0";
+	stops[1] : "1.0";
+}
+
+
+Subobject#format7 {
+	class : "com.lombardisoftware.core.chart.jviews.IlvNumberFormat(type, pattern)";
+	pattern : "%,d";
+	type : "INTEGER";
+}
+
+Subobject#label4 {
+	border : "@#border5";
+	class : "ilog.views.chart.swing.IlvJLabel";
+	font : "SansSerif-16";
+	foreground : "#ff000000";
+	horizontalAlignment : "0";
+	text : "&lt;#= msg.getChartDefString("chart.SimpleLine.header") #&gt;";
+}
+
+Subobject#label9 {
+	border : "@#border10";
+	class : "ilog.views.chart.swing.IlvJLabel";
+	font : "SansSerif-16";
+	foreground : "#ff000000";
+	horizontalAlignment : "0";
+	text : "&lt;#= msg.getChartDefString("chart.SimpleLine.header") #&gt;";
+}
+
+Subobject#stroke1 {
+	class : "java.awt.BasicStroke(lineWidth,endCap,lineJoin,miterLimit,dashArray,dashPhase)";
+	dashPhase : "0.0";
+	endCap : "0";
+	lineJoin : "2";
+	lineWidth : "1";
+	miterLimit : "3.732051";
+}
+
+Subobject#stroke2 {
+	class : "java.awt.BasicStroke(lineWidth,endCap,lineJoin,miterLimit,dashArray,dashPhase)";
+	dashPhase : "0.0";
+	endCap : "0";
+	lineJoin : "2";
+	lineWidth : "1";
+	miterLimit : "3.732051";
+}
+
+Subobject#stroke8 {
+	class : "java.awt.BasicStroke(lineWidth,endCap,lineJoin,miterLimit,dashArray,dashPhase)";
+	dashPhase : "0.0";
+	endCap : "0";
+	lineJoin : "2";
+	lineWidth : "1";
+	miterLimit : "3.732051";
+}
+</layoutData>
+        <description>Line Chart</description>
+        <guid>guid:948579733943e104:28e4a9e:107e9266638:-7ecc</guid>
+        <versionId>2c6ad646-69ec-4912-9052-88ed967d9684</versionId>
+        <layoutParam name="ChartType">
+            <lastModified isNull="true" />
+            <lastModifiedBy isNull="true" />
+            <layoutParamId>2023.7b9825db-f006-42e9-9a93-1939fe3c2528</layoutParamId>
+            <layoutId>20.49ac9154-36d9-4334-bccb-e4cf6fb6ee9e</layoutId>
+            <value>Line Chart</value>
+            <type isNull="true" />
+            <seq isNull="true" />
+            <guid>guid:197d4ddc90fc5427:-1c619ffe:11def1582ed:-7ee5</guid>
+            <versionId>34c61988-efd3-48ca-82ac-31c3356dbc80</versionId>
+        </layoutParam>
+        <layoutParam name="ChartPieSeries">
+            <lastModified isNull="true" />
+            <lastModifiedBy isNull="true" />
+            <layoutParamId>2023.edfec699-669a-40ee-830a-f4789714ed74</layoutParamId>
+            <layoutId>20.49ac9154-36d9-4334-bccb-e4cf6fb6ee9e</layoutId>
+            <value>0</value>
+            <type isNull="true" />
+            <seq isNull="true" />
+            <guid>guid:197d4ddc90fc5427:-1c619ffe:11def1582ed:-7edf</guid>
+            <versionId>389c81cf-8d2f-4b37-ab62-38ef56289385</versionId>
+        </layoutParam>
+        <layoutParam name="ChartLineSeries">
+            <lastModified isNull="true" />
+            <lastModifiedBy isNull="true" />
+            <layoutParamId>2023.36cd8758-8808-4925-853a-899a6269a83b</layoutParamId>
+            <layoutId>20.49ac9154-36d9-4334-bccb-e4cf6fb6ee9e</layoutId>
+            <value>99</value>
+            <type isNull="true" />
+            <seq isNull="true" />
+            <guid>guid:197d4ddc90fc5427:-1c619ffe:11def1582ed:-7ee1</guid>
+            <versionId>659249cf-c082-4351-9392-731d1c1e1a87</versionId>
+        </layoutParam>
+        <layoutParam name="ChartBarSeries">
+            <lastModified isNull="true" />
+            <lastModifiedBy isNull="true" />
+            <layoutParamId>2023.d235545c-d47f-46c7-9ddb-5fe770d1e55f</layoutParamId>
+            <layoutId>20.49ac9154-36d9-4334-bccb-e4cf6fb6ee9e</layoutId>
+            <value>0</value>
+            <type isNull="true" />
+            <seq isNull="true" />
+            <guid>guid:197d4ddc90fc5427:-1c619ffe:11def1582ed:-7ee3</guid>
+            <versionId>8e2f1ce3-76a2-4e8e-81d9-e65ea1c5d30f</versionId>
+        </layoutParam>
+    </layout>
+</teamworks>
+

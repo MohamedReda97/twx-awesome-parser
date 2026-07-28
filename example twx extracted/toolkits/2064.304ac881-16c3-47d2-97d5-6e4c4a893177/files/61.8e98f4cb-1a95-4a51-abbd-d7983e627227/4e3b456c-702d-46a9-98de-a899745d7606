@@ -1,0 +1,125 @@
+/*
+ * #BEGIN COPYRIGHT
+ *
+ * Licensed Materials - Property of IBM
+ * 5725-C95
+ * (C) Copyright IBM Corporation 2017. All Rights Reserved.
+ * US Government Users Restricted Rights- Use, duplication or disclosure
+ * restricted by GSA ADP Schedule Contract with IBM Corp.
+ *
+ * #END COPYRIGHT
+ */
+
+var mixObject = {
+	createPreview:function(containingDiv, labelText, callback){
+		var bpmextUri = this.context.getManagedAssetUrl("BPMExt-Core-Designer.js", this.context.assetType_WEB, "SYSBPMUI");	
+		var wysiwygQRCodeUri = this.context.getManagedAssetUrl("BPMExt-Lib-QRCode.zip", this.context.assetType_WEB, "SYSBPMUI", null, "lib/main.js");
+		require([ "dojo/dom-construct", "dojo/dom-class", "dojo/dom-attr", bpmextUri, wysiwygQRCodeUri], this.lang.hitch(this, function(domConstruct, domClass, domAttr, bpmext, wysiwygQRCode){
+			bpmext.uidesign.css.ensureGlyphsLoaded(this);
+			bpmext.uidesign.css.ensureSparkUIClass(containingDiv);
+			this.context.coachViewData.containingDiv = containingDiv;
+
+			this.context.coachViewData.OPTS_ERROR_CORRECTION_LEVEL ={"L" : 1,"M" : 2,"Q" : 3,"H" : 4};
+			
+			this.context.coachViewData.defaultQRCodeSize = "100";
+			domClass.add(this.context.coachViewData.containingDiv, "QR_Code");
+			this.context.coachViewData.formGroupDiv = document.createElement("div");
+			
+			this.context.coachViewData.labelTextDom = document.createTextNode(labelText);
+			this.context.coachViewData.label = domConstruct.create("span");
+			domClass.add(this.context.coachViewData.label, "control-label");
+			this.context.coachViewData.label.appendChild(this.context.coachViewData.labelTextDom);
+			
+			this.context.coachViewData.canvasDiv = document.createElement("div");
+			domClass.add(this.context.coachViewData.canvasDiv, "input");
+
+			//this.context.coachViewData.qrCodeControl = new wysiwygQRCode({"ecclevel":1,"text":"www.salientprocess.com","imageURL":""}, this.context.coachViewData.canvasDiv);
+			this.context.coachViewData.qrCodeControl = new wysiwygQRCode({}, this.context.coachViewData.canvasDiv);
+			this.context.coachViewData.qrCodeControl.setText("QR Code");
+			this.context.coachViewData.qrCodeControl.setWidth(this.context.coachViewData.defaultQRCodeSize);
+			this.context.coachViewData.qrCodeControl.setHeight(this.context.coachViewData.defaultQRCodeSize);
+			this.context.coachViewData.qrCodeControl.update();
+
+			domConstruct.place(this.context.coachViewData.formGroupDiv, this.context.coachViewData.containingDiv);	
+			domClass.add(this.context.coachViewData.formGroupDiv, "form-group");
+			this.context.coachViewData.formGroupDiv.appendChild(this.context.coachViewData.label);	
+			this.context.coachViewData.formGroupDiv.appendChild(this.context.coachViewData.canvasDiv);
+
+			this.context.coachViewData.labelHandler = bpmext.uidesign.createLabelHandler(this.context.coachViewData.labelTextDom, this.context.coachViewData.label, this.context.coachViewData.containingDiv, false, false);
+			
+			callback();
+		}));
+	},
+	
+	propertyChanged:function(propertyName, propertyValue){
+		var configHelperUri = this.context.getManagedAssetUrl("BPMExt-Core-ConfigHelper.js",this.context.assetType_WEB, "SYSBPMUI");
+		require(["dojo/dom-style", "dojo/dom-class", "dojo/dom-attr", "dojo/dom-construct", configHelperUri], this.lang.hitch(this, function(domStyle, domClass, domAttr, domConstruct, configHelper){
+			this.context.coachViewData.labelHandler.propertyChanged(propertyName, propertyValue);
+			if(propertyName == "width"){
+				if(!!propertyValue) {
+					var newWidth = isNaN(propertyValue) ? propertyValue : (propertyValue+"px");
+					this.context.coachViewData.qrCodeControl.canvas.style.width = newWidth;
+					this.context.coachViewData.containingDiv.style.width = newWidth;
+					
+					var qrWidth = getComputedStyle(this.context.coachViewData.qrCodeControl.canvas).width;
+					qrWidth = qrWidth.substring(0, qrWidth.length - 2);
+					qrWidth = Number(qrWidth);
+					this.context.coachViewData.qrCodeControl.setWidth(qrWidth);
+					this.context.coachViewData.qrCodeControl.update();
+				} else {
+					this.context.coachViewData.qrCodeControl.canvas.style.width = this.context.coachViewData.defaultQRCodeSize+"px";
+					this.context.coachViewData.containingDiv.style.width = "";
+					this.context.coachViewData.qrCodeControl.setWidth(this.context.coachViewData.defaultQRCodeSize);
+					this.context.coachViewData.qrCodeControl.update();
+				}
+            } else if (propertyName == "labelWidth") {
+                if (propertyValue) {
+                    this.context.coachViewData.label.style.width = isNaN(propertyValue) ? propertyValue : (propertyValue + "px");
+                    domClass.add(this.context.coachViewData.containingDiv, "labelWidth");
+                } else {
+                    this.context.coachViewData.label.style.width = "";
+                    domClass.remove(this.context.coachViewData.containingDiv, "labelWidth");
+                }
+			} else if(propertyName == "height"){
+				if(!!propertyValue) {
+					var newHeight = isNaN(propertyValue) ? propertyValue : (propertyValue+"px");
+					this.context.coachViewData.qrCodeControl.canvas.style.height = newHeight;
+					this.context.coachViewData.containingDiv.style.height = newHeight;
+					
+					var qrHeight = getComputedStyle(this.context.coachViewData.qrCodeControl.canvas).height;
+					qrHeight = qrHeight.substring(0, qrHeight.length - 2);
+					qrHeight = Number(qrHeight);
+					this.context.coachViewData.qrCodeControl.setHeight(qrHeight);
+					this.context.coachViewData.qrCodeControl.update();
+				} else {
+					this.context.coachViewData.qrCodeControl.canvas.style.height = this.context.coachViewData.defaultQRCodeSize+"px";
+					this.context.coachViewData.containingDiv.style.height = "";
+					this.context.coachViewData.qrCodeControl.setHeight(this.context.coachViewData.defaultQRCodeSize);
+					this.context.coachViewData.qrCodeControl.update();
+				}
+			} else if(propertyName == "labelPlacement"){
+				var labelPlacement;
+				if(propertyValue == "L"){
+					labelPlacement = "label-left";
+				} else {
+					labelPlacement = "";
+				}
+				domClass.replace(this.context.coachViewData.formGroupDiv, labelPlacement, "label-left");
+			} else if(propertyName == "errorCorrectionLevel"){
+				//this.context.coachViewData.qrCodeControl.update(configHelper.getConfigOptionValue(this, "expression"));
+				this.context.coachViewData.qrCodeControl.setText("QR Code", configHelper.getConfigOptionValue(this, "expression"));
+				this.context.coachViewData.qrCodeControl.setECCLevel(this.context.coachViewData.OPTS_ERROR_CORRECTION_LEVEL[propertyValue]);
+				this.context.coachViewData.qrCodeControl.update();
+			} else if(propertyName == "backgroundImageURL"){
+				var imgUrl = (!!propertyValue) ? this.context.getManagedAssetUrl(propertyValue, this.context.assetType_WEB, "SYSBPMUI") : "";
+				this.context.coachViewData.qrCodeControl.setBackgroundImageURL(imgUrl);
+				this.context.coachViewData.qrCodeControl.update();
+			} else if(propertyName == "expression"){
+				this.context.coachViewData.qrCodeControl.update(propertyValue);
+			}
+		}));
+	},
+	modelChanged: function(propertyName, propertyValue) {
+		this.context.coachViewData.labelHandler.modelChanged(propertyName, propertyValue);
+	}
+};

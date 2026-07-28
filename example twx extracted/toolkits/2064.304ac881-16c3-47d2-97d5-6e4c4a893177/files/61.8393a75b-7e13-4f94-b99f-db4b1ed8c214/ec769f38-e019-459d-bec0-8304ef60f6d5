@@ -1,0 +1,563 @@
+/**
+ * @file SPARK - ServiceDataTable
+ */
+
+/**
+ * @ignore
+ * @instance
+ * @memberof ServiceDataTable
+ * @method isValid
+ */  
+
+/**
+ * @ignore
+ * @instance
+ * @memberof ServiceDataTable
+ * @method setValid
+ */
+
+/**
+ * @ignore
+ * @instance
+ * @memberof ServiceDataTable
+ * @method recalculate
+ */
+
+/**
+ * @ignore
+ * @instance
+ * @memberof ServiceDataTable
+ * @method getData
+ */
+
+/**
+ * @ignore
+ * @instance
+ * @memberof ServiceDataTable
+ * @method setData
+ */ 
+
+/** 
+ * @constructor ServiceDataTable
+ * @desc This constructor is <i>never</i> used explicitly.
+ * @augments com.ibm.bpm.coach.CoachView 
+ * @classdesc A ServiceDataTable Section control provides the following configuration properties in Process Designer:
+* <table class=Config>
+ *   <tr class=Prop>
+ *     <td class=SectionName colspan=3>Behavior</td>
+ *   </tr>
+ 
+  *   <tr class=Prop>
+ *     <td>Data Service:</td>
+ *     <td>(e.g. Default Table Data Service)</td>
+ *     <td><code>Ajax Service</code></td>
+ *   </tr>
+ 
+ *   <tr class=Prop>
+ *     <td>Service Data:</td>
+ *     <td>(e.g. int1)</td>
+ *     <td><code>{ANY}</code></td>
+ *   </tr>
+ 
+ *   <tr class=Prop>
+ *     <td>Start Empty:</td>
+ *     <td>{true | false}</td>
+ *     <td><code>boolean</code></td>
+ *   </tr>
+ 
+ 
+ *   <tr class=Prop>
+ *     <td>Selection Mode:</td>
+ *     <td>{None | Single | Multiple}</td>
+ *     <td><code>string</code></td>
+ *   </tr>
+ 
+ 
+ *   <tr class=Prop>
+ *     <td>Show Footer:</td>
+ *     <td>{True | False}</td>
+ *     <td><code>boolean</code></td>
+ *   </tr>
+ 
+ *   <tr class=Prop>
+ *     <td>Show Table Stats:</td>
+ *     <td>{True | False}</td>
+ *     <td><code>string</code></td>
+ *   </tr>
+ 
+ *   <tr class=Prop>
+ *     <td>Show Pager:</td>
+ *     <td>{True | False}</td>
+ *     <td><code>string</code></td>
+ *   </tr>
+ 
+ *   <tr class=Prop>
+ *     <td>Show Page Sizer:</td>
+ *     <td>{True | False}</td>
+ *     <td><code>string</code></td>
+ *   </tr>
+ 
+ *   <tr class=Prop>
+ *     <td>Initial Page Size:</td>
+ *     <td>{True | False}</td>
+ *     <td><code>string</code></td>
+ *   </tr>
+ 
+ *     <tr class=Prop>
+ *     <td>Columns:</td>
+ *	    <td colspan = "2">
+ *	    <table>
+ 
+ *		<tr class=Prop>
+ *		<td>Data element name:</td>
+ *		<td>(e.g bool1)</td>
+ *		<td><code>string</code></td>
+ *		</tr> 
+ 
+ *		<tr class=Prop>
+ *		<td>Render as:</td>
+ *		<td>{Coach View | Seamless Coach View | Simple HTML | Custom}</td>
+ *		<td><code>string</code></td>
+ *		</tr> 
+ *		<tr>
+ *		<td>Visibility</td>
+ *     <td>{Visible | Read-Only | None}</td>
+ *     <td><code>string</code></td>
+ *		</tr>	
+ *		<tr class=Prop>
+ *		<td>Sortable:</td>
+ *		<td>{True | False}</td>
+ *		<td><code>boolean</code></td>
+ *		</tr>
+ *		<tr class=Prop>
+ *		<td>Options:</td>
+ *		<td>(e.g. "decimalPlaces": 2, "decimalSeparator": ".", "thousandSeparator": ",", "prefix": "$")</td>
+ *		<td><code>object</code></td>
+ *		</tr>
+ 
+ <table style= "border: 1px solid black; border-collapse: collapse; ">
+
+ 
+* <tr  style= "border: 1px solid black; border-collapse: collapse;">
+
+*<td style="color: black; font-weight: normal; border: 1px solid black; border-collapse: collapse;padding: 5px;">Decimal</td>
+*<td style="color: black; font-weight: normal; border: 1px solid black; border-collapse: collapse;padding: 5px;">thousandsSeparator, decimalPlaces, decimalSeparator, postfix, prefix<td>
+*</tr>
+
+* <tr  style= "border: 1px solid black; border-collapse: collapse;">
+*<td style="color: black; font-weight: normal; border: 1px solid black; border-collapse: collapse;padding: 5px;">DatePicker</td>
+*<td style="color: black; font-weight: normal; border: 1px solid black; border-collapse: collapse;padding: 5px;">datePattern</td>
+*</tr>
+
+
+
+* <tr  style= "border: 1px solid black; border-collapse: collapse;">
+
+*<td style="color: black; font-weight: normal; border: 1px solid black; border-collapse: collapse;padding: 5px;">Link</td>
+*<td style="color: black; font-weight: normal; border: 1px solid black; border-collapse: collapse;padding: 5px;">href</td>
+*</tr>
+
+* <tr  style= "border: 1px solid black; border-collapse: collapse;">
+
+*<td style="color: black; font-weight: normal; border: 1px solid black; border-collapse: collapse;padding: 5px;">Integer</td>
+*<td style="color: black; font-weight: normal; border: 1px solid black; border-collapse: collapse;padding: 5px;">thousandSeparator</td>
+*</tr>
+
+
+
+*  </table>
+ 
+ * 	<tr>
+ *		<td>CSS</td>
+ *      <td>(e.g. color: #00ff00;)</td>
+ *      <td><code>CSS</code></td>
+ *		 </tr>
+ *		 <tr>
+ *		 <td>Width</td>
+ *      <td>400px (e.g. 300px, 20%, 1em)</td>
+ *      <td><code>string</code></td>
+ *		 </tr>
+ *	     </table>
+ *      </tr>
+ *   <tr class=Prop>
+ *     <td class=SectionName colspan=3>Appearance</td>
+ *   </tr>
+ *   <tr class=Prop>
+ *     <td>Table Style:</td>
+ *     <td>{Default | Elegant | Bordered | Striped | Hover Row | Condensed}</td>
+ *     <td><code>string</code></td>
+ *   </tr>
+ *   <tr class=Prop>
+ *     <td>Color Style:</td>
+ *     <td>{None | Light | Primary | Success | Danger | Warning | Info}</td>
+ *     <td><code>string</code></td>
+ *   </tr>
+ *   <tr class=Prop>
+ *     <td> Width:</td>
+ *     <td>(e.g. 500px, 50%)</td>
+ *     <td><code>string</code></td>
+ *   </tr>
+ *   <tr class=Prop>
+ *     <td>Height:</td>
+ *     <td>(e.g. 500px, 50%)</td>
+ *     <td><code>string</code></td>
+ *   </tr>
+ *   <tr class=Prop>
+ *     <td class=SectionName colspan=3>Performance</td>
+ *   </tr>
+ *   <tr class=Prop>
+ *     <td>Async Loading:</td>
+ *     <td>{True | False}</td>
+ *     <td><code>boolean</code></td>
+ *   </tr>
+ *   <tr class=Prop>
+ *     <td>Async Batch Size:</td>
+ *     <td>(e.g. 20)</td>
+ *     <td><code>integer</code></td>
+ *   </tr>
+ *   <tr class=Prop>
+ *     <td class=SectionName colspan=3>Searching</td>
+ *   </tr>
+ *   <tr class=Prop>
+ *     <td>Enable Search:</td>
+ *     <td>{true | false}</td>
+ *     <td><code>boolean</code></td>
+ *   </tr>
+ *   <tr class=Prop>
+ *     <td>Full Text Search:</td>
+ *     <td>{true | false}</td>
+ *     <td><code>boolean</code></td>
+ *   </tr>
+ *   <tr class=Prop>
+ *     <td class=SectionName colspan=3>Events</td>
+ *   </tr>
+ 
+ 
+
+ 
+ *   <tr class=Prop>
+ *      <td>On Load:</td>
+ *	    <td colspan = "2">
+ *   <table> 
+ *   <tr class=Prop>
+ *     <td>Description: </td>
+ *     <td>This event when the table is loaded.</td>
+ *   </tr>
+ 
+*   <tr class=Prop>
+*     <td>Example: </td>
+*     <td><pre class="prettyprint"><code>me.setPageIndex(0);<code></pre></td>
+*   </tr>
+ 
+</table>
+ 
+ 
+ 
+  *   <tr class=Prop>
+ *      <td>On Custom Cell:</td>
+ *	    <td colspan = "2">
+ *   <table> 
+ *   <tr class=Prop>
+ *     <td>Description: </td>
+ *     <td>This event fires whenever a cell loads with custom rendering options.  In order to make use of this event, you must set the configuration in Columns.</td>
+ *   </tr>
+ 
+*   <tr class=Prop>
+*     <td>Example: </td>
+*     <td><pre class="prettyprint"><code>var div = document.createElement("div"); div.innerHTML = cell.row.data[cell.varName]; return div;<code></pre></td>
+*   </tr>
+ 
+</table>
+ 
+ 
+ 
+<table style= "border: 1px solid black; border-collapse: collapse; ">
+* <tr  style= "border: 1px solid black; border-collapse: collapse;">
+*<th   style= "border: 1px solid black; border-collapse: collapse;padding: 5px;">Context Variables</th>
+*<th   style="border: 1px solid black; border-collapse: collapse; padding: 5px;">cell</th>
+*</tr>
+ 
+* <tr  style= "border: 1px solid black; border-collapse: collapse;">
+*<td  rowspan="5" style= "border: 1px solid black; border-collapse: collapse;padding: 5px;">Properties</td>
+*<td style="color: black; font-weight: normal; border: 1px solid black; border-collapse: collapse;padding: 5px;">colIndex</td>
+*</tr>
+
+* <tr  style= "border: 1px solid black; border-collapse: collapse;">
+*<td style="color: black; font-weight: normal; border: 1px solid black; border-collapse: collapse;padding: 5px;">controlType</td>
+*</tr>
+
+
+
+* <tr  style= "border: 1px solid black; border-collapse: collapse;">
+
+*<td style="color: black; font-weight: normal; border: 1px solid black; border-collapse: collapse;padding: 5px;">parentNode</td>
+*</tr>
+
+* <tr  style= "border: 1px solid black; border-collapse: collapse;">
+
+*<td style="color: black; font-weight: normal; border: 1px solid black; border-collapse: collapse;padding: 5px;">row {data, index}</td>
+*</tr>
+
+* <tr  style= "border: 1px solid black; border-collapse: collapse;">
+
+*<td style="color: black; font-weight: normal; border: 1px solid black; border-collapse: collapse;padding: 5px;">varName</td>
+*</tr>
+
+
+*  </table>
+
+* </td>
+* </tr>
+ 
+
+ 
+ 
+ 
+  
+ *   <tr class=Prop>
+ *      <td>On Rows Loaded:</td>
+ *	    <td colspan = "2">
+ *   <table> 
+ *   <tr class=Prop>
+ *     <td>Description: </td>
+ *     <td>This event is fired when the user deletes a record.</td>
+ *   </tr>
+ 
+*   <tr class=Prop>
+*     <td>Example: </td>
+*     <td><pre class="prettyprint"><code>return confirm("Are you sure you want to delete item " + item.str1);<code></pre></td>
+*   </tr>
+ 
+</table>
+ 
+  
+<table style= "border: 1px solid black; border-collapse: collapse; ">
+* <tr  style= "border: 1px solid black; border-collapse: collapse;">
+*<th   style= "border: 1px solid black; border-collapse: collapse;padding: 5px;">Context Variables</th>
+*<th   style="border: 1px solid black; border-collapse: collapse; padding: 5px;">item</th>
+*</tr>
+ 
+
+
+
+*  </table>
+
+* </td>
+* </tr>
+
+ *   </table>
+ */
+
+ /*
+		Public control methods *************************************************************
+		 */
+
+		//START Data Service-backed Table logic /////////////////////////////////////////// 
+		/**
+		 * @instance
+		 * @memberof ServiceDataTable
+		 * @method getQueryData
+		 * @desc Gets the input for the AJAX Data Service
+		 * @returns {any}
+		 */
+
+		/**
+		 * @instance
+		 * @memberof ServiceDataTable
+		 * @method setQueryData
+		 * @desc Sets the input for the AJAX Data Service
+		 * @param {any} data set the query data
+		 */
+
+		/**
+		 * @instance
+		 * @memberof ServiceDataTable
+		 * @method refresh
+		 * @param {boolean} fetchNewData set true or false whether new data load on refresh
+		 * @desc Refreshes the chart, takes in a parameter whether you want new data on refresh.
+		 */
+
+		/**
+		 * @instance
+		 * @memberof ServiceDataTable
+		 * @method clear
+		 * @desc Clear selected data on this control
+		 */
+		
+		//END Data Service-backed Table logic ///////////////////////////////////////////
+
+		/**
+		 * @instance
+		 * @memberof ServiceDataTable
+		 * @method setWidth
+		 * @param {string} width sets the width
+		 * @desc Set width of section (e.g. 50px, 20%, 2em - omitting the unit assumes px)
+		 */
+
+		/**
+		 * @instance
+		 * @memberof ServiceDataTable
+		 * @method getWidth
+		 * @desc Get configured width for section (including unit)
+		 * @returns {string}
+		 */		
+		
+		/**
+		 * @instance
+		 * @memberof ServiceDataTable
+		 * @method getRecordCount
+		 * @desc Returns the number of records in the table
+		 * @returns {integer}
+		 */	
+
+		/**
+		 * @instance
+		 * @memberof ServiceDataTable
+		 * @method search
+		 * @desc Retrieves record according to the specified parameters
+		 * @param {string} col	the column you want to search
+		 * @param {string} exp regular expression used for the search 
+		 * @param {boolean} caseInsensitive whether the search should be case insensitive
+		 * @param {boolean} [useRegex] whether or not to use the regular expression set
+		 * @example me.search("0", "[0-9]", true, false)
+		 */	
+		
+		/**
+		 * @instance
+		 * @memberof ServiceDataTable
+		 * @method getHighlightSelection
+		 * @desc This returns whether a row is highlighted when selected. 
+		 * @return {boolean} 
+		 */	
+		
+		/**
+		 * @instance
+		 * @memberof ServiceDataTable
+		 * @method setTableStyle
+		 * @desc This programmatically sets the table style.  NOTE: No error checking.
+		 * @param {string} style "D"=Default | "E"=Elegant | "B"=table-bordered | "S"=table-striped | "H"=table-hover | "C"=table-condensed
+		 */	
+		
+	    /**
+		 * @instance
+		 * @memberof ServiceDataTable
+		 * @method getTableStyle
+		 * @desc Gets the table style.  NOTE: This always returns the table style as set.
+		 * @return {string}
+		 */	
+		
+		/**
+		 * @instance
+		 * @memberof ServiceDataTable
+		 * @method clearSearch
+		 * @desc Clears the search
+		 */	
+
+		/**
+		 * @instance
+		 * @memberOf ServiceDataTable
+         * @method getPageSize
+         * @desc Returns the page size
+		 * @returns {integer}
+		 */
+		
+		/**
+		 * @instance
+		 * @memberOf ServiceDataTable
+         * @method setPageSize
+         * @desc Set the page size, number of rows in a given page
+		 * @param {integer} size the page size
+		 */
+		
+		/**
+		 * @instance
+		 * @memberof ServiceDataTable
+		 * @method setColorStyle
+		 * @param {string} style "DEFAULT"|"DEF"|"D"=Default | "LIGHT"|"L"=Light | PRIMARY"|"P"=Primary | "INFO"|INF"|"I"=Info | "SUCCESS"|"S"=Success | "WARNING"|"WARN"|"W"=Warning | "ERROR"|"ERR"|"DANGER"|"G"=Danger 
+		 * @desc Sets color style of table.  NOTE: to avoid ambiguity always set the color using "D"|"L"|P"|"I"|"S"|"W"|"G"
+		 */
+		
+		/**
+		 * @instance
+		 * @memberof ServiceDataTable
+		 * @method getColorStyle
+		 * @desc Gets color style of table.  NOTE: This always returns the color as set, to avoid ambiguity always set the color using "D"|"L"|"P"|"I"|"S"|"W"|"G"
+		 * @returns {string} 
+		 */
+		
+	    /**
+		 * @instance
+		 * @memberOf ServiceDataTable
+         * @method getPageIndex
+         * @desc Returns the page index
+		 * @returns {integer}
+		 */
+
+		/**
+		 * @instance
+		 * @memberOf ServiceDataTable
+         * @method sort
+         * @desc Sort by column and whether it should be in ascending order
+		 * @param {string} col the column name
+		 * @param {boolean} [asc] ascending order, default is false
+		 */
+
+		/**
+		 * @instance
+		 * @memberOf ServiceDataTable
+         * @method clearSort
+         * @desc Clears the sort
+		 * @returns {boolean}
+		 */
+
+		/**
+		 * @instance
+		 * @memberOf ServiceDataTable
+         * @method setPageIndex
+         * @desc Set the page index, 0-based indexing
+		 * @param {integer} idx the page index
+		 */
+
+		/**
+		 * @instance
+		 * @memberOf ServiceDataTable
+         * @method getMaxPageIndex
+         * @desc Get the maximum page index
+		 * @returns {integer} 
+		 */
+		
+		/**
+		 * @instance
+		 * @memberof ServiceDataTable
+		 * @method setColumns
+		 * @desc Sets column specifications for the table (results in complete table reset if the table had loaded records)
+		 * @param {ColumnSpecification[]} columnSpecs The specifications for the columns
+		 * @example
+		 * var table1 = page.ui.get("ServiceDataTable1");
+		 * var columnSpecs = [
+		 * 	{width: "20%", visibility: true, sortable: true, cssClass: "", dataElementName: "str1", type: "Text", label: "Str1"},
+		 * 	{width: "25%", visibility: true, sortable: true, cssClass: "", dataElementName: "int1", type: "Integer", label: "Int1"},
+		 * 	{width: "25%", visibility: true, sortable: true, cssClass: "", dataElementName: "dec1", type: "Decimal", label: "Dec1", options:{decimalPlaces: 2, currency: "USD"}},
+		 * 	{width: "30%", visibility: true, sortable: false, cssClass: "", dataElementName: "date1", type: "Date", label: "Date1", options:{dateFormat: "yyyy-MM"}},
+		 * ];
+		 *
+		 * table1.setColumns(columnSpecs);
+		 * table1.executeService();	 
+		 */
+
+		/**
+		 * @instance
+		 * @memberof ServiceDataTable
+		 * @method getRow
+		 * @desc Gets the row the specified child view
+		 * @param {object} v A view instance in the table (in one of the table cells)
+		 * @returns {Row} The row object containing the view
+		 */
+		
+		/**
+		 * @instance
+		 * @memberof ServiceDataTable
+		 * @method getType
+		 * @desc Get descriptive string representing the type of control
+		 * @returns {string}
+		 */

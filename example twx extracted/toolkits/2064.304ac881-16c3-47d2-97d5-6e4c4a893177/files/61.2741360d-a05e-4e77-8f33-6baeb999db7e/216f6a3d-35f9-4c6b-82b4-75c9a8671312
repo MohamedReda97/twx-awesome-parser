@@ -1,0 +1,650 @@
+/*
+ * #BEGIN COPYRIGHT
+ *
+ * Licensed Materials - Property of IBM
+ * 5725-C95
+ * (C) Copyright IBM Corporation 2017, 2021. All Rights Reserved.
+ * US Government Users Restricted Rights- Use, duplication or disclosure
+ * restricted by GSA ADP Schedule Contract with IBM Corp.
+ *
+ * #END COPYRIGHT
+ */
+
+/**
+ * @ignore
+ * @instance
+ * @memberof Note
+ * @method isValid
+ */ 
+
+/**
+ * @ignore
+ * @instance
+ * @memberof Note
+ * @method setValid
+ */ 
+
+/**
+ *   <tr class=Prop>
+ *     <td class=SectionName colspan=3>Events</td>
+ *   </tr>
+ *   <tr class=Prop>
+ *     <td>On Load:</td>
+ *     <td colspan="2">
+ *       <table> 
+ *         <tr class=Prop>
+ *           <td>Description: </td>
+ *           <td>Triggers whenever the view is loaded.</td>
+ *         </tr>
+ *         <tr class=Prop>
+ *           <td>Example: </td>
+ *           <td><pre class="prettyprint"><code>me.setText(${DynamicNoteText}.getValue())</code></pre></td>
+ *         </tr>
+ *       </table>
+ *     </td>
+ *   </tr>
+ *   <tr class=Prop>
+ *     <td>On Click:</td>
+ *     <td colspan="2">
+ *       <table> 
+ *         <tr class=Prop>
+ *           <td>Description: </td>
+ *           <td>Triggers when the view is clicked.</td>
+ *         </tr>
+ *         <tr class=Prop>
+ *           <td>Example: </td>
+ *           <td><pre class="prettyprint"><code>me.setVisible(false)</code></pre></td>
+ *         </tr>
+ *       </table>
+ *     </td>
+ *   </tr>
+ * </table>
+ */
+bpmext_control_InitNote = function (bpmext, utilities, domClass, domAttr, domConstruct)
+{
+	this._instance = {};
+
+	if (!this.constructor.prototype._proto)
+	{
+		this.constructor.prototype._proto =
+		{
+			EVT_ONCLICK : "eventON_CLICK",
+			OPTS_LBL_STLZ :
+			{
+				"H1" : "h1",
+				"H2" : "h2",
+				"H3" : "h3",
+				"H4" : "h4",
+			},
+			//{#feature: * Added support for Primary color style}
+			//{#feature: * Allow for both E and G for Danger color style}
+			OPTS_COL_STLZ :
+			{
+				"D" : "",
+				"P" : "note-primary",
+				"I" : "note-info",
+				"S" : "note-success",
+				"W" : "note-warning",
+				"E" : "note-danger",
+				"G" : "note-danger"
+			},
+			_setText : function (view, text)
+			{
+				try
+				{
+					if(text == null)
+					{
+						view.context.setDisplay(false, view._instance.text);
+					}
+					else
+					{
+						if(text.length == 0)
+							text = "&nbsp;";
+
+						view._instance.text.innerHTML = text; //add processing differences for HTML vs. non-HTML content
+						view.context.setDisplay(true, view._instance.text);
+						
+						utilities.BiDi.applyTextDir(
+								view._instance.text, 
+								view._instance.text.textContent, 
+								view._instance.baseTxtDir, 
+								view._instance.genPrefTextDir
+								);
+					}
+				}
+				catch (e)
+				{
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.error("Note._setText() error: " + e);
+					bpmext.log.error("Note._setText() " + bpmext.localization.formatMsg("general", "ERROR") + ": " + e);
+					if(e.stack) { 
+						//{#feature: US-1330 Added RT localization}
+						//bpmext.log.error("  Call stack: " + e.stack);
+						bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+					}
+				}
+			},
+			_setLabelVisibility : function (view, flag)
+			{
+				try
+				{
+					view.context.setDisplay(flag == "SHOW", view._instance.label);
+				}
+				catch (e)
+				{
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.error("Note._setLabelVisibility() error: " + e);
+					bpmext.log.error("Note._setLabelVisibility() " + bpmext.localization.formatMsg("general", "ERROR") + ": " + e);
+					if(e.stack) { 
+						//{#feature: US-1330 Added RT localization}
+						//bpmext.log.error("  Call stack: " + e.stack);
+						bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+					}
+				}
+			},
+			_setLabelStyle : function(view)
+			{
+				var lblStl = view.context.options.labelStyle.get("value");
+				var tagName = this.OPTS_LBL_STLZ[lblStl];
+				
+				if(tagName != null)
+				{
+					if(view._instance.label != null)
+					{
+						if(tagName != view._instance.label.tagName)
+						{
+							var p = view._instance.label.parentNode;
+							var newLbl = document.createElement(tagName);
+							domAttr.set(newLbl, "id", "note-label-"+view.context.controlidpath);
+							newLbl.innerHTML = view._instance.label.innerHTML;
+							
+							p.replaceChild(newLbl, view._instance.label);
+							view._instance.label = newLbl;
+							domClass.add(view._instance.label, "note-title");
+							
+							this._setLabelVisibility(view, view.context.options._metadata.labelVisibility.get("value"));
+						}
+					}
+					else
+					{
+						view._instance.label = document.createElement(tagName);
+						domAttr.set(view._instance.label, "id", "note-label-"+view.context.controlidpath);
+						domClass.add(view._instance.label, "note-title");
+					}
+				}
+			},
+			_setLabel : function (view, label)
+			{
+				try
+				{
+					if(label)
+					{
+						view._instance.label.innerHTML = view.context.htmlEscape(label);
+						utilities.BiDi.applyTextDir(
+							view._instance.label, 
+							view._instance.label.innerHTML, 
+							view._instance.baseTxtDir, 
+							view._instance.genPrefTextDir
+							);
+					}
+					else
+					{
+						view._instance.label.innerHTML = "";
+						view.context.setDisplay(false, view._instance.label);
+					}
+				}
+				catch (e)
+				{
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.error("Note._setLabel() error: " + e);
+					bpmext.log.error("Note._setLabel() " + bpmext.localization.formatMsg("general", "ERROR") + ": " + e);
+					if(e.stack) { 
+						//{#feature: US-1330 Added RT localization}
+						//bpmext.log.error("  Call stack: " + e.stack);
+						bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+					}
+				}
+			},
+			_setWidth : function (view, width)
+			{
+				try
+				{
+					if (width != null && width != "")
+					{
+						if (!isNaN(width))
+							width += "px";
+
+						view.context.element.style.width = width;
+						
+						domClass.add(view.context.element, "widthSet");
+					}
+					else 
+					{
+						view.context.element.style.width = null;
+
+						domClass.remove(view.context.element, "widthSet");
+					}
+				}
+				catch (e)
+				{
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.error("Note._setWidth() error: " + e);
+					bpmext.log.error("Note._setWidth() " + bpmext.localization.formatMsg("general", "ERROR") + ": " + e);
+					if(e.stack) { 
+						//{#feature: US-1330 Added RT localization}
+						//bpmext.log.error("  Call stack: " + e.stack);
+						bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+					}
+				}
+			},
+			_handleVisibility : function (view)
+			{
+				var vis = utilities.handleVisibility(view.context);
+				
+				if (vis != "NONE")
+					view._instance.text.disabled = (vis == "READONLY");
+				
+				// Updates for WAI
+				if (domAttr.has(view._instance.text, "disabled")) {										
+					domAttr.set(view._instance.text, "aria-disabled", "true");
+				} else {					
+					domAttr.remove(view._instance.text, "aria-disabled");
+				}
+			},
+			_normalizeColorStyle: function(style)
+			{
+				// OPTS_COL_STLZ :
+				// {
+					// "D" : "",
+					// "I" : "note-info",
+					// "S" : "note-success",
+					// "W" : "note-warning",
+					// "G" : "note-danger"
+				// },
+				if(!style)
+					style = "D";
+				
+				style = style.toUpperCase();
+
+				if(style == "E")
+					style = "G";
+
+				if(style.length > 1)
+				{
+					switch (style)
+					{
+						case "DEFAULT":
+						case "DEF":
+							style = "D";
+							break;
+						case "SUCCESS":
+							style = "S";
+							break;
+						case "INFO":
+						case "INF":
+							style = "I";
+							break;
+						case "WARNING":
+						case "WARN":
+							style = "W";
+							break;
+						case "ERR":
+						case "ERROR":
+						case "DANGER":
+							style = "G";
+							break;
+						default:
+							//{#feature: US-1330 Added RT localization}
+							//bpmext.log.warn("Unexpected color style: " + style);
+							bpmext.log.warn(bpmext.localization.formatMsg("general", "COLOR_STYLE_WARNING",style));
+					}
+				}
+
+				return style;
+			},
+			_setColorStyle : function (view, newVal, oldVal)
+			{
+				if(!oldVal)
+					oldVal = view._instance.oldColStyle;
+				
+				newVal = this._normalizeColorStyle(newVal);
+				oldVal = this._normalizeColorStyle(oldVal);
+
+				bpmext.ui.util.replaceCSSClass(view._instance.noteDiv, this.OPTS_COL_STLZ, newVal, oldVal);
+				view._instance.oldColStyle = newVal;
+			}
+		};
+
+		/*
+		Public control methods *************************************************************
+		 */
+
+		/**
+		 * @instance
+		 * @memberof Note
+		 * @method setLabelStyle
+		 * @param {string} style Note label style ("H1"|"H2"|"H3"|"H4")
+		 * @desc Set label style for note control
+		 */
+		this.constructor.prototype.setLabelStyle = function (style)
+		{
+			this.context.options.labelStyle.set("value", style);
+		};
+
+		/**
+		 * @instance
+		 * @memberof Note
+		 * @method getLabel
+		 * @desc Get Note control label style
+		 * @returns {string}
+		 */
+		this.constructor.prototype.getLabelStyle = function ()
+		{
+			return this.context.options.labelStyle.get("value");
+		}
+		 
+		/**
+		 * @instance
+		 * @memberof Note
+		 * @method setLabel
+		 * @param {string} label Note label
+		 * @desc Set label for note control
+		 */
+		this.constructor.prototype.setLabel = function (text)
+		{
+			this.context.options._metadata.label.set("value", text);
+		};
+
+		/**
+		 * @instance
+		 * @memberof Note
+		 * @method getLabel
+		 * @desc Get label associated with note control
+		 * @returns {string}
+		 */
+		this.constructor.prototype.getLabel = function ()
+		{
+			return this.context.options._metadata.label.get("value");
+		}
+
+		/**
+		 * @instance
+		 * @memberof Note
+		 * @method isLabelVisible
+		 * @desc Get label visibility for note control
+		 * @returns {boolean}
+		 */
+		this.constructor.prototype.isLabelVisible = function ()
+		{
+			return this.context.options._metadata.labelVisibility.get("value") == "SHOW";
+		}
+
+		/**
+		 * @instance
+		 * @memberof Note
+		 * @method setLabelVisible
+		 * @param {boolean} flag {true | false}
+		 * @desc Set label visibility for note control
+		 */
+		this.constructor.prototype.setLabelVisible = function (flag)
+		{
+			this.context.options._metadata.labelVisibility.set("value", flag ? "SHOW" : "HIDE");
+		};		
+		
+		/**
+		 * @instance
+		 * @memberof Note
+		 * @method getText
+		 * @desc Get text for note control
+		 * @returns {string}
+		 */
+		this.constructor.prototype.getText = function ()
+		{
+			var res = this.getData();
+			return res == null ? "" : res;
+		}
+
+		/**
+		 * @instance
+		 * @memberof Note
+		 * @method setText
+		 * @param {string} text Note text
+		 * @desc Set text for note control
+		 */
+		this.constructor.prototype.setText = function (text)
+		{
+			this.context.binding.set("value", text);
+		}
+
+		/**
+		 * @instance
+		 * @memberof Note
+		 * @method setWidth
+		 * @param {string} width Note width
+		 * @desc Set width of text control (e.g. 50px, 20%, 2em - omitting the unit assumes px)
+		 */
+		this.constructor.prototype.setWidth = function (width)
+		{
+			this.context.options.width.set("value", width);
+		}
+
+		/**
+		 * @instance
+		 * @memberof Note
+		 * @method getWidth
+		 * @desc Get configured width for note control (including unit)
+		 * @returns {string}
+		 */	
+		this.constructor.prototype.getWidth = function ()
+		{
+			return this.context.options.width.get("value");
+		}
+		
+		/**
+		 * @instance
+		 * @memberof Note
+		 * @method setColorStyle
+		 * @param {string} style "DEFAULT"|"DEF"|"D"=Default | "INFO"|INF"|"I"=Info | "SUCCESS"|"S"=Success | "WARNING"|"WARN"|"W"=Warning | "DANGER"|"G"=Danger 
+		 * @desc Sets color style of note.  NOTE: to avoid ambiguity always set the color using "D"|"I"|"S"|"W"|"G"
+		 */
+		this.constructor.prototype.setColorStyle = function (style)
+		{
+			this.context.options.colorStyle.set("value", style);
+		}
+
+		/**
+		 * @instance
+		 * @memberof Note
+		 * @method getColorStyle
+		 * @desc Gets color style of note.  NOTE: This always returns the color as set, to avoid ambiguity always set the color using "D"|"I"|"S"|"W"|"G"
+		 * @returns {string}
+		 */
+		this.constructor.prototype.getColorStyle = function ()
+		{
+			return this.context.options.colorStyle.get("value");
+		}
+		
+		/**
+		 * @instance
+		 * @memberof Note
+		 * @method getType
+		 * @desc Get descriptive string representing the type of control
+		 * @returns {string}
+		 */
+		this.constructor.prototype.getType = function ()
+		{
+			return "note.3";
+		}
+
+		/*
+		Coach NG Lifecycle methods *************************************************************
+		 */
+		this.constructor.prototype.load = function ()
+		{
+			try
+			{
+				var opts = this.context.options;
+				var mdt = opts._metadata;
+
+				this._instance.baseTxtDir = mdt.baseTextDirection && mdt.baseTextDirection.get("value") ? mdt.baseTextDirection.get("value") : utilities.BiDi.BASE_TEXT_DIRECTION._default;
+				this._instance.genPrefTextDir = this.context.bpm.system.baseTextDirection;
+				
+				if (!this.context.binding)
+					this.context.binding = bpmext.ui.substituteObject(this);
+
+				if (!opts.labelStyle)
+					bpmext.ui.substituteConfigOption(this, "labelStyle", "H4");
+				
+				if (!opts.colorStyle)
+					bpmext.ui.substituteConfigOption(this, "colorStyle", "D");
+
+				if (!opts.textAlignment)
+					bpmext.ui.substituteConfigOption(this, "textAlignment", "L");
+
+				if (!opts.width)
+					bpmext.ui.substituteConfigOption(this, "width", null);
+
+				this._instance.noteDiv = document.createElement("div");
+				domClass.add(this._instance.noteDiv, "note");
+				this._proto._setLabelStyle(this);
+				
+				this._instance.text = document.createElement("p");
+				domAttr.set(this._instance.text, "id", "note-text-"+this.context.controlidpath);
+				
+				this._instance.noteDiv.appendChild(this._instance.label);
+				this._instance.noteDiv.appendChild(this._instance.text);
+				this.context.element.appendChild(this._instance.noteDiv);
+
+				var view = this;
+				bpmext.ui.setupFormulaTriggeredUpdates(
+					this, 
+					function (expResult)
+					{
+						if (expResult == undefined)
+						{
+							expResult = "";
+						}
+
+						view.setText(expResult);
+					},
+					this.getText
+				);
+				
+				bpmext.ui.loadView(this);
+
+				this._proto._setLabelVisibility(this, opts._metadata.labelVisibility.get("value"));
+				this._proto._setLabel(this, opts._metadata.label.get("value"));
+				this._proto._setWidth(this, opts.width.get("value"));
+				this._proto._setText(this, this.context.binding.get("value"))
+				this._proto._setColorStyle(this, opts.colorStyle.get("value"));
+				
+				if(opts[this._proto.EVT_ONCLICK])
+					bpmext.ui.registerEventHandlingFunction(this, this._proto.EVT_ONCLICK);
+					
+				this._instance.noteDiv.onclick = function (event)
+				{
+					if(!domClass.contains(this, "disabled"))
+					{
+						bpmext.ui.executeEventHandlingFunction(view, view._proto.EVT_ONCLICK);
+					}
+					return false;
+				}
+				//bpmext.log.info("#### Note::load() complete", this);
+			}
+			catch (e)
+			{
+				//{#feature: US-1330 Added RT localization}
+				//bpmext.log.error("Error on load event [" + this.context.viewid + "]: " + e);
+				bpmext.log.error(bpmext.localization.formatMsg("general", "ERROR_ONLOAD_EVENT") + " [" + this.context.viewid + "]: " + e);
+				if(e.stack) { 
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.error("  Call stack: " + e.stack);
+					bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+				}
+			}
+		};
+
+		this.constructor.prototype.view = function ()
+		{
+			try
+			{
+				this._proto._handleVisibility(this);
+				//bpmext.log.info("#### Note::view() complete", this);				
+			}
+			catch (e)
+			{
+				//{#feature: US-1330 Added RT localization}
+				//bpmext.log.error("Error on view event [" + this.ui.getAbsoluteName() + "]: " + e);
+				bpmext.log.error(bpmext.localization.formatMsg("general", "ERROR_ONVIEW_EVENT") + " [" + this.ui.getAbsoluteName() + "]: " + e);
+				if(e.stack) { 
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.error("  Call stack: " + e.stack);
+					bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+				}
+			}
+		};
+
+		this.constructor.prototype.change = function (event)
+		{
+			try
+			{
+				if (event.type == "config")
+				{
+					switch (event.property)
+					{
+						case "_metadata.label":
+						{
+							this._proto._setLabel(this, event.newVal);
+							break;
+						}
+						case "_metadata.visibility":
+						{
+							this._proto._handleVisibility(this);
+							break;
+						}
+						case "_metadata.labelVisibility":
+						{
+							this._proto._setLabelVisibility(this, event.newVal);
+							break;
+						}
+						case "width":
+						{
+							this._proto._setWidth(this, event.newVal);
+							break;
+						}
+						case "colorStyle":
+						{
+							this._proto._setColorStyle(this, event.newVal, event.oldVal);
+							break;
+						}
+						case "labelStyle":
+						{
+							this._proto._setLabelStyle(this);
+							break;
+						}
+					}
+				}
+				else if(event.insertedInto == event.removedFrom)
+				{
+					this._proto._setText(this, event.newVal);
+				}
+			}
+			catch (e)
+			{
+				//{#feature: US-1330 Added RT localization}
+				//bpmext.log.error("Error on change event [" + this.ui.getAbsoluteName() + "]: " + e);
+				bpmext.log.error(bpmext.localization.formatMsg("general", "ERROR_ONCHANGE_EVENT") + " [" + this.ui.getAbsoluteName() + "]: " + e);
+				if(e.stack) { 
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.error("  Call stack: " + e.stack);
+					bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+				}
+			}
+		};
+		
+		this.constructor.prototype.unload = function ()
+		{
+			bpmext.ui.unloadView(this);
+		};
+	}
+}

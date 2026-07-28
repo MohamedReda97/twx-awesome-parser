@@ -1,0 +1,252 @@
+/*
+ * #BEGIN COPYRIGHT
+ *
+ * Licensed Materials - Property of IBM
+ * 5725-C95
+ * (C) Copyright IBM Corporation 2017. All Rights Reserved.
+ * US Government Users Restricted Rights- Use, duplication or disclosure
+ * restricted by GSA ADP Schedule Contract with IBM Corp.
+ *
+ * #END COPYRIGHT
+ */
+
+var mixObject = {
+	createPreview:function(containingDiv, labelText, callback){
+		var bpmextUri = this.context.getManagedAssetUrl("BPMExt-Core-Designer.js", this.context.assetType_WEB, "SYSBPMUI");
+		require(["dojo/dom-class", bpmextUri], this.lang.hitch(this, function(domClass, bpmext){
+			bpmext.uidesign.css.ensureGlyphsLoaded(this);
+            bpmext.uidesign.css.ensureSparkUIClass(containingDiv);
+            bpmext.uidesign.svg.ensureCarbonIconsLoaded(this);
+
+			this.context.coachViewData.containingDiv = containingDiv;
+			domClass.add(this.context.coachViewData.containingDiv, "ie-edge");
+
+			var tempID;
+			while(true) {
+				tempID = dojox.uuid.generateRandomUuid();
+				if(this.context.coachViewData.containingDiv.querySelector("div[data-temp-id='" + tempID + "']") == null)
+					break;
+			}
+
+			this.context.coachViewData.containingDiv.setAttribute("data-temp-id", tempID);
+
+			this.context.coachViewData.root = this.context.coachViewData.containingDiv.querySelector("div[data-temp-id='" + tempID + "'] > .DesignSectionRoot");
+			this.context.coachViewData.outerDiv = this.context.coachViewData.root;
+			this.context.coachViewData.themeDefaultDiv = this.context.coachViewData.outerDiv;
+			domClass.add(this.context.coachViewData.themeDefaultDiv, "spark-ui");
+
+			this.context.coachViewData.label = this.context.coachViewData.containingDiv.querySelector("div[data-temp-id='" + tempID + "']  .control-label");
+			this.context.coachViewData.inputGroup = this.context.coachViewData.containingDiv.querySelector("div[data-temp-id='" + tempID + "'] .input-group");
+			this.context.coachViewData.inputGroupAddon = this.context.coachViewData.containingDiv.querySelector("div[data-temp-id='" + tempID + "'] .input-group-addon");
+			this.context.coachViewData.contentBoxDiv = this.context.coachViewData.containingDiv.querySelector("div[data-temp-id='" + tempID + "']  .DesignContentBox");
+
+			this.context.coachViewData.labelTextDom = document.createTextNode(labelText);
+			this.context.coachViewData.label.appendChild(this.context.coachViewData.labelTextDom);
+			this.context.coachViewData.containingDiv.removeAttribute("data-temp-id");
+
+			this.context.coachViewData.buttonInfoTextNode = document.createTextNode("");
+			this.context.coachViewData.inputGroupAddon.appendChild(this.context.coachViewData.buttonInfoTextNode);
+
+			this.context.coachViewData.containingDiv.appendChild(this.context.coachViewData.themeDefaultDiv);
+
+			this.context.coachViewData.iconClass = "fa-circle-o";
+			this.context.coachViewData.oldIconClass = "fa-circle-o";
+
+			this.context.coachViewData.updateHorizontalPosition = this.lang.hitch(this, function(value){
+				var horizontalPos;
+				if(this.context.coachViewData.tooltip){
+					if(value == "R"){
+						horizontalPos = "alignRight";
+					} else if(value == "C"){
+						horizontalPos = "alignCenter";
+					} else {
+						horizontalPos = "alignLeft";
+					}
+					domClass.replace(this.context.coachViewData.tooltip, horizontalPos, "alignLeft alignRight alignCenter");
+				}
+			});
+
+			this.context.coachViewData.updateVerticalPosition = this.lang.hitch(this, function(value){
+				var verticalPos;
+				if(this.context.coachViewData.tooltip){
+					if(value == "B"){
+						verticalPos = "bottom";
+					} else {
+						verticalPos = "top";
+					}
+					domClass.replace(this.context.coachViewData.tooltip, verticalPos, "top bottom");
+				}
+			});
+			this.context.coachViewData.labelHandler = bpmext.uidesign.createLabelHandler(this.context.coachViewData.labelTextDom, this.context.coachViewData.label, this.context.coachViewData.containingDiv, false, false);
+			callback();
+		}));
+	},
+	getLabelDomElement:function(){
+		return this.context.coachViewData.label;
+	},
+	propertyChanged:function(propertyName, propertyValue){
+		var configHelperUri = this.context.getManagedAssetUrl("BPMExt-Core-ConfigHelper.js",this.context.assetType_WEB, "SYSBPMUI");
+		require(["dojo/dom-class", configHelperUri], this.lang.hitch(this, function(domClass, configHelper){
+			this.context.coachViewData.labelHandler.propertyChanged(propertyName, propertyValue);
+			if(propertyName == "@style"){
+				var width = configHelper.getResponsiveConfigOptionValue(this, "@width");
+				var minWidth = configHelper.getResponsiveConfigOptionValue(this, "@minWidth");
+				if(!!width || !!minWidth || this.context.coachViewData.width) {
+					this.context.coachViewData.containingDiv.style.width =  minWidth || this.context.coachViewData.width || width;
+				} else {
+					this.context.coachViewData.containingDiv.style.width = "";
+				}
+			} else if(propertyName == "labelPlacement"){
+				var labelPlacement;
+				if(propertyValue == "L"){
+					labelPlacement = "label-left";
+				} else {
+					labelPlacement = "";
+				}
+				domClass.replace(this.context.coachViewData.outerDiv, labelPlacement, "label-left");
+			} else if(propertyName == "sizeStyle"){
+				// var sizeStyle;
+				// if(propertyValue == "L"){
+					// sizeStyle = "input-lg";
+				// } else if(propertyValue == "S"){
+					// sizeStyle = "input-sm";
+				// } else {
+					// sizeStyle = "";
+				// }
+				// domClass.replace(this.contentBoxDiv, sizeStyle, "input-sm input-lg");
+
+			} else if(propertyName ==  "@helpText"){
+				// var tooltipVisible = configHelper.getConfigOptionValue(this, "showTooltip");
+
+				// if((tooltipVisible == "true" || tooltipVisible == true) && propertyValue){
+					// if(this.context.coachViewData.tooltip && this.context.coachViewData.buttonInfoTextNode != undefined){
+						// this.context.coachViewData.buttonInfoTextNode.nodeValue = propertyValue;
+					// } else {
+						// this.context.coachViewData.createToolTipNode(propertyValue);
+					// }
+				// } else {
+					// this.context.coachViewData.deleteToolTipNode();
+				// }
+			} else if(propertyName == "width"){
+				this.context.coachViewData.width = propertyValue;
+				if(!!propertyValue) {
+					//this.context.coachViewData.containingDiv.style.width = propertyValue;
+					this.context.coachViewData.containingDiv.style.width = isNaN(propertyValue) ? propertyValue : (propertyValue+"px");
+				} else {
+					this.context.coachViewData.containingDiv.style.width = "";
+				}
+            } else if (propertyName == "labelWidth") {
+                if (propertyValue) {
+                    this.context.coachViewData.label.style.width = isNaN(propertyValue) ? propertyValue : (propertyValue + "px");
+                    domClass.add(this.context.coachViewData.containingDiv, "labelWidth");
+                } else {
+                    this.context.coachViewData.label.style.width = "";
+                    domClass.remove(this.context.coachViewData.containingDiv, "labelWidth");
+                }
+			} else if(propertyName == "buttonInfo"){
+				this.updateButton();
+			} else if(propertyName == "buttonKind"){
+				this.updateButton();
+			} else if(propertyName == "buttonLocation"){
+				if(propertyValue == "L"){
+					this.context.coachViewData.inputGroup.removeChild(this.context.coachViewData.contentBoxDiv);
+					this.context.coachViewData.inputGroup.appendChild(this.context.coachViewData.contentBoxDiv);
+				} else if(propertyValue == "R"){
+					this.context.coachViewData.inputGroup.removeChild(this.context.coachViewData.inputGroupAddon);
+					this.context.coachViewData.inputGroup.appendChild(this.context.coachViewData.inputGroupAddon);
+				}
+			} else if(propertyName == "buttonColorStyle"){
+				var colorStyle;
+				if(propertyValue == "P"){
+					colorStyle = "bg-primary";
+				} else if(propertyValue == "I"){
+					colorStyle = "bg-info";
+				} else if(propertyValue == "S"){
+					colorStyle = "bg-success";
+				} else if(propertyValue == "W"){
+					colorStyle = "bg-warning";
+				} else if(propertyValue == "G"){
+					colorStyle = "bg-danger";
+				} else {
+					colorStyle = "";
+				}
+				domClass.replace(this.context.coachViewData.inputGroupAddon, colorStyle, "bg-primary bg-info bg-success bg-warning bg-danger");
+			} else if(propertyName == "showTooltip"){
+				// var tooltipText = configHelper.getConfigOptionValue(this, "@helpText");
+				// if(propertyValue == true && tooltipText){
+					// if(!this.context.coachViewData.tooltip){
+						// this.context.coachViewData.createToolTipNode(tooltipText);
+					// }
+				// } else {
+					// this.context.coachViewData.deleteToolTipNode();
+				// }
+			}
+		}));
+    },
+	updateButton: function(){
+		var configHelperUri = this.context.getManagedAssetUrl("BPMExt-Core-ConfigHelper.js",this.context.assetType_WEB, "SYSBPMUI");
+		require(["dojo/dom-class", configHelperUri], this.lang.hitch(this, function(domClass, configHelper){
+			var buttonInfoText = configHelper.getConfigOptionValue(this, "buttonInfo");
+			var buttonKind = configHelper.getConfigOptionValue(this, "buttonKind") || "I";
+            var iconName = (buttonInfoText || "").toLowerCase();
+
+			if(buttonKind == "I"){//Icon
+				this.context.coachViewData.buttonInfoTextNode.nodeValue = "";
+				domClass.add(this.context.coachViewData.inputGroupAddon, "btn-label icon bg");
+				if(this.context.coachViewData.menuCaretDown){
+					this.context.coachViewData.inputGroupAddon.removeChild(this.context.coachViewData.menuCaretDown);
+					this.context.coachViewData.menuCaretDown = undefined;
+				}
+
+				if(iconName){
+                    // empty icon holder
+                    this.context.coachViewData.inputGroupAddon.innerHTML = ""
+                    if (iconName.indexOf("ci-") === 0) {
+                        // add carbon icon
+                        this.context.coachViewData.inputGroupAddon.appendChild(bpmext.uidesign.svg.getCarbonIcon(iconName));
+                        iconName = "ci " + iconName;
+                    } else {
+                        if (!iconName.indexOf("fa-") === 0) {
+                            iconName = "fa-" + iconName;
+                        }
+                        iconName = "fa " + iconName;
+                    }
+					this.context.coachViewData.iconClass = iconName;
+					domClass.remove(this.context.coachViewData.inputGroupAddon, this.context.coachViewData.oldIconClass);
+					domClass.add(this.context.coachViewData.inputGroupAddon, iconName);
+				} else {
+					this.context.coachViewData.iconClass = "fa fa-circle-o";
+					domClass.remove(this.context.coachViewData.inputGroupAddon, this.context.coachViewData.oldIconClass);
+					domClass.add(this.context.coachViewData.inputGroupAddon,this.context.coachViewData.iconClass);
+				}
+				this.context.coachViewData.oldIconClass = iconName;
+
+			} else if(buttonKind == "T"){//Text
+				if(buttonInfoText != undefined){
+					this.context.coachViewData.buttonInfoTextNode.nodeValue = buttonInfoText;
+				}
+				if(this.context.coachViewData.menuCaretDown){
+					this.context.coachViewData.inputGroupAddon.removeChild(this.context.coachViewData.menuCaretDown);
+					this.context.coachViewData.menuCaretDown = undefined;
+				}
+				domClass.remove(this.context.coachViewData.inputGroupAddon, "btn-label icon fa bg");
+				domClass.remove(this.context.coachViewData.inputGroupAddon, this.context.coachViewData.iconClass);
+			} else if(buttonKind == "M"){//menu
+				if(buttonInfoText != undefined){
+					this.context.coachViewData.buttonInfoTextNode.nodeValue = buttonInfoText;
+				}
+				if(!this.context.coachViewData.menuCaretDown){
+					this.context.coachViewData.menuCaretDown = document.createElement("span");
+					domClass.add(this.context.coachViewData.menuCaretDown, "ig-menu-btn fa fa-caret-down");
+					this.context.coachViewData.inputGroupAddon.appendChild(this.context.coachViewData.menuCaretDown);
+				}
+
+				domClass.remove(this.context.coachViewData.inputGroupAddon, "btn-label icon fa bg");
+				domClass.remove(this.context.coachViewData.inputGroupAddon, this.context.coachViewData.iconClass);
+			}
+		}));
+	},
+	modelChanged: function(propertyName, propertyValue) {
+		this.context.coachViewData.labelHandler.modelChanged(propertyName, propertyValue);
+	}
+};

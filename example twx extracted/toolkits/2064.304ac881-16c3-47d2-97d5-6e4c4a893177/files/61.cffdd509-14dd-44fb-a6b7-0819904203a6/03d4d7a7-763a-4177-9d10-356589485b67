@@ -1,0 +1,1752 @@
+/*
+ * #BEGIN COPYRIGHT
+ *
+ * Licensed Materials - Property of IBM
+ * 5725-C95
+ * (C) Copyright IBM Corporation 2017, 2021. All Rights Reserved.
+ * US Government Users Restricted Rights- Use, duplication or disclosure
+ * restricted by GSA ADP Schedule Contract with IBM Corp.
+ *
+ * #END COPYRIGHT
+ */
+
+/** 
+ *   <tr class=Prop>
+ *     <td class=SectionName colspan=3>Events</td>
+ *   </tr>
+ *   <tr class=Prop>
+ *     <td>On Load:</td>
+ *     <td colspan="2">
+ *       <table> 
+ *         <tr class=Prop>
+ *           <td>Description: </td>
+ *           <td>Triggers whenever the view is loaded.</td>
+ *         </tr>
+ *         <tr class=Prop>
+ *           <td>Example: </td>
+ *           <td><pre class="prettyprint"><code>console.log(me.getItemCount())</code></pre></td>
+ *         </tr>
+ *       </table>
+ *     </td>
+ *   </tr>
+ *   <tr class=Prop>
+ *     <td>On Service Items:</td>
+ *     <td colspan="2">
+ *       <table> 
+ *         <tr class=Prop>
+ *           <td>Description: </td>
+ *           <td>Triggers when AJAX Service returns item list. Only triggers if Item lookup Mode is set to Items From Service.</td>
+ *         </tr>
+ *         <tr class=Prop>
+ *           <td>Example: </td>
+ *           <td><pre class="prettyprint"><code>console.log("MultiSelect1 item service retrieved items successfully")</code></pre></td>
+ *         </tr>
+ *       </table>
+ *     </td>
+ *   </tr>
+ *   <tr class=Prop>
+ *     <td>On Service Error:</td>
+ *     <td colspan="2">
+ *       <table> 
+ *         <tr class=Prop>
+ *           <td>Description: </td>
+ *           <td>Triggers when AJAX selection service returns an error. Will not trigger if Item Lookup Mode is not set to Items From Service.</td>
+ *         </tr>
+ *         <tr class=Prop>
+ *           <td>Example: </td>
+ *           <td><pre class="prettyprint"><code>me.clearItems()</code></pre></td>
+ *         </tr>
+ *       </table>
+ *     </td>
+ *   </tr>
+ *   <tr class=Prop>
+ *     <td>On Change:</td>
+ *     <td colspan="2">
+ *       <table> 
+ *         <tr class=Prop>
+ *           <td>Description: </td>
+ *           <td>Triggers when the bound data changes.</td>
+ *         </tr>
+ *         <tr class=Prop>
+ *           <td>Example: </td>
+ *           <td><pre class="prettyprint"><code>${MultiSelect2}.reloadServiceItems(me.getSelectedIndices())</code></pre></td>
+ *         </tr>
+ *       </table>
+ *     </td>
+ *   </tr>
+ * </table>
+ */
+bpmext_control_InitMultiSelect = function (bpmext, utilities, domClass, domAttr, domConstruct, domGeometry, json)
+{
+	this._instance = {};
+
+	if (!this.constructor.prototype._proto)
+	{
+		this.constructor.prototype._proto =
+		{
+			EVT_ONCHANGE : "eventON_CHANGE",
+			EVT_ONFOCUS : "eventON_FOCUS",
+			EVT_ONBLUR : "eventON_BLUR",
+			EVT_ONSVCITEMS : "eventON_SVCITEMS",
+			EVT_ONSVCERROR : "eventON_SVCERROR",
+			_getItemIndex : function (view, value)
+			{
+				
+				// DEC2016 CHANGE to use _instance.itemList instead of _instance.select.options
+				// for consistency with Single Select method
+				if(view._instance.itemList.items)
+				{
+					for(var i = 0; i < view._instance.itemList.items.length; i++)
+					{
+
+						if (value ==  view._instance.itemList.items[i][view._instance._optValProp] )
+							return i;
+					}
+				}				
+				
+				return -1;
+			},
+			_getItemOption : function (view, index)
+			{
+				if(view._instance.select.options)
+					return view._instance.select.options[index];
+			},
+			//{#feature: * Allow leniency for mapping complex-typed items list element to bound data}
+			_mapBindingValues : function(view, values)
+			{
+				if(view.isBound() && view.context.bindingType)
+				{
+					var bType = view.context.bindingType().toUpperCase();
+					if ( (bType == "STRING[]")  || (bType == "INTEGER[]") || (bType == "DECIMAL[]") || (bType == "BOOLEAN[]") )		//jmacSEL
+					{
+						if(values != null && values.length > 0)
+						{
+							var typeOfItems;
+							if (values[0][view._instance._optValProp] != undefined)
+								typeOfItems = typeof values[0][view._instance._optValProp];
+							else
+								typeOfItems = typeof values[0];
+
+							var values2 = [];
+							
+							if(typeOfItems == "number") 
+							{
+								for(var i = 0; i < values.length; i++)
+								{
+									if (values[0][view._instance._optValProp] != undefined)									
+										values2.push(values[i][view._instance._optValProp]);
+									else
+										values2.push(values[i]);
+								}
+								
+								values = values2;
+							}
+							else // store as string
+							{
+								for(var i = 0; i < values.length; i++)
+								{
+									if (values[0][view._instance._optValProp] != undefined)									
+									  values2.push(values[i][view._instance._optValProp] + "");
+									else
+										values2.push(values[i] + "");
+								}
+								
+								values = values2;
+							}
+						}
+					}
+				}
+
+				return values;
+			},
+			_getSelectedItemIndices : function (view,newVal) 						// jmacSEL  // DEC 2016
+			{
+				var indices = [];
+				if (view._instance._isSimpleBinding)
+				{	
+					for (var i=0; i < view._instance.select.options.length; i ++)
+					{
+						for (var ii = 0; ii < newVal.items.length; ii++)
+						{
+//							if (view._instance.select.options[i].value == newVal.items[ii][view._instance._optValProp])
+							if (view._instance.select.options[i].value == newVal.items[ii])
+							{
+								indices.push(i);
+								break;
+							}
+						}
+					}
+				}
+				else // complex binding
+				{	
+					for (var i=0; i < view._instance.select.options.length; i ++)
+					{
+						for (var ii = 0; ii < newVal.items.length; ii++)
+						{
+							if (view._instance.select.options[i].innerHTML == newVal.items[ii][view._instance._busDisProp])
+//							if (view._instance.select.options[i].innerHTML == newVal.items[ii])
+							{
+								indices.push(i);
+								break;
+							}
+						}
+					}
+				}
+				return indices;
+			},
+			_setSelectedItemsByIndex : function(view, idxs) 				//jmacSEL
+			{
+				for(var i = 0; i < view._instance.select.options.length; i++)
+				{
+					view._instance.select.options[i].selected = false;
+					domClass.remove(view._instance.select.options[i], "selected");
+					domAttr.set(view._instance.select.options[i], "aria-selected", "false");
+				}
+				
+				for(var i = 0; i < idxs.length; i++)
+				{
+					var curIdx = idxs[i];
+					view._instance.select.options[curIdx].selected = true;
+					domClass.add(view._instance.select.options[curIdx], "selected");
+					domAttr.set(view._instance.select.options[curIdx], "aria-selected", "true");
+				}				
+			},
+			_setSelectedItems : function (view, values)
+			{
+				var i;
+				for(i = 0; i < view._instance.select.options.length; i++)
+				{
+					view._instance.select.options[i].selected = false;
+					domClass.remove(view._instance.select.options[i], "selected");
+					domAttr.set(view._instance.select.options[i], "aria-selected", "false");
+				}
+				
+				if(values != null && values.items)
+					values = values.items;
+				
+				if(values)
+				{
+					var map = {};
+					for(i = 0; i < values.length; i++)
+					{
+						if (values[i].name)
+						{
+							map[values[i].name] = true;
+						}
+						else
+						{
+							map[values[i]] = true;
+						}
+					}
+					
+					for(i = 0; i < view._instance.select.options.length; i++)
+					{
+						if(map[view._instance.select.options[i].value]){
+							view._instance.select.options[i].selected = true;
+							domClass.add(view._instance.select.options[i], "selected");
+							domAttr.set(view._instance.select.options[i], "aria-selected", "true");
+						}
+					}
+				}
+			},
+			_appendOption : function(view, key, value)
+			{
+				if(view.context.itemCount===null || view.context.itemCount===undefined){
+					view.context.itemCount=0;
+				}
+				var opt = document.createElement("option");
+				domAttr.set(opt, "id", "multiselect-option-" + view.context.controlidpath + "["+view.context.itemCount+"]");
+				view.context.itemCount++;
+				domAttr.set(opt, "value", key);
+				opt.innerHTML = view.context.htmlEscape(value);
+				utilities.BiDi.applyTextDir(opt, opt.innerHTML, view._instance.baseTxtDir, view._instance.genPrefTextDir);
+				view._instance.select.appendChild(opt);
+				
+				return opt;
+			},
+			_rebindAllUpdates : function(view)
+			{
+				
+			},
+			_updateItemList: function(view, event, itemList)
+			{
+				var selOpt
+				if(event.insertedInto >= 0 && event.insertedInto != event.removedFrom)
+				{
+					view._proto._rebindAllUpdates(view);
+					
+					if(event.insertedInto == view._instance.select.options.length) //If inserted at the end
+					{
+						var item = event.newVal;
+						selOpt = view._proto._appendOption(view, item[view._instance._optValProp], item[view._instance._optDisProp]);
+						var tstOptValue;  //DEC 2016
+						var boundData = view.context.binding.get("value").items;
+						// check the bound dat for any items which should be selected
+						for (var i = 0; i < boundData.length; i++)
+						{
+							if (view._instance._isSimpleBinding)
+								tstOptValue = boundData[i];
+							else
+								tstOptValue = boundData[i][view._instance._busValProp];
+							if (selOpt.value == tstOptValue)
+							{
+								selOpt.selected = true;
+								domClass.add(selOpt, "selected");
+								domAttr.set(selOpt, "aria-selected", "true");
+								break;
+							}	
+						}
+					}
+					else
+					{
+						//{#feature: US-1330 Added RT localization}
+						//bpmext.log.error("Mid-list inserts not supported by Coach NG API yet");
+						bpmext.log.error(bpmext.localization.formatMsg("general", "MID_LIST_INSERT_COACH_NG_ERROR"));
+					}
+				}
+				else if(event.removedFrom >= 0 && event.removedFrom != event.insertedInto) //List item deletion
+				{
+					view._proto._rebindAllUpdates(view);
+					selOpt = view._instance.select.options[event.removedFrom];
+					
+					if(selOpt != undefined) 	// DEC2016
+					{
+						selOpt.parentNode.removeChild(selOpt);
+						
+						if (selOpt.selected == true)  // remove current selection
+						{
+							view._proto._updateSelectedItems(view);
+						}
+					}
+				}
+				else if(event.removedFrom >= 0 && event.removedFrom == event.insertedInto)//Just a value change...
+				{
+					if(event.newVal != null)
+					{
+						selOpt = view._instance.select.options[event.removedFrom];
+						selOpt.value = event.newVal[view._instance._optValProp];
+						selOpt.innerHTML = event.newVal[view._instance._optDisProp];
+						if (selOpt.selected == true)
+							view._proto._updateSelectedItems(view);
+						utilities.BiDi.applyTextDir(selOpt, selOpt.innerHTML, view._instance.baseTxtDir, view._instance.genPrefTextDir);
+					}
+				}
+				else if(event.removedFrom == undefined && event.removedFrom == event.insertedInto ) // whole new list
+				{
+					if (event.newVal != null)
+					{
+						view._instance.itemList = view.context.options.itemList.get("value");
+						view._proto._loadListItems(view, view._instance.itemList, view.context.binding.get("value"), view._instance._optValProp, view._instance._optDisProp);						
+						//view._proto._loadListItems(view, view._instance.itemList, event.newVal);				
+					}
+				}
+
+			},
+			_updateSelectedItems : function (view)
+			{
+				try
+				{
+					view._instance._stopSetItem = true;
+					var tArray = [];
+					for (var i = 0; i < view._instance.select.options.length; i++)
+					{
+						if (view._instance.select.options[i].selected == true)
+						{
+							if (view._instance._isSimpleBinding)
+							{
+								tArray.push(view._instance.itemList.items[i][view._instance._optValProp]);
+							}
+							else
+							{	
+								tArray.push(view._instance.itemList.items[i]);
+							}
+						}
+					}
+					view.context.binding.set("value", tArray);
+				}
+				finally
+				{
+					delete view._instance._stopSetItem;
+				}
+				
+			},
+			_loadListItems : function(view, itemList, selectedValues, keyProp, valueProp)
+			{
+				if(view._instance._bindSelUpdHandle)
+					view._instance._bindSelUpdHandle.unbind();
+
+				if(view._instance._bindValueUpdHandle)
+					view._instance._bindValueUpdHandle.unbind();
+				
+				if(keyProp == null)
+					keyProp = "name";
+				
+				if(valueProp == null)
+					valueProp = "value";
+				
+				view._instance._bindValueUpdHandle = itemList.bindAll
+				(
+					function(event)
+					{			// jmacSEL potential  IT doesn't look like this code EVER gets called.					
+						view._proto._updateItemList(view, event, itemList);
+					}, 
+					view
+				);
+
+				// Fix for defect 290086
+				view._instance.select.innerHTML = "<optgroup disabled hidden></optgroup>";
+				
+				var items = itemList.items;
+				//{#bug: * Allow initial selection from keys in bound list}
+				var selVals = {};
+				//{#bug: BG-760 }
+				if (selectedValues)
+				{
+					var selIdxs = selectedValues.length() > 0 ? [] : null;
+					
+					for(var i = 0; i < selectedValues.length(); i++)
+					{
+						var selItem = selectedValues.get(i);
+						if(selItem[view._instance._busValProp] != undefined)		// DEC2016
+							selVals[selItem[view._instance._busValProp]] = true;	// DEC 2016
+						else
+							selVals[selItem] = true;
+					}
+				}
+					
+				for(var i = 0; i < items.length; i++)
+				{
+					var opt;
+					if (items[i][keyProp] != undefined)				// jmacSEL  existing bug  without test for undefined a value of 0 causes issues
+						opt = this._appendOption(view, items[i][keyProp], items[i][valueProp]);
+					else
+						opt = this._appendOption(view, items[i], items[i]);
+					
+					if(selVals[opt.value])
+					{
+						opt.selected = true;
+						domClass.add(opt, "selected");
+						domAttr.set(opt, "aria-selected", "true");
+						if(selIdxs != null)
+							selIdxs.push(i);
+					}
+				}
+				
+				if(selIdxs != null)
+				{
+					var lookupMode = view.context.options.itemLookupMode.get("value");
+					
+					if(lookupMode == "B" && view.context.options.itemList && !view.isBound())
+					{
+						var l = view.context.options.itemList.get("value");
+						l.set("listAllSelectedIndices", selIdxs);
+					}
+				}
+
+				view._instance._bindSelUpdHandle = itemList.bind(
+					"listAllSelectedIndices", 
+					function(event){
+						if(event.newVal !== view._instance.sidxs){
+							view._proto._setSelectedItemsByIndex(view,event.newVal);				//jmacSEL
+						}
+						//view._proto._setSelectedItems(view, {items: itemKeys});
+					}, 
+					view
+					);
+
+				// Defect 330494 - START
+				this._handleVisibility(view);
+				// Defect 330494 - END
+			},
+			_updateControl : function (view)
+			{
+				var errors = bpmext.ui.getViewValidationErrors(view);
+				
+				//Color style
+				var colStyle = errors ? "E" : view.context.options.colorStyle.get("value");
+				
+				bpmext.ui.util.replaceCSSClass(view._instance.group, bpmext.ui.util.OPTS_COL_STL_CLZ, colStyle, view._instance.oldColStyle);
+				view._instance.oldColStyle = colStyle;
+				
+				//Validation Error Icon
+				if(view._instance.icon)
+				{
+					bpmext.ui.util.closeTooltip(view._instance.iconTT, view._instance.input);
+					delete view._instance.iconTT;
+					
+					view._instance.input.removeChild(view._instance.icon);
+					delete view._instance.icon;
+				}
+				
+				if(errors)
+				{
+					domClass.add(view._instance.group, "has-feedback has-error");
+					view._instance.icon = document.createElement("span");
+					view._instance.input.appendChild(view._instance.icon);
+
+					if (view.context.options.showValidationMarker.get("value") === true) {
+						domClass.add(view._instance.icon, "fa form-control-feedback fa-exclamation-circle");
+					
+						var ttOpts = {
+							horizontalPos: "right", 
+							verticalPos: "top", 
+							cssClass: "validationError",
+							plainText: false,
+							smartPositioning: true
+						};
+					
+						view._instance.iconTT = bpmext.ui.util.showTooltip(
+							view._instance.input, 
+							bpmext.ui.util.formatErrors(errors), 
+							ttOpts
+						);
+
+						view._instance.errorMessage = document.createElement("div");
+						view._instance.errorMessage.id = view._instance.input.firstElementChild.id + "-error-msg";
+						view._instance.errorMessage.classList.add("hide");
+						view._instance.errorMessage.innerHTML = bpmext.ui.util.formatErrors(errors);
+						view._instance.input.appendChild(view._instance.errorMessage);
+						domAttr.set(view._instance.input.firstElementChild, "aria-describedby", view._instance.errorMessage.id);
+						domAttr.set(view._instance.input.firstElementChild, "aria-invalid", "true");
+					}
+				}
+				else
+				{
+					domClass.remove(view._instance.group, "has-feedback has-error");	
+					if (view._instance.errorMessage) { view._instance.errorMessage.remove(); }
+					domAttr.remove(view._instance.input.firstElementChild, "aria-describedby");
+					domAttr.remove(view._instance.input.firstElementChild, "aria-invalid");			
+				}
+			},
+			_setLabelPlacement : function (view, newVal, oldVal)
+			{
+				if(!oldVal)
+					oldVal = view._instance.oldLblPlc;
+				
+				newVal = bpmext.ui.util.normalizeLabelPlacement(newVal, bpmext.ui.util.OPTS_LBL_PLC_CLZ);
+				oldVal = bpmext.ui.util.normalizeLabelPlacement(oldVal, bpmext.ui.util.OPTS_LBL_PLC_CLZ);
+
+				bpmext.ui.util.replaceCSSClass(view._instance.group, bpmext.ui.util.OPTS_LBL_PLC_CLZ, newVal, oldVal);
+				view._instance.oldLblPlc = newVal;
+			},
+			_setLabelWidth : function (view, labelWidth)
+			{
+				if(labelWidth != null && labelWidth != "")
+				{
+					if(!isNaN(labelWidth))
+						labelWidth += "px";
+					
+					view._instance.label.style.width = labelWidth;
+					domClass.add(view.context.element, "labelWidth");
+				}
+				else 
+				{
+					if (view._instance.label) {
+						view._instance.label.style.width = null;
+					}
+					
+					domClass.remove(view.context.element, "labelWidth");
+				}
+					
+			},			
+			_setLabelVisibility : function (view, flag)
+			{
+				try
+				{
+					if(view._instance.label)
+						view.context.setDisplay(flag == "SHOW", view._instance.label);
+				}
+				catch (e)
+				{
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.error("MultiSelect._setLabelVisibility() error: " + e);
+					bpmext.log.error("MultiSelect._setLabelVisibility() " + bpmext.localization.formatMsg("general", "ERROR") + ": " + e);
+					if(e.stack) { 
+						//{#feature: US-1330 Added RT localization}
+						//bpmext.log.error("  Call stack: " + e.stack);
+						bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+					}
+				}
+			},
+			_createLabel : function (view)
+			{
+				view._instance.label = document.createElement("label");
+				domClass.add(view._instance.label, "control-label");
+				domConstruct.place(view._instance.label, view._instance.group, "first");
+				domAttr.set(view._instance.label, "for", view._instance.select.id);
+			},
+			_setLabel : function (view, label)
+			{
+				try
+				{
+					if(label)
+					{
+						if(!view._instance.label)
+							this._createLabel(view);
+
+						view._instance.label.innerHTML = view.context.htmlEscape(label);
+						utilities.BiDi.applyTextDir(
+							view._instance.label, 
+							view._instance.label.innerHTML, 
+							view._instance.baseTxtDir, 
+							view._instance.genPrefTextDir
+							);
+					}
+					else
+					{
+						if(view._instance.label)
+						{
+							view._instance.group.removeChild(view._instance.label);
+							delete view._instance.label;
+						}
+					}
+				}
+				catch (e)
+				{
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.error("MultiSelect._setLabel() error: " + e);
+					bpmext.log.error("MultiSelect._setLabel() " + bpmext.localization.formatMsg("general", "ERROR") + ": " + e);
+					if(e.stack) { 
+						//{#feature: US-1330 Added RT localization}
+						//bpmext.log.error("  Call stack: " + e.stack);
+						bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+					}
+				}
+			},
+			_setSizeStyle : function (view, newVal, oldVal)
+			{
+				if(!oldVal)
+					oldVal = view._instance.oldSzStyle;
+				
+				newVal = bpmext.ui.util.normalizeSizeStyle(newVal, bpmext.ui.util.OPTS_SZ_STL_CLZ);
+				oldVal = bpmext.ui.util.normalizeSizeStyle(oldVal, bpmext.ui.util.OPTS_SZ_STL_CLZ);
+
+				bpmext.ui.util.replaceCSSClass(view._instance.select, bpmext.ui.util.OPTS_SZ_STL_CLZ, newVal, oldVal);
+				view._instance.oldSzStyle = newVal;
+				
+				bpmext.ui.util.propagateUpSizeStyle(view, newVal);
+			},
+			_setWidth : function (view, width)
+			{
+				try
+				{
+					if (width != null && width != "")
+					{
+						if (!isNaN(width))
+							width += "px";
+
+						view.context.element.style.width = width;
+						
+						domClass.add(view.context.element, "widthSet");
+					}
+					else
+					{
+						view.context.element.style.width = null;
+
+						domClass.remove(view.context.element, "widthSet");
+					}
+				}
+				catch (e)
+				{
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.error("MultiSelect._setWidth() error: " + e);
+					bpmext.log.error("MultiSelect._setWidth() " + bpmext.localization.formatMsg("general", "ERROR") + ": " + e);
+					if(e.stack) { 
+						//{#feature: US-1330 Added RT localization}
+						//bpmext.log.error("  Call stack: " + e.stack);
+						bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+					}
+				}
+			},			
+			_setTabIndex : function (view, index)
+			{
+				if(index != null)
+					domAttr.set(view._instance.select, "tabindex", index);
+				else
+					domAttr.remove(view._instance.select, "tabindex");
+			},
+			_handleVisibility : function (view)
+			{
+				var vis = utilities.handleVisibility(view.context);
+				
+				if (vis != "NONE") {
+					if(vis === "READONLY") {
+						// Defect 323393 - Android 9:  Multiselect values in read-only Tabs can not be seen
+						var options = view._instance.select.options;
+						for(i = 0; i < options.length; i++) {
+							domAttr.set(options[i], "disabled", "");
+						}
+					} else {
+						// Defect 323393 - Android 9:  Multiselect values in read-only Tabs can not be seen
+						var options = view._instance.select.options;
+						for(i = 0; i < options.length; i++) {
+							domAttr.remove(options[i], "disabled");
+						}
+					}
+					if (!view._instance.label)
+						return;
+					if (vis === "READONLY")
+						domClass.add(view.context.element, "disabled");
+					else
+						domClass.remove(view.context.element, "disabled");
+				}
+			},
+			_setHelpText : function(view, text){
+				utilities.setHelpText(view, text);
+			}
+		};
+
+		/*
+		Public control methods *************************************************************
+		 */
+		 
+		/**
+		 * @instance
+		 * @memberof MultiSelect
+		 * @method setLabel
+		 * @param {string} label Label for the control
+		 * @desc Set label for multiselect control
+		 */
+		this.constructor.prototype.setLabel = function (text)
+		{
+			this.context.options._metadata.label.set("value", text);
+		};
+
+		/**
+		 * @instance
+		 * @memberof MultiSelect
+		 * @method getLabel
+		 * @desc Get label associated with multiselect control
+		 * @returns {string}
+		 */
+		this.constructor.prototype.getLabel = function ()
+		{
+			return this.context.options._metadata.label.get("value");
+		};
+
+		/**
+		 * @instance
+		 * @memberof MultiSelect
+		 * @method setHelpText
+		 * @param {string} helptext Help text for the control
+		 * @desc Set help text for multiselect control
+		 */
+		this.constructor.prototype.setHelpText = function (text)
+		{
+			this.context.options._metadata.helpText.set("value", text);
+		};
+
+		/**
+		 * @instance
+		 * @memberof MultiSelect
+		 * @method getHelpText
+		 * @desc Get help text associated with multiselect control
+		 * @returns {string}
+		 */
+		this.constructor.prototype.getHelpText = function ()
+		{
+			return this.context.options._metadata.helpText.get("value");
+		};
+
+		/**
+		 * @instance
+		 * @memberof MultiSelect
+		 * @method setLabelPlacement
+		 * @param {string} placement "T"|"TOP"=Top | "L"|"LEFT"=Left
+		 * @desc Set label placement for control.  NOTE: to avoid ambiguity always set the label placement using "T"|"L"
+		 */
+		this.constructor.prototype.setLabelPlacement = function (plc)
+		{
+			this.context.options.labelPlacement.set("value", plc);
+		};
+
+		/**
+		 * @instance
+		 * @memberof MultiSelect
+		 * @method getLabelPlacement
+		 * @desc Get label placement for control.  NOTE: This always returns the label placement as set, to avoid ambiguity always set the label placement using "T"|"L"
+		 * @returns {string}
+		 */
+		this.constructor.prototype.getLabelPlacement = function ()
+		{
+			return this.context.options.labelPlacement.get("value");
+		};
+		
+		/**
+		 * @instance
+		 * @memberof MultiSelect
+		 * @method getLabelWidth
+		 * @desc Get label width of MultiSelect control (e.g. 50px, 20%, 2em - omitting the unit assumes px)
+		 * @returns {string}
+		 */
+		this.constructor.prototype.getLabelWidth = function ()
+		{
+			return this.context.options.labelWidth.get("value");
+		};
+		
+		/**
+		 * @instance
+		 * @memberof MultiSelect
+		 * @method setLabelWidth
+		 * @param {string} labelWidth Control's label width
+		 * @desc Set label width of MultiSelect control (e.g. 50px, 20%, 2em - omitting the unit assumes px)
+		 */
+		this.constructor.prototype.setLabelWidth = function (labelWidth)
+		{
+			this.context.options.labelWidth.set("value", labelWidth);
+		};
+
+		/**
+		 * @instance
+		 * @memberof MultiSelect
+		 * @method isLabelVisible
+		 * @desc Get label visibility for multiselect control
+		 * @returns {boolean}
+		 */
+		this.constructor.prototype.isLabelVisible = function ()
+		{
+			return this.context.options._metadata.labelVisibility.get("value") == "SHOW";
+		};
+
+		/**
+		 * @instance
+		 * @memberof MultiSelect
+		 * @method setLabelVisible
+		 * @param {boolean} flag {true | false} Set to false to hide label
+		 * @desc Set label visibility for select control
+		 */
+		this.constructor.prototype.setLabelVisible = function (flag)
+		{
+			this.context.options._metadata.labelVisibility.set("value", flag ? "SHOW" : "HIDE");
+		};
+
+		/**
+		 * @instance
+		 * @memberof MultiSelect
+		 * @method setSizeStyle
+		 * @param {string} style "DEFAULT"|"DEF"|"NORMAL"|"D"=Default | "SMALL"|"S"=Small | "LARGE"|"L"=Large
+		 * @desc Sets size style of control.  NOTE: to avoid ambiguity always set the size style using "D"|"S"|"L"
+		 */		
+		this.constructor.prototype.setSizeStyle = function (style)
+		{
+			return this.context.options.sizeStyle.set("value", style);
+		};
+
+		/**
+		 * @instance
+		 * @memberof MultiSelect
+		 * @method getSizeStyle
+		 * @desc Gets size style of control.  NOTE: This always returns the size style as set, to avoid ambiguity always set the size style using "D"|"S"|"L"
+		 * @returns {string}
+		 */		
+		this.constructor.prototype.getSizeStyle = function ()
+		{
+			return this.context.options.sizeStyle.get("value");
+		};
+		
+		/**
+		 * @instance
+		 * @memberof MultiSelect
+		 * @method getSelectedItems
+		 * @desc Get values associated with items selected in multiselect control
+		 * @returns {ANY[]}
+		 */
+		this.constructor.prototype.getSelectedItems = function ()
+		{
+			var list = this.context.binding.get("value");
+			return list ? list.items : null;
+		};
+
+		/**
+		 * @instance
+		 * @memberof MultiSelect
+		 * @method getSelectedIndices
+		 * @desc Get indices of items selected in multiselect control
+		 * @returns {integer[]}
+		 */
+		this.constructor.prototype.getSelectedIndices = function ()
+		{
+			var idxs = [];
+			for(var i = 0; i < this._instance.select.options.length; i++)
+			{
+				if(this._instance.select.options[i].selected)
+					idxs.push(i);
+			}
+			
+			return idxs;
+		};
+		
+		/**
+		 * @instance
+		 * @memberof MultiSelect
+		 * @method getItemTextAt
+		 * @desc Get display text associated with item at specified index
+		 * @param {integer} index Index of item/option in multiselect control
+		 * @returns {string}
+		 */
+		this.constructor.prototype.getItemTextAt = function (idx)
+		{
+			var opt = this._proto._getItemOption(this, idx);
+			if(opt)
+				return opt.innerHTML;			
+		};
+
+		/**
+		 * @instance
+		 * @memberof MultiSelect
+		 * @method getItemText
+		 * @param {ANY} itemVal Value of item to get text for
+		 * @desc Get the display text for a value (value must be known)
+		 * @example mltslct.getItemText("option1") // returns "Option 1" (for a selection item with value="option1" and name="Option 1")
+		 * @example mltslct.getItemText(mltslct.getSelectedItems()[0]) // returns the text of the first selected item
+		 * @returns {string}
+		 */
+		this.constructor.prototype.getItemText = function (itemVal)
+		{
+			var idx = this._proto._getItemIndex(this, itemVal);
+			if(idx > -1)
+				return this.getItemTextAt(idx);
+		};
+		
+		/**
+		 * @instance
+		 * @memberof MultiSelect
+		 * @method getItemCount
+		 * @desc Get number of items in the list
+		 * @returns {integer}
+		 */
+		this.constructor.prototype.getItemCount = function ()
+		{
+			return this._instance.select.options.length;
+		};
+		
+		//TODO Add getSelectedItemCount()?
+		
+		/**
+		 * @instance
+		 * @memberof MultiSelect
+		 * @method appendItem
+		 * @param {ANY} value The value of the selection
+		 * @param {string} displayText The text to be displayed
+		 * @desc Appends an item to the selection list
+		 * @returns {object} Item that was added to the list
+		 */
+		this.constructor.prototype.appendItem = function (optVal, optTxt)
+		{
+			if(typeof optTxt == "undefined")
+				optTxt = optVal;
+			
+			var obj = {};
+			obj[this._instance._optValProp] = optVal;
+			obj[this._instance._optDisProp] = optTxt;
+			
+			var listItems = this._instance.itemList.items;
+			for (var idx in listItems)
+			{
+				if (obj[this._instance._optValProp] == listItems[idx][this._instance._optValProp] && obj[this._instance._optDisProp] == listItems[idx][this._instance._optDisProp])
+				{
+					console.log("Item already in list");
+					return obj;
+				}
+			}
+			var index = this._instance.itemList.add(obj);
+
+			return obj;			
+		};
+		
+		/**
+		 * @instance
+		 * @memberof MultiSelect
+		 * @method removeItemAt
+		 * @desc Remove item at specified index
+		 * @param {integer} index Index of item/option in multiselect control
+		 * @returns {ANY}
+		 */
+		this.constructor.prototype.removeItemAt = function(idx)
+		{
+			return this._instance.itemList.remove(idx);
+		};
+		
+		/**
+		 * @instance
+		 * @memberof MultiSelect
+		 * @method removeItem
+		 * @desc Remove item/option matching the value specified
+		 * @param {ANY} value Value of item/option in multiselect control
+		 * @returns {ANY}
+		 */
+		this.constructor.prototype.removeItem = function(itemVal)
+		{
+			var idx = this._proto._getItemIndex(this, itemVal);
+			if(idx > -1)
+				return this.removeItemAt(idx);
+		};
+		
+		/**
+		 * @instance
+		 * @memberof MultiSelect
+		 * @method setItemText
+		 * @desc Set display text of item/option matching the value specified
+		 * @param {ANY} value Value of item/option in multiselect control
+		 * @param {string} text The display text to show for the item/option
+		 */
+		this.constructor.prototype.setItemText = function(itemVal, text)
+		{
+			var idx = this._proto._getItemIndex(this, itemVal);
+			if(idx > -1)
+			{
+				this.setItem(idx, itemVal, text);
+			}
+		};
+		
+		/**
+		 * @instance
+		 * @memberof MultiSelect
+		 * @method setItem
+		 * @desc Set display text of item/option at specified index
+		 * @param {integer} idx Index to set
+		 * @param {ANY} value Value of item/option in multiselect control
+		 * @param {string} text The display text to show for the item/option
+		 */
+		this.constructor.prototype.setItem = function(idx, val, text)
+		{
+			var obj = {};
+			obj[this._instance._optValProp] = val;
+			obj[this._instance._optDisProp] = text;
+			
+			this._instance.itemList.put(idx, obj);			
+		};
+		
+
+		/**
+		 * @instance
+		 * @memberof MultiSelect
+		 * @method clearItems
+		 * @desc Clears the selection list
+		 */
+		this.constructor.prototype.clearItems = function()
+		{
+			var opts = this.context.options;
+			var lookupMode = opts.itemLookupMode.get("value");			
+			//{#bug: BG-760 changed to specify lookupMode E for second compare}
+			if(lookupMode == "S" || lookupMode == "E")
+			{
+				this._instance.itemList = new com.ibm.bpm.coach.List([], "svc.items");
+				this._proto._loadListItems(this, this._instance.itemList);
+			}
+			else if(lookupMode == "L" || lookupMode == "B")
+			{
+				for(var i = this._instance.itemList.length() - 1; i >= 0; i--)
+				{
+					this._instance.itemList.remove(i);
+				}
+				
+				this._proto._loadListItems(this, this._instance.itemList, this.context.binding.get("value"));				
+			}
+			//{#bug: BG-760 added to indicate no selected items }
+			this.context.binding.set("value", []);
+		};
+		
+		/**
+		 * @instance
+		 * @memberof MultiSelect
+		 * @method setSelectedItems
+		 * @param {ANY} value Values (i.e. keys) of items to set selection to
+		 * @desc Set items selected in select control based on the value of the items/options
+		 */
+		this.constructor.prototype.setSelectedItems = function (values)
+		{
+			//{#bug: 456 Replaced incorrect setSelectedItem method for a multi-select with setSelectedItems}
+			values = this._proto._mapBindingValues(this, values);			//jmacSEL
+			this._proto._setSelectedItems(this,values);						//jmacSEL
+			this.context.binding.set("value", values);		
+		};
+		
+		/**
+		 * @instance
+		 * @memberof MultiSelect
+		 * @method setSelectedItemsAt
+		 * @param {Int} array of indexes of the items to set selection
+		 * @desc Set items selected in select control based on the indexes
+		 */
+		this.constructor.prototype.setSelectedItemsAt = function (idxs)			//jmacSEL
+		{
+			if (idxs.length > 0)
+			{
+				for(var i = 0; i < this._instance.select.options.length; i++)
+				{
+					this._instance.select.options[i].selected = false;
+					domClass.remove(this._instance.select.options[i], "selected");
+					domAttr.set(this._instance.select.options[i], "aria-selected", "false");
+				}			
+				
+				var selOpts = this._instance.select.options;
+				var mySelectedArray =  [ ];
+				for (var i = 0; i < idxs.length; i++)
+				{
+
+					var curIdx = idxs[i];
+					if ( !isNaN(curIdx) && (curIdx <= this._instance.select.options.length - 1) && (curIdx > -1) )
+					{
+						this._instance.select.options[curIdx].selected = true;
+						domClass.add(this._instance.select.options[curIdx], "selected");
+						domAttr.set(this._instance.select.options[curIdx], "aria-selected", "true");
+						if (this._instance._isSimpleBinding)
+							mySelectedArray.push(selOpts[curIdx].value)
+						else
+						{
+							var myObj = {};
+							myObj[this._instance._busValProp] = selOpts[curIdx].value;
+							myObj[this._instance._busDisProp] = selOpts[curIdx].label;
+							mySelectedArray.push(myObj);
+						}
+					}
+				}
+				
+				this.context.binding.set("value", mySelectedArray);			
+			}
+		};
+
+		/**
+		 * @instance
+		 * @memberof MultiSelect
+		 * @method setTabIndex
+		 * @param {integer} tabIndex Tab indices start at 1 and may be set sparsely
+		 * @desc Sets tab index of select control
+		 */
+		this.constructor.prototype.setTabIndex = function (tabIndex)
+		{
+			return this.context.options.tabIndex.set("value", tabIndex);
+		};
+
+		/**
+		 * @instance
+		 * @memberof MultiSelect
+		 * @method getTabIndex
+		 * @desc Get tab index for select control
+		 * @returns {integer}
+		 */
+		this.constructor.prototype.getTabIndex = function ()
+		{
+			return domAttr.get(this._instance.select, "tabindex");
+		};
+		
+		/**
+		 * @instance
+		 * @memberof MultiSelect
+		 * @method focus
+		 * @desc Set focus on this control
+		 */
+		this.constructor.prototype.focus = function ()
+		{
+			this._instance.select.focus();
+		};
+
+		/**
+		 * @instance
+		 * @memberof MultiSelect
+		 * @method setServiceInputData
+		 * @param {ANY} data Default input data for service
+		 * @desc Specifies the default input for the list items AJAX service
+		 */		
+		this.constructor.prototype.setServiceInputData = function(data)
+		{ 
+			this.context.options.inputData.set("value", data);
+		};
+
+		/**
+		 * @instance
+		 * @memberof MultiSelect
+		 * @method getServiceInputData
+		 * @returns {ANY}
+		 * @desc Returns the input for the list items AJAX service
+		 */
+		this.constructor.prototype.getServiceInputData = function()
+		{
+			return this.context.options.inputData.set("value");
+		};
+
+		/**
+		 * @instance
+		 * @memberof MultiSelect
+		 * @method reloadServiceItems
+		 * @param {ANY} input Data to be passed to the AJAX Service retrieving the items for the control 
+		 * @desc Sets tab index of select control
+		 */
+		this.constructor.prototype.reloadServiceItems = function(input)
+		{
+			if(input === undefined)
+				input = this.context.options.inputData.get("value");
+
+			// {bug: 540 error passing in complex data }
+			if ( (input != null) && (typeof input == "object") && input.toJson) 
+				input = json.parse(input.toJson());
+			
+			input = {"data": input};
+			var view = this;
+			
+
+			var sargs = {
+				params:  input,
+				load: function(data) {
+					try
+					{
+						domClass.remove(view._instance.input, "spin");
+						//"results" is the name of the ouput of the AJAX service
+						if(data.results)
+						{
+							delete data.results["@metadata"];
+							// {bug: 854 wierd javascript error when a simple type is returned as a list of 1 item and the value is "1" }
+							if ( (data.results.items.length > 0) && (typeof data.results.items[0] != "object") )
+							{
+								var nvps = [];
+								for (var i = 0; i < data.results.items.length; i++)
+								{
+									var obj = {};
+									obj[ view._instance._optValProp] = data.results.items[i];
+									obj[ view._instance._optDisProp] = data.results.items[i];
+									nvps[i] = obj;
+
+								}
+								data.results.items = nvps;
+							}							
+							if(data.results.items && data.results.items.length)
+							{
+								view._instance.itemList = new com.ibm.bpm.coach.List(data.results.items, "svc.items");
+								//jmacSEL  existing bug (no "_" for optVal and optDisp)
+								view._proto._loadListItems(view, view._instance.itemList, view.context.binding.get("value"), view._instance._optValProp, view._instance._optDisProp);
+								
+								if(view.context.binding.get("value").items.length === 0 && data.results.selected && data.results.selected.length) {
+									setTimeout(function() {
+										var values = [],
+                                    		value;
+                                    	for(var i=0; i<data.results.selected.length; i++){
+                                    		value = data.results.items[data.results.selected[i]];
+                                    		delete value["@metadata"];
+                                    		values.push(value);
+                                    	}
+                                    	view.setSelectedItems(values);
+									});
+								}
+							}
+						}
+						
+						//console.log("Service returned: " + bpmext.text.toString(data));
+						setTimeout(function(){
+							bpmext.ui.executeEventHandlingFunction(view, view._proto.EVT_ONSVCITEMS);
+						});
+					}
+					catch (e) {
+						//{#feature: US-1330 Added RT localization}
+						//bpmext.log.error("Error on AJAX item list fetching [" + view.context.viewid + "]: " + e);
+						bpmext.log.error(bpmext.localization.formatMsg("general", "ERROR_ONAJAX_ITEMLIST_FETCH") + " [" + view.context.viewid + "]: " + e);
+						if(e.stack) { 
+							//{#feature: US-1330 Added RT localization}
+							//bpmext.log.error("  Call stack: " + e.stack);
+							bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+						}
+					}							
+				},
+				error: function(error) {
+					try
+					{
+						domClass.remove(view._instance.input, "spin");
+						//console.log("Service returned w/ error");
+						
+						//TODO Show error on control?
+						bpmext.ui.executeEventHandlingFunction(view, view._proto.EVT_ONSVCERROR);
+					}
+					catch (e) {
+						//{#feature: US-1330 Added RT localization}
+						//bpmext.log.error("Error on AJAX item list fetching [" + view.context.viewid + "]: " + e);
+						bpmext.log.error(bpmext.localization.formatMsg("general", "ERROR_ONAJAX_ITEMLIST_FETCH") + " [" + view.context.viewid + "]: " + e);
+						if(e.stack) { 
+							//{#feature: US-1330 Added RT localization}
+							//bpmext.log.error("  Call stack: " + e.stack);
+							bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+						}
+					}
+				}
+			};
+
+			domClass.add(this._instance.input, "spin");
+			this.context.options.itemService(sargs);			
+		};
+		
+		/**
+		 * @instance
+		 * @memberof MultiSelect
+		 * @method getType
+		 * @desc Get descriptive string representing the type of control
+		 * @returns {string}
+		 */
+		this.constructor.prototype.getType = function ()
+		{
+			return "multiSelect.3";
+		};
+		
+		//{#feature: US-696 ARIA labeling}
+		this.constructor.prototype._getHTMLInputElement = function () 
+		{
+			return this._instance.select;   //This is the element that will need its "aria-labelledby" attribute set
+		};
+		//End US-696
+		
+		/*
+		Coach NG Lifecycle methods *************************************************************
+		 */
+		this.constructor.prototype.load = function ()
+		{
+			try
+			{
+				var opts = this.context.options;
+				var mdt = opts._metadata;
+
+				this._instance.baseTxtDir = mdt.baseTextDirection && mdt.baseTextDirection.get("value") ? mdt.baseTextDirection.get("value") : utilities.BiDi.BASE_TEXT_DIRECTION._default;
+				this._instance.genPrefTextDir = this.context.bpm.system.baseTextDirection;
+				
+				//{#feature: * Allow for binding to Complex Types in addition to Simple Types; Added setSelectedItemsAt public method}
+				//jmacSEL tagged items	
+
+				if (!this.context.binding)
+				{
+					this._instance._isSimpleBinding = true;				//jmacSEL
+					this.context.binding = bpmext.ui.substituteObject(
+						this, 
+						"binding", 
+						"value", 
+						new com.ibm.bpm.coach.List([], "selected.items")
+						);
+				}
+				else													// jmacSEL
+				{
+					this._instance._isSimpleBinding = false;
+					var boundType = this.context.bindingType().toUpperCase();
+					var boundTypeIsList = false;
+					if ( bpmext.text.endsWith(boundType,"[]") )
+					{	
+						boundType = boundType.substr(0,boundType.length - 2);
+						boundTypeIsList = true;
+					}
+					if ( (boundType == "STRING") || (boundType == "INTEGER") || (boundType == "DECIMAL") || (boundType == "BOOLEAN") )
+						this._instance._isSimpleBinding = true;
+					else
+					{
+						if (opts.businessDataMapping)
+						{
+							var dm = opts.businessDataMapping.get("value");
+							this._instance._busValProp = (dm.optionValueProperty ? dm.optionValueProperty : "name" );
+							this._instance._busDisProp = (dm.optionDisplayProperty ? dm.optionDisplayProperty : "value");
+						}
+						else
+						{
+							this._instance._busValProp = "name";
+							this._instance._busDisProp = "value";							
+						}
+					}
+					if (!boundTypeIsList){
+						//{#feature: US-1330 Added RT localization}
+						//throw new Error("A 'bound' Multi Select must be bound to a list");	
+						throw new Error(bpmext.localization.formatMsg("controlMultiSelect", "MULTISELECT_ERROR"));	
+					}
+				}
+				
+				if (!this.context.binding)
+				{
+					this.context.binding = bpmext.ui.substituteObject(
+						this, 
+						"binding", 
+						"value", 
+						new com.ibm.bpm.coach.List([], "selected.items")
+						);
+				}
+
+				if (!opts.tabIndex)
+					bpmext.ui.substituteConfigOption(this, "tabIndex", null);
+
+				if (!opts.staticList)
+					bpmext.ui.substituteConfigOption(this, "staticList", []);
+
+				if (!opts.sizeStyle)
+					bpmext.ui.substituteConfigOption(this, "sizeStyle", "D");
+
+				if (!opts.colorStyle)
+					bpmext.ui.substituteConfigOption(this, "colorStyle", "D");
+					
+				if (!opts.width)
+					bpmext.ui.substituteConfigOption(this, "width", null);
+					
+				if(!opts.labelPlacement)
+					bpmext.ui.substituteConfigOption(this, "labelPlacement", "T");
+
+				if(!opts.labelWidth)
+					bpmext.ui.substituteConfigOption(this, "labelWidth", null);
+
+				if (!opts.itemLookupMode)
+					bpmext.ui.substituteConfigOption(this, "itemLookupMode", "E");
+
+				if (!opts.inputData)
+					bpmext.ui.substituteConfigOption(this, "inputData", null);
+
+				if (!opts.disableAutoCall)
+					bpmext.ui.substituteConfigOption(this, "disableAutoCall", false);
+				
+				if (opts.dataMapping)
+				{
+					var dm = opts.dataMapping.get("value");
+					this._instance._optValProp = dm.optionValueProperty;
+					this._instance._optDisProp = dm.optionDisplayProperty;
+				}
+				
+				if (!opts.showValidationMarker)
+					bpmext.ui.substituteConfigOption(this, "showValidationMarker", false);
+
+				if (opts.showValidationMarker.get("value") === true) {
+					domClass.add(this.context.element, "showValidation");
+				}
+
+				var lookupMode = opts.itemLookupMode.get("value");	
+				
+				if(this._instance._optValProp == null || lookupMode == "L")
+					this._instance._optValProp = "name";
+				
+				if(this._instance._optDisProp == null || lookupMode == "L")
+					this._instance._optDisProp = "value";
+				
+				this._instance.group = document.createElement("div");
+				domClass.add(this._instance.group, "form-group");
+
+				this._instance.select = document.createElement("select");
+				domAttr.set(this._instance.select, "id", "multiselect-" + this.context.controlidpath);
+				domAttr.set(this._instance.select, "aria-labelledby", this._instance.select.id);
+				domAttr.set(this._instance.select, "multiple", "true");
+				domAttr.set(this._instance.select, "aria-multiselectable", "true");
+				domClass.add(this._instance.select, "form-control");
+				
+				this._instance.input = document.createElement("div");
+				domClass.add(this._instance.input, "input");
+				
+				this._instance.group.appendChild(this._instance.input);
+
+				this._instance.input.appendChild(this._instance.select);
+				this._instance.group.appendChild(this._instance.input);
+				this.context.element.appendChild(this._instance.group);
+				
+				bpmext.ui.loadView(this);
+				this._instance.vc = bpmext.ui.getNearestValidationContainer(this);
+
+				this._proto._setSizeStyle(this, opts.sizeStyle.get("value"));
+				this._proto._setWidth(this, opts.width.get("value"));
+				
+				//BG-1000 moving setLabel above setLabelVisibility
+				this._proto._setLabel(this, opts._metadata.label.get("value"));
+				this._proto._setLabelVisibility(this, opts._metadata.labelVisibility.get("value"));
+				this._proto._setLabelPlacement(this, opts.labelPlacement.get("value"));
+				
+				//this._proto._setLabel(this, opts._metadata.label.get("value"));
+				this._proto._setLabelWidth(this, opts.labelWidth.get("value"));		
+				this._proto._setTabIndex(this, opts.tabIndex.get("value"));
+				
+				var tmp = mdt.helpText ? mdt.helpText.get("value") : null;
+				if (tmp && tmp.length > 0)
+				{
+					this._proto._setHelpText(this, tmp);
+				}
+
+				bpmext.ui.registerEventHandlingFunction(this, this._proto.EVT_ONCHANGE);
+
+
+				var view = this;
+				
+				if(opts[this._proto.EVT_ONFOCUS])
+				{
+					this._instance.select.onfocus = function(event) {
+						bpmext.ui.executeEventHandlingFunction(view, view._proto.EVT_ONFOCUS);
+					}
+
+					bpmext.ui.registerEventHandlingFunction(this, this._proto.EVT_ONFOCUS);
+				} 
+
+				if(opts[this._proto.EVT_ONBLUR])
+				{
+					this._instance.select.onblur = function(event) {
+						bpmext.ui.executeEventHandlingFunction(view, view._proto.EVT_ONBLUR);
+					}
+
+					bpmext.ui.registerEventHandlingFunction(this, this._proto.EVT_ONBLUR);
+				}
+				
+				this._instance.select.onchange = function(event)
+				{
+					var visibility = utilities.handleVisibility(view.context);
+                    if (visibility === "READONLY") {
+                        return;
+                    }
+					
+					var i;
+					var selOpts = [];
+					view._instance.sidxs = [];
+
+					for(i = 0; i < this.options.length; i++)
+					{
+						if(this.options[i].selected)
+						{
+							selOpts.push(view._instance.itemList.items[i]);
+							view._instance.sidxs.push(i);
+
+							domClass.add(this.options[i], "selected");
+							domAttr.set(this.options[i], "aria-selected", "true");
+						} else {
+							domClass.remove(this.options[i], "selected");
+							domAttr.set(this.options[i], "aria-selected", "false");
+						}
+					}
+
+					// jmacSEL 						
+					//view.context.binding.set("value", view._proto._mapBindingValues(view, selOpts));
+					view._instance._stopSetItem = true;
+					try
+					{
+						if (view._instance._isSimpleBinding)
+						{
+							view.context.binding.set("value", view._proto._mapBindingValues(view, selOpts));
+						}
+						else
+						{
+							var mySelectedArray =  [ ];
+							for (var i = 0; i < selOpts.length; i++)
+							{
+
+								var myObj = {};
+								myObj[view._instance._busValProp] = selOpts[i][view._instance._optValProp];
+								myObj[view._instance._busDisProp] = selOpts[i][view._instance._optDisProp];
+								mySelectedArray.push(myObj);
+							}
+							view.context.binding.set("value", mySelectedArray);
+						}
+
+						if(lookupMode == "B" && opts.itemList && !view.isBound())
+						{
+							var l = opts.itemList.get("value");
+							l.set("listAllSelectedIndices", view._instance.sidxs);
+						}
+					}
+					finally
+					{
+						delete view._instance._stopSetItem;
+					}
+
+				};
+				if(lookupMode == "S" && opts.itemService) //S = Lookup from AJAX Service
+				{
+					bpmext.ui.registerEventHandlingFunction(this, this._proto.EVT_ONSVCITEMS);
+					bpmext.ui.registerEventHandlingFunction(this, this._proto.EVT_ONSVCERROR);
+					
+					this.reloadServiceItems();
+				}
+				else if(lookupMode == "L") //Static list
+				{
+					view._instance.itemList = opts.staticList.get("value");
+					if(!view._instance.itemList)
+						view._instance.itemList = new com.ibm.bpm.coach.List([], "static.items");
+
+					this._proto._loadListItems(this, view._instance.itemList, this.context.binding.get("value"));
+				}
+				else if(lookupMode == "B")
+				{
+					if(!opts.itemList)
+						bpmext.ui.substituteConfigOption(this, "itemList", []);						
+					
+					view._instance.itemList = opts.itemList.get("value");
+					if(!view._instance.itemList)
+						//view._instance.itemList = new ItemList(this, function(){return view.context.binding.get("value")}, false);	
+						view._instance.itemList = new com.ibm.bpm.coach.List([], "list.items");
+					
+					this._proto._loadListItems(this, view._instance.itemList, this.context.binding.get("value"), this._instance._optValProp, this._instance._optDisProp);
+				}
+				else //lookupMode == "E"
+				{
+					//{#bug: BG-398 Fire service load-related events when starting empty}
+					bpmext.ui.registerEventHandlingFunction(this, this._proto.EVT_ONSVCITEMS);
+					bpmext.ui.registerEventHandlingFunction(this, this._proto.EVT_ONSVCERROR);
+
+					view._instance.itemList = view._instance.itemList = new com.ibm.bpm.coach.List([], "list2.items");
+					this._proto._loadListItems(this, view._instance.itemList, this.context.binding.get("value"), this._instance._optValProp, this._instance._optDisProp);
+				}
+			}
+			catch (e)
+			{
+				//{#feature: US-1330 Added RT localization}
+				//bpmext.log.error("Error on load event [" + this.context.viewid + "]: " + e);
+				bpmext.log.error(bpmext.localization.formatMsg("general", "ERROR_ONLOAD_EVENT") + " [" + this.context.viewid + "]: " + e);
+				if(e.stack) { 
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.error("  Call stack: " + e.stack);
+					bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+				}
+			}
+		};
+
+		this.constructor.prototype.view = function ()
+		{
+			try
+			{
+				this._proto._handleVisibility(this);
+			}
+			catch (e)
+			{
+				//{#feature: US-1330 Added RT localization}
+				//bpmext.log.error("Error on view event [" + this.ui.getAbsoluteName() + "]: " + e);
+				bpmext.log.error(bpmext.localization.formatMsg("general", "ERROR_ONVIEW_EVENT") + " [" + this.ui.getAbsoluteName() + "]: " + e);
+				if(e.stack) { 
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.error("  Call stack: " + e.stack);
+					bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+				}
+			}
+		};
+
+		this.constructor.prototype.change = function (event)
+		{
+			try
+			{
+				if (event.type == "config")
+				{
+					switch (event.property)
+					{
+						case "_metadata.label":
+						{
+							this._proto._setLabel(this, event.newVal);
+							this._proto._setHelpText(this, this.context.options._metadata.helpText.get("value"));
+							break;
+						}
+						case "_metadata.visibility":
+						{
+							this._proto._handleVisibility(this);
+							break;
+						}
+						case "_metadata.labelVisibility":
+						{
+							this._proto._setLabelVisibility(this, event.newVal);
+							break;
+						}
+						case "_metadata.helpText":
+						{
+							this._proto._setHelpText(this, event.newVal);
+                            this._proto._updateControl(this);
+                            break;
+						}
+						case "tabIndex":
+						{
+							this._proto._setTabIndex(this, event.newVal);
+							break;
+						}
+						case "sizeStyle":
+						{
+							this._proto._setSizeStyle(this, event.newVal);
+							break;
+						}
+						case "labelPlacement":
+						{
+							this._proto._setLabelPlacement(this, event.newVal);
+							break;
+						}
+						case "labelWidth":
+						{
+							this._proto._setLabelWidth(this, event.newVal);
+							break;
+						}
+						case "itemList":
+						{
+							this._instance.itemList = event.newVal;
+							this._proto._updateItemList(this, event, this._instance.itemList);
+							break;
+						}
+                        case "width":
+                        {
+                            this._proto._setWidth(this, event.newVal);
+                            break;
+                        }
+						case "inputData":
+						{
+							if (this.context.options.disableAutoCall.get("value")) {
+								// The view is configured to disable automatic calling of the service
+								break;
+							}
+							if(event.newVal != event.oldVal) {
+								this.reloadServiceItems(event.newVal);
+								if(this.context.binding.get("value")) {
+									this.context.binding.set("value", []);
+								}
+							}
+							break;
+						}
+					}
+				}
+				else
+				{
+  
+					if(!this._instance._stopSetItem)									// jmacSEL
+					{
+						this._proto._setSelectedItems(this, event.newVal);
+					}
+					
+					if(event.newVal != event.oldVal)
+						bpmext.ui.executeEventHandlingFunction(this, this._proto.EVT_ONCHANGE);
+				}
+			}
+			catch (e)
+			{
+				//{#feature: US-1330 Added RT localization}
+				//bpmext.log.error("Error on change event [" + this.ui.getAbsoluteName() + "]: " + e);
+				bpmext.log.error(bpmext.localization.formatMsg("general", "ERROR_ONCHANGE_EVENT") + " [" + this.ui.getAbsoluteName() + "]: " + e);
+				if(e.stack) { 
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.error("  Call stack: " + e.stack);
+					bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+				}
+			}
+		};
+
+		this.constructor.prototype.validate = function (event)
+		{
+			try
+			{
+				bpmext.ui.updateViewValidationState(this, event);
+
+				this._proto._updateControl(this);
+				
+				if(this._instance.vc)
+					this._instance.vc.validate(event);
+			}
+			catch (e)
+			{
+				//{#feature: US-1330 Added RT localization}
+				//bpmext.log.error("Error on validate event [" + this.ui.getAbsoluteName() + "]: " + e);
+				bpmext.log.error(bpmext.localization.formatMsg("general", "ERROR_ONVALIDATE_EVENT") + " [" + this.ui.getAbsoluteName() + "]: " + e);
+				if(e.stack) { 
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.error("  Call stack: " + e.stack);
+					bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+				}
+			}		
+		};
+
+		/*
+		this.constructor.prototype.collaboration = function (event)
+		{
+		};
+		*/
+		
+		this.constructor.prototype.unload = function ()
+		{
+			if(this._instance._bindSelUpdHandle)
+				this._instance._bindSelUpdHandle.unbind();
+
+			if(this._instance._bindValueUpdHandle)
+				this._instance._bindValueUpdHandle.unbind();
+
+			bpmext.ui.unloadView(this);
+		};
+	}
+};

@@ -1,0 +1,2397 @@
+/*
+ * #BEGIN COPYRIGHT
+ *
+ * Licensed Materials - Property of IBM
+ * 5725-C95
+ * (C) Copyright IBM Corporation 2018, 2021. All Rights Reserved.
+ * US Government Users Restricted Rights- Use, duplication or disclosure
+ * restricted by GSA ADP Schedule Contract with IBM Corp.
+ *
+ * #END COPYRIGHT
+ */
+
+
+/**
+ * @ignore
+ * @instance
+ * @memberof DateTimePicker
+ * @method recalculate
+ */
+
+
+/**
+ *   <tr class=Prop>
+ *     <td class=SectionName colspan=3>Events</td>
+ *   </tr>
+ *   <tr class=Prop>
+ *     <td>On Load:</td>
+ *     <td colspan = "2">
+ *       <table>
+ *         <tr class=Prop>
+ *           <td>Description: </td>
+ *           <td>This event is triggered the datepicker control is loaded.</td>
+ *         </tr>
+ *         <tr class=Prop>
+ *           <td>Example: </td>
+ *           <td><pre class="prettyprint"><code>var workerStart = ${StartDate}.getDate();  me.setStart(workerStart);<code></pre></td>
+ *         </tr>
+ *       </table>
+ *     </td>
+ *   </tr>
+ *   <tr class=Prop>
+ *     <td>On Change:</td>
+ *     <td colspan = "2">
+ *       <table>
+ *         <tr class=Prop>
+ *           <td>Description: </td>
+ *           <td>This event is triggered when there is a change detected.</td>
+ *         </tr>
+ *         <tr class=Prop>
+ *           <td>Example: </td>
+ *           <td><pre class="prettyprint"><code>return confirm("Are you sure you want to change date?")<code></pre></td>
+ *         </tr>
+ *       </table>
+ *     </td>
+ *   </tr>
+ *   <tr class=Prop>
+ *     <td>On Day Cell Render:</td>
+ *     <td colspan = "2">
+ *       <table>
+ *         <tr class=Prop>
+ *           <td>Description: </td>
+ *           <td>This event is triggered before the date shows on the control.</td>
+ *         </tr>
+ *         <tr class=Prop>
+ *           <td>Example: </td>
+ *           <td><pre class="prettyprint"><code>me.setDate(new Date("01/01/2015"))<code></pre></td>
+ *         </tr>
+ *       </table>
+ *       <table style="border: 1px solid black; border-collapse: collapse; ">
+ *         <tr style="border: 1px solid black; border-collapse: collapse;">
+ *           <th style="border: 1px solid black; border-collapse: collapse;padding: 5px;">Context Variables</th>
+ *           <th style="border: 1px solid black; border-collapse: collapse; padding: 5px;">date {object}</th>
+ *         </tr>
+ *       </table> 
+ *     </td>
+ *   </tr>
+ * </table>
+ */
+bpmext_control_InitBPMDatePicker = function(utilities, bpmext, dom, domClass, domStyle, query, domAttr, domConstruct, baseWindow, win, domGeometry, bpmdatepicker, has, stamp, i18n) {
+    this._instance = {
+        /* {#feature: 349 Added validation to make sure dates entered adhere to correct formatting requested in TKT 349} */
+        dateType: "unset", // TKT 349
+        dateIsValid: true, // TKT 349
+        loadEHIsRunning: true,
+        validateEHIsRunning: true,
+        onChangeHandleRunning: false,
+        dateBundle: null
+    };
+
+    if (!this.constructor.prototype._proto) {
+        this.constructor.prototype._proto = {
+            OPTS_FORMAT: {
+                canonical: "yyyy-MM-dd",
+                default: "short"
+            },
+            OPTS_TYPE: {
+                "TI": "TI",
+                "I": "I"
+            },
+            OPTS_ORIENTATION: {
+                "A": "auto",
+                "TA": "top auto",
+                "BA": "bottom auto",
+                "AL": "auto left",
+                "TL": "top left",
+                "BL": "bottom left",
+                "AR": "auto right",
+                "TR": "top right",
+                "BR": "bottom right",
+            },
+            OPTS_WEEK_DAYS_ARRAY: [
+                "Sunday",
+                "Monday",
+                "Tuesday",
+                "Wednesday",
+                "Thursday",
+                "Friday",
+                "Saturday"
+            ],
+            OPTS_COL_STLZ: {
+                "D": "",
+                // "P": "dp-primary",
+                "I": "dp-info",
+                "S": "dp-success",
+                "W": "dp-warning",
+                "G": "dp-danger",
+                "E": "dp-danger"
+            },
+            EVT_ONLOAD: "eventON_LOAD",
+            EVT_ONCHANGE: "eventON_CHANGE",
+            EVT_ONINPUT: "eventON_INPUT",
+            EVT_ONFOCUS: "eventON_FOCUS",
+            EVT_ONBLUR: "eventON_BLUR",
+            EVT_ONBEFORESHOWDAY: "eventON_BEFORE_SHOW_DAY",
+            _setHelpText: function (view, text) {
+                utilities.setHelpText(view, text);
+            },
+            _getLabelElt: function(view) {
+                if (!view._instance.label)
+                    this._createLabel(view);
+
+                return view._instance.label;
+            },
+            _createLabel: function(view) {
+                view._instance.label = document.createElement("span");
+                view._instance.hiddenLabel = document.createElement("span");
+                domClass.add(view._instance.label, "control-label");
+                domConstruct.place(view._instance.label, view._instance.formgroupDiv, "first");
+                domAttr.set(view._instance.label, "id", view.context.element.id + '_label');
+
+                domConstruct.place(view._instance.hiddenLabel, view._instance.formgroupDiv, "first");
+                domAttr.set(view._instance.hiddenLabel, "aria-hidden", "true");
+                domAttr.set(view._instance.hiddenLabel, "id", view.context.element.id + '_hidden-label');
+                view._instance.hiddenLabel.style.display = "none";
+                view._instance.hiddenLabel.innerText = bpmext.localization.formatMsg("controlDatePicker", "ENTER_POPUP_DESCRIPTION");
+            },
+            _setLabelVisibility: function(view, flag) {
+                try {
+                    if (!view._instance.label)
+                        this._createLabel(view);
+
+                    view.context.setDisplay(flag == "SHOW", view._instance.label);
+                } catch (e) {
+                    bpmext.log.error("DateTimePicker._setLabelVisibility() " + bpmext.localization.formatMsg("general", "ERROR") + ": " + e);
+                    if (e.stack)
+                        bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+                }
+            },
+            _setLabel: function(view, label) {
+                try {
+                    if (label) {
+                        if (!view._instance.label)
+                            this._createLabel(view);
+
+                        view._instance.label.innerHTML = view.context.htmlEscape(label);
+                        utilities.BiDi.applyTextDir(
+                            view._instance.label,
+                            view._instance.label.innerHTML,
+                            view._instance.baseTxtDir,
+                            view._instance.genPrefTextDir);
+                    } else {
+                        if (view._instance.label) {
+                            view._instance.label.parentNode.removeChild(view._instance.label);
+                            delete view._instance.label;
+                        }
+                    }
+                } catch (e) {
+                    bpmext.log.error("DateTimePicker._setLabel() " + bpmext.localization.formatMsg("general", "ERROR") + ": " + e);
+                    if (e.stack)
+                        bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+                }
+            },
+            _setPlaceholder: function(view, text) {
+                try {
+                    if (text)
+                        domAttr.set(view._instance.pickerElement, "placeholder", text);
+                    else
+                        domAttr.remove(view._instance.pickerElement, "placeholder");
+                } catch (e) {
+                    bpmext.log.error("DateTimePicker._setPlaceholder() " + bpmext.localization.formatMsg("general", "ERROR") + ": " + e);
+                    if (e.stack)
+                        bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+                }
+            },
+            _setLabelPlacement: function(view, newVal, oldVal) {
+                newVal = bpmext.ui.util.normalizeLabelPlacement(newVal, bpmext.ui.util.OPTS_LBL_PLC_CLZ);
+
+                if (!oldVal)
+                    oldVal = view._instance.oldLblPlc;
+
+                bpmext.ui.util.replaceCSSClass(view._instance.formgroupDiv, bpmext.ui.util.OPTS_LBL_PLC_CLZ, newVal, oldVal);
+                view._instance.oldLblPlc = newVal;
+            },
+            _setPrevNextBtnIcon: function (view) {
+                if (utilities.getActiveTheme() !== '"CARBON"') {
+					return;
+                }
+
+				var replaceIcon = function(querySelector, iconName) {
+					var list = view._instance.pickerControl.picker.querySelectorAll(querySelector);
+					if (!!list && list.length > 0) {
+                    	for (var i = 0; i<list.length; i++) {
+                            domAttr.set(list[i].parentElement.parentElement, "scope", "row");
+                    		var target = list[i];
+                    		var icon = utilities.getCarbonIcon(iconName);
+                    		
+                        	domConstruct.empty(target);
+                        	domAttr.set(target, "class", "ci " + iconName);
+                        	domConstruct.place(icon, target)
+                    	}
+                	}
+				}
+				
+				replaceIcon(".prev-btn > i", "ci-chevron-left");
+				replaceIcon(".next-btn > i", "ci-chevron-right");
+            },
+            _setLabelWidth: function(view, labelWidth) {
+                if (labelWidth != null && labelWidth != "") {
+                    if (!isNaN(labelWidth))
+                        labelWidth += "px";
+
+                    view._instance.label.style.width = labelWidth;
+                    domClass.add(view.context.element, "labelWidth");
+                } else {
+                    if (view._instance.label) {
+						view._instance.label.style.width = null;
+                    }
+                    
+                    domClass.remove(view.context.element, "labelWidth");
+                }
+
+            },
+            _setYearSelectorStyle: function(view, style) {
+                if (view._instance.pickerControl) {
+                	view._instance.pickerControl.setYearSelectorStyle(style);
+                }
+            },
+            _handleVisibility: function(view) {
+                var visibility = utilities.handleVisibility(view.context);
+                if (view._instance.type === 'I' || view._instance.type === 'TI') {
+                    view._instance.pickerControl.readonly = (visibility === "READONLY");
+                }
+
+                if (visibility != "NONE" && view._instance.disabler) {
+                    if (visibility === "READONLY") {
+                        domClass.remove(view._instance.disabler, "hidden");
+                        this._setReadOnly(view, true);
+                    } else {
+                        domClass.add(view._instance.disabler, "hidden");
+                        this._setReadOnly(view, false);
+                    }
+                } else if (visibility === "NONE") {
+                    this._setPickerDisplay(view, false);
+                }
+                
+                if (!view._instance.label)
+                    return;
+                if (visibility === "READONLY")
+                    domClass.add(view.context.element, "disabled");
+                else
+                    domClass.remove(view.context.element, "disabled");
+            },
+            _setReadOnly: function(view, value) {
+                if (view._instance.type === "I") {
+                    controlElement = view._instance.pickerControl.picker;
+                    if (value) {
+                        query("td", controlElement).style("cursor", "default");
+                    } else {
+                        query("td", controlElement).style("cursor", "");
+                    }
+                } else {
+                    controlElement = view._instance.pickerElement;
+                    if (value) {
+                        domAttr.set(controlElement, "readonly", "");
+                        domAttr.set(controlElement, "disabled", "");
+                    } else {
+                        domAttr.remove(controlElement, "readonly");
+                        domAttr.remove(controlElement, "disabled");
+                    }
+                }
+            },
+            _updateControl: function(view) {
+                bpmext.log.debug("_updateControl for viewid [" + view.context.viewid + "]");
+                var errors = bpmext.ui.getViewValidationErrors(view);
+
+                //Color style
+                var colStyle = errors ? "E" : view.context.options.colorStyle.get("value");
+
+                //bpmext.ui.util.replaceCSSClass(view._instance.formgroupDiv, bpmext.ui.util.OPTS_COL_STL_CLZ, colStyle, view._instance.oldColStyle);
+                view._instance.oldColStyle = colStyle;
+
+                var type = view.context.options.type.get('value');
+
+                //Validation Error Icon
+                if (view._instance.icon) {
+                    bpmext.ui.util.closeTooltip(view._instance.iconTT, view._instance.icon);
+                    delete view._instance.iconTT;
+
+                    if (type === "TI") {
+                        view._instance.inputDivWrapper.removeChild(view._instance.icon);
+                    }
+                    delete view._instance.icon;
+                }
+
+                if (errors) {
+                    var anchorElement;
+                    domClass.add(view._instance.formgroupDiv, "has-feedback has-error");
+                    if (type === "TI") {
+                        view._instance.icon = document.createElement("span");
+                        //Remove the calendar icon if present
+                        if (view._instance.calendarIcon) {
+                        	domClass.remove(view._instance.pickerElement, 'has-icon');
+                            domConstruct.destroy(view._instance.calendarIcon);
+                            view._instance.calendarIcon = null;
+                        }
+                        view._instance.inputDivWrapper.appendChild(view._instance.icon);
+                        domClass.add(view._instance.icon, "fa form-control-feedback fa-exclamation-circle");
+                        anchorElement =  view._instance.inputDivWrapper;
+                    } else {
+                        anchorElement = view._instance.pickerControl.picker;
+                    }
+
+                    var ttOpts = {
+                        horizontalPos: type === "I" ? "left" : "right",
+                        verticalPos: "top",
+                        cssClass: "validationError",
+                        plainText: false,
+                        smartPositioning: true
+                    };
+
+                    view._instance.iconTT = bpmext.ui.util.showTooltip(
+                        anchorElement,
+                        bpmext.ui.util.formatErrors(errors),
+                        ttOpts);
+
+                    view._instance.errorMessage = document.createElement("div");
+                    view._instance.errorMessage.id = view._instance.inputDivWrapper.firstElementChild.id + "-error-msg";
+                    view._instance.errorMessage.classList.add("hide");
+                    view._instance.errorMessage.innerHTML = bpmext.ui.util.formatErrors(errors);
+                    view._instance.inputDivWrapper.appendChild(view._instance.errorMessage);
+                    domAttr.set(view._instance.inputDivWrapper.firstElementChild, "aria-describedby", view._instance.errorMessage.id);
+                    domAttr.set(view._instance.inputDivWrapper.firstElementChild, "aria-invalid", "true");
+                } else {
+                    domClass.remove(view._instance.formgroupDiv, "has-feedback has-error");
+                    view._proto._setEnableCalendarIcon(view, view.context.options.enableCalendarIcon.get("value"));
+                    if (view._instance.errorMessage) { view._instance.errorMessage.remove(); }
+					domAttr.remove(view._instance.inputDivWrapper.firstElementChild, "aria-describedby");
+					domAttr.remove(view._instance.inputDivWrapper.firstElementChild, "aria-invalid");
+                }
+
+            },
+            /* {#feature: US-357 made changes so that type could be dynamically updated for responsive designs in WebPD} */
+            _createHTMLForType: function(type) {
+                var toReturn;
+                switch (type) {
+                    case "I":
+                        {
+                            toReturn = document.createElement("div");
+                            break;
+                        }
+                    case "TI":
+                        {
+                            toReturn = document.createElement("input");
+                            domClass.add(toReturn, "form-control");
+                            domAttr.set(toReturn, "autocomplete", "off")
+                            break;
+                        }
+                    case "ND":
+                        {
+                            toReturn = domConstruct.create("input", { type: "date" });
+                            domClass.add(toReturn, "form-control");
+                            break;
+                        }
+                    case "NDT":
+                        {
+                            toReturn = domConstruct.create("input", { type: "datetime-local", step: "60" });
+                            domClass.add(toReturn, "form-control");
+                            break;
+                        }
+                }
+                return toReturn;
+            },
+            _setShowWeeks: function(view, value) {
+                try {
+                    if (view._instance.pickerControl) {
+                        view._instance.pickerControl.showCalendarWeek(value);
+                    }
+                } catch (e) {
+                    bpmext.log.error("DateTimePicker._setShowWeeks() " + bpmext.localization.formatMsg("general", "ERROR") + ": " + e);
+                    if (e.stack)
+                        bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+                }
+            },
+            _convertDisabledWeekDaysOptionToString: function(toConvert) {
+                var toReturn = "";
+                var disabledWeekDaysArray = [];
+                var index;
+                for (index in this.OPTS_WEEK_DAYS_ARRAY) {
+                    if (toConvert[this.OPTS_WEEK_DAYS_ARRAY[index]]) {
+                        disabledWeekDaysArray.push(index);
+                    }
+                }
+                toReturn = disabledWeekDaysArray.join();
+                return toReturn;
+            },
+            _setDisabledWeekDays: function(view, value) {
+                try {
+                    var stringValue = this._convertDisabledWeekDaysOptionToString(value);
+                    view._instance.pickerControl.setDaysOfWeekDisabled(stringValue);
+                } catch (e) {
+                    bpmext.log.error("DateTimePicker._setDisabledWeekDays() " + bpmext.localization.formatMsg("general", "ERROR") + ": " + e);
+                    if (e.stack)
+                        bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+                }
+            },
+            _setStartView: function(view, value) {
+                try {
+                    if (view._instance.pickerControl) {
+                        view._instance.pickerControl.viewMode = value;
+                        view._instance.pickerControl.setStartView(value);
+                    }
+                } catch (e) {
+                    bpmext.log.error("DateTimePicker._setStartView() " + bpmext.localization.formatMsg("general", "ERROR") + ": " + e);
+                    if (e.stack)
+                        bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+                }
+            },
+            _setHighlightToday: function(view, value) {
+                try {
+                    if (view._instance.pickerControl) {
+                        //console.log("_setHighlightToday", value);
+                        view._instance.pickerControl.setTodayHighlight(value);
+                    }
+                } catch (e) {
+                    bpmext.log.error("DateTimePicker._setHighlightToday() " + bpmext.localization.formatMsg("general", "ERROR") + ": " + e);
+                    if (e.stack)
+                        bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+                }
+            },
+            _setEnableTodayButton: function(view, value) {
+                try {
+                    if (view._instance.pickerControl) {
+                        view._instance.pickerControl.showTodayButton(value);
+                    }
+                } catch (e) {
+                    bpmext.log.error("DateTimePicker._setEnableTodayButton() " + bpmext.localization.formatMsg("general", "ERROR") + ": " + e);
+                    if (e.stack)
+                        bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+                }
+            },
+            _setEnableCalendarIcon: function(view, value) {
+                try {
+                    var type = view.context.options.type.get('value');
+                    //Remove Calendar Icon if it exists
+                    if (view._instance.calendarIcon) {
+                        if (type === "TI") {
+                        	domClass.remove(view._instance.pickerElement, 'has-icon');
+                            domConstruct.destroy(view._instance.calendarIcon);
+                            view._instance.calendarIcon = null;
+                        }
+                        delete view._instance.calendarIcon;
+                    }
+                    if (typeof value === 'boolean') {
+                        if (value) {
+                            if (type === "TI") {
+                                view._instance.calendarIcon = domConstruct.create("span", {"class": "form-control-feedback has-icon"}, view._instance.inputDivWrapper);
+                                domClass.add(view._instance.pickerElement, 'has-icon');
+                                
+                                if (utilities.getActiveTheme() === '"CARBON"') {
+                                    var icon = utilities.getCarbonIcon("ci-calendar");
+                                    icon && domConstruct.place(icon, view._instance.calendarIcon);
+                                    domClass.add(view._instance.calendarIcon, 'ci ci-calendar');
+                                } else {
+                                    domClass.add(view._instance.calendarIcon, 'fa fa-calendar');                        			
+                                }
+                            }
+                        }
+                    }
+                    
+                } catch (e) {
+                    bpmext.log.error("DateTimePicker._setEnableCalendarIcon() " + bpmext.localization.formatMsg("general", "ERROR") + ": " + e);
+                    if (e.stack)
+                        bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+                }
+            },
+            _setEnableClearButton: function(view, value) {
+                try {
+                    if (view._instance.pickerControl) {
+                        //console.log("_setEnableClearButton", value);
+                        view._instance.pickerControl.showClearButton(value);
+                    }
+                } catch (e) {
+                    bpmext.log.error("DateTimePicker._setEnableClearButton() " + bpmext.localization.formatMsg("general", "ERROR") + ": " + e);
+                    if (e.stack)
+                        bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+                }
+            },
+            _setWeekStart: function(view, value) {
+                try {
+                    if (view._instance.pickerControl) {
+                        //console.log("_setWeekStart", value);
+                        view._instance.pickerControl.setWeekStart(value);
+                    }
+                } catch (e) {
+                    bpmext.log.error("DateTimePicker._setWeekStart() " + bpmext.localization.formatMsg("general", "ERROR") + ": " + e);
+                    if (e.stack)
+                        bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+                }
+            },
+            _setOrientation: function(view, orientation) {
+                try {
+                    if (view.context.options.type.get('value') === 'I') return;
+
+                    orientation = view._proto.OPTS_ORIENTATION[orientation];
+                    var rtl = view._proto._getDirection() === "rtl";
+
+                    var plc = String(orientation).toLowerCase().split(/\s+/g),
+                        _plc = orientation.toLowerCase();
+                    plc = plc.filter(function(word) {
+                        return (/^auto|left|right|top|bottom$/).test(word);
+                    });
+                    orientation = { x: 'auto', y: 'auto' };
+                    if (plc.length === 1) {
+                        switch (plc[0]) {
+                            case 'top':
+                            case 'bottom':
+                                orientation.y = plc[0];
+                                break;
+                            case 'left':
+                            case 'right':
+                                orientation.x = plc[0];
+                                break;
+                        }
+                    } else {
+                        _plc = plc.filter(function(word) {
+                            return (/^left|right$/).test(word);
+                        });
+                        orientation.x = _plc[0] || 'auto';
+
+                        _plc = plc.filter(function(word) {
+                            return (/^top|bottom$/).test(word);
+                        });
+                        orientation.y = _plc[0] || 'auto';
+                    }
+
+                    var computedStyle = domStyle.getComputedStyle(view._instance.pickerControl.picker);
+                    var contentBox = domGeometry.getContentBox(view._instance.pickerControl.picker, computedStyle);
+                    var paddingBorderExtends = domGeometry.getPadBorderExtents(view._instance.pickerControl.picker, computedStyle);
+                    var calendarWidth = contentBox.w + paddingBorderExtends.w;
+                    var calendarHeight = contentBox.h + paddingBorderExtends.h;
+                    var windowBox = win.getBox();
+                    var visualPadding = 10;
+                    var windowWidth = windowBox.w;
+                    var windowHeight = windowBox.h;
+
+                    var scrollTop;
+                    // maybe we should use specific versions for FF and IE (e.g. 36 - this is where the bug was introduced, 
+                    // and 9 respectively - i am not sure how it worked before version 9) instead of using a version > 0 
+                    if (dojo && (dojo.isChrome > 0 || dojo.isFF > 0 || dojo.isIE > 0 || navigator.userAgent.indexOf("Trident") > 0)) {
+                        scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
+                    } else {
+                        scrollTop = baseWindow.body().scrollTop || window.pageYOffset;
+                    }
+
+                    var parents = query(view._instance.pickerElement).parents();
+                    var subParents = parents.filter(function(parent) {
+                        return query(parent).style("z-index")[0] !== "auto";
+                    });
+
+                    //{#bug: BG-325 Display calendar popup above the background of a modal section}
+                    var subParentZIndex = parseInt(subParents.first().style("z-index")[0]) || 0;
+                    var zIndex = subParentZIndex + 1060; //1060 is used because a modal section's z-index is 1050
+                    //var zIndex = parseInt(subParents.first().style("z-index")[0]) + 10;
+
+                    var position = domGeometry.position(view._instance.pickerElement);
+
+                    var left = position.x;
+                    var top = position.y;
+                    var height = position.h;
+                    var width = position.w;
+                    domClass.remove(view._instance.pickerControl.picker, 'datepicker-orient-top datepicker-orient-bottom ' +
+                        'datepicker-orient-right datepicker-orient-left');
+
+                    if (orientation.x == 'right') {
+                        domClass.add(view._instance.pickerControl.picker, 'datepicker-orient-' + orientation.x);
+                        if (!rtl) {
+                            left -= calendarWidth - width - window.pageXOffset;
+                        } else {
+                            if (left < 0) {
+                                left -= left - visualPadding;
+                            } else {
+                                left = left + window.pageXOffset;
+                            }
+                        }
+                    }
+                    // auto x orientation is best-placement: if it crosses a window
+                    // edge, fudge it sideways
+                    else {
+                        // Default to left
+                        domClass.add(view._instance.pickerControl.picker, "datepicker-orient-left");
+                        if (!rtl) {
+                            if (left < 0) {
+                                left -= left - visualPadding;
+                            } else {
+                                if (left + calendarWidth > windowWidth) {
+                                    // left = windowWidth - calendarWidth - visualPadding;
+                                    left = (left - calendarWidth) + visualPadding + 20; //Move it left
+                                    domClass.replace(view._instance.pickerControl.picker, "datepicker-orient-right", "datepicker-orient-left");
+                                }
+                                left = left + window.pageXOffset;
+                            }
+                        } else {
+                            if (left < 0) {
+                                left -= left - visualPadding;
+                                domClass.replace(view._instance.pickerControl.picker, "datepicker-orient-right", "datepicker-orient-left");
+                            } else {
+                                // left = width - calendarWidth; this line works 
+                                // but when there is a scroll bar(because or many controls), the popup is shifted a few pixels to the left
+                                left += width - calendarWidth + window.pageXOffset;
+                            }
+                        }
+                    }
+
+                    // auto y orientation is best-situation: top or bottom, no fudging,
+                    // decision based on which shows more of the calendar
+                    var yorient = orientation.y,
+                        top_overflow, bottom_overflow;
+                    if (yorient === 'auto') {
+                        top_overflow = top - calendarHeight;
+                        bottom_overflow = windowHeight - (top + height + calendarHeight);
+                        if (Math.max(top_overflow, bottom_overflow) === bottom_overflow)
+                            yorient = 'bottom';
+                        else
+                            yorient = 'top';
+                    }
+
+                    //domClass.add(this.picker, "datepicker-orient-" + yorient);
+                    if (yorient === 'top') {
+                        domClass.add(view._instance.pickerControl.picker, "datepicker-orient-bottom");
+                        top = top + scrollTop - calendarHeight - parseInt(domStyle.get(view._instance.pickerControl.picker, "padding-top"));
+                    } else {
+                        domClass.add(view._instance.pickerControl.picker, "datepicker-orient-top");
+                        top += height + scrollTop;
+                    }
+
+                    /*
+                    if (yorient === 'top')
+                        top += height + scrollTop;
+                    else
+                        top = top + scrollTop - calendarHeight - parseInt(domStyle.get(this.picker, "padding-top"));
+                    */
+
+                    domStyle.set(view._instance.pickerControl.picker, {
+                        top: top + "px",
+                        left: left + "px",
+                        zIndex: zIndex
+                    });
+                } catch (e) {
+                    bpmext.log.error("DateTimePicker._setOrientation() " + bpmext.localization.formatMsg("general", "ERROR") + ": " + e);
+                    if (e.stack)
+                        bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+                }
+            },
+            _loadi18Bundle: function(view) {
+                view._instance.dateBundle = i18n.getLocalization("dojo.cldr", view.context.options.calendarType.get("value"));
+            },
+            _setFormat: function(view, value) {
+                try {
+                    if (!value) {
+                        value = OPTS_FORMAT.default;
+                    }
+                    if (view._instance.pickerControl) {
+                        //console.log("_setFormat", value);
+                        view._instance.pickerControl.setFormat(value);
+                    }
+                } catch (e) {
+                    bpmext.log.error("DateTimePicker._setFormat() " + bpmext.localization.formatMsg("general", "ERROR") + ": " + e);
+                    if (e.stack)
+                        bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+                }
+            },
+            _getFormat: function(view) {
+                var fmt,
+                    format = view.context.options.format.get("value"),
+                    datePattern,
+                    timePattern,
+                    bundle = view._instance.dateBundle;
+
+                if (format === 'short' || format === 'medium' || format === 'long' || format === 'full') {
+                    fmt = datePattern = bundle["dateFormat-" + format];
+                    timePattern = bundle["timeFormat-" + format];
+
+                    //Convert to full year
+                    if (datePattern.search("yyyy") == -1) {
+                        if (datePattern.search("yy") > -1) {
+                            fmt = datePattern = datePattern.replace("yy", "yyyy");
+                        }
+                    }
+
+                    if (view.context.options.includeTimePicker.get("value")) {
+                        fmt = bundle["dateTimeFormat-" + format].replace(/\{(\d+)\}/g, function(match, key) {
+                            return [timePattern, datePattern][key];
+                        });
+                    }
+
+                    return fmt;
+                } else {
+                    return format;
+                }
+            },
+            _setMinViewMode: function(view, value) {
+                try {
+                    if (view._instance.pickerControl) {
+                        //console.log("_setMinViewMode", value);
+                        view._instance.pickerControl.setMinViewMode(value);
+                    }
+                } catch (e) {
+                    bpmext.log.error("DateTimePicker._setMinViewMode() " + bpmext.localization.formatMsg("general", "ERROR") + ": " + e);
+                    if (e.stack)
+                        bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+                }
+            },
+            _setStartDate: function(view, value) {
+                try {
+                    if (view._instance.pickerControl) {
+                        //console.log("_setStartDate", value);
+                        view._instance.pickerControl.setStartDate(value);
+                    }
+                } catch (e) {
+                    bpmext.log.error("DateTimePicker._setStartDate() " + bpmext.localization.formatMsg("general", "ERROR") + ": " + e);
+                    if (e.stack)
+                        bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+                }
+            },
+            _setEndDate: function(view, value) {
+                try {
+                    if (view._instance.pickerControl) {
+                        //console.log("_setEndDate", value);
+                        view._instance.pickerControl.setEndDate(value);
+                    }
+                } catch (e) {
+                    bpmext.log.error("DateTimePicker._setEndDate() " + bpmext.localization.formatMsg("general", "ERROR") + ": " + e);
+                    if (e.stack)
+                        bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+                }
+            },
+            _setBlackoutDateStart: function(view, date) {
+                view._instance.pickerControl.setBlackoutDateStart(date);
+            },
+            _setBlackoutDateEnd: function(view, date) {
+                view._instance.pickerControl.setBlackoutDateEnd(date);
+            },
+            _setBlackoutDates: function(view, dates) {
+                if (!dates || !Array.isArray(dates.items)) {
+                    return;
+                }
+                view._instance.pickerControl.setBlackoutDates(dates.items);
+            },
+            _setWidth: function(view, value) {
+                try {
+                    if (value != null && value != "") {
+                        if (!isNaN(value))
+                            value += "px";
+
+                        view.context.element.style.width = value;
+
+                        domClass.add(view.context.element, "widthSet");
+                    } else {
+                        view.context.element.style.width = null;
+
+                        domClass.remove(view.context.element, "widthSet");
+                    }
+                } catch (e) {
+                    bpmext.log.error("DateTimePicker._setWidth() " + bpmext.localization.formatMsg("general", "ERROR") + ": " + e);
+                    if (e.stack)
+                        bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+                }
+            },
+            _setSizeStyle: function(view, newVal, oldVal) {
+                if (view._instance.type !== 'I') { //'TI', 'ND' or 'NDT'
+                    if (!oldVal)
+                        oldVal = view._instance.oldSzStyle;
+
+                    newVal = bpmext.ui.util.normalizeSizeStyle(newVal, bpmext.ui.util.OPTS_SZ_STL_CLZ);
+                    oldVal = bpmext.ui.util.normalizeSizeStyle(oldVal, bpmext.ui.util.OPTS_SZ_STL_CLZ);
+
+                    bpmext.ui.util.replaceCSSClass(view._instance.pickerElement, bpmext.ui.util.OPTS_SZ_STL_CLZ, newVal, oldVal);
+                    view._instance.oldSzStyle = newVal;
+
+                    bpmext.ui.util.propagateUpSizeStyle(view, newVal);
+                }
+            },
+            _setColorStyle: function(view, newVal, oldVal) {
+                if (!oldVal)
+                    oldVal = view._instance.oldColStyle;
+
+                newVal = bpmext.ui.util.normalizeColorStyle(newVal, this.OPTS_COL_STLZ);
+                oldVal = bpmext.ui.util.normalizeColorStyle(oldVal, this.OPTS_COL_STLZ);
+
+                if (view._instance.type === 'I') {
+                    bpmext.ui.util.replaceCSSClass(view._instance.pickerControl.picker, this.OPTS_COL_STLZ, newVal, oldVal);
+                } else if (view._instance.type === 'TI') {
+                    //bpmext.ui.util.replaceCSSClass(view._instance.formgroupDiv, bpmext.ui.util.OPTS_COL_STL_CLZ, newVal, oldVal);
+                    bpmext.ui.util.replaceCSSClass(view._instance.pickerControl.picker, this.OPTS_COL_STLZ, newVal, oldVal);
+                } else if (view._instance.type === 'ND' || view._instance.type === 'NDT') {
+                    bpmext.ui.util.replaceCSSClass(view._instance.formgroupDiv, bpmext.ui.util.OPTS_COL_STL_CLZ, newVal, oldVal);
+                }
+                view._instance.oldColStyle = newVal;
+
+                bpmext.ui.util.propagateUpSizeStyle(view, newVal);
+            },
+            _removeStyle: function(view) {
+                if (view.context.options.type.get('value') === 'I') {
+                    view._instance.pickerControl.picker.removeAttribute("style");
+                }
+            },
+            _setPickerTypeCSS: function(view) {
+                if (view._instance.type === "I") {
+                    domClass.replace(view._instance.pickerControl.picker, "datepicker-inline", "datepicker-dropdown dropdown-menu datepicker-orient-left datepicker-orient-top");
+                } else if (view._instance.type === "TI") {
+                    domClass.replace(view._instance.pickerControl.picker, "datepicker-dropdown dropdown-menu datepicker-orient-left datepicker-orient-top", "datepicker-inline");
+                }
+            },
+            _setPickerDisplay: function(view, value) {
+                if (view._instance.type === "NDT") {
+                    return;
+                }
+                
+                if (value) { //show
+                    view._instance.pickerControl.picker.style.display = "inline-block";
+
+                    //Accessibility
+                    view._instance.pickerControl.picker.setAttribute("aria-hidden", "false");
+
+                    //Add scroll event
+                    document.addEventListener("scroll", view._instance, { passive: true, capture: true });
+                    document.addEventListener("touchmove", view._instance, { passive: true });
+
+                    //Defect 323394 - Android 9: Date Time Picker dialog remains on screen out of context when scrolling
+                    if (dojo.isAndroid) {
+                        window.addEventListener("resize", view._instance, { passive: true });
+                    }
+                } else { //hide
+                    view._instance.pickerControl.picker.style.display = "";
+
+                    //Accessibility
+                    view._instance.pickerControl.picker.setAttribute("aria-hidden", "true");
+
+                    //Remove scroll event
+                    document.removeEventListener("scroll", view._instance, { passive: true, capture: true });
+                    document.removeEventListener("touchmove", view._instance, { passive: true });
+
+                    //Defect 323394 - Android 9: Date Time Picker dialog remains on screen out of context when scrolling
+                    if (dojo.isAndroid) {
+                        window.removeEventListener("resize", view._instance, { passive: true });
+                    }
+                }
+            },
+            _setTabIndex: function(view, index) {
+                if (index != null) { //Add tabindex
+                    if (view._instance.type === 'I') {
+                        domAttr.set(view._instance.pickerControl.picker, "tabindex", index);
+                    } else {
+                        domAttr.set(view._instance.pickerElement, "tabindex", index);
+                    }
+                } else { //Remove tabindex
+                    if (view._instance.type === 'I') {
+                        domAttr.remove(view._instance.pickerControl.picker, "tabindex");
+                    } else {
+                        domAttr.remove(view._instance.pickerElement, "tabindex");
+                    }
+                }
+            },
+            _isIE: function() {
+                var ua = window.navigator.userAgent;
+
+                // Test values; Uncomment to check result
+
+                // IE 10
+                // ua = 'Mozilla/5.0 (compatible; MSIE 10.0; Windows NT 6.2; Trident/6.0)';
+
+                // IE 11
+                // ua = 'Mozilla/5.0 (Windows NT 6.3; Trident/7.0; rv:11.0) like Gecko';
+
+                // Edge 12 (Spartan)
+                // ua = 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.71 Safari/537.36 Edge/12.0';
+
+                // Edge 13
+                // ua = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/46.0.2486.0 Safari/537.36 Edge/13.10586';
+
+                var msie = ua.indexOf('MSIE ');
+                if (msie > 0) {
+                    // IE 10 or older => return version number
+                    return parseInt(ua.substring(msie + 5, ua.indexOf('.', msie)), 10);
+                }
+
+                var trident = ua.indexOf('Trident/');
+                if (trident > 0) {
+                    // IE 11 => return version number
+                    var rv = ua.indexOf('rv:');
+                    return parseInt(ua.substring(rv + 3, ua.indexOf('.', rv)), 10);
+                }
+
+                var edge = ua.indexOf('Edge/');
+                if (edge > 0) {
+                    // Edge (IE 12+) => return version number
+                    return parseInt(ua.substring(edge + 5, ua.indexOf('.', edge)), 10);
+                }
+
+                // other browser
+                return false;
+            },
+            _applyEvents: function(view) {
+                view._instance.handleEvent = function(event) {
+                    var date = null;
+                    var isDisabled = false;
+                    var format = view.context.options.format.get("value");
+                    switch (event.type) {
+                        case 'focus':
+                        case 'click':
+                            if (event.target.tagName === "INPUT" && !view._instance.changeDateHandleRunning) {
+                                var visibility = utilities.handleVisibility(view.context);
+                                if (visibility !== "READONLY") {
+                                    view._proto._setPickerDisplay(view, true);
+                                    var orientation = view.context.options.orientation.get("value");
+                                    view._proto._setOrientation(view, orientation);
+                                }
+                            }
+                            view._instance.changeDateHandleRunning = false;
+                            break;
+                        case 'blur':
+                            setTimeout(function() {
+                                var ae = document.activeElement;
+                                var isDescendant = dom.isDescendant(ae, view.context.element) || dom.isDescendant(ae, view._instance.pickerControl.picker);
+                                if (view.context.options.type.get("value") === 'TI') {
+                                    if (view.context.options.noAutoclose.get("value") && !isDescendant) { // Do not close picker when date is selected but close if clicked outside
+                                        view._proto._setPickerDisplay(view, false);
+                                    } else if (!view.context.options.noAutoclose.get("value")) {
+                                        if (isDescendant && !view._instance.changeDateHandleRunning) {
+                                            return;
+                                        }
+
+                                        //Focus on input element when a date is selected
+                                        if (view._instance.changeDateHandleRunning) {
+                                            view._instance.pickerElement.focus();
+                                        }
+
+                                        //Close picker
+                                        view._proto._setPickerDisplay(view, false);
+                                    }
+                                }
+                            }, 150);
+                            break;
+                        case 'keydown':
+                            if (event.key === "Tab" || event.key === "Esc" || event.key === "Escape") {
+                                if (event.key === "Esc" || event.key === "Escape") view._instance.pickerElement.focus();
+                                view._proto._setPickerDisplay(view, false);
+                                //Accessibility
+                                view._instance.pickerControl.picker.setAttribute("aria-hidden", "true");
+                            } else if (event.key === "ArrowUp" || event.key === "Up" || event.key === "ArrowDown" || event.key === "Down") {
+                                event.preventDefault();
+                                if (view._instance.pickerElement === document.activeElement) {
+                                    view._instance.handleEvent(event = { type: 'focus', target: view._instance.pickerElement });
+                                    view._instance.pickerControl.picker.focus();
+                                }
+                            } else if (event.key === "Enter") { //301333: Typing a date in IE11 and pressing 'Enter' does not select the date on the calendar
+                                if (view._proto._isIE() && (event.target === view._instance.pickerElement)) {
+                                    view._instance.handleEvent(event = { type: 'change' });
+                                }
+
+                                var isDescendant = dom.isDescendant(event.target, view._instance.pickerControl.picker);
+                                if (isDescendant) {
+                                    view._instance.handleEvent(event = { type: 'blur' });
+                                }
+                            }
+                            break;
+                        case 'change':
+                            var value = view._instance.pickerElement.value;
+                            if (view._instance.type === "TI") {
+                                if (value !== "" && value.length > 0) {
+                                    date = view._instance.pickerControl.parseDate(value, {
+                                        calendarType: view.context.options.calendarType.get("value"),
+                                        hasTime: view.context.options.includeTimePicker.get("value"),
+                                        customFormat: format,
+                                        testDefaultFormats: false
+                                    });
+
+                                    if (date) {
+                                        isDisabled = view._instance.pickerControl.isDisabled(date);
+                                    }
+
+                                    if (!date || isDisabled) {
+                                        view._instance.dateIsValid = false;
+                                        if (isDisabled) {
+                                        	bpmext.ui.addViewValidationError(view, "datetime", bpmext.localization.formatMsg("controlDatePicker", "INVALID_DATE_RANGE", value));
+                                        } else {
+                                        	bpmext.ui.addViewValidationError(view, "datetime", bpmext.localization.formatMsg("controlDatePicker", "INVALID_DATE", value, view._proto._getFormat(view)));
+                                        }
+
+                                        //Accessibility
+                                        view._instance.pickerElement.setAttribute("aria-invalid", "true");
+                                    } else {
+                                        if (!view._instance.dateIsValid) {
+                                            view._instance.dateIsValid = true;
+                                            bpmext.ui.removeViewValidationError(view, "datetime");
+
+                                            //Accessibility
+                                            view._instance.pickerElement.setAttribute("aria-invalid", "false");
+                                        }
+                                        view.setDate(new Date(date));
+                                    }
+                                } else {
+                                    view.setDate(null);
+                                }
+
+                                if (!isDisabled) {
+                                    view._instance.pickerControl.updateControl(date);
+                                }
+                            } else {
+                                if (value !== "" && value.length > 0) {
+                                    view.setDate(stamp.fromISOString(value));
+                                } else {
+                                    view.setDate(null);
+                                }
+                            }
+                            break;
+                        case 'changeDate':
+                            if (view._instance.onChangeHandleRunning) { // TKT 349
+                                return;
+                            } else {
+                                view._instance.changeDateHandleRunning = true;
+                            }
+
+                            if (!view._instance.dateIsValid) {
+                                view._instance.dateIsValid = true;
+                                bpmext.ui.removeViewValidationError(view, "datetime");
+                            }
+
+                            //If Date Time Picker is displayed as "Text Input" update the input value
+                            if (view.context.options.type.get("value") === 'TI') {
+                                view._proto._updateTextInput(view, event.datepicker.date, format);
+                            }
+
+                            var oldValue = view.context.binding.get("value");
+                            bpmext.log.debug("onChangeHandle for viewid [" + view.context.viewid + "] current binding [" + oldValue + "]");
+
+                            var newValue = event.datepicker.date;
+                            try {
+                                view._instance.onChangeHandleRunning = true;
+                                //Update date
+                                if ((oldValue && oldValue.getTime()) !== (newValue && newValue.getTime())) {
+                                    view.context.binding.set("value", newValue);
+                                }
+                            } finally {
+                                view._instance.onChangeHandleRunning = false;
+                            }
+                            break;
+                        case 'changeTime':
+                            if (view._instance.onChangeHandleRunning) { // TKT 349
+                                return;
+                            }
+
+                            if (!view._instance.dateIsValid) {
+                                view._instance.dateIsValid = true;
+                                bpmext.ui.removeViewValidationError(view, "datetime");
+                            }
+
+                            var newTime;
+                            date = view.context.binding.get("value");
+
+                            bpmext.log.debug("onChangeTimeHandle for viewid [" + view.context.viewid + "] current binding [" + date + "]");
+
+                            if (date) {
+                                newTime = new Date(date);
+                                var hours = event.timepicker.hours;
+                                var minutes = event.timepicker.minutes;
+                                newTime.setHours(hours, minutes, 0, 0);
+                            }
+
+                            //If Date Picker is displayed as "Text Input", update the input value
+                            if (view.context.options.type.get("value") === 'TI') {
+                                view._proto._updateTextInput(view, date, format);
+                            }
+
+                            try {
+                                view._instance.onChangeHandleRunning = true;
+                                //Update date
+                                if (date) {
+                                    view.context.binding.set("value", newTime);
+                                }
+                            } finally {
+                                view._instance.onChangeHandleRunning = false;
+                            }
+                            break;
+                        case 'scroll':
+                            //Close picker
+                            view._proto._setPickerDisplay(view, false);
+                        case 'touchmove':
+                        case 'resize':
+                            var time = (event.type === "touchmove") ? 100 : 0;
+                            setTimeout(function() {
+                                var orientation = view.context.options.orientation.get("value");
+                                view._proto._setOrientation(view, orientation);
+                            }, time);
+                            break;
+                    }
+                };
+
+                //Add event listeners based on the type of calendar being displayed
+                if (view._instance.type === 'TI') {
+                    view._instance.pickerElement.addEventListener("focus", view._instance, false);
+                    view._instance.pickerElement.addEventListener("click", view._instance, false);
+                    view._instance.pickerElement.addEventListener("blur", view._instance, false);
+                    view._instance.pickerControl.picker.addEventListener("blur", view._instance, true);
+                    view._instance.pickerElement.addEventListener("keydown", view._instance, false);
+                    view._instance.pickerControl.picker.addEventListener("keydown", view._instance, false);
+                    view._instance.pickerElement.addEventListener("change", view._instance, false);
+                    view._instance.pickerControl.picker.addEventListener("changeDate", view._instance, false);
+                    view._instance.pickerControl.picker.addEventListener("changeTime", view._instance, false);
+                } else if (view._instance.type === 'I') {
+                    view._instance.pickerControl.picker.addEventListener("changeDate", view._instance, false);
+                    view._instance.pickerControl.picker.addEventListener("changeTime", view._instance, false);
+                } else if (view._instance.type === 'ND' || view._instance.type === 'NDT') {
+                    view._instance.pickerElement.addEventListener("change", view._instance, false);
+                }
+            },
+            _unapplyEvents: function(view) {
+                view._instance.pickerElement.removeEventListener('focus', view._instance, false);
+                view._instance.pickerElement.removeEventListener("click", view._instance, false);
+                view._instance.pickerElement.removeEventListener('blur', view._instance, false);
+                view._instance.pickerControl.picker.removeEventListener("blur", view._instance, true);
+                view._instance.pickerElement.removeEventListener("keydown", view._instance, false);
+                view._instance.pickerControl.picker.removeEventListener("keydown", view._instance, false);
+                view._instance.pickerElement.removeEventListener('change', view._instance, false);
+                view._instance.pickerControl.picker.removeEventListener('changeDate', view._instance, false);
+                view._instance.pickerControl.picker.removeEventListener('changeTime', view._instance, false);
+            },
+            _getDirection: function() {
+                var getDirection = function(element) {
+                    var result = null;
+                    if (element) {
+                        if (window.getComputedStyle) {
+                            result = window.getComputedStyle(element, null).direction;
+                        } else if (element.currentStyle) {
+                            result = element.currentStyle.direction;
+                        }
+                    }
+                    return result;
+                };
+
+                var bidi = "auto";
+                if (getDirection(document.body) == "rtl" && domClass.contains(document.body, "CoachViewRTL")) {
+                    bidi = "rtl";
+                }
+                return bidi;
+            },
+            _updateTextInput: function(view, date, format) {
+                if (view.context.options.type.get('value') === 'I') return;
+
+                var calendarType = view.context.options.calendarType.get("value");
+                var includeTimePicker = view.context.options.includeTimePicker.get("value");
+
+                //Format date to display in input text
+                if (date) {
+                    var dateString = view._instance.pickerControl.formatDate(date, format, calendarType, !includeTimePicker);
+                    view._instance.pickerElement.value = dateString;
+                } else {
+                    view._instance.pickerElement.value = "";
+                }
+            },
+            _updateNativeDateInput: function(view, date) {
+                if (view._instance.type === 'I' || view._instance.type === 'TI') {
+                    return;
+                }
+
+                if (date) {
+                    date.setSeconds(0);
+                    date.setMilliseconds(0);
+
+                    var dateString = stamp.toISOString(date, { selector: 'date' });
+
+                    if (view._instance.type === 'ND') {
+                        view._instance.pickerElement.value = dateString;
+                    } else if (view._instance.type === 'NDT') {
+                        var timeString = stamp.toISOString(date, { selector: 'time' });
+                        view._instance.pickerElement.value = dateString + timeString;
+                    }
+
+                    //BiDi
+                    utilities.BiDi.applyTextDir(
+                        view._instance.pickerElement,
+                        view._instance.pickerElement.value,
+                        view._instance.baseTxtDir,
+                        view._instance.genPrefTextDir
+                    );
+                } else {
+                    view._instance.pickerElement.value = "";
+                }
+            },
+            _isMobileDevice: function() {
+                if (has('android')) {
+                    return true;
+                } else if (has('ios')) {
+                    return true;
+                } else {
+                    return false;
+                }
+            },
+            _detectNativeDateSupport: function() {
+                var input = document.createElement('input');
+                input.setAttribute('type', 'date');
+
+                var inValidDate = 'Invalid Date';
+                input.setAttribute('value', inValidDate);
+
+                return (input.value !== inValidDate);
+            },
+            _loadNativePicker: function(view, opts, datepickerOptions) {
+                view._instance.pickerElement = view._proto._createHTMLForType(view._instance.type);
+
+                view._instance.formgroupDiv = document.createElement("div");
+                domClass.add(view._instance.formgroupDiv, "form-group");
+
+                view._instance.inputDivWrapper = document.createElement("div");
+                domClass.add(view._instance.inputDivWrapper, "input");
+                view._instance.inputDivWrapper.appendChild(view._instance.pickerElement);
+
+                view._instance.formgroupDiv.appendChild(view._instance.inputDivWrapper);
+
+                view._instance.wrapper = document.createElement("div");
+                view._instance.wrapper.appendChild(view._instance.formgroupDiv);
+
+                view.context.element.appendChild(view._instance.wrapper);
+
+                view._instance.disabler = bpmext.ui.util.createDisabler(view, view._instance.pickerElement);
+
+                view._proto._setSizeStyle(view, opts.sizeStyle.get("value"));
+                view._proto._setColorStyle(view, opts.colorStyle.get("value"));
+                view._proto._setLabelVisibility(view, opts._metadata.labelVisibility.get("value"));
+                view._proto._setLabelPlacement(view, opts.labelPlacement.get("value"));
+                view._proto._setLabel(view, opts._metadata.label.get("value"));
+                view._proto._setLabelWidth(view, opts.labelWidth.get("value"));
+                view._proto._setWidth(view, opts.width.get("value"));
+                view._proto._setTabIndex(view, opts.tabIndex.get("value"));
+                view._proto._applyEvents(view);
+                view._proto._addAccessibility(view);
+
+                view._proto._updateNativeDateInput(view, datepickerOptions.date);
+            },
+            _loadCustomPicker: function(view, opts, datepickerOptions) {
+                view._instance.formgroupDiv = document.createElement("div");
+                domClass.add(view._instance.formgroupDiv, "form-group");
+
+                view._instance.inputDivWrapper = document.createElement("div");
+                domClass.add(view._instance.inputDivWrapper, "input");
+                view._instance.formgroupDiv.appendChild(view._instance.inputDivWrapper);
+
+                view._instance.wrapper = document.createElement("div");
+                view._instance.wrapper.appendChild(view._instance.formgroupDiv);
+
+                view.context.element.appendChild(view._instance.wrapper);
+
+                if (opts.type.get("value") === 'TI') {
+                    view._instance.pickerElement = view._proto._createHTMLForType(view._instance.type);
+                    view._instance.inputDivWrapper.appendChild(view._instance.pickerElement);
+
+                    view._instance.pickerControl = new bpmdatepicker(datepickerOptions, document.getElementsByTagName("body")[0]);
+
+                    view._instance.disabler = bpmext.ui.util.createDisabler(view, view._instance.pickerElement);
+                } else {
+                    view._instance.dpControlDiv = document.createElement("div");
+                    view._instance.inputDivWrapper.appendChild(view._instance.dpControlDiv);
+
+                    view._instance.pickerControl = new bpmdatepicker(datepickerOptions, view._instance.dpControlDiv);
+
+                    view._instance.disabler = bpmext.ui.util.createDisabler(view, view._instance.dpControlDiv);
+                }
+
+                view._instance.vc = bpmext.ui.getNearestValidationContainer();
+
+                view._proto._setSizeStyle(view, opts.sizeStyle.get("value"));
+                view._proto._setColorStyle(view, opts.colorStyle.get("value"));
+                view._proto._setLabelVisibility(view, opts._metadata.labelVisibility.get("value"));
+                view._proto._setLabelPlacement(view, opts.labelPlacement.get("value"));
+                view._proto._setLabel(view, opts._metadata.label.get("value"));
+                view._proto._setLabelWidth(view, opts.labelWidth.get("value"));
+                view._proto._setWidth(view, opts.width.get("value"));
+                view._proto._setEnableCalendarIcon(view, opts.enableCalendarIcon.get("value"));
+                view._proto._setTabIndex(view, opts.tabIndex.get("value"));
+                view._proto._setPickerTypeCSS(view);
+                view._proto._updateControl(view);
+                view._proto._applyEvents(view);
+                view._proto._addAccessibility(view);
+                view._proto._setPrevNextBtnIcon(view);
+
+                if (opts.type.get("value") === 'TI') {
+                    view._proto._setPlaceholder(view, opts.placeHolder.get("value"));
+
+                    //If Date Picker is displayed as "Text Input" update the input value
+                    view._proto._updateTextInput(view, datepickerOptions.date, datepickerOptions.format);
+                }
+            },
+            _addAccessibility: function(view) {
+                if (view._instance.label) {
+                    var id = view._instance.label.id;
+                    var hiddenId = view._instance.hiddenLabel.id;
+
+                    //Custom Picker
+                    if (view._instance.pickerControl && view._instance.pickerControl.picker) {
+                        view._instance.pickerControl.picker.setAttribute("id", view.context.element.id + "_customPicker");
+                        view._instance.pickerControl.picker.setAttribute("aria-labelledby", id);
+                        if (view._instance.type === "TI") {
+                            view._instance.pickerControl.picker.setAttribute("aria-hidden", "true");
+                        }
+                    }
+
+                    //Input element
+                    if (view._instance.pickerElement) {
+                        view._instance.pickerElement.setAttribute("aria-labelledby", id);
+                        view._instance.pickerElement.setAttribute("aria-describedby", hiddenId);
+                        view._instance.pickerElement.setAttribute("id", "datetimepicker-input-" + view.context.controlidpath);
+                        if (view._instance.type === "TI") {
+                            view._instance.pickerElement.setAttribute("role", "textbox");
+                            view._instance.pickerElement.setAttribute("aria-controls", view._instance.pickerControl.picker.id);
+                            view._instance.pickerElement.setAttribute("aria-haspopup", "true");
+                        }
+                    }
+                }
+
+                //Custom Picker
+                if (view._instance.pickerControl && view._instance.pickerControl.picker) {
+                    //Bidi
+                    var p = view._instance.pickerControl.picker.querySelectorAll('.header p');
+                    utilities.BiDi.applyTextDir(
+                        p[0],
+                        p[0].innerHTML,
+                        view._instance.baseTxtDir,
+                        view._instance.genPrefTextDir
+                    );
+                    utilities.BiDi.applyTextDir(
+                        p[1],
+                        p[1].innerHTML,
+                        view._instance.baseTxtDir,
+                        view._instance.genPrefTextDir
+                    );
+                }
+            }
+        };
+
+        /*
+        Public control methods *************************************************************
+         */
+
+        /**
+         * @instance
+         * @memberof DateTimePicker
+         * @method setLabel
+         * @param {string} label Date picker label
+         * @desc Set label associated with DatePicker control
+         */
+        this.constructor.prototype.setLabel = function(text) {
+            this.context.options._metadata.label.set("value", text);
+        };
+
+        /**
+         * @instance
+         * @memberof DateTimePicker
+         * @method getLabel
+         * @desc Get label associated with DatePicker control
+         * @returns {string}
+         */
+        this.constructor.prototype.getLabel = function() {
+            return this.context.options._metadata.label.get("value");
+        };
+
+        /**
+         * @instance
+         * @memberof DateTimePicker
+         * @method setLabelPlacement
+         * @param {string} placement "T"|"TOP"=Top | "L"|"LEFT"=Left
+         * @desc Set label placement for control.  NOTE: to avoid ambiguity always set the label placement using "T"|"L"
+         * @example me.setLabelPlacement("L");
+         */
+        this.constructor.prototype.setLabelPlacement = function(plc) {
+            this.context.options.labelPlacement.set("value", plc);
+        };
+
+        /**
+         * @instance
+         * @memberof DateTimePicker
+         * @method getLabelPlacement
+         * @desc Get label placement for control.  NOTE: This always returns the label placement as set, to avoid ambiguity always set the label placement using "T"|"L"
+         * @returns {string}
+         * @example me.getLabelPlacement();
+         */
+        this.constructor.prototype.getLabelPlacement = function() {
+            return this.context.options.labelPlacement.get("value");
+        };
+
+        /**
+         * @instance
+         * @memberof DateTimePicker
+         * @method getLabelWidth
+         * @desc Get label width of DatePicker control (e.g. 50px, 20%, 2em - omitting the unit assumes px)
+         * @returns {string}
+         */
+        this.constructor.prototype.getLabelWidth = function() {
+            return this.context.options.labelWidth.get("value");
+        };
+
+        /**
+         * @instance
+         * @memberof DateTimePicker
+         * @method setLabelWidth
+         * @param {string} labelWidth Control's label width
+         * @desc Set label width of DatePicker control (e.g. 50px, 20%, 2em - omitting the unit assumes px)
+         */
+        this.constructor.prototype.setLabelWidth = function(labelWidth) {
+            this.context.options.labelWidth.set("value", labelWidth);
+        };
+
+        /**
+         * @instance
+         * @memberof DateTimePicker
+         * @method isLabelVisible
+         * @desc Get label visibility for DatePicker control
+         * @returns {boolean}
+         */
+        this.constructor.prototype.isLabelVisible = function() {
+            return this.context.options._metadata.labelVisibility.get("value") == "SHOW";
+        };
+
+        /**
+         * @instance
+         * @memberof DateTimePicker
+         * @method setLabelVisible
+         * @param {boolean} flag Sets the visibility of the label {true | false}
+         * @desc Set label visibility for DatePicker control
+         */
+        this.constructor.prototype.setLabelVisible = function(flag) {
+            this.context.options._metadata.labelVisibility.set("value", flag ? "SHOW" : "HIDE");
+        };
+
+        /**
+         * @instance
+         * @memberof DateTimePicker
+         * @method getDate
+         * @desc Get date for DatePicker control
+         * @returns {date}
+         */
+        this.constructor.prototype.getDate = function() {
+            var binding = this.context.binding.get("value");
+            var res = (binding && binding.getTime) ? binding : "";
+            return res == null ? "" : res;
+        };
+
+        /**
+         * @instance
+         * @memberof DateTimePicker
+         * @method setDate
+         * @param {date} date Sets the date
+         * @desc Set date for DatePicker control
+         */
+        this.constructor.prototype.setDate = function(date) {
+            this.context.binding.set("value", date);
+        };
+
+        /**
+         * @instance
+         * @memberof DateTimePicker
+         * @method setPlaceholder
+         * @param {string} text Placeholder text
+         * @desc Set placeholder text for DatePicker control
+         */
+        this.constructor.prototype.setPlaceholder = function(text) {
+            this.context.options.placeHolder.set("value", text);
+        };
+
+        /**
+         * @instance
+         * @memberof DateTimePicker
+         * @method getPlaceholder
+         * @desc Get placeholder text associated with DatePicker control
+         * @returns {string}
+         */
+        this.constructor.prototype.getPlaceholder = function() {
+            return this.context.options.placeHolder.get("value");
+        };
+
+        /**
+         * @instance
+         * @memberof DateTimePicker
+         * @method setWidth
+         * @param {string} width sets the width of the control
+         * @desc Set width of DatePicker control (e.g. 50px, 20%, 2em - omitting the unit assumes px)
+         */
+        this.constructor.prototype.setWidth = function(width) {
+            this.context.options.width.set("value", width);
+        };
+
+        /**
+         * @instance
+         * @memberof DateTimePicker
+         * @method getWidth
+         * @desc Get configured width for DatePicker control (including unit)
+         * @returns {string}
+         */
+        this.constructor.prototype.getWidth = function() {
+            return this.context.options.width.get("value");
+        };
+
+        /**
+         * @instance
+         * @memberof DateTimePicker
+         * @method setSizeStyle
+         * @param {string} style "DEFAULT"|"DEF"|"NORMAL"|"D"=Default | "SMALL"|"S"=Small | "LARGE"|"L"=Large
+         * @desc Sets size style of DatePicker control.  NOTE: to avoid ambiguity always set the size style using "D"|"S"|"L"
+         */
+        this.constructor.prototype.setSizeStyle = function(style) {
+            this.context.options.sizeStyle.set("value", style);
+        };
+
+        /**
+         * @instance
+         * @memberof DateTimePicker
+         * @method getSizeStyle
+         * @desc Gets size style of DatePicker control.  NOTE: This always returns the size style as set, to avoid ambiguity always set the size style using "D"|"S"|"L"
+         * @returns {string}
+         */
+        this.constructor.prototype.getSizeStyle = function() {
+            return this.context.options.sizeStyle.get("value");
+        };
+
+        /**
+         * @instance
+         * @memberof DateTimePicker
+         * @method setColorStyle
+         * @param {string} style "DEFAULT"|"DEF"|"D"=Default | "INFO"|INF"|"I"=Info | "SUCCESS"|"S"=Success | "WARNING"|"WARN"|"W"=Warning | "DANGER"|"ERROR"|"ERR"|"G"=Danger
+         * @desc Sets color style of DatePicker control.  NOTE: to avoid ambiguity always set the color using "D"|"I"|"S"|"W"|"G"
+         */
+        this.constructor.prototype.setColorStyle = function(value) {
+            this.context.options.colorStyle.set("value", value);
+        };
+
+        /**
+         * @instance
+         * @memberof DateTimePicker
+         * @method getColorStyle
+         * @desc Gets color style of DatePicker control.  NOTE: This always returns the color as set, to avoid ambiguity always set the color using "D"|"I"|"S"|"W"|"G"
+         * @returns {string}
+         */
+        this.constructor.prototype.getColorStyle = function() {
+            return this.context.options.colorStyle.get("value");
+        };
+
+        /**
+         * @instance
+         * @memberof DateTimePicker
+         * @method setTabIndex
+         * @param {integer} tabIndex Tab indices start at 1 and may be set sparsely
+         * @desc Sets tab index of DatePicker control
+         */
+        this.constructor.prototype.setTabIndex = function(tabIndex) {
+            this.context.options.tabIndex.set("value", tabIndex);
+        };
+
+        /**
+         * @instance
+         * @memberof DateTimePicker
+         * @method getTabIndex
+         * @desc Get tab index for DatePicker control
+         * @returns {integer}
+         */
+        this.constructor.prototype.getTabIndex = function() {
+            // return domAttr.get(this._instance.pickerControl.focusElement, "tabindex");
+            return this.context.options.tabIndex.get("value");
+        };
+
+        /**
+         * @instance
+         * @memberof DateTimePicker
+         * @method focus
+         * @desc Set focus on this control
+         */
+        this.constructor.prototype.focus = function() {
+            if (this._instance.type === 'TI') {
+                this._instance.pickerElement.focus();
+            } else {
+                this._instance.pickerControl.picker.focus();
+            }
+        };
+
+        /**
+         * @instance
+         * @memberof DateTimePicker
+         * @method clear
+         * @desc Clear selected date on this control
+         */
+        this.constructor.prototype.clear = function() {
+            // this._instance.pickerControl.resetControl();
+            this.context.binding.set("value", null);
+        };
+
+        /**
+         * @instance
+         * @memberof DateTimePicker
+         * @method getType
+         * @desc Get descriptive string representing the type of control
+         * @returns {string}
+         */
+        this.constructor.prototype.getType = function() {
+            return "dateTimePicker.3";
+        };
+        /**
+         * @instance
+         * @memberof DateTimePicker
+         * @method setStart
+         * @param {date} start This sets the start date, dates prior to this date are disallowed.
+         * @desc Set the available start date programmatically
+         * @example me.setStart(date);
+         * @example me.setStart(new Date("06/01/2015"));
+         */
+        this.constructor.prototype.setStart = function(start) {
+            this.context.options.startDate.set("value", start);
+        };
+
+        /**
+         * @instance
+         * @memberof DateTimePicker
+         * @method setEnd
+         * @param {date} end This sets the cut-off date, dates subsequent to this are disallowed.
+         * @desc Set the available start date programmatically
+         * @example me.setEnd(date);
+         * @example me.setEnd(new Date("06/07/2015"));
+         */
+        this.constructor.prototype.setEnd = function(end) {
+            this.context.options.endDate.set("value", end);
+        };
+
+        /**
+         * @instance
+         * @memberof DateTimePicker
+         * @method getStart
+         * @desc Get the start date of the calendar that is currently set, if available.
+         * @example me.getStart();
+         * @return {date}
+         */
+        this.constructor.prototype.getStart = function() {
+            return this.context.options.startDate.get("value");
+        };
+
+        /**
+         * @instance
+         * @memberof DateTimePicker
+         * @method getEnd
+         * @desc Get the end date of the calendar that is currently set, if available.
+         * @example me.getEnd();
+         * @return {date}
+         */
+        this.constructor.prototype.getEnd = function() {
+            return this.context.options.endDate.get("value");
+        };
+
+        /**
+         * @instance
+         * @memberof DateTimePicker
+         * @method setBlackoutDateStart
+         * @param {date} date - Dates after the start date, including the start date, will be blocked out.
+         * @desc Disable dates starting from and including the specified date.
+         * @example me.setBlackoutDateStart(date);
+         * @example me.setBlackoutDateStart(new Date("01/01/2018"));
+         * @example me.setBlackoutDateStart();
+         */
+        this.constructor.prototype.setBlackoutDateStart = function(date) {
+            this.context.options.blackoutDateStart.set("value", date);
+        };
+
+        /**
+         * @instance
+         * @memberof DateTimePicker
+         * @method setBlackoutDateEnd
+         * @param {date} date - Dates before the end date, including the end date, will be blocked out.
+         * @desc Disable dates prior to and including the specified date.
+         * @example me.setBlackoutDateEnd(date);
+         * @example me.setBlackoutDateEnd(new Date("01/01/2018"));
+         * @example me.setBlackoutDateEnd();
+         */
+        this.constructor.prototype.setBlackoutDateEnd = function(date) {
+            this.context.options.blackoutDateEnd.set("value", date);
+        };
+
+        /**
+         * @instance
+         * @memberof DateTimePicker
+         * @method getBlackoutDateStart
+         * @desc Get the disabled start date.
+         * @example me.getBlackoutDateStart();
+         * @return {Date}
+         */
+        this.constructor.prototype.getBlackoutDateStart = function() {
+            return this._instance.pickerControl.blackoutDateStart;
+        };
+
+        /**
+         * @instance
+         * @memberof DateTimePicker
+         * @method getBlackoutDateEnd
+         * @desc Get the disabled end date.
+         * @example me.getBlackoutDateEnd();
+         * @return {Date}
+         */
+        this.constructor.prototype.getBlackoutDateEnd = function() {
+            return this._instance.pickerControl.blackoutDateEnd;
+        };
+
+        /**
+         * @instance
+         * @memberof DateTimePicker
+         * @method setBlackoutDates
+         * @param {date[]} list of dates that will be blocked.
+         * @desc Set dates that the user cannot select.
+         * @example me.setBlackoutDates([date, date, date]);
+         * @example me.setBlackoutDates([new Date("01/01/2018"), new Date("04/01/2018")]);
+         * @example me.setBlackoutDates([]);
+         */
+        this.constructor.prototype.setBlackoutDates = function(dates) {
+            this.context.options.blackoutDates.set("value", dates);
+        };
+
+        /**
+         * @instance
+         * @memberOf DateTimePicker
+         * @method getBlackoutDates
+         * @desc Get the list of disabled dates.
+         * @example me.getBlackoutDates();
+         * @return {date[]}
+         */
+        this.constructor.prototype.getBlackoutDates = function() {
+            return this.context.options.blackoutDates.get("value").items;
+        };
+
+        /**
+         * @instance
+         * @memberof DateTimePicker
+         * @method open
+         * @desc Opens the drop-down calendar.
+         * @example me.open();
+         */
+        this.constructor.prototype.open = function() {
+            if (this._instance.type === 'I' || !this.isVisible()) {
+                return;
+            }
+            this._proto._setPickerDisplay(this, true);
+            var orientation = this.context.options.orientation.get("value");
+            this._proto._setOrientation(this, orientation);
+
+            //Accessibility
+            this._instance.pickerControl.picker.setAttribute("aria-hidden", "false");
+        };
+
+        /**
+         * @instance
+         * @memberof DateTimePicker
+         * @method close
+         * @desc Closes the drop-down calendar.
+         * @example me.close();
+         */
+        this.constructor.prototype.close = function() {
+            if (this._instance.type === 'I') {
+                return;
+            }
+            this._proto._setPickerDisplay(this, false);
+            //Accessibility
+            this._instance.pickerControl.picker.setAttribute("aria-hidden", "true");
+        };
+
+        /**
+         * @instance
+         * @memberof DateTimePicker
+         * @method hide
+         * @param {boolean} collapseFlag Set to <code>true</code> to collapse the view (equivalent to a view setting of "NONE")
+         * @desc Hides the date time picker
+         */
+        this.constructor.prototype.hide = function(collapseFlag) {
+            if (this._instance.type === 'TI') {
+                this.close();
+            }
+            bpmEventHelper.ui._hideView.call(this, collapseFlag);
+        };
+
+        /**
+         * @instance
+         * @memberof DateTimePicker
+         * @method includeTimePicker
+         * @param {boolean} flag Sets the visibility of the time picker {true | false}
+         * @desc Shows or hides the time picker
+         */
+        this.constructor.prototype.includeTimePicker = function(flag) {
+            if (typeof flag !== 'boolean') {
+                return;
+            }
+            this.context.options.includeTimePicker.set("value", flag);
+        };
+
+        /**
+         * @instance
+         * @memberof DateTimePicker
+         * @method getYearSelectorStyle
+         * @desc Gets style of the year selector (Default | Modern) 
+         */
+        this.constructor.prototype.getYearSelectorStyle = function() {
+            return this.context.options.yearSelectorStyle.get("value");
+        };
+
+        
+        /**
+         * @instance
+         * @memberof DateTimePicker
+         * @method setYearSelectorStyle
+         * @param {string} style Sets style of the year selector (Default | Modern) 
+         * @desc Sets the style of the year selector
+         */
+        this.constructor.prototype.setYearSelectorStyle = function(style) {
+        	this.context.options.yearSelectorStyle.set("value", style);
+        };
+
+        /**
+		 * @instance
+		 * @memberof DateTimePicker
+		 * @method setHelpText
+		 * @param {string} helptext Help text for the control
+		 * @desc Set help text for the control
+		 */
+		this.constructor.prototype.setHelpText = function (text) {
+			this.context.options._metadata.helpText.set("value", text);
+		};
+
+		/**
+		 * @instance
+		 * @memberof DateTimePicker
+		 * @method getHelpText
+		 * @desc Get help text associated with the control
+		 * @returns {string}
+		 */
+		this.constructor.prototype.getHelpText = function () {
+			return this.context.options._metadata.helpText.get("value");
+		};
+
+        
+        /*
+        Coach NG Lifecycle methods *************************************************************
+         */
+        this.constructor.prototype.load = function() {
+            try {
+                var view = this;
+                var opts = this.context.options;
+                var mdt = opts._metadata;
+
+                this._instance.baseTxtDir = mdt.baseTextDirection && mdt.baseTextDirection.get("value") ? mdt.baseTextDirection.get("value") : utilities.BiDi.BASE_TEXT_DIRECTION._default;
+                this._instance.genPrefTextDir = this.context.bpm.system.baseTextDirection;
+
+                if (!this.context.binding) {
+                    this.context.binding = bpmext.ui.substituteObject(this, null, null, null);
+                }
+
+                // NOTE: unbound assumes "Date"
+                this._instance.dateType = (this.context.bindingType() === "" ? "Date" : this.context.bindingType()); // TKT 349
+
+                if (!opts.calendarType) {
+                    opts.calendarType = bpmext.ui.substituteConfigOption(this, "calendarType", "gregorian");
+                }
+
+                if (!opts.type) {
+                    opts.type = bpmext.ui.substituteConfigOption(this, "type", "TI");
+                }
+
+                if (!opts.labelPlacement) {
+                    opts.labelPlacement = bpmext.ui.substituteConfigOption(this, "labelPlacement", "T");
+                }
+
+                if (!opts.labelWidth) {
+                    opts.labelWidth = bpmext.ui.substituteConfigOption(this, "labelWidth", null);
+                }
+
+                if (!opts.tabIndex) {
+                    opts.tabIndex = bpmext.ui.substituteConfigOption(this, "tabIndex", null);
+                }
+
+                if (!opts.placeHolder) {
+                    opts.placeHolder = bpmext.ui.substituteConfigOption(this, "placeHolder", null);
+                }
+
+                if (!opts.colorStyle) {
+                    opts.colorStyle = bpmext.ui.substituteConfigOption(this, "colorStyle", "D");
+                }
+
+                if (!opts.sizeStyle) {
+                    opts.sizeStyle = bpmext.ui.substituteConfigOption(this, "sizeStyle", "D");
+                }
+
+                if (!opts.width) {
+                    opts.width = bpmext.ui.substituteConfigOption(this, "width", null);
+                }
+
+                if (!opts.disabledWeekDays) {
+                    opts.disabledWeekDays = bpmext.ui.substituteConfigOption(this, "disabledWeekDays", {
+                        "Sunday": false,
+                        "Monday": false,
+                        "Tuesday": false,
+                        "Wednesday": false,
+                        "Thursday": false,
+                        "Friday": false,
+                        "Saturday": false
+                    });
+                }
+
+                if (!opts.blackoutDates) {
+                    opts.blackoutDates = bpmext.ui.substituteConfigOption(this, "blackoutDates", []);
+                }
+
+                if (!opts.blackoutDateStart) {
+                    opts.blackoutDateStart = bpmext.ui.substituteConfigOption(this, "blackoutDateStart", null);
+                }
+
+                if (!opts.blackoutDateEnd) {
+                    opts.blackoutDateEnd = bpmext.ui.substituteConfigOption(this, "blackoutDateEnd", null);
+                }
+
+                if (!opts.enableClearButton) {
+                    opts.enableClearButton = bpmext.ui.substituteConfigOption(this, "enableClearButton", false);
+                }
+
+                if (!opts.enableTodayButton) {
+                    opts.enableTodayButton = bpmext.ui.substituteConfigOption(this, "enableTodayButton", false);
+                }
+                
+                if (!opts.enableCalendarIcon) {
+                    opts.enableCalendarIcon = bpmext.ui.substituteConfigOption(this, "enableCalendarIcon", false);
+                }
+
+                if (!opts.endDate) {
+                    opts.endDate = bpmext.ui.substituteConfigOption(this, "endDate", "");
+                }
+
+                if (!opts.includeTimePicker) {
+                    opts.includeTimePicker = bpmext.ui.substituteConfigOption(this, "includeTimePicker", false);
+                }
+
+                if (!opts.format) {
+                    opts.format = bpmext.ui.substituteConfigOption(this, "format", this._proto.OPTS_FORMAT.default);
+                }
+
+                if (!opts.highlightToday) {
+                    opts.highlightToday = bpmext.ui.substituteConfigOption(this, "highlightToday", false);
+                }
+
+                if (!opts.minViewMode) {
+                    opts.minViewMode = bpmext.ui.substituteConfigOption(this, "minViewMode", 0);
+                }
+
+                if (!opts.orientation) {
+                    opts.orientation = bpmext.ui.substituteConfigOption(this, "orientation", "A");
+                }
+
+                if (!opts.showWeeks) {
+                    opts.showWeeks = bpmext.ui.substituteConfigOption(this, "showWeeks", false);
+                }
+
+                if (!opts.startDate) {
+                    opts.startDate = bpmext.ui.substituteConfigOption(this, "startDate", "");
+                }
+
+                if (!opts.startView) {
+                    opts.startView = bpmext.ui.substituteConfigOption(this, "startView", 0);
+                }
+
+                if (!opts.weekStart) {
+                    opts.weekStart = bpmext.ui.substituteConfigOption(this, "weekStart", 0);
+                }
+
+                if (!opts.noAutoclose) {
+                    opts.noAutoclose = bpmext.ui.substituteConfigOption(this, "noAutoclose", false);
+                }
+
+                if (!opts.hideHeader) {
+                    opts.hideHeader = bpmext.ui.substituteConfigOption(this, "hideHeader", false);
+                }
+
+                if (!opts.customPickerOnly) {
+                    opts.customPickerOnly = bpmext.ui.substituteConfigOption(this, "customPickerOnly", false);
+                }
+
+                if (!opts.yearSelectorStyle) {
+                    opts.yearSelectorStyle = bpmext.ui.substituteConfigOption(this, "yearSelectorStyle", "Default");
+                }
+
+                if (opts[this._proto.EVT_ONBEFORESHOWDAY]) {
+                    bpmext.ui.registerEventHandlingFunction(this, this._proto.EVT_ONBEFORESHOWDAY, "date");
+
+                    var beforeShowDay = function(date) {
+                        bpmext.ui.executeEventHandlingFunction(view, view._proto.EVT_ONBEFORESHOWDAY, date);
+                    };
+                }
+
+                if (opts[this._proto.EVT_ONCHANGE]) {
+                    bpmext.ui.registerEventHandlingFunction(this, this._proto.EVT_ONCHANGE, "newVal", "oldVal");
+                }
+
+                //Load i18n bundle
+                view._proto._loadi18Bundle(view);
+
+                var disabledWeekDays = opts.disabledWeekDays.get("value");
+                var disabledWeekDaysString = this._proto._convertDisabledWeekDaysOptionToString(disabledWeekDays);
+
+                this._instance.type = opts.type.get("value");
+                var blackoutDates = opts.blackoutDates.get("value").items;
+                var blackoutDateStart = opts.blackoutDateStart.get("value");
+                var blackoutDateEnd = opts.blackoutDateEnd.get("value");
+                var calendarType = opts.calendarType.get("value");
+                var format = opts.format.get("value");
+                var weekStart = parseInt(opts.weekStart.get("value"));
+                var startView = parseInt(opts.startView.get("value"));
+                var startDate = opts.startDate.get("value");
+                var endDate = opts.endDate.get("value");
+                var minViewMode = parseInt(opts.minViewMode.get("value"));
+                var showWeeks = opts.showWeeks.get("value");
+                var highlightToday = opts.highlightToday.get("value");
+                var includeTimePicker = opts.includeTimePicker.get("value");
+                var enableTodayButton = opts.enableTodayButton.get("value");
+                var enableClearButton = opts.enableClearButton.get("value");
+                var bidi = this._proto._getDirection();
+                var hideHeader = opts.hideHeader.get("value");
+                var customPickerOnly = opts.customPickerOnly.get("value");
+                var date = this.getDate();
+                var yearSelectorStyle = opts.yearSelectorStyle.get("value");
+
+                var datepickerOptions = {
+                    calendarType: calendarType,
+                    format: format,
+                    weekStart: weekStart,
+                    startView: startView,
+                    daysOfWeekDisabled: disabledWeekDaysString,
+                    blackoutDates: blackoutDates,
+                    blackoutDateStart: blackoutDateStart,
+                    blackoutDateEnd: blackoutDateEnd,
+                    startDate: startDate,
+                    endDate: endDate,
+                    minViewMode: minViewMode,
+                    calendarWeeks: showWeeks,
+                    todayHighlight: highlightToday,
+                    includeTimePicker: includeTimePicker,
+                    todayBtn: enableTodayButton,
+                    clearBtn: enableClearButton,
+                    bidi: bidi,
+                    beforeShowDay: beforeShowDay,
+                    showHeader: !hideHeader,
+                    date: date,
+                    controlidpath: this.context.controlidpath,
+                    yearSelectorStyle: yearSelectorStyle
+                };
+
+                if (this._proto._isMobileDevice() && this._proto._detectNativeDateSupport() && !customPickerOnly && this._instance.type !== 'I' && weekStart === 0 && disabledWeekDaysString === "" && calendarType === "gregorian" && blackoutDates.length === 0 && !blackoutDateStart && !blackoutDateEnd && !startDate && !endDate) {
+                    view._instance.type = 'ND'; //Native Date
+                    if (datepickerOptions.includeTimePicker) {
+                        view._instance.type = 'NDT'; //Native Date Time
+                    }
+                    this._proto._loadNativePicker(view, opts, datepickerOptions);
+                } else {
+                    this._proto._loadCustomPicker(view, opts, datepickerOptions);
+                }
+                
+                var tmp = mdt.helpText ? mdt.helpText.get("value") : null;
+				if (tmp && tmp.length > 0)
+				{
+					this._proto._setHelpText(this, tmp);
+                }
+                
+                bpmext.ui.loadView(this);
+
+                if (this._instance.type === 'I' || this._instance.type === 'TI') {
+                    this._instance.pickerControl.startup(); //Start Date picker
+
+                    if (!this._instance.dateIsValid) { // TKT 349  Show Error on initial display with bad input
+                        bpmext.ui.addViewValidationError(this, "datetime", bpmext.localization.formatMsg("controlDatePicker", "DATE_BOUND_INPUT_ERROR") + " [" + this.context.binding.get("value") + "] ");
+                    }
+                }
+
+                this._instance.loadEHIsRunning = false;
+            } catch (e) {
+                bpmext.log.error("Error on load event [" + this.context.viewid + "]: " + e);
+                if (e.stack)
+                    bpmext.log.error("  Call stack: " + e.stack);
+            }
+        };
+
+        this.constructor.prototype.view = function() {
+            try {
+                this.context.element.classList.remove("Date_Time_Picker");
+                this.context.element.classList.add("Date_Picker");
+
+                this._proto._handleVisibility(this);
+            } catch (e) {
+                bpmext.log.error(bpmext.localization.formatMsg("general", "ERROR_ONVIEW_EVENT") + " [" + this.ui.getAbsoluteName() + "]: " + e);
+                if (e.stack)
+                    bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+            }
+        };
+
+        this.constructor.prototype.change = function(event) {
+            try {
+                bpmext.log.debug("Change eh for viewid [" + this.context.viewid + "] type [" + event.type + "] property [" + event.property + "] newVal [" + event.newVal + "] oldVal [" + event.oldVal + "]");
+                if (event.type == "config") {
+                    switch (event.property) {
+                        case "_metadata.label":
+                            {
+                                this._proto._setLabel(this, event.newVal, event.oldVal);
+                                this._proto._setHelpText(this, this.context.options._metadata.helpText.get("value"));
+                                break;
+                            }
+                        case "_metadata.visibility":
+                            {
+                                this._proto._handleVisibility(this, event.newVal, event.oldVal);
+                                break;
+                            }
+                        case "_metadata.labelVisibility":
+                            {
+                                this._proto._setLabelVisibility(this, event.newVal, event.oldVal);
+                                break;
+                            }
+                        case "_metadata.helpText":
+                            {
+                                this._proto._updateControl(this, event.newVal, event.oldVal);
+                                this._proto._setHelpText(this, event.newVal);
+                                break;
+                            }
+                        case "placeHolder":
+                            {
+                                this._proto._setPlaceholder(this, event.newVal, event.oldVal);
+                                break;
+                            }
+                        case "showWeeks":
+                            {
+                                this._proto._setShowWeeks(this, event.newVal, event.oldVal);
+                                break;
+                            }
+                        case "disabledWeekDays":
+                            {
+                                this._proto._setDisabledWeekDays(this, event.newVal, event.oldVal);
+                                break;
+                            }
+                        case "startView":
+                            {
+                                this._proto._setStartView(this, event.newVal, event.oldVal);
+                                break;
+                            }
+                        case "highlightToday":
+                            {
+                                this._proto._setHighlightToday(this, event.newVal, event.oldVal);
+                                break;
+                            }
+                        case "enableTodayButton":
+                            {
+                                this._proto._setEnableTodayButton(this, event.newVal, event.oldVal);
+                                break;
+                            }
+                        case "enableClearButton":
+                            {
+                                this._proto._setEnableClearButton(this, event.newVal, event.oldVal);
+                                break;
+                            }
+                        case "enableCalendarIcon":
+                        	{
+                            	this._proto._setEnableCalendarIcon(this, event.newVal, event.oldVal);
+                            	break;
+                        	}
+                        case "weekStart":
+                            {
+                                this._proto._setWeekStart(this, event.newVal, event.oldVal);
+                                break;
+                            }
+                        case "orientation":
+                            {
+                                this._proto._setOrientation(this, event.newVal, event.oldVal);
+                                break;
+                            }
+                        case "format":
+                            {
+                                this._proto._setFormat(this, event.newVal, event.oldVal);
+                                break;
+                            }
+                        case "minViewMode":
+                            {
+                                this._proto._setMinViewMode(this, event.newVal, event.oldVal);
+                                break;
+                            }
+                        case "startDate":
+                            {
+                                this._proto._setStartDate(this, event.newVal, event.oldVal);
+                                break;
+                            }
+                        case "endDate":
+                            {
+                                this._proto._setEndDate(this, event.newVal, event.oldVal);
+                                break;
+                            }
+                        case "blackoutDateStart":
+                            {
+                                this._proto._setBlackoutDateStart(this, event.newVal);
+                                break;
+                            }
+                        case "blackoutDateEnd":
+                            {
+                                this._proto._setBlackoutDateEnd(this, event.newVal);
+                                break;
+                            }
+                        case "blackoutDates":
+                            {
+                                this._proto._setBlackoutDates(this, event.newVal);
+                                break;
+                            }
+                        case "width":
+                            {
+                                this._proto._setWidth(this, event.newVal, event.oldVal);
+                                break;
+                            }
+                        case "sizeStyle":
+                            {
+                                this._proto._setSizeStyle(this, event.newVal, event.oldVal);
+                                break;
+                            }
+                        case "colorStyle":
+                            {
+                                this._proto._setColorStyle(this, event.newVal, event.oldVal);
+                                break;
+                            }
+                        case "tabIndex":
+                            {
+                                this._proto._setTabIndex(this, event.newVal, event.oldVal);
+                                break;
+                            }
+                        case "labelPlacement":
+                            {
+                                this._proto._setLabelPlacement(this, event.newVal, event.oldVal);
+                                break;
+                            }
+                        case "labelWidth":
+                            {
+                                this._proto._setLabelWidth(this, event.newVal);
+                                break;
+                            }
+                        case "yearSelectorStyle":
+                            {
+                                this._proto._setYearSelectorStyle(this, event.newVal);
+                                break;
+                            }
+                        case "type":
+                            {
+                                this._instance.type = event.newVal;
+                                if (event.newVal === "I" && event.oldVal === "TI") {
+                                    if (this._instance.pickerControl.picker.parentElement.tagName === 'BODY') {
+                                        if(!this._instance.dpControlDiv) {
+                                            this._instance.dpControlDiv = document.createElement("div");
+                                            this._instance.inputDivWrapper.appendChild(this._instance.dpControlDiv);
+                                        }
+                                        this._instance.dpControlDiv.appendChild(this._instance.pickerControl.picker);
+                                    }
+                                    domClass.add(this._instance.pickerElement, "hidden");
+
+                                    this._proto._removeStyle(this);
+                                    this._proto._setPickerDisplay(this, true);
+                                } else if (event.newVal === "TI" && event.oldVal === "I") {
+                                    if (this._instance.pickerControl.picker.parentElement.tagName === 'DIV') {
+                                        document.getElementsByTagName("body")[0].appendChild(this._instance.pickerControl.picker);
+                                    }
+                                    var element = this._instance.inputDivWrapper.children[0];
+                                    if (element.tagName === "DIV") {
+                                        this._instance.inputDivWrapper.removeChild(element);
+                                        this._instance.pickerElement = this._proto._createHTMLForType(event.newVal);
+                                        this._instance.inputDivWrapper.appendChild(this._instance.pickerElement);
+                                    }
+                                    domClass.remove(this._instance.pickerElement, "hidden");
+
+                                    this._proto._setPlaceholder(this, this.context.options.placeHolder.get("value"));
+                                    this._proto._setPickerDisplay(this, false);
+                                    this._proto._addAccessibility(this);
+                                    this._proto._handleVisibility(this);
+
+                                    var format = this.context.options.format.get("value") || this._proto.OPTS_FORMAT.default;
+                                    this._proto._updateTextInput(this, this.context.binding.get("value"), format);
+                                }
+                                this._proto._unapplyEvents(this);
+                                this._proto._applyEvents(this);
+                                this._proto._setPickerTypeCSS(this);
+                                this._proto._setTabIndex(this, this.context.options.tabIndex.get("value"));
+                                this._proto._updateControl(this);
+
+                                //Load i18n bundle
+                                this._proto._loadi18Bundle(this);
+
+                                break;
+                            }
+                        case "includeTimePicker":
+                            {
+                                this._instance.pickerControl.showTimePicker(event.newVal);
+                                if (this._instance.type === 'TI') { //If Date Time Picker is displayed as "Text Input" update the input value
+                                    var format = this.context.options.format.get("value") || this._proto.OPTS_FORMAT.default;
+                                    this._proto._updateTextInput(this, this.context.binding.get("value"), format);
+                                }
+
+                                break;
+                            }
+                    }
+                } else if (event.insertedInto == event.removedFrom){
+                    //{#bug: * issue with clearing datePicker}
+                    if (this._instance.loadEHIsRunning && this._instance.validateEHIsRunning)
+                        return;
+                    bpmext.log.debug("Change eh for viewid [" + this.context.viewid + "] newVal [" + event.newVal + "] oldVal [" + event.oldVal + "]");
+
+                    if ((event.oldVal && event.oldVal.getTime()) !== (event.newVal && event.newVal.getTime())) {
+
+                        if (this._instance.type === 'I') { //Inline
+                            this._instance.pickerControl.updateControl(event.newVal);
+                        } else if (this._instance.type === 'TI') { //Text Input
+                            this._instance.pickerControl.updateControl(event.newVal);
+
+                            var orientation = this.context.options.orientation.get("value"); //APAR 327163
+                            this._proto._setOrientation(this, orientation); //APAR 327163
+
+                            //Format date to display in input text
+                            var format = this.context.options.format.get("value") || this._proto.OPTS_FORMAT.default;
+                            this._proto._updateTextInput(this, event.newVal, format);
+
+                            if (!this._instance.dateIsValid) {
+                                this._instance.dateIsValid = true;
+                                bpmext.ui.removeViewValidationError(this, "datetime");
+                            }
+                            this._proto._updateControl(this);
+                        } else if (this._instance.type === 'ND' || this._instance.type === 'NDT') { //Native Date Time Picker
+                            this._proto._updateNativeDateInput(this, event.newVal);
+                        }
+                        bpmext.ui.executeEventHandlingFunction(this, this._proto.EVT_ONCHANGE, event.newVal, event.oldVal);
+                    }
+                }
+            } catch (e) {
+                bpmext.log.error(bpmext.localization.formatMsg("general", "ERROR_ONCHANGE_EVENT") + " [" + this.ui.getAbsoluteName() + "]: " + e);
+                if (e.stack)
+                    bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+            }
+        };
+
+        this.constructor.prototype.validate = function(event) {
+            try {
+                this._instance.validateEHIsRunning = true;
+                bpmext.log.debug("Validation eh for viewid [" + this.context.viewid + "] running with type [" + event.type + "]");
+                bpmext.ui.updateViewValidationState(this, event);
+                if ((this._instance.loadEHIsRunning) && (event.type == "error"))
+                    this.context.binding.set("value", ""); //Tkt 349
+                this._proto._updateControl(this);
+                if (this._instance.vc)
+                    this._instance.vc.validate(event);
+            } catch (e) {
+                bpmext.log.error(bpmext.localization.formatMsg("general", "ERROR_ONVALIDATE_EVENT") + " [" + this.ui.getAbsoluteName() + "]: " + e);
+                if (e.stack)
+                    bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+            } finally {
+                this._instance.validateEHIsRunning = false;
+            }
+        };
+
+        this.constructor.prototype.unload = function() {
+            this._instance.pickerControl.picker.parentNode.removeChild(this._instance.pickerControl.picker);
+            delete this._instance.pickerControl;
+
+            bpmext.ui.unloadView(this);
+        };
+    }
+};

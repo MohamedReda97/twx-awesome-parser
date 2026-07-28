@@ -1,0 +1,624 @@
+/*
+ * #BEGIN COPYRIGHT
+ *
+ * Licensed Materials - Property of IBM
+ * 5725-C95
+ * (C) Copyright IBM Corporation 2017. All Rights Reserved.
+ * US Government Users Restricted Rights- Use, duplication or disclosure
+ * restricted by GSA ADP Schedule Contract with IBM Corp.
+ *
+ * #END COPYRIGHT
+ */
+
+/**
+ * @ignore
+ * @instance
+ * @memberof ProgressBar
+ * @method isValid
+ */  
+
+/**
+ * @ignore
+ * @instance
+ * @memberof ProgressBar
+ * @method isLabelVisible
+ */
+
+/**
+ * @ignore
+ * @instance
+ * @memberof ProgressBar
+ * @method setLabelVisible
+ */ 
+
+/**
+ * @ignore
+ * @instance
+ * @memberof ProgressBar
+ * @method setValid
+ */
+
+/**
+ * @ignore
+ * @instance
+ * @memberof ProgressBar
+ * @method recalculate
+ */
+
+/**
+ * @ignore
+ * @instance
+ * @memberof ProgressBar
+ * @method getData
+ */
+
+/**
+ * @ignore
+ * @instance
+ * @memberof ProgressBar
+ * @method setData
+ */ 
+
+/** 
+ *   <tr class=Prop>
+ *     <td class=SectionName colspan=3>Events</td>
+ *   </tr>
+ *   <tr class=Prop>
+ *     <td>On Load:</td>
+ *     <td colspan="2">
+ *       <table> 
+ *         <tr class=Prop>
+ *           <td>Description: </td>
+ *           <td>Triggers whenever the view is loaded.</td>
+ *         </tr>
+ *         <tr class=Prop>
+ *           <td>Example: </td>
+ *           <td><pre class="prettyprint"><code>me.setProgress(100)</code></pre></td>
+ *         </tr>
+ *       </table>
+ *     </td>
+ *   </tr>
+ *   <tr class=Prop>
+ *     <td>On Load:</td>
+ *     <td colspan="2">
+ *       <table> 
+ *         <tr class=Prop>
+ *           <td>Description: </td>
+ *           <td>Triggers whenever the view is loaded.</td>
+ *         </tr>
+ *         <tr class=Prop>
+ *           <td>Example: </td>
+ *           <td><pre class="prettyprint"><code>me.setProgress(0)</code></pre></td>
+ *         </tr>
+ *       </table>
+ *     </td>
+ *   </tr>
+ * </table>
+ */
+bpmext_control_InitProgressBar = function (utilities, bpmext, domClass, domAttr, domConstruct)
+{
+	this._instance =
+	{
+	};
+
+	if (!this.constructor.prototype._proto)
+	{
+		this.constructor.prototype._proto =
+		{
+			OPTS_COL_STLZ :
+			{
+				"D" : "",
+				"P": "progress-bar-primary",
+				"I" : "progress-bar-info",
+				"S" : "progress-bar-success",
+				"W" : "progress-bar-warning",
+				"E" : "progress-bar-danger",
+				"G" : "progress-bar-danger"
+			},
+			EVT_ONCLICK : "eventON_CLICK",
+			_setWidth : function (view, size)
+			{
+				try
+				{
+					if(size == null || size == "")
+						size = "100%";
+					
+					if (!isNaN(size))
+						size += "px";
+
+					view._instance.pgbDiv.style.width = size;
+				}
+				catch (e)
+				{
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.error("ProgressBar._setWidth() error: " + e);
+					bpmext.log.error("ProgressBar._setWidth() " + bpmext.localization.formatMsg("general", "ERROR") + ": " + e);
+					if(e.stack) { 
+						//{#feature: US-1330 Added RT localization}
+						//bpmext.log.error("  Call stack: " + e.stack);
+						bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+					}
+				}
+			},
+			_setHeight : function (view, size)
+			{
+				try
+				{
+					if(size != null && size != "")
+					{
+						if (!isNaN(size))
+							size += "px";
+
+						view._instance.pgbDiv.style.height = size;
+					}
+					else
+						view._instance.pgbDiv.style.height = null;
+				}
+				catch (e)
+				{
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.error("ProgressBar._setHeight() error: " + e);
+					bpmext.log.error("ProgressBar._setHeight() " + bpmext.localization.formatMsg("general", "ERROR") + ": " + e);
+					if(e.stack) { 
+						//{#feature: US-1330 Added RT localization}
+						//bpmext.log.error("  Call stack: " + e.stack);
+						bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+					}
+				}
+			},
+			_normalizeColorStyle: function(style)
+			{
+				if(!style)
+					style = "D";
+
+				style = style.toUpperCase();
+
+				if(style == "E")
+					style = "G";
+				
+				if(style.length > 1)
+				{
+					switch (style)
+					{
+						case "DEFAULT":
+						case "DEF":
+							style = "D";
+							break;
+						case "PRIMARY":
+							style = "P";
+							break;
+						case "SUCCESS":
+							style = "S";
+							break;
+						case "INFO":
+						case "INF":
+							style = "I";
+							break;
+						case "WARNING":
+						case "WARN":
+							style = "W";
+							break;
+						case "ERR":
+						case "ERROR":
+						case "DANGER":
+							style = "G";
+							break;
+						default:
+							//{#feature: US-1330 Added RT localization}
+							//bpmext.log.warn("Unexpected color style: " + style);
+							bpmext.log.warn(bpmext.localization.formatMsg("general", "COLOR_STYLE_WARNING",style));
+					}
+				}
+
+				return style;
+			},
+			_setColorStyle : function (view, newVal, oldVal)
+			{
+				if(!oldVal)
+					oldVal = view._instance.oldColStyle;
+				
+				newVal = this._normalizeColorStyle(newVal);
+				oldVal = this._normalizeColorStyle(oldVal);
+
+				bpmext.ui.util.replaceCSSClass(view._instance.pgbInnerDiv, this.OPTS_COL_STLZ, newVal, oldVal);
+				view._instance.oldColStyle = newVal;
+			},
+			_setStriped : function (view)
+			{
+				var striped = view.context.options.striped.get("value");
+				var fn = striped ? domClass.add : domClass.remove;
+				
+				fn(view._instance.pgbDiv, "progress-striped");
+			},
+			_setActive : function (view, newVal, oldVal)
+			{
+				var active = view.context.options.active.get("value");
+				var fn = active ? domClass.add : domClass.remove;
+				
+				fn(view._instance.pgbDiv, "active");
+			},
+			_setProgress : function(view, value)
+			{
+				var maxValue = view.context.options.maxValue.get("value");
+				var progress = view.context.binding.get("value");
+				
+				var pct = progress / maxValue * 100;
+				if(pct > 100)
+					pct = 100;
+				
+				view._instance.pgbInnerDiv.style.width = pct + "%";
+                domAttr.set(view._instance.pgbDiv, "aria-valuemax", maxValue);
+                domAttr.set(view._instance.pgbDiv, "aria-valuenow", progress);
+			},
+			_setRadius : function (view, newVal)
+			{
+				if (newVal != null)
+				{
+					if (!isNaN(newVal))
+						newVal += "px";
+					else
+						if((newVal + "").length == 0)
+							newVal = null;
+				}
+				else
+					newVal = null;
+					
+				view._instance.pgbDiv.style.borderRadius = newVal;
+				view._instance.pgbInnerDiv.style.borderRadius = newVal;
+			},
+			_handleVisibility : function (view)
+			{
+				var btn = view._instance.pgbDiv;
+				var visibility = bpmext.ui.getEffectiveVisibility(view);
+
+				if (visibility != "NONE")
+				{
+					if (visibility == "READONLY")
+					{
+						btn.disabled = true;
+						domClass.add(btn, "disabled");
+					}
+					else
+					{
+						btn.disabled = false;
+						domClass.remove(btn, "disabled");
+					}
+				}
+
+				// Updates for WAI
+				if (domAttr.has(btn, "disabled")) {										
+					domAttr.set(btn, "aria-disabled", "true");
+				} else {					
+					domAttr.remove(btn, "aria-disabled");
+				}
+			}
+		};
+		
+
+		/*
+		Public control methods *************************************************************
+		 */
+
+		/**
+		 * @instance
+		 * @memberof ProgressBar
+		 * @method setWidth
+		 * @param {string} width
+		 * @desc Set width of progressBar (e.g. 50px, 20%, 2em - omitting the unit assumes px)
+		 */
+		this.constructor.prototype.setWidth = function (size)
+		{
+			this.context.options.width.set("value", size);
+		}
+
+		/**
+		 * @instance
+		 * @memberof ProgressBar
+		 * @method getWidth
+		 * @desc Get configured width for progressBar (including unit)
+		 * @returns {string}
+		 */	
+		this.constructor.prototype.getWidth = function ()
+		{
+			return this.context.options.width.get("value");
+		}
+
+		/**
+		 * @instance
+		 * @memberof ProgressBar
+		 * @method setHeight
+		 * @param {string} height
+		 * @desc Set height of progressBar (e.g. 50px, 20%, 2em - omitting the unit assumes px)
+		 */
+		this.constructor.prototype.setHeight = function (size)
+		{
+			this.context.options.height.set("value", size);
+		}
+
+		/**
+		 * @instance
+		 * @memberof ProgressBar
+		 * @method getHeight
+		 * @desc Get configured height for progressBar (including unit)
+		 * @returns {string}
+		 */	
+		this.constructor.prototype.getHeight = function ()
+		{
+			return this.context.options.height.get("value");
+		}
+		
+		
+		/**
+		 * @instance
+		 * @memberof ProgressBar
+		 * @method setColorStyle
+		 * @param {string} style "DEFAULT"|"DEF"|"D"=Default | "PRIMARY"|"P"=Primary | "INFO"|INF"|"I"=Info | "SUCCESS"|"S"=Success | "WARNING"|"WARN"|"W"=Warning | "DANGER"|"G"=Danger 	
+		 * @desc Sets color style of progressBar.  NOTE: to avoid ambiguity always set the color using "D"|"P"|"I"|"S"|"W"|"G"
+		 */
+		this.constructor.prototype.setColorStyle = function (style)
+		{
+			return this.context.options.colorStyle.set("value", style);
+		}
+
+		/**
+		 * @instance
+		 * @memberof ProgressBar
+		 * @method setRadius
+		 * @param {string} radius Radius of curvature for progress bar corners
+		 * @desc Sets radius (roundness) of progressBar
+		 */
+		this.constructor.prototype.setRadius = function (radius)
+		{
+			return this.context.options.radius.set("value", radius);
+		}
+
+		/**
+		 * @instance
+		 * @memberof ProgressBar
+		 * @method setProgress
+		 * @param {decimal} value Progress of bar
+		 * @desc Sets progress status
+		 */		
+		this.constructor.prototype.setProgress = this.constructor.prototype.setValue = function (value)
+		{
+			this.context.binding.set("value", value);
+		}
+		
+		/**
+		 * @instance
+		 * @memberof ProgressBar
+		 * @method getProgress
+		 * @desc Gets the current value associated with the Progress Bar.
+		 * @returns {decimal}
+		 */
+		this.constructor.prototype.getProgress = this.constructor.prototype.getValue = function ()
+		{
+			return this.context.binding.get("value");
+		}
+
+		/**
+		 * @instance
+		 * @memberof ProgressBar
+		 * @method setMaximum
+		 * @param {decimal} value Maximum value of bar (what constitutes 100%). Note that it is possible for progress to be set past this value, though it will not be apparent.
+		 * @desc Sets the maximum value associated with the progress bar
+		 */
+		this.constructor.prototype.setMaximum = function (value)
+		{
+			this.context.options.maxValue.set("value", value);
+		}
+		
+		/**
+		 * @instance
+		 * @memberof ProgressBar
+		 * @method getType
+		 * @desc Get descriptive string representing the type of control
+		 * @returns {string}
+		 */
+		this.constructor.prototype.getType = function ()
+		{
+			return "progressBar.3";
+		}
+		
+		
+		/*
+		Coach NG Lifecycle methods *************************************************************
+		 */
+		this.constructor.prototype.load = function ()
+		{
+			try
+			{
+				var opts = this.context.options;
+				var mdt = opts._metadata;
+
+				if (!this.context.binding)
+					this.context.binding = bpmext.ui.substituteObject(this, null, null, 0.0);				
+
+				if (!opts.colorStyle)
+					opts.colorStyle = bpmext.ui.substituteConfigOption(this, "colorStyle", "D");
+
+				if (!opts.striped)
+					opts.striped = bpmext.ui.substituteConfigOption(this, "striped", false);
+
+				if (!opts.active)
+					opts.active = bpmext.ui.substituteConfigOption(this, "active", false);
+					
+				if (!opts.radius)
+					opts.radius = bpmext.ui.substituteConfigOption(this, "radius", "5px");
+
+				if (!opts.width)
+					opts.width = bpmext.ui.substituteConfigOption(this, "width", "100%");
+
+				if (!opts.height)
+					opts.height = bpmext.ui.substituteConfigOption(this, "height", null);
+
+				if (!opts.maxValue)
+					opts.maxValue = bpmext.ui.substituteConfigOption(this, "maxValue", 100.0);
+
+				this._instance.env = document.createElement("div");
+				domClass.add(this._instance.env, "pbwrapper");
+				
+				this._instance.pgbDiv = document.createElement("div");
+				this._instance.pgbInnerDiv = document.createElement("div");
+				
+				domClass.add(this.context.element, "SPARKProgressBar");
+				
+				domClass.add(this._instance.pgbDiv, "progress");
+				domClass.add(this._instance.pgbInnerDiv, "progress-bar");
+                domAttr.set(this._instance.pgbDiv, "role", "progressbar");
+                domAttr.set(this._instance.pgbDiv, "aria-valuemin", 0);
+                domAttr.set(this._instance.pgbDiv, "tabindex", 0);
+                domAttr.set(this._instance.pgbDiv, "aria-label", opts._metadata.label.get("value"));
+
+				this._proto._setColorStyle(this, opts.colorStyle.get("value"));
+				this._proto._setWidth(this, opts.width.get("value"));
+				this._proto._setHeight(this, opts.height.get("value"));
+				this._proto._setRadius(this, opts.radius.get("value"));
+				this._proto._setStriped(this);
+				this._proto._setActive(this);
+				this._proto._setProgress(this);
+
+				this._instance.pgbDiv.appendChild(this._instance.pgbInnerDiv);
+				this._instance.env.appendChild(this._instance.pgbDiv);
+				this.context.element.appendChild(this._instance.env);
+
+				bpmext.ui.registerEventHandlingFunction(this, this._proto.EVT_ONCLICK);
+
+				var view = this;
+				this._instance.pgbDiv.onclick = function (event)
+				{
+					if(!view._instance.pgbDiv.disabled){
+						var fireBE = bpmext.ui.executeEventHandlingFunction(view, view._proto.EVT_ONCLICK);
+					}
+				}
+                
+                this._instance.pgbDiv.onkeypress = function (event) {
+                    if (event.key === "Enter" || event.key === " " || event.key === "Spacebar") {
+                        if(!view._instance.pgbDiv.disabled){
+                            var fireBE = bpmext.ui.executeEventHandlingFunction(view, view._proto.EVT_ONCLICK);
+                        }
+                    }
+                }
+
+				bpmext.ui.setupFormulaTriggeredUpdates(
+					this, 
+					function (expResult)
+					{
+						if (expResult == undefined)
+						{
+							expResult = 0.0;
+						}
+
+						view.setProgress(expResult);
+					},
+					this.getProgress
+				);
+				
+				bpmext.ui.loadView(this);
+			}
+			catch (e)
+			{
+				//{#feature: US-1330 Added RT localization}
+				//bpmext.log.error("Error on load event [" + this.context.viewid + "]: " + e);
+				bpmext.log.error(bpmext.localization.formatMsg("general", "ERROR_ONLOAD_EVENT") + " [" + this.context.viewid + "]: " + e);
+				if(e.stack) { 
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.error("  Call stack: " + e.stack);
+					bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+				}
+			}
+		};
+
+		this.constructor.prototype.view = function ()
+		{
+			try
+			{
+				this._proto._handleVisibility(this);
+			}
+			catch (e)
+			{
+				//{#feature: US-1330 Added RT localization}
+				//bpmext.log.error("Error on view event [" + this.ui.getAbsoluteName() + "]: " + e);
+				bpmext.log.error(bpmext.localization.formatMsg("general", "ERROR_ONVIEW_EVENT") + " [" + this.ui.getAbsoluteName() + "]: " + e);
+				if(e.stack) { 
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.error("  Call stack: " + e.stack);
+					bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+				}
+			}
+		};
+
+		this.constructor.prototype.change = function (event)
+		{
+			try
+			{
+				if (event.type == "config")
+				{
+					switch (event.property)
+					{
+						case "_metadata.visibility":
+						{
+							this._proto._handleVisibility(this);
+							break;
+						}
+						case "width":
+						{
+							this._proto._setWidth(this, event.newVal);
+							break;
+						}
+						case "height":
+						{
+							this._proto._setHeight(this, event.newVal);
+							break;
+						}
+						case "colorStyle":
+						{
+							this._proto._setColorStyle(this, event.newVal, event.oldVal);
+							break;
+						}
+						case "striped":
+						{
+							this._proto._setStriped(this);
+							break;
+						}
+						case "active":
+						{
+							this._proto._setActive(this);
+							break;
+						}
+						case "radius":
+						{
+							this._proto._setRadius(this, event.newVal);
+							break;
+						}
+						case "maxValue":
+						{
+							this._proto._setProgress(this);
+							break;
+						}
+					}
+				}
+				else
+				{
+					this._proto._setProgress(this);
+				}
+			}
+			catch (e)
+			{
+				//{#feature: US-1330 Added RT localization}
+				//bpmext.log.error("Error on change event [" + this.ui.getAbsoluteName() + "]: " + e);
+				bpmext.log.error(bpmext.localization.formatMsg("general", "ERROR_ONCHANGE_EVENT") + " [" + this.ui.getAbsoluteName() + "]: " + e);
+				if(e.stack) { 
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.error("  Call stack: " + e.stack);
+					bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+				}
+			}
+		};
+
+		this.constructor.prototype.unload = function ()
+		{
+			bpmext.ui.unloadView(this);
+		};
+	}
+}

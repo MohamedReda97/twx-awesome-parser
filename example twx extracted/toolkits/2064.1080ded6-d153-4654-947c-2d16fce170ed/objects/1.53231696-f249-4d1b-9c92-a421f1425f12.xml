@@ -1,0 +1,609 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<teamworks>
+    <process id="1.53231696-f249-4d1b-9c92-a421f1425f12" name="DeleteApplicationData">
+        <lastModified>1600977768368</lastModified>
+        <lastModifiedBy>tw_admin</lastModifiedBy>
+        <processId>1.53231696-f249-4d1b-9c92-a421f1425f12</processId>
+        <image isNull="true" />
+        <tabGroup isNull="true" />
+        <startingProcessItemId>2025.fbaf29bb-fce3-48d4-abb9-26bf5aace394</startingProcessItemId>
+        <isRootProcess>false</isRootProcess>
+        <processType>14</processType>
+        <isErrorHandlerEnabled>false</isErrorHandlerEnabled>
+        <errorHandlerItemId isNull="true" />
+        <isLoggingVariables>false</isLoggingVariables>
+        <isTransactional>false</isTransactional>
+        <processTimingLevel isNull="true" />
+        <participantRef isNull="true" />
+        <exposedType>0</exposedType>
+        <isTrackingEnabled>true</isTrackingEnabled>
+        <xmlData isNull="true" />
+        <cachingType>false</cachingType>
+        <itemLabel isNull="true" />
+        <cacheLength isNull="true" />
+        <mobileReady>false</mobileReady>
+        <sboSyncEnabled>true</sboSyncEnabled>
+        <externalId isNull="true" />
+        <isSecured>false</isSecured>
+        <isAjaxExposed>false</isAjaxExposed>
+        <description>Deletes application data</description>
+        <guid>guid:0d572886d67947e4:-45529b47:1726124c748:1f1a</guid>
+        <versionId>a836cd52-6e9f-4447-bdb0-acc0e646b19e</versionId>
+        <dependencySummary isNull="true" />
+        <jsonData>{"rootElement":[{"extensionElements":{"userTaskImplementation":[{"flowElement":[{"parallelMultiple":false,"outgoing":["2027.31395c53-87a6-4804-8ca2-0a99aa2d772c"],"isInterrupting":true,"extensionElements":{"nodeVisualInfo":[{"color":"#F8F8F8","width":24,"x":50,"y":200,"declaredType":"TNodeVisualInfo","height":24}]},"name":"Start","declaredType":"startEvent","id":"55e03bf0-2636-452b-87d3-7ecf0e1615ce"},{"incoming":["2027.c105fbda-2cc4-4e6e-8b4f-4cede486cf65"],"extensionElements":{"nodeVisualInfo":[{"color":"#F8F8F8","width":24,"x":700,"y":200,"declaredType":"TNodeVisualInfo","height":24}],"navigationInstructions":[{"targetType":"Default","declaredType":"com.ibm.bpmsdk.model.bpmn20.ibmext.TNavigationInstructions"}]},"name":"End","declaredType":"endEvent","id":"efeb333f-569e-4ddb-8572-c70a7ef4fb8b"},{"targetRef":"2025.fdfafe97-9add-4ec8-8a63-60273230e95b","extensionElements":{"linkVisualInfo":[{"sourcePortLocation":"rightCenter","showCoachControlLabel":false,"labelPosition":0.0,"targetPortLocation":"leftCenter","declaredType":"TLinkVisualInfo","saveExecutionContext":false,"showLabel":false}]},"name":"To DeleteApplicationData","declaredType":"sequenceFlow","id":"2027.31395c53-87a6-4804-8ca2-0a99aa2d772c","sourceRef":"55e03bf0-2636-452b-87d3-7ecf0e1615ce"},{"outgoing":["2027.d96dbe3d-7518-44bc-89d3-d079a2d0e615"],"incoming":["2027.31395c53-87a6-4804-8ca2-0a99aa2d772c"],"extensionElements":{"nodeVisualInfo":[{"width":95,"x":292,"y":177,"declaredType":"TNodeVisualInfo","height":70}]},"documentation":[{"content":["Deletes application data"],"textFormat":"text\/plain"}],"declaredType":"scriptTask","script":{"content":["tw.system.waitForContinueFlow();\r\nvar payload = tw.local.inputParams;\r\ntw.system.performRequest(\"#DATAPERSISTENCE\", {\r\n  path: tw.local.inputParams.appId,\r\n  method: \"DELETE\",\r\n  payload: {\r\n    params: payload\r\n  },\r\n  auth: {\r\n    protocol: \"OIDC\"\r\n  },\r\n  headers: {\r\n    \"Content-Type\": \"application\/json\"\r\n  }\r\n}, function (response, data) {\r\n  tw.system.log(tw.system.model.name, tw.system.model.step.name, JSON.stringify(response));\r\n  tw.system.log(tw.system.model.name, tw.system.model.step.name, JSON.stringify(data));\r\n  tw.system.continueFlow();\r\n}, function (error) {\r\n  tw.system.log(tw.system.model.name, tw.system.model.step.name, JSON.stringify(error));\r\n  tw.local.error = error;\r\n  tw.system.continueFlow();\r\n});"]},"startQuantity":1,"default":"2027.d96dbe3d-7518-44bc-89d3-d079a2d0e615","name":"DeleteApplicationData","isForCompensation":false,"completionQuantity":1,"id":"2025.fdfafe97-9add-4ec8-8a63-60273230e95b","scriptFormat":"text\/x-javascript"},{"targetRef":"2025.c2791a63-aad3-4c92-88d4-74dcd602b27e","extensionElements":{"sequenceFlowImplementation":[{"fireValidation":"Never","sboSyncEnabled":true,"declaredType":"com.ibm.bpmsdk.model.bpmn20.ibmext.TSequenceFlowImplementation"}],"linkVisualInfo":[{"sourcePortLocation":"rightCenter","showCoachControlLabel":false,"labelPosition":0.0,"targetPortLocation":"leftCenter","declaredType":"TLinkVisualInfo","saveExecutionContext":true,"showLabel":false}]},"name":"To Has error?","declaredType":"sequenceFlow","id":"2027.d96dbe3d-7518-44bc-89d3-d079a2d0e615","sourceRef":"2025.fdfafe97-9add-4ec8-8a63-60273230e95b"},{"itemSubjectRef":"itm.12.c09c9b6e-aabd-4897-bef2-ed61db106297","documentation":[{"content":["Error"],"textFormat":"text\/plain"}],"name":"error","isCollection":false,"declaredType":"dataObject","id":"2056.54ef1ee8-caf6-4276-801d-d6beeb574749"},{"incoming":["2027.38871cca-6faf-49d4-8f05-d2c452059d0c"],"eventDefinition":[{"extensionElements":{"errorEventSettings":[{"catchAll":false,"errorCode":"\"DeleteApplicationDataError\"","declaredType":"com.ibm.bpmsdk.model.bpmn20.ibmwleext.TErrorEventSettings"}]},"declaredType":"errorEventDefinition"}],"extensionElements":{"nodeVisualInfo":[{"width":24,"x":691,"y":266,"declaredType":"TNodeVisualInfo","height":24}],"navigationInstructions":[{"targetType":"Default","declaredType":"com.ibm.bpmsdk.model.bpmn20.ibmext.TNavigationInstructions"}]},"name":"Error","dataInputAssociation":[{"assignment":[{"from":{"evaluatesToTypeRef":"itm.12.c09c9b6e-aabd-4897-bef2-ed61db106297","declaredType":"TFormalExpression","content":["tw.local.error"]}}]}],"declaredType":"endEvent","id":"2025.ce4c179f-9362-48aa-82b6-ad2d5347e412"},{"outgoing":["2027.c105fbda-2cc4-4e6e-8b4f-4cede486cf65","2027.38871cca-6faf-49d4-8f05-d2c452059d0c"],"incoming":["2027.d96dbe3d-7518-44bc-89d3-d079a2d0e615"],"default":"2027.c105fbda-2cc4-4e6e-8b4f-4cede486cf65","gatewayDirection":"Unspecified","extensionElements":{"nodeVisualInfo":[{"width":32,"x":419,"y":196,"declaredType":"TNodeVisualInfo","height":32}]},"name":"Has error?","declaredType":"exclusiveGateway","id":"2025.c2791a63-aad3-4c92-88d4-74dcd602b27e"},{"targetRef":"efeb333f-569e-4ddb-8572-c70a7ef4fb8b","extensionElements":{"sequenceFlowImplementation":[{"fireValidation":"Never","sboSyncEnabled":true,"declaredType":"com.ibm.bpmsdk.model.bpmn20.ibmext.TSequenceFlowImplementation"}],"linkVisualInfo":[{"sourcePortLocation":"rightCenter","showCoachControlLabel":false,"labelPosition":0.0,"targetPortLocation":"leftCenter","declaredType":"TLinkVisualInfo","saveExecutionContext":true,"showLabel":true}]},"name":"Start to End","declaredType":"sequenceFlow","id":"2027.c105fbda-2cc4-4e6e-8b4f-4cede486cf65","sourceRef":"2025.c2791a63-aad3-4c92-88d4-74dcd602b27e"},{"targetRef":"2025.ce4c179f-9362-48aa-82b6-ad2d5347e412","conditionExpression":{"declaredType":"TFormalExpression","content":["!!tw.local.error\t  ==\t  true"]},"extensionElements":{"sequenceFlowImplementation":[{"fireValidation":"Never","sboSyncEnabled":true,"declaredType":"com.ibm.bpmsdk.model.bpmn20.ibmext.TSequenceFlowImplementation"}],"linkVisualInfo":[{"sourcePortLocation":"bottomCenter","showCoachControlLabel":false,"labelPosition":0.0,"targetPortLocation":"leftCenter","declaredType":"TLinkVisualInfo","saveExecutionContext":true,"showLabel":true}]},"name":"To Error","declaredType":"sequenceFlow","id":"2027.38871cca-6faf-49d4-8f05-d2c452059d0c","sourceRef":"2025.c2791a63-aad3-4c92-88d4-74dcd602b27e"}],"isClosed":false,"declaredType":"com.ibm.bpmsdk.model.bpmn20.ibmext.TUserTaskImplementation","id":"2cee3756-61a5-4eab-8b23-23079dcb52b5","processType":"None"}]},"implementation":"##unspecified","documentation":[{"content":["Deletes application data"],"textFormat":"text\/plain"}],"name":"DeleteApplicationData","declaredType":"globalUserTask","id":"1.b031388d-74e3-4ff7-8a83-c5bbdda9f14d","ioSpecification":{"inputSet":[{}],"outputSet":[{}],"dataInput":[{"itemSubjectRef":"itm.12.f946d717-c4dd-4882-bdb8-589f5f878de4","documentation":[{"content":["Input parameters"],"textFormat":"text\/plain"}],"name":"inputParams","isCollection":false,"id":"2055.e775eab7-528d-4e49-85d6-6d3e89f8badd"}]}}],"targetNamespace":"","typeLanguage":"http:\/\/www.w3.org\/2001\/XMLSchema","expressionLanguage":"http:\/\/www.ibm.com\/xmlns\/prod\/bpm\/expression-lang\/javascript","id":"1.53231696-f249-4d1b-9c92-a421f1425f12"}</jsonData>
+        <field1 isNull="true" />
+        <field2 isNull="true" />
+        <field3>0</field3>
+        <field4 isNull="true" />
+        <field5>false</field5>
+        <clobField1 isNull="true" />
+        <blobField1 isNull="true" />
+        <processParameter name="inputParams">
+            <lastModified isNull="true" />
+            <lastModifiedBy isNull="true" />
+            <processParameterId>2055.e775eab7-528d-4e49-85d6-6d3e89f8badd</processParameterId>
+            <processId>1.53231696-f249-4d1b-9c92-a421f1425f12</processId>
+            <parameterType>1</parameterType>
+            <isArrayOf>false</isArrayOf>
+            <classId>/12.f946d717-c4dd-4882-bdb8-589f5f878de4</classId>
+            <seq>1</seq>
+            <hasDefault>false</hasDefault>
+            <defaultValue isNull="true" />
+            <isLocked>false</isLocked>
+            <description>Input parameters</description>
+            <guid>f1466172-a960-4fa8-93ba-f54c2c914de9</guid>
+            <versionId>fd09b5bf-1275-4065-b997-f193235f3f37</versionId>
+        </processParameter>
+        <processParameter name="DeleteApplicationDataError">
+            <lastModified isNull="true" />
+            <lastModifiedBy isNull="true" />
+            <processParameterId>2055.80559f2f-3c3f-49d7-aa1f-335f77325da2</processParameterId>
+            <processId>1.53231696-f249-4d1b-9c92-a421f1425f12</processId>
+            <parameterType>3</parameterType>
+            <isArrayOf>false</isArrayOf>
+            <classId>/12.c09c9b6e-aabd-4897-bef2-ed61db106297</classId>
+            <seq>3</seq>
+            <hasDefault>false</hasDefault>
+            <defaultValue isNull="true" />
+            <isLocked>false</isLocked>
+            <description isNull="true" />
+            <guid>872ed3a9-411d-43fb-8e70-1d12aca36f94</guid>
+            <versionId>593bfe0f-bb57-45c5-ae45-38c274b83310</versionId>
+        </processParameter>
+        <processVariable name="error">
+            <lastModified isNull="true" />
+            <lastModifiedBy isNull="true" />
+            <processVariableId>2056.54ef1ee8-caf6-4276-801d-d6beeb574749</processVariableId>
+            <description>Error</description>
+            <processId>1.53231696-f249-4d1b-9c92-a421f1425f12</processId>
+            <namespace>2</namespace>
+            <seq>1</seq>
+            <isArrayOf>false</isArrayOf>
+            <isTransient>false</isTransient>
+            <classId>/12.c09c9b6e-aabd-4897-bef2-ed61db106297</classId>
+            <hasDefault>false</hasDefault>
+            <defaultValue isNull="true" />
+            <guid>18efbe7a-8a5b-4e38-bbf7-277b239826b9</guid>
+            <versionId>bc6d2251-4560-4bc3-bcc0-161d99589f22</versionId>
+        </processVariable>
+        <item>
+            <lastModified isNull="true" />
+            <lastModifiedBy isNull="true" />
+            <processItemId>2025.d2d898e5-c3e5-4531-b8d3-e3cb0dc5ff96</processItemId>
+            <processId>1.53231696-f249-4d1b-9c92-a421f1425f12</processId>
+            <name>End</name>
+            <tWComponentName>ExitPoint</tWComponentName>
+            <tWComponentId>3008.9ee51238-fe21-4439-b856-54af548f0da6</tWComponentId>
+            <isLogEnabled>false</isLogEnabled>
+            <isTraceEnabled>false</isTraceEnabled>
+            <traceCategory isNull="true" />
+            <traceLevel isNull="true" />
+            <traceMessage isNull="true" />
+            <traceSymbolTable isNull="true" />
+            <isExecutionContextTraced>false</isExecutionContextTraced>
+            <saveExecutionContext>true</saveExecutionContext>
+            <documentation isNull="true" />
+            <isErrorHandlerEnabled>false</isErrorHandlerEnabled>
+            <errorHandlerItemId isNull="true" />
+            <guid>guid:0d572886d67947e4:-45529b47:1726124c748:1f1b</guid>
+            <versionId>d15d52b1-11a6-4a05-a0c4-6cca061a4aa7</versionId>
+            <externalServiceRef isNull="true" />
+            <externalServiceOp isNull="true" />
+            <nodeColor isNull="true" />
+            <layoutData x="0" y="0">
+                <errorLink>
+                    <controlPoints />
+                    <showEndState>false</showEndState>
+                    <showName>false</showName>
+                </errorLink>
+            </layoutData>
+            <TWComponent>
+                <lastModified isNull="true" />
+                <lastModifiedBy isNull="true" />
+                <exitPointId>3008.9ee51238-fe21-4439-b856-54af548f0da6</exitPointId>
+                <haltProcess>false</haltProcess>
+                <guid>24ebc2d8-e5f7-48ee-a163-507ca4f3f3dd</guid>
+                <versionId>2e2738b7-ac61-4b03-a4c0-b9a9c303aecb</versionId>
+            </TWComponent>
+        </item>
+        <item>
+            <lastModified isNull="true" />
+            <lastModifiedBy isNull="true" />
+            <processItemId>2025.fbaf29bb-fce3-48d4-abb9-26bf5aace394</processItemId>
+            <processId>1.53231696-f249-4d1b-9c92-a421f1425f12</processId>
+            <name>CoachFlowWrapper</name>
+            <tWComponentName>CoachFlow</tWComponentName>
+            <tWComponentId>3032.5cf472e9-ce2d-4fb9-8386-b4ae3d2d3c81</tWComponentId>
+            <isLogEnabled>false</isLogEnabled>
+            <isTraceEnabled>false</isTraceEnabled>
+            <traceCategory isNull="true" />
+            <traceLevel isNull="true" />
+            <traceMessage isNull="true" />
+            <traceSymbolTable isNull="true" />
+            <isExecutionContextTraced>false</isExecutionContextTraced>
+            <saveExecutionContext>true</saveExecutionContext>
+            <documentation isNull="true" />
+            <isErrorHandlerEnabled>false</isErrorHandlerEnabled>
+            <errorHandlerItemId isNull="true" />
+            <guid>guid:0d572886d67947e4:-45529b47:1726124c748:1f1c</guid>
+            <versionId>e8b0a040-f6df-4e7d-8be5-0d615cfaebe3</versionId>
+            <externalServiceRef isNull="true" />
+            <externalServiceOp isNull="true" />
+            <nodeColor isNull="true" />
+            <layoutData x="0" y="0">
+                <errorLink>
+                    <controlPoints />
+                    <showEndState>false</showEndState>
+                    <showName>false</showName>
+                </errorLink>
+            </layoutData>
+            <TWComponent />
+        </item>
+        <startingProcessItemId>2025.fbaf29bb-fce3-48d4-abb9-26bf5aace394</startingProcessItemId>
+        <errorHandlerItemId isNull="true" />
+        <layoutData noConversion="true">
+            <errorLink>
+                <controlPoints />
+                <showEndState>false</showEndState>
+                <showName>false</showName>
+            </errorLink>
+        </layoutData>
+        <startPoint>
+            <layoutData x="0" y="0">
+                <errorLink>
+                    <controlPoints />
+                    <showEndState>false</showEndState>
+                    <showName>false</showName>
+                </errorLink>
+            </layoutData>
+        </startPoint>
+        <startLink>
+            <fromPort locationId="rightCenter" portType="1" />
+            <toPort locationId="rightCenter" portType="2" />
+            <layoutData>
+                <controlPoints />
+                <showEndState>false</showEndState>
+                <showName>false</showName>
+            </layoutData>
+        </startLink>
+        <bpmn2Model>
+            <ns16:definitions xmlns:ns16="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:ns2="http://www.ibm.com/xmlns/prod/bpm/bpmn/ext/process" xmlns:ns3="http://www.ibm.com/xmlns/prod/bpm/bpmn/ext/process/wle" xmlns:ns4="http://www.ibm.com/xmlns/prod/bpm/bpmn/ext/process/case" xmlns:ns5="http://www.ibm.com/bpm/Extensions" xmlns:ns6="http://www.ibm.com/xmlns/prod/bpm/uca" xmlns:ns7="http://www.ibm.com/xmlns/prod/bpm/bpmn/ext/trackinggroup" xmlns:ns8="http://www.ibm.com/xmlns/prod/bpm/bpmn/ext/team" xmlns:ns9="http://www.ibm.com/xmlns/bpmnx/20100524/v1/BusinessVocabulary" xmlns:ns10="http://www.omg.org/spec/DD/20100524/DI" xmlns:ns11="http://www.omg.org/spec/DD/20100524/DC" xmlns:ns12="http://www.omg.org/spec/BPMN/20100524/BPMNDI" xmlns:ns13="http://www.ibm.com/xmlns/prod/bpm/graph" xmlns:ns14="http://www.ibm.com/xmlns/prod/bpm/bpmn/ext/process/auth" xmlns:ns15="http://www.ibm.com/xmlns/prod/bpm/bpmn/ext/extservice" xmlns:ns17="http://www.ibm.com/bpm/processappsettings" xmlns:ns18="http://www.ibm.com/xmlns/links" xmlns:ns19="http://www.ibm.com/bpm/CoachDesignerNG" xmlns:ns20="http://www.ibm.com/xmlns/tagging" xmlns:ns21="http://www.ibm.com/bpm/uitheme" xmlns:ns22="http://www.ibm.com/bpm/coachview" id="1.53231696-f249-4d1b-9c92-a421f1425f12" targetNamespace="" expressionLanguage="http://www.ibm.com/xmlns/prod/bpm/expression-lang/javascript" typeLanguage="http://www.w3.org/2001/XMLSchema">
+                
+                
+                <ns16:globalUserTask implementation="##unspecified" name="DeleteApplicationData" id="1.b031388d-74e3-4ff7-8a83-c5bbdda9f14d">
+                    
+                    
+                    <ns16:documentation textFormat="text/plain">Deletes application data</ns16:documentation>
+                    
+                    
+                    <ns16:extensionElements>
+                        
+                        
+                        <ns2:userTaskImplementation processType="None" isClosed="false" id="2cee3756-61a5-4eab-8b23-23079dcb52b5">
+                            
+                            
+                            <ns16:startEvent isInterrupting="true" parallelMultiple="false" name="Start" id="55e03bf0-2636-452b-87d3-7ecf0e1615ce">
+                                
+                                
+                                <ns16:extensionElements>
+                                    
+                                    
+                                    <ns13:nodeVisualInfo x="50" y="200" width="24" height="24" color="#F8F8F8" />
+                                    
+                                
+                                </ns16:extensionElements>
+                                
+                                
+                                <ns16:outgoing>2027.31395c53-87a6-4804-8ca2-0a99aa2d772c</ns16:outgoing>
+                                
+                            
+                            </ns16:startEvent>
+                            
+                            
+                            <ns16:endEvent name="End" id="efeb333f-569e-4ddb-8572-c70a7ef4fb8b">
+                                
+                                
+                                <ns16:extensionElements>
+                                    
+                                    
+                                    <ns13:nodeVisualInfo x="700" y="200" width="24" height="24" color="#F8F8F8" />
+                                    
+                                    
+                                    <ns2:navigationInstructions>
+                                        
+                                        
+                                        <ns2:targetType>Default</ns2:targetType>
+                                        
+                                    
+                                    </ns2:navigationInstructions>
+                                    
+                                
+                                </ns16:extensionElements>
+                                
+                                
+                                <ns16:incoming>2027.c105fbda-2cc4-4e6e-8b4f-4cede486cf65</ns16:incoming>
+                                
+                            
+                            </ns16:endEvent>
+                            
+                            
+                            <ns16:sequenceFlow sourceRef="55e03bf0-2636-452b-87d3-7ecf0e1615ce" targetRef="2025.fdfafe97-9add-4ec8-8a63-60273230e95b" name="To DeleteApplicationData" id="2027.31395c53-87a6-4804-8ca2-0a99aa2d772c">
+                                
+                                
+                                <ns16:extensionElements>
+                                    
+                                    
+                                    <ns13:linkVisualInfo>
+                                        
+                                        
+                                        <ns13:sourcePortLocation>rightCenter</ns13:sourcePortLocation>
+                                        
+                                        
+                                        <ns13:targetPortLocation>leftCenter</ns13:targetPortLocation>
+                                        
+                                        
+                                        <ns13:showLabel>false</ns13:showLabel>
+                                        
+                                        
+                                        <ns13:showCoachControlLabel>false</ns13:showCoachControlLabel>
+                                        
+                                        
+                                        <ns13:labelPosition>0.0</ns13:labelPosition>
+                                        
+                                        
+                                        <ns13:saveExecutionContext>false</ns13:saveExecutionContext>
+                                        
+                                    
+                                    </ns13:linkVisualInfo>
+                                    
+                                
+                                </ns16:extensionElements>
+                                
+                            
+                            </ns16:sequenceFlow>
+                            
+                            
+                            <ns16:scriptTask scriptFormat="text/x-javascript" default="2027.d96dbe3d-7518-44bc-89d3-d079a2d0e615" name="DeleteApplicationData" id="2025.fdfafe97-9add-4ec8-8a63-60273230e95b">
+                                
+                                
+                                <ns16:documentation textFormat="text/plain">Deletes application data</ns16:documentation>
+                                
+                                
+                                <ns16:extensionElements>
+                                    
+                                    
+                                    <ns13:nodeVisualInfo x="292" y="177" width="95" height="70" />
+                                    
+                                
+                                </ns16:extensionElements>
+                                
+                                
+                                <ns16:incoming>2027.31395c53-87a6-4804-8ca2-0a99aa2d772c</ns16:incoming>
+                                
+                                
+                                <ns16:outgoing>2027.d96dbe3d-7518-44bc-89d3-d079a2d0e615</ns16:outgoing>
+                                
+                                
+                                <ns16:script>tw.system.waitForContinueFlow();&#xD;
+var payload = tw.local.inputParams;&#xD;
+tw.system.performRequest("#DATAPERSISTENCE", {&#xD;
+  path: tw.local.inputParams.appId,&#xD;
+  method: "DELETE",&#xD;
+  payload: {&#xD;
+    params: payload&#xD;
+  },&#xD;
+  auth: {&#xD;
+    protocol: "OIDC"&#xD;
+  },&#xD;
+  headers: {&#xD;
+    "Content-Type": "application/json"&#xD;
+  }&#xD;
+}, function (response, data) {&#xD;
+  tw.system.log(tw.system.model.name, tw.system.model.step.name, JSON.stringify(response));&#xD;
+  tw.system.log(tw.system.model.name, tw.system.model.step.name, JSON.stringify(data));&#xD;
+  tw.system.continueFlow();&#xD;
+}, function (error) {&#xD;
+  tw.system.log(tw.system.model.name, tw.system.model.step.name, JSON.stringify(error));&#xD;
+  tw.local.error = error;&#xD;
+  tw.system.continueFlow();&#xD;
+});</ns16:script>
+                                
+                            
+                            </ns16:scriptTask>
+                            
+                            
+                            <ns16:sequenceFlow sourceRef="2025.fdfafe97-9add-4ec8-8a63-60273230e95b" targetRef="2025.c2791a63-aad3-4c92-88d4-74dcd602b27e" name="To Has error?" id="2027.d96dbe3d-7518-44bc-89d3-d079a2d0e615">
+                                
+                                
+                                <ns16:extensionElements>
+                                    
+                                    
+                                    <ns2:sequenceFlowImplementation sboSyncEnabled="true" />
+                                    
+                                    
+                                    <ns13:linkVisualInfo>
+                                        
+                                        
+                                        <ns13:sourcePortLocation>rightCenter</ns13:sourcePortLocation>
+                                        
+                                        
+                                        <ns13:targetPortLocation>leftCenter</ns13:targetPortLocation>
+                                        
+                                        
+                                        <ns13:showLabel>false</ns13:showLabel>
+                                        
+                                        
+                                        <ns13:showCoachControlLabel>false</ns13:showCoachControlLabel>
+                                        
+                                        
+                                        <ns13:labelPosition>0.0</ns13:labelPosition>
+                                        
+                                        
+                                        <ns13:saveExecutionContext>true</ns13:saveExecutionContext>
+                                        
+                                    
+                                    </ns13:linkVisualInfo>
+                                    
+                                
+                                </ns16:extensionElements>
+                                
+                            
+                            </ns16:sequenceFlow>
+                            
+                            
+                            <ns16:dataObject itemSubjectRef="itm.12.c09c9b6e-aabd-4897-bef2-ed61db106297" isCollection="false" name="error" id="2056.54ef1ee8-caf6-4276-801d-d6beeb574749">
+                                
+                                
+                                <ns16:documentation textFormat="text/plain">Error</ns16:documentation>
+                                
+                            
+                            </ns16:dataObject>
+                            
+                            
+                            <ns16:endEvent name="Error" id="2025.ce4c179f-9362-48aa-82b6-ad2d5347e412">
+                                
+                                
+                                <ns16:extensionElements>
+                                    
+                                    
+                                    <ns13:nodeVisualInfo x="691" y="266" width="24" height="24" />
+                                    
+                                    
+                                    <ns2:navigationInstructions>
+                                        
+                                        
+                                        <ns2:targetType>Default</ns2:targetType>
+                                        
+                                    
+                                    </ns2:navigationInstructions>
+                                    
+                                
+                                </ns16:extensionElements>
+                                
+                                
+                                <ns16:incoming>2027.38871cca-6faf-49d4-8f05-d2c452059d0c</ns16:incoming>
+                                
+                                
+                                <ns16:dataInputAssociation>
+                                    
+                                    
+                                    <ns16:assignment>
+                                        
+                                        
+                                        <ns16:from xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="ns16:tFormalExpression" evaluatesToTypeRef="itm.12.c09c9b6e-aabd-4897-bef2-ed61db106297">tw.local.error</ns16:from>
+                                        
+                                    
+                                    </ns16:assignment>
+                                    
+                                
+                                </ns16:dataInputAssociation>
+                                
+                                
+                                <ns16:errorEventDefinition>
+                                    
+                                    
+                                    <ns16:extensionElements>
+                                        
+                                        
+                                        <ns3:errorEventSettings>
+                                            
+                                            
+                                            <ns3:catchAll>false</ns3:catchAll>
+                                            
+                                            
+                                            <ns3:errorCode>"DeleteApplicationDataError"</ns3:errorCode>
+                                            
+                                        
+                                        </ns3:errorEventSettings>
+                                        
+                                    
+                                    </ns16:extensionElements>
+                                    
+                                
+                                </ns16:errorEventDefinition>
+                                
+                            
+                            </ns16:endEvent>
+                            
+                            
+                            <ns16:exclusiveGateway default="2027.c105fbda-2cc4-4e6e-8b4f-4cede486cf65" name="Has error?" id="2025.c2791a63-aad3-4c92-88d4-74dcd602b27e">
+                                
+                                
+                                <ns16:extensionElements>
+                                    
+                                    
+                                    <ns13:nodeVisualInfo x="419" y="196" width="32" height="32" />
+                                    
+                                
+                                </ns16:extensionElements>
+                                
+                                
+                                <ns16:incoming>2027.d96dbe3d-7518-44bc-89d3-d079a2d0e615</ns16:incoming>
+                                
+                                
+                                <ns16:outgoing>2027.c105fbda-2cc4-4e6e-8b4f-4cede486cf65</ns16:outgoing>
+                                
+                                
+                                <ns16:outgoing>2027.38871cca-6faf-49d4-8f05-d2c452059d0c</ns16:outgoing>
+                                
+                            
+                            </ns16:exclusiveGateway>
+                            
+                            
+                            <ns16:sequenceFlow sourceRef="2025.c2791a63-aad3-4c92-88d4-74dcd602b27e" targetRef="efeb333f-569e-4ddb-8572-c70a7ef4fb8b" name="Start to End" id="2027.c105fbda-2cc4-4e6e-8b4f-4cede486cf65">
+                                
+                                
+                                <ns16:extensionElements>
+                                    
+                                    
+                                    <ns2:sequenceFlowImplementation sboSyncEnabled="true" />
+                                    
+                                    
+                                    <ns13:linkVisualInfo>
+                                        
+                                        
+                                        <ns13:sourcePortLocation>rightCenter</ns13:sourcePortLocation>
+                                        
+                                        
+                                        <ns13:targetPortLocation>leftCenter</ns13:targetPortLocation>
+                                        
+                                        
+                                        <ns13:showLabel>true</ns13:showLabel>
+                                        
+                                        
+                                        <ns13:showCoachControlLabel>false</ns13:showCoachControlLabel>
+                                        
+                                        
+                                        <ns13:labelPosition>0.0</ns13:labelPosition>
+                                        
+                                        
+                                        <ns13:saveExecutionContext>true</ns13:saveExecutionContext>
+                                        
+                                    
+                                    </ns13:linkVisualInfo>
+                                    
+                                
+                                </ns16:extensionElements>
+                                
+                            
+                            </ns16:sequenceFlow>
+                            
+                            
+                            <ns16:sequenceFlow sourceRef="2025.c2791a63-aad3-4c92-88d4-74dcd602b27e" targetRef="2025.ce4c179f-9362-48aa-82b6-ad2d5347e412" name="To Error" id="2027.38871cca-6faf-49d4-8f05-d2c452059d0c">
+                                
+                                
+                                <ns16:extensionElements>
+                                    
+                                    
+                                    <ns2:sequenceFlowImplementation sboSyncEnabled="true" />
+                                    
+                                    
+                                    <ns13:linkVisualInfo>
+                                        
+                                        
+                                        <ns13:sourcePortLocation>bottomCenter</ns13:sourcePortLocation>
+                                        
+                                        
+                                        <ns13:targetPortLocation>leftCenter</ns13:targetPortLocation>
+                                        
+                                        
+                                        <ns13:showLabel>true</ns13:showLabel>
+                                        
+                                        
+                                        <ns13:showCoachControlLabel>false</ns13:showCoachControlLabel>
+                                        
+                                        
+                                        <ns13:labelPosition>0.0</ns13:labelPosition>
+                                        
+                                        
+                                        <ns13:saveExecutionContext>true</ns13:saveExecutionContext>
+                                        
+                                    
+                                    </ns13:linkVisualInfo>
+                                    
+                                
+                                </ns16:extensionElements>
+                                
+                                
+                                <ns16:conditionExpression xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="ns16:tFormalExpression">!!tw.local.error	  ==	  true</ns16:conditionExpression>
+                                
+                            
+                            </ns16:sequenceFlow>
+                            
+                        
+                        </ns2:userTaskImplementation>
+                        
+                    
+                    </ns16:extensionElements>
+                    
+                    
+                    <ns16:ioSpecification>
+                        
+                        
+                        <ns16:dataInput name="inputParams" itemSubjectRef="itm.12.f946d717-c4dd-4882-bdb8-589f5f878de4" isCollection="false" id="2055.e775eab7-528d-4e49-85d6-6d3e89f8badd">
+                            
+                            
+                            <ns16:documentation textFormat="text/plain">Input parameters</ns16:documentation>
+                            
+                        
+                        </ns16:dataInput>
+                        
+                        
+                        <ns16:inputSet />
+                        
+                        
+                        <ns16:outputSet />
+                        
+                    
+                    </ns16:ioSpecification>
+                    
+                
+                </ns16:globalUserTask>
+                
+            
+            </ns16:definitions>
+        </bpmn2Model>
+        <link name="Untitled">
+            <lastModified isNull="true" />
+            <lastModifiedBy isNull="true" />
+            <processLinkId>2027.df83be66-be7f-4ec3-a1bb-f6ae4d918277</processLinkId>
+            <processId>1.53231696-f249-4d1b-9c92-a421f1425f12</processId>
+            <description isNull="true" />
+            <fromProcessItemId>2025.fbaf29bb-fce3-48d4-abb9-26bf5aace394</fromProcessItemId>
+            <endStateId>Out</endStateId>
+            <toProcessItemId>2025.d2d898e5-c3e5-4531-b8d3-e3cb0dc5ff96</toProcessItemId>
+            <guid>ba56a585-34e4-4934-a5da-21f1ea7d8b9e</guid>
+            <versionId>2d6ee0d3-98b8-4221-a62a-fc923189555d</versionId>
+            <layoutData>
+                <controlPoints />
+                <showEndState>false</showEndState>
+                <showName>false</showName>
+            </layoutData>
+            <fromItemPort locationId="rightCenter" portType="1" />
+            <toItemPort locationId="rightCenter" portType="2" />
+            <fromProcessItemId>2025.fbaf29bb-fce3-48d4-abb9-26bf5aace394</fromProcessItemId>
+            <toProcessItemId>2025.d2d898e5-c3e5-4531-b8d3-e3cb0dc5ff96</toProcessItemId>
+        </link>
+    </process>
+</teamworks>
+

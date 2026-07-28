@@ -1,0 +1,118 @@
+/*
+ * #BEGIN COPYRIGHT
+ *
+ * Licensed Materials - Property of IBM
+ * 5725-C95
+ * (C) Copyright IBM Corporation 2019. All Rights Reserved.
+ * US Government Users Restricted Rights- Use, duplication or disclosure
+ * restricted by GSA ADP Schedule Contract with IBM Corp.
+ *
+ * #END COPYRIGHT
+ */
+
+var mixObject = {
+    createPreview:function(containingDiv, labelText, callback){
+		var bpmextUri = this.context.getManagedAssetUrl("BPMExt-Core-Designer.js", this.context.assetType_WEB, "SYSBPMUI");
+		require([ "dojo/dom-construct", "dojo/dom-class", "dojo/dom-style", "dojo/dom-attr", bpmextUri], this.lang.hitch(this, function(domConstruct, domClass, domStyle, domAttr, bpmext){
+			this.context.coachViewData.containingDiv = containingDiv;
+			bpmext.uidesign.css.ensureSparkUIClass(containingDiv);
+			
+			domClass.add(this.context.coachViewData.containingDiv, "SPARKImage");
+			this.context.coachViewData.defaultBorderRadius = "5px";
+			
+			this.context.coachViewData.disablerDiv = domConstruct.create("div");
+			domClass.add(this.context.coachViewData.disablerDiv, "disabler hidden");
+			
+			this.context.coachViewData.defaultWidth = "";
+			this.context.coachViewData.defaultHeight = "";
+			
+			this.context.coachViewData.defaultUrl = null;
+			this.context.coachViewData.defaultUrlType = null;
+			this.context.coachViewData.defaultAppAcronym = null;
+			this.context.coachViewData.binding = null;
+			this.context.coachViewData.placeholderImageUrl = this.context.getManagedAssetUrl("BPMExt-Control-Image-Preview.png", this.context.assetType_WEB, "SYSBPMUI");
+			
+			this.context.coachViewData.imageEl = domConstruct.create("img",{src:this.context.coachViewData.placeholderImageUrl});
+			domStyle.set(this.context.coachViewData.imageEl, "border-radius", this.context.coachViewData.defaultBorderRadius);
+			
+			this.context.coachViewData.containingDiv.appendChild(this.context.coachViewData.disablerDiv);
+			this.context.coachViewData.containingDiv.appendChild(this.context.coachViewData.imageEl);
+			callback();
+		}));
+    },
+	
+    propertyChanged:function(propertyName, propertyValue){
+		var configHelperUri = this.context.getManagedAssetUrl("BPMExt-Core-ConfigHelper.js",this.context.assetType_WEB, "SYSBPMUI");
+		require(["dojo/dom-style", "dojo/dom-class", "dojo/dom-attr", configHelperUri], this.lang.hitch(this, function(domStyle, domClass, domAttr, configHelper){
+			if(propertyName == "radius"){
+				if(propertyValue===null || propertyValue===undefined || propertyValue==""){
+					domStyle.set(this.context.coachViewData.imageEl, "border-radius", this.context.coachViewData.defaultBorderRadius);
+				}else if(isNaN(propertyValue)){
+					domStyle.set(this.context.coachViewData.imageEl, "border-radius", propertyValue);
+				}else{
+					domStyle.set(this.context.coachViewData.imageEl, "border-radius", propertyValue+"px");
+				}
+			} else if(propertyName == "width"){
+				if(propertyValue===null || propertyValue===undefined || propertyValue==""){
+					domStyle.set(this.context.coachViewData.imageEl, "width", this.context.coachViewData.defaultWidth);
+				}else if(isNaN(propertyValue)){
+					domStyle.set(this.context.coachViewData.imageEl, "width", propertyValue);
+				}else{
+					domStyle.set(this.context.coachViewData.imageEl, "width", propertyValue+"px");
+				}
+			} else if(propertyName == "height"){
+				if(propertyValue===null || propertyValue===undefined || propertyValue==""){
+					domStyle.set(this.context.coachViewData.imageEl, "height", this.context.coachViewData.defaultHeight);
+				}else if(isNaN(propertyValue)){
+					domStyle.set(this.context.coachViewData.imageEl, "height", propertyValue);
+				}else{
+					domStyle.set(this.context.coachViewData.imageEl, "height", propertyValue+"px");
+				}
+			} else if(propertyName == "defaultURL"){
+				this.context.coachViewData.defaultUrl = propertyValue;
+				this.updateImageSrc();
+			} else if(propertyName == "defaultURLType"){
+				this.context.coachViewData.defaultUrlType = propertyValue;
+				this.updateImageSrc();
+			} else if(propertyName == "defaultAppAcronym"){
+				this.context.coachViewData.defaultAppAcronym = propertyValue;
+				this.updateImageSrc();
+			}
+		}));
+	},
+	modelChanged: function(propertyName, propertyValue) {
+		if(propertyName=="@binding"){
+			this.context.coachViewData.binding = propertyValue;
+			this.updateImageSrc();
+		}
+	},
+	updateImageSrc:function(){
+		require(["dojo/dom-attr"], this.lang.hitch(this, function(domAttr){
+			if(this.context.coachViewData.binding!==null && this.context.coachViewData.binding!==undefined && this.context.coachViewData.binding!=""){
+				if (this.context.coachViewData.binding.indexOf("61.") == 0){
+					var assetType = "Web";
+					var imgUrl = this.context.getManagedAssetUrlById(this.context.coachViewData.binding);
+					domAttr.set(this.context.coachViewData.imageEl, "src", imgUrl);
+				} else {
+					//binding is set, which overrides "default" image settings, so just show placeholder
+					domAttr.set(this.context.coachViewData.imageEl, "src", this.context.coachViewData.placeholderImageUrl);
+				}
+			} else if(this.context.coachViewData.defaultUrl!==null && this.context.coachViewData.defaultUrl!==undefined && this.context.coachViewData.defaultUrl!=""){
+				//try to show value based on default image settings, since URL is set (not really a URL, it's just the managed asset name)
+				var appAcronym = null;
+				if(this.context.coachViewData.defaultAppAcronym!==null && this.context.coachViewData.defaultAppAcronym!==undefined && this.context.coachViewData.defaultAppAcronym!=""){
+					appAcronym = this.context.coachViewData.defaultAppAcronym;
+				}
+				var assetType = "Web";
+				if(this.context.coachViewData.defaultUrlType=="External"){
+					assetType = "External";
+				}
+				var imgDefaultUrl = (assetType === "External") ? this.context.coachViewData.defaultUrl : this.context.getManagedAssetUrl(this.context.coachViewData.defaultUrl, assetType, appAcronym, false, null, true);
+				domAttr.set(this.context.coachViewData.imageEl, "src", imgDefaultUrl);
+			} else{
+				//binding not set, and neither is default image URL, so show placeholder
+				domAttr.set(this.context.coachViewData.imageEl, "src", this.context.coachViewData.placeholderImageUrl);
+			}
+		}));
+	}
+};

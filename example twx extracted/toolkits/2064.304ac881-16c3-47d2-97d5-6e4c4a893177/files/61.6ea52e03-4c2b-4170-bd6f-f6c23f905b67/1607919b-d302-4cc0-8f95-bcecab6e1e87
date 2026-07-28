@@ -1,0 +1,1865 @@
+/*
+ * #BEGIN COPYRIGHT
+ *
+ * Licensed Materials - Property of IBM
+ * 5725-C95
+ * (C) Copyright IBM Corporation 2017, 2021. All Rights Reserved.
+ * US Government Users Restricted Rights- Use, duplication or disclosure
+ * restricted by GSA ADP Schedule Contract with IBM Corp.
+ *
+ * #END COPYRIGHT
+ */
+
+/**
+ * @file SPARK - SingleSelect Control
+ */
+
+/** 
+ * @constructor SingleSelect
+ * @desc This constructor is <i>never</i> used explicitly.
+ * @augments com.ibm.bpm.coach.CoachView 
+ * @classdesc A SingleSelect control is used when you want a user to select only one item from a list. By default, the Single Select uses value as it's display property.<br>A SingleSelect control provides the following configuration properties in Process Designer:
+ * <table class=Config>
+
+ *   <tr class=Prop>
+ *     <td class=SectionName colspan=3>Events</td>
+ *   </tr>
+ 
+ *   <tr class=Prop>
+ *     <td>On Load:</td>
+ *     <td colspan="2">
+ *       <table> 
+ *         <tr class=Prop>
+ *           <td>Description: </td>
+ *           <td>Triggers whenever the view is loaded.</td>
+ *         </tr>
+ 
+ *         <tr class=Prop>
+ *           <td>Example: </td>
+ *           <td><pre class="prettyprint"><code>me.setServiceInputData({"Default"})</code></pre></td>
+ *         </tr>
+ *       </table>
+ *     </td>
+ *   </tr>
+ 
+ *   <tr class=Prop>
+ *     <td>On Service Items:</td>
+ *     <td colspan="2">
+ *       <table> 
+ *         <tr class=Prop>
+ *           <td>Description: </td>
+ *           <td>Triggers when AJAX Service returns item list. Only triggers if Item lookup Mode is set to Items From Service.</td>
+ *         </tr>
+ 
+ *         <tr class=Prop>
+ *           <td>Example: </td>
+ *           <td><pre class="prettyprint"><code>${SingleSelect2}.clearItems()</code></pre></td>
+ *         </tr>
+ *       </table>
+ *     </td>
+ *   </tr>
+ 
+ *   <tr class=Prop>
+ *     <td>On Service Error:</td>
+ *     <td colspan="2">
+ *       <table> 
+ *         <tr class=Prop>
+ *           <td>Description: </td>
+ *           <td>Triggers when AJAX selection service returns an error. Will not trigger if Item Lookup Mode is not set to Items From Service.</td>
+ *         </tr>
+ 
+ *         <tr class=Prop>
+ *           <td>Example: </td>
+ *           <td><pre class="prettyprint"><code>me.clearItems();console.log("Error in SingleSelect1")</code></pre></td>
+ *         </tr>
+ *       </table>
+ *     </td>
+ *   </tr>
+ 
+ *   <tr class=Prop>
+ *     <td>On Change:</td>
+ *     <td colspan="2">
+ *       <table> 
+ *         <tr class=Prop>
+ *           <td>Description: </td>
+ *           <td>Triggers when the bound data changes.</td>
+ *         </tr>
+ 
+ *         <tr class=Prop>
+ *           <td>Example: </td>
+ *           <td><pre class="prettyprint"><code>${SingleSelect2}.reloadServiceItems(me.getSelectedItem())</code></pre></td>
+ *         </tr>
+ *       </table>
+ *     </td>
+ *   </tr>
+ 
+ * </table>
+ */
+ bpmext_control_InitSingleSelect = function (bpmext, utilities, domClass, domAttr, domConstruct, domGeometry, json)
+{
+	this._instance = {};
+
+	if (!this.constructor.prototype._proto)
+	{
+		this.constructor.prototype._proto =
+		{
+			EVT_ONCHANGE : "eventON_CHANGE",
+			EVT_ONFOCUS : "eventON_FOCUS",
+			EVT_ONBLUR : "eventON_BLUR",
+			EVT_ONSVCITEMS : "eventON_SVCITEMS",
+			EVT_ONSVCERROR : "eventON_SVCERROR",
+			_getItemIndex : function (view, value)
+			{
+				// DEC2016 CHANGE to use _instance.itemList instead of _instance.select.options
+				// itemList is the true list of items... select.options always contains the placeholder
+				if(view._instance.itemList.items)
+				{
+					for(var i = 0; i < view._instance.itemList.items.length; i++)
+					{
+
+						if (value ==  view._instance.itemList.items[i][view._instance._optValProp] )
+							return i;
+					}
+				}
+				return -1;
+			},
+			_getItemOption : function (view, index)
+			{
+				if(view._instance.select.options)
+					return view._instance.select.options[index];
+			},
+			//{#feature: * Allow leniency for mapping complex-typed items list element to simple-typed bound data}
+			_mapBindingValue : function(view, value)
+			{
+				if(value != null)
+				{
+					if(view.isBound() && view.context.bindingType)  
+					{
+						//{#bug: * update with fixes for binding issues }
+						var bType = view.context.bindingType().toUpperCase();
+						if ( (bType == "STRING")  || (bType == "INTEGER") || (bType == "DECIMAL") || (bType == "BOOLEAN") || (bType == "") )		//jmacSEL
+						{
+							var typeOfItem;
+							if (value[view._instance._optValProp] != undefined)
+								typeOfItem = typeof value[view._instance._optValProp];
+							else
+								typeOfItem = typeof value;
+							
+							var value2;
+							
+							if(typeOfItem == "number")
+							{
+								if (value[view._instance._optValProp] != undefined)
+								{
+									value2 = value[view._instance._optValProp];
+									value = value2;
+								}
+							}
+							else // store as string
+							{
+								if (value[view._instance._optValProp] != undefined)
+									value2 = value[view._instance._optValProp] + "";
+								else
+									value2 = value + "";
+								value = value2;
+							}
+						}
+					}
+				}
+
+				return value;
+			},
+			_setSelectedItemByIndex : function(view, idx)		//jmacSEL
+			{
+				if (idx != null) {
+					view._instance.select.selectedIndex = idx + 1;
+					domClass.remove(view._instance.select, "placeHolder");
+				} else {
+					//BG-1013 Index should default to placeholder
+					view._instance.select.selectedIndex = 0;
+					//view._instance.select.selectedIndex = -1;
+					if (view._proto._hasPlaceholder(view)) {
+                    domClass.add(view._instance.select, "placeHolder");
+				}
+				}
+			},
+			_setSelectedItem : function (view, value)
+			{
+
+				var hit = false;
+				
+				for(var i = 0; i < view._instance.select.options.length; i++)
+				{
+					var opt = view._instance.select.options[i];
+
+					if(opt.value == value)
+					{
+						view._instance.select.selectedIndex = i;
+						domClass.remove(view._instance.select, "placeHolder");
+						//domAttr.set(opt, "selected", "selected");
+						hit = true;
+						break;
+					}
+					else
+					{
+						//domAttr.remove(opt, "selected");
+					}
+				}
+				
+				if(!hit)
+				{
+					//BG-1013 set index to placeholder whether blank or not
+					view._instance.select.selectedIndex = 0;
+					if (view._proto._hasPlaceholder(view)) {
+                    domClass.add(view._instance.select, "placeHolder");
+					}
+					/*var ph = view.context.options.placeHolder.get("value");
+					if(ph != null && ph.length > 0)
+					{
+						view._instance.select.selectedIndex = 0;
+					}
+					else
+					{
+						view._instance.select.selectedIndex = -1;
+//						debugger;
+					}*/
+				}
+			},
+			_appendOption : function(view, key, value)
+			{
+				if(view.context.itemCount===null || view.context.itemCount===undefined){
+					view.context.itemCount=0;
+				}
+				
+				var opt = document.createElement("option");
+				domAttr.set(opt, "id", "singleselect-option-" + view.context.controlidpath + "[" + view.context.itemCount + "]");
+				view.context.itemCount++;
+				domAttr.set(opt, "value", key);
+				//Added for TK-1069
+				domAttr.set(opt,"aria-selected","false");
+				//Ends
+				
+				//{#feature: US-1036 Allow entries to start with spaces to facilitate options indenting}
+				value = view.context.htmlEscape(value);
+				
+				if(value[0] === " ")
+				{
+					var value2 = "";
+					
+					for(var i = 0; i < value.length; i++)
+					{
+						if(value[i] == " ")
+							value2 += "&#160;";
+						else
+							value2 += value[i];
+					}
+					
+					value = value2;
+				}
+				
+				opt.innerHTML = value;
+				utilities.BiDi.applyTextDir(opt, opt.innerHTML, view._instance.baseTxtDir, view._instance.genPrefTextDir);
+				view._instance.select.appendChild(opt);
+				
+				return opt;
+			},
+			_rebindAllUpdates : function(view)
+			{
+				
+			},		
+			_updateItemList : function(view, event, itemList) 
+			{
+				var selOpt;
+				if(event.insertedInto >= 0 && event.insertedInto != event.removedFrom)
+				{
+					view._proto._rebindAllUpdates(view);
+
+					if(event.insertedInto == view._instance.select.options.length - 1) //If inserted at the end (-1 offset to account for placeholder option)
+					{
+						var item = event.newVal;
+						selOpt = view._proto._appendOption(view, item[view._instance._optValProp], item[view._instance._optDisProp]);
+						var tstOptValue;	// NOV 2016
+						if (view.context != null && view.context.binding != null) {
+							if (view._instance._isSimpleBinding)
+								tstOptValue = view.context.binding.get("value");
+							else
+								tstOptValue = view.context.binding.get("value")[view._instance._busValProp];
+						}
+						if (selOpt.value == tstOptValue)
+							selOpt.selected = true;
+					}
+					else
+					{
+						//{#feature: US-1330 Added RT localization}
+						//bpmext.log.error("Mid-list inserts not supported by Coach NG API yet");
+						bpmext.log.error(bpmext.localization.formatMsg("general", "MID_LIST_INSERT_COACH_NG_ERROR"));
+					}
+				}
+				else if(event.removedFrom >= 0 && event.removedFrom != event.insertedInto) //List item deletion
+				{
+					view._proto._rebindAllUpdates(view);  
+
+
+					//#{bug: BG-377 updated to use 0 based index}
+					//var selOpt = view._instance.select.options[event.removedFrom];
+					selOpt = view._instance.select.options[event.removedFrom + 1];
+					
+					if(selOpt != undefined)
+					{
+						selOpt.parentNode.removeChild(selOpt);
+
+						if (selOpt.selected)	// Dec 2016 Deal with removing curently selected Item
+						{
+							selOpt.selected = false;
+							view.setSelectedItem(null);
+						
+						}
+
+					}
+				}
+				else if(event.removedFrom >= 0 && event.removedFrom == event.insertedInto)//Just a value change...
+				{
+					if(event.newVal != null)
+					{
+						selOpt = view._instance.select.options[event.removedFrom + 1];		// DEC 2016 added the +1 
+						selOpt.value = event.newVal[view._instance._optValProp];
+						selOpt.innerHTML = event.newVal[view._instance._optDisProp];
+						utilities.BiDi.applyTextDir(selOpt, selOpt.innerHTML, view._instance.baseTxtDir, view._instance.genPrefTextDir);
+					}
+				}
+				else if(event.removedFrom == undefined && event.removedFrom == event.insertedInto ) // whole new list
+				{
+					if (event.newVal != null)
+					{
+						view._instance.itemList = view.context.options.itemList.get("value");
+						view._proto._loadListItems(view, view._instance.itemList, view.context.binding.get("value"), view._instance._optValProp, view._instance._optDisProp, view._instance._busValProp, view._instance._busDisProp );						
+						//view._proto._loadListItems(view, view._instance.itemList, event.newVal);				
+					}
+				}	
+//				if (view.getSelectedIndex() != -1) 
+				if (selOpt != undefined && selOpt.selected == true)			//DEC 2016
+				{
+					if (view._instance._isSimpleBinding)
+						view.setSelectedItem(view._instance.select.value);
+					else
+					{
+						var tObj = {};
+						tObj[view._instance._busValProp] = selOpt.value;
+						tObj[view._instance._busDisProp] = selOpt.innerHTML;
+						view.setSelectedItem(tObj);
+					}
+				}
+				
+			},
+			_loadListItems : function(view, itemList, selectedValue, keyProp, valueProp, busKeyProp, busValueProp)
+			{
+				var boundToObject = (typeof selectedValue == "object" ? true : false);
+
+				if(view._instance._bindSelUpdHandle)
+					view._instance._bindSelUpdHandle.unbind();
+
+				if(view._instance._bindValueUpdHandle)
+					view._instance._bindValueUpdHandle.unbind();
+				
+				if(keyProp == null)
+					keyProp = "name";
+				
+				if(valueProp == null)
+					valueProp = "value";
+				
+				if(busKeyProp == null)
+					busKeyProp = "name";
+				
+				if(busValueProp == null)
+					busValueProp = "value";
+				
+				view._instance._bindValueUpdHandle = itemList.bindAll
+				(
+					function(event)
+					{
+						view._proto._updateItemList(view, event,itemList);
+					}, 
+					view
+					);
+				view._instance.select.innerHTML = "";
+				
+				var ph = view.context.options.placeHolder.get("value");
+				if(ph == null)
+					ph = "";
+
+				var dopt = document.createElement("option");
+				view._instance.placeHolderOption = dopt;
+				//Added for TK-1069
+				domAttr.set(dopt,"aria-selected","false");
+
+				//Ends
+				dopt.innerHTML = view.context.htmlEscape(ph);
+				utilities.BiDi.applyTextDir(dopt, dopt.innerHTML, view._instance.baseTxtDir, view._instance.genPrefTextDir);
+				view._instance.select.appendChild(dopt);
+
+				var items = itemList.items;
+				var itemsIsObject = (items[0] != undefined) && (typeof items[0] == "object");	// bug 860
+				var viewId = view.context && view.context.viewid ? view.context.viewid : "UNKNOWN";
+				bpmext.log.debug("For view [" + viewId + "]\tItem list is " 
+					+ (itemsIsObject ? "object" : "scalar") + "\n\tBound variable is " 
+					+ (boundToObject ? "object" : "scalar") );
+				//#{bug: BG491 issue when binding to complex types setting the selected item.}
+				var selectedText;
+				if ( (selectedValue != undefined) && (typeof selectedValue == "object") )
+				{
+					selectedText = selectedValue[busValueProp];  // added Nov 2016
+					selectedValue = selectedValue[busKeyProp];
+				}
+				else if ( (selectedValue != undefined) && (typeof selectedValue != "object") )
+				{
+					selectedText = undefined;
+					// have to settle for the first match.  No other way around this.  Nov 2016
+					for (var i = 0; i < items.length; i++)
+					{
+						//{#bug:860 - during Nov/Dec 2016 updates we lost the code for when the list is simple type}
+						
+						if (itemsIsObject)
+						{	// item list is an array of complex types
+							if (selectedValue == items[i][keyProp])
+							{
+								selectedText = items[i][valueProp];
+							}
+						}
+						else
+						{	// item list is an array of simple types
+							if (selectedValue == items[i])							
+							{	
+								selectedText = items[i];							
+							}	
+						}
+						
+					}
+
+				}
+				//BG-1013 default selected index to 0
+				view._instance.select.selectedIndex = 0;
+				if (view._proto._hasPlaceholder(view)) {
+                domClass.add(view._instance.select, "placeHolder");
+				}
+				for(var i = 0; i < items.length; i++)
+				{
+					var opt;
+					//{#bug: * changed how lists of objects are differentiated from lists of simple types to avoid issues with objects that contain falsy values}
+					if (Object.prototype.toString.call(items[i]) === "[object Object]" && Object.prototype.toString.call(items[i]) !== "[object Null]" && Object.prototype.toString.call(items[i]) !== "[object Date]") {
+						// if (/*items[i][keyProp] != undefined && items[i][keyProp] != null &&*/ items[i][valueProp] != undefined && items[i][valueProp] != null)
+						opt = this._appendOption(view, items[i][keyProp], items[i][valueProp]);
+					} else if (Object.prototype.toString.call(items[i]) !== "[object Null]")
+					// {feature: 156 allow config option to be list of simple types }
+						opt = this._appendOption(view, items[i], items[i]);
+				
+					//if ( (selectedValue != undefined) && (opt.value == selectedValue.toString()) ) Nov 2016
+					//BG-939 added unescape to prevent HTML escape on special characters
+					// var displayText = opt ? bpmext.text.unescapeHTML(opt.innerHTML) : null;
+					// if ( (selectedText != undefined) && (displayText == selectedText.toString()) )
+					if ((itemsIsObject && (selectedValue != undefined) && (items[i][keyProp] == selectedValue.toString()))
+						|| (!itemsIsObject &&  (selectedValue != undefined) && (items[i] == selectedValue.toString())))
+					{
+						view._instance.select.selectedIndex = i + 1;
+                        domClass.remove(view._instance.select, "placeHolder");
+                        domAttr.set(opt,"aria-selected","true");
+					}
+				}
+
+				setTimeout(function(){
+                    //BG-1076 adding defensive code for unloaded view
+                    if(view.context == null || view.context.binding == null)
+                        return;
+                    
+					//Refresh selected value because setTimeout is async
+					selectedValue = view.context.binding.get("value");
+					
+					//{#bug: 453 Fix intermittent issue erroneously displaying a selection when the control first displays} 
+					if(selectedValue == null || selectedValue === "")  // NOV 2016
+						domAttr.set(dopt, "selected", "");
+
+					domAttr.set(dopt, "disabled", "");
+					domAttr.set(dopt, "style", "display:none");
+					//Added for TK-1069
+					domAttr.set(dopt, "aria-hidden", "true");
+					//Ends
+				});	
+
+			view._instance._bindSelUpdHandle = itemList.bind(
+					"listAllSelectedIndices", 
+					function(event)
+					{
+						var idxs = event.newVal;
+						if (idxs == null)
+							idxs = [];
+						var idx = idxs.length > 0 ? idxs[0]: null;
+						view._proto._setSelectedItemByIndex(view, idx);		// jmacSEL
+						//view._proto._setSelectedItem(view, itemKey);
+					}, 
+					view
+					);
+			},
+			_updateControl : function (view)
+			{
+				var errors = bpmext.ui.getViewValidationErrors(view);
+				
+				//Color style
+				var colStyle = errors ? "E" : view.context.options.colorStyle.get("value");
+				
+				bpmext.ui.util.replaceCSSClass(view._instance.group, bpmext.ui.util.OPTS_COL_STL_CLZ, colStyle, view._instance.oldColStyle);
+				view._instance.oldColStyle = colStyle;
+				
+				//Validation Error Icon
+				if(view._instance.icon)
+				{
+					bpmext.ui.util.closeTooltip(view._instance.iconTT, view._instance.input);
+					delete view._instance.iconTT;
+					
+					view._instance.input.removeChild(view._instance.icon);
+					delete view._instance.icon;
+				}
+				
+				if(errors)
+				{
+					domClass.add(view._instance.group, "has-feedback has-error");
+					view._instance.icon = document.createElement("span");
+					view._instance.input.appendChild(view._instance.icon);
+					domClass.add(view._instance.icon, "fa form-control-feedback fa-exclamation-circle");
+					
+					var ttOpts = {
+							horizontalPos: "right", 
+							verticalPos: "top",
+							cssClass: "validationError",
+							plainText: false,
+							smartPositioning: true
+						};
+					
+					view._instance.iconTT = bpmext.ui.util.showTooltip(
+						view._instance.input, 
+						bpmext.ui.util.formatErrors(errors), 
+						ttOpts
+						);
+
+					view._instance.errorMessage = document.createElement("div");
+					view._instance.errorMessage.id = view._instance.input.firstElementChild.id + "-error-msg";
+					view._instance.errorMessage.classList.add("hide");
+					view._instance.errorMessage.innerHTML = bpmext.ui.util.formatErrors(errors);
+					view._instance.input.appendChild(view._instance.errorMessage);
+					domAttr.set(view._instance.input.firstElementChild, "aria-describedby", view._instance.errorMessage.id);
+					domAttr.set(view._instance.input.firstElementChild, "aria-invalid", "true");
+				}
+				else
+				{
+					domClass.remove(view._instance.group, "has-feedback has-error");
+					if (view._instance.errorMessage) { view._instance.errorMessage.remove(); }
+					domAttr.remove(view._instance.input.firstElementChild, "aria-describedby");
+					domAttr.remove(view._instance.input.firstElementChild, "aria-invalid");				
+				}
+			},
+			_setLabelPlacement : function (view, newVal, oldVal)
+			{
+				if(!oldVal)
+					oldVal = view._instance.oldLblPlc;
+				
+				newVal = bpmext.ui.util.normalizeLabelPlacement(newVal, bpmext.ui.util.OPTS_LBL_PLC_CLZ);
+				oldVal = bpmext.ui.util.normalizeLabelPlacement(oldVal, bpmext.ui.util.OPTS_LBL_PLC_CLZ);
+				
+				bpmext.ui.util.replaceCSSClass(view._instance.group, bpmext.ui.util.OPTS_LBL_PLC_CLZ, newVal, oldVal);
+				view._instance.oldLblPlc = newVal;
+			},
+			_setLabelWidth : function (view, labelWidth)
+			{
+				if(labelWidth != null && labelWidth != "")
+				{
+					if(!isNaN(labelWidth))
+						labelWidth += "px";
+					
+					view._instance.label.style.width = labelWidth;
+					domClass.add(view.context.element, "labelWidth");
+				}
+				else 
+				{
+					if (view._instance.label) {
+						view._instance.label.style.width = null;
+					}
+					
+					domClass.remove(view.context.element, "labelWidth");
+				}
+					
+			},	
+			_setLabelVisibility : function (view, flag)
+			{
+				try
+				{
+					if(view._instance.label)
+						view.context.setDisplay(flag == "SHOW", view._instance.label);
+				}
+				catch (e)
+				{
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.error("SingleSelect._setLabelVisibility() error: " + e);
+					bpmext.log.error("SingleSelect._setLabelVisibility() " + bpmext.localization.formatMsg("general", "ERROR") + ": " + e);
+					if(e.stack) { 
+						//{#feature: US-1330 Added RT localization}
+						//bpmext.log.error("  Call stack: " + e.stack);
+						bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+					}
+				}
+			},
+			_createLabel : function (view)
+			{
+				//changing label to span : TK-1069
+				view._instance.label = document.createElement("span");
+				domClass.add(view._instance.label, "control-label");
+				domConstruct.place(view._instance.label, view._instance.group, "first");
+				//Added for Tk-1069
+				//domAttr.set(view._instance.label, "for", view._instance.select.id);	
+				var lblId="lbl_"+bpmext.ui.makeUniqueId("");
+				domAttr.set(view._instance.label, "id", lblId);
+				domAttr.set(view._instance.select, "aria-labelledby", lblId);
+				//ends
+			},
+			_setLabel : function (view, label)
+			{
+				try
+				{
+					if(label)
+					{
+						if(!view._instance.label)
+							this._createLabel(view);
+
+						view._instance.label.innerHTML = view.context.htmlEscape(label);
+				
+						utilities.BiDi.applyTextDir(
+							view._instance.label, 
+							view._instance.label.innerHTML, 
+							view._instance.baseTxtDir, 
+							view._instance.genPrefTextDir
+							);
+					}
+					else
+					{
+						if(view._instance.label)
+						{
+							view._instance.group.removeChild(view._instance.label);
+							delete view._instance.label;
+						}
+					}
+				}
+				catch (e)
+				{
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.error("SingleSelect._setLabel() error: " + e);
+					bpmext.log.error("SingleSelect._setLabel() " + bpmext.localization.formatMsg("general", "ERROR") + ": " + e);
+					if(e.stack) { 
+						//{#feature: US-1330 Added RT localization}
+						//bpmext.log.error("  Call stack: " + e.stack);
+						bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+					}
+				}
+			},
+			_setHelpText : function (view, text)
+			{
+				utilities.setHelpText(view, text);
+			},
+			_setSizeStyle : function (view, newVal, oldVal)
+			{
+				if(!oldVal)
+					oldVal = view._instance.oldSzStyle;
+
+				newVal = bpmext.ui.util.normalizeSizeStyle(newVal, bpmext.ui.util.OPTS_SZ_STL_CLZ);
+				oldVal = bpmext.ui.util.normalizeSizeStyle(oldVal, bpmext.ui.util.OPTS_SZ_STL_CLZ);
+				
+				bpmext.ui.util.replaceCSSClass(view._instance.select, bpmext.ui.util.OPTS_SZ_STL_CLZ, newVal, oldVal);
+				view._instance.oldSzStyle = newVal;
+				
+				bpmext.ui.util.propagateUpSizeStyle(view, newVal);
+			},
+			_setWidth : function (view, width)
+			{
+				try
+				{
+					if (width != null && width != "")
+					{
+						if (!isNaN(width))
+							width += "px";
+
+						view.context.element.style.width = width;
+						
+						domClass.add(view.context.element, "widthSet");
+					}
+					else
+					{
+						view.context.element.style.width = null;
+
+						domClass.remove(view.context.element, "widthSet");
+					}
+				}
+				catch (e)
+				{
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.error("SingleSelect._setWidth() error: " + e);
+					bpmext.log.error("SingleSelect._setWidth() " + bpmext.localization.formatMsg("general", "ERROR") + ": " + e);
+					if(e.stack) { 
+						//{#feature: US-1330 Added RT localization}
+						//bpmext.log.error("  Call stack: " + e.stack);
+						bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+					}
+				}
+			},			
+			_setTabIndex : function (view, index)
+			{
+				if(index != null)
+					domAttr.set(view._instance.select, "tabindex", index);
+				else
+					domAttr.remove(view._instance.select, "tabindex");
+			},
+			_handleVisibility : function (view)
+			{
+				var vis = utilities.handleVisibility(view.context);
+				
+				if (vis != "NONE") {
+					view._instance.select.disabled = (vis === "READONLY");
+					if (!view._instance.label)
+						return;
+					if (vis === "READONLY")
+						domClass.add(view.context.element, "disabled");
+					else
+						domClass.remove(view.context.element, "disabled");
+					
+					// Updates for WAI
+					if (view._instance.select.disabled) {										
+						domAttr.set(view._instance.select, "aria-disabled", "true");
+					} else {					
+						domAttr.remove(view._instance.select, "aria-disabled");
+					}
+				}
+			},
+			_checkBindingType : function (view) 
+			{
+				if (!view.context.binding)
+				{
+					view._instance.bindingExists = false;
+					view._instance._isSimpleBinding = true;				//jmacSEL
+					view.context.binding = bpmext.ui.substituteObject(view, null, null, null);
+				}
+				else if (!view.context.binding._spliced)  // when true everything has been set.													// jmacSEL													// jmacSEL
+				{
+					view._instance.bindingExists = true;
+					view._instance._isSimpleBinding = false;
+					var boundType = view.context.bindingType().toUpperCase();
+					if ( (boundType == "STRING") || (boundType == "INTEGER") || (boundType == "DECIMAL") || (boundType == "BOOLEAN") )
+						view._instance._isSimpleBinding = true;
+					else
+					{
+						var opts = view.context.options;
+						if (opts.businessDataMapping)
+						{
+							var dm = opts.businessDataMapping.get("value");
+							view._instance._busValProp = (dm.optionValueProperty ? dm.optionValueProperty : "name" );
+							view._instance._busDisProp = (dm.optionDisplayProperty ? dm.optionDisplayProperty : "value");
+						}
+						else
+						{
+							view._instance._busValProp = "name";
+							view._instance._busDisProp = "value";							
+						}
+					}
+				}
+			},
+			_hasPlaceholder : function(view) {
+			    return (!!view.context.options.placeHolder && !!view.context.options.placeHolder.get("value"));
+			}
+		};
+
+		/*
+		Public control methods *************************************************************
+		 */
+		
+		/**
+		 * @instance
+		 * @memberof SingleSelect
+		 * @method setLabel
+		 * @param {string} label Label for single select control
+		 * @desc Set label for select control
+		 */
+		this.constructor.prototype.setLabel = function (text)
+		{
+			this.context.options._metadata.label.set("value", text);
+		};
+
+		/**
+		 * @instance
+		 * @memberof SingleSelect
+		 * @method getLabel
+		 * @desc Get label associated with select control
+		 * @returns {string}
+		 */
+		this.constructor.prototype.getLabel = function ()
+		{
+			return this.context.options._metadata.label.get("value");
+		};
+		
+		/**
+		 * @instance
+		 * @memberof SingleSelect
+		 * @method setLabelPlacement
+		 * @param {string} placement "T"|"TOP"=Top | "L"|"LEFT"=Left
+		 * @desc Set label placement for control.  NOTE: to avoid ambiguity always set the label placement using "T"|"L"
+		 */
+		this.constructor.prototype.setLabelPlacement = function (plc)
+		{
+			this.context.options.labelPlacement.set("value", plc);
+		};
+
+		/**
+		 * @instance
+		 * @memberof SingleSelect
+		 * @method getLabelPlacement
+		 * @desc Get label placement for control.  NOTE: This always returns the label placement as set, to avoid ambiguity always set the label placement using "T"|"L"
+		 * @returns {string}
+		 */
+		this.constructor.prototype.getLabelPlacement = function ()
+		{
+			return this.context.options.labelPlacement.get("value");
+		};
+
+		/**
+		 * @instance
+		 * @memberof SingleSelect
+		 * @method getLabelWidth
+		 * @desc Get label width of SingleSelect control (e.g. 50px, 20%, 2em - omitting the unit assumes px)
+		 * @returns {string}
+		 */
+		this.constructor.prototype.getLabelWidth = function ()
+		{
+			return this.context.options.labelWidth.get("value");
+		};
+		
+		/**
+		 * @instance
+		 * @memberof SingleSelect
+		 * @method setLabelWidth
+		 * @param {string} labelWidth Control's label width
+		 * @desc Set label width of SingleSelect control (e.g. 50px, 20%, 2em - omitting the unit assumes px)
+		 */
+		this.constructor.prototype.setLabelWidth = function (labelWidth)
+		{
+			this.context.options.labelWidth.set("value", labelWidth);
+		};
+		
+		/**
+		 * @instance
+		 * @memberof SingleSelect
+		 * @method isLabelVisible
+		 * @desc Get label visibility for single select control
+		 * @returns {boolean}
+		 */
+		this.constructor.prototype.isLabelVisible = function ()
+		{
+			return this.context.options._metadata.labelVisibility.get("value") == "SHOW";
+		};
+
+		/**
+		 * @instance
+		 * @memberof SingleSelect
+		 * @method setLabelVisible
+		 * @param {boolean} flag {true | false}
+		 * @desc Set label visibility for select control
+		 */
+		this.constructor.prototype.setLabelVisible = function (flag)
+		{
+			this.context.options._metadata.labelVisibility.set("value", flag ? "SHOW" : "HIDE");
+		};
+
+		/**
+		 * @instance
+		 * @memberof SingleSelect
+		 * @method setSizeStyle
+		 * @param {string} style "DEFAULT"|"DEF"|"NORMAL"|"D"=Default | "SMALL"|"S"=Small | "LARGE"|"L"=Large
+		 * @desc Sets size style of control.  NOTE: to avoid ambiguity always set the size style using "D"|"S"|"L"
+		 */		
+		this.constructor.prototype.setSizeStyle = function (style)
+		{
+			return this.context.options.sizeStyle.set("value", style);
+		};
+
+		/**
+		 * @instance
+		 * @memberof SingleSelect
+		 * @method getSizeStyle
+		 * @param {string} style "DEFAULT"|"DEF"|"NORMAL"|"D"=Default | "SMALL"|"S"=Small | "LARGE"|"L"=Large
+		 * @desc Gets size style of control.  NOTE: to avoid ambiguity always set the size style using "D"|"S"|"L"
+		 */		
+		this.constructor.prototype.getSizeStyle = function ()
+		{
+			return this.context.options.sizeStyle.get("value");
+		};
+		
+		/**
+		 * @instance
+		 * @memberof SingleSelect
+		 * @method getSelectedItem
+		 * @desc Get value associated with item selected in select control
+		 * @returns {ANY}
+		 */
+		this.constructor.prototype.getSelectedItem = function ()
+		{
+			//Return value of binding data (which corresponds to the selected value)
+			//TODO what do we do when the list is empty but the control is bound.  Or is bound and the list does not contain the key of the bound value
+			return this.context.binding.get("value");
+			
+		};
+
+		/**
+		 * @instance
+		 * @memberof SingleSelect
+		 * @method getSelectedIndex
+		 * @desc Get index of item selected in select control
+		 * @returns {integer}
+		 */
+		this.constructor.prototype.getSelectedIndex = function ()
+		{
+			for(var i = 0; i < this._instance.select.options.length; i++)
+			{
+				if(this._instance.select.options[i].selected)
+					return i - 1;
+			} // end for i
+			return -1;
+		};
+
+		/**
+		 * @instance
+		 * @memberof SingleSelect
+		 * @method getItemTextAt
+		 * @desc Get display text associated with item at specified index
+		 * @param {integer} index Index of item/option in select control
+		 * @returns {string}
+		 */
+		this.constructor.prototype.getItemTextAt = function (idx)
+		{
+			//#{bug: * Fixed item index processing to use 0-based instead of 1-based indexing}
+			// var opt = this._proto._getItemOption(this, idx + 1);
+			// if(opt)
+				//{#feature: US-1036 Allow entries to start with spaces to facilitate options indenting}
+				//	added the replace method to the return text to strip out the &nbsp;
+				// return opt.innerHTML.replace(/&nbsp;*/g, " ");			
+				
+			if(isNaN(idx)) {
+				return;
+			}
+
+			if(this._instance.itemList && this._instance.itemList.items[idx]) {
+				return this._instance.itemList.items[idx][this._instance._optDisProp];
+			}
+		};
+		
+		/**
+		 * @instance
+		 * @memberof SingleSelect
+		 * @method getItemText
+		 * @param {ANY} itemVal Value of item to get text for
+		 * @desc Get the display text for a value (value must be known)
+		 * @example slct.getItemText("option1")
+		 * // returns "Option 1" (for a selection item with value="option1" and name="Option 1")
+		 * @example slct.getItemText(slct.getSelectedItem())
+		 * // returns the text of the currently selected item
+		 * @returns {string}
+		 */
+		this.constructor.prototype.getItemText = function (itemVal)
+		{
+			var idx = this._proto._getItemIndex(this, itemVal);
+			//#{bug: * updated to use 0 based index}
+			if(idx > -1)
+				return this.getItemTextAt(idx);   
+		};
+
+		/**
+		 * @instance
+		 * @memberof SingleSelect
+		 * @method getItemCount
+		 * @desc Get number of items in the list
+		 * @returns {integer}
+		 */
+		this.constructor.prototype.getItemCount = function ()
+		{
+			//return this._instance.select.options.length;  this contains the placeholder.
+			//{#bug: BG-802 getItemCount, setSelectedItemAt issues}
+			//BG-1003 adding null protection for itemList
+			if (this._instance.itemList != null)
+				return this._instance.itemList.length();
+			else
+				return 0;
+		};
+		
+		/**
+		 * @instance
+		 * @memberof SingleSelect
+		 * @method appendItem
+		 * @param {ANY} value The value of the selection
+		 * @param {string} displayText The text to be displayed
+		 * @desc Appends an item to the selection list
+		 * @returns {object} Item that was added to the list
+		 */
+		this.constructor.prototype.appendItem = function (optVal, optTxt)
+		{
+			if(typeof optTxt == "undefined")
+				optTxt = optVal;
+			
+			var obj = {};
+			obj[this._instance._optValProp] = optVal;
+			obj[this._instance._optDisProp] = optTxt;
+			
+			this._instance.itemList.add(obj);
+			
+			return obj;
+		};
+
+		/**
+		 * @instance
+		 * @memberof SingleSelect
+		 * @method removeItemAt
+		 * @desc Remove item at specified index
+		 * @param {integer} index Index of item/option in select control
+		 * @returns {ANY}
+		 */
+		this.constructor.prototype.removeItemAt = function(idx)
+		{
+			return this._instance.itemList.remove(idx);		
+		};
+		
+		/**
+		 * @instance
+		 * @memberof SingleSelect
+		 * @method removeItem
+		 * @desc Remove item/option matching the value specified
+		 * @param {ANY} value Value of item/option in select control
+		 * @returns {ANY}
+		 */		
+		this.constructor.prototype.removeItem = function(itemVal)
+		{
+			var idx = this._proto._getItemIndex(this, itemVal);
+			if(idx > -1)
+				return this.removeItemAt(idx);			
+		};
+		
+		/**
+		 * @instance
+		 * @memberof SingleSelect
+		 * @method setItemText
+		 * @desc Set display text of item/option matching the value specified
+		 * @param {ANY} value Value of item/option in select control
+		 * @param {string} text The display text to show for the item/option
+		 */	
+		this.constructor.prototype.setItemText = function(itemVal, text)
+		{
+			var idx = this._proto._getItemIndex(this, itemVal);
+			if(idx > -1)
+			{
+				this.setItem(idx,  this._instance.itemList.items[idx][this._instance._optValProp], text);			
+			}
+		};
+
+		/**
+		 * @instance
+		 * @memberof SingleSelect
+		 * @method setItem
+		 * @desc Set display text of item/option at specified index
+		 * @param {integer} idx Index to set
+		 * @param {ANY} value Value of item/option in select control
+		 * @param {string} text The display text to show for the item/option
+		 */
+		this.constructor.prototype.setItem = function(idx, val, text)
+		{
+			var obj = {};
+			obj[this._instance._optValProp] = val;
+			obj[this._instance._optDisProp] = text;
+			
+			this._instance.itemList.put(idx, obj);	
+		};
+		
+		/**
+		 * @instance
+		 * @memberof SingleSelect
+		 * @method clearItems
+		 * @desc Clears the selection list
+		 */
+		this.constructor.prototype.clearItems = function()
+		{
+			var opts = this.context.options;
+			var lookupMode = opts.itemLookupMode.get("value");
+			
+			//{#bug: BG-758 clearItems() doesn't clear items if item lookup mode is "Start Empty"}
+			//{#bug: * view._instance replaced with this._instance}
+			if(lookupMode == "S" || lookupMode == "E")
+			{
+				this._instance.itemList = new com.ibm.bpm.coach.List([], "svc.items");
+				//line below has an error not enough operands JMAC  Adding: this.context.binding.get("value"), as 3rd operand
+				this._proto._loadListItems(this, this._instance.itemList, this.context.binding.get("value"), this._instance._optValProp, this._instance._optDisProp, this._instance._busValProp, this._instance._busDisProp);
+			}
+			else if(lookupMode == "L" || lookupMode == "B")
+			{
+//				for(var i = this._instance.itemList.length() - 1; i >= 0; i--)  // Dec 2016
+				for(var i = this._instance.itemList.length(); i >= 0; i--)  // Dec 2016
+				{
+					this._instance.itemList.remove(i);
+				}
+				
+				this._proto._loadListItems(this, this._instance.itemList, this.context.binding.get("value"), this._instance._optValProp, this._instance._optDisProp, this._instance._busValProp, this._instance._busDisProp);				
+			}
+			//{#bug: BG-758 added to indicate no selected item (JMAC)}			
+//			this.context.binding.set("value",null);  // BG-817  was set to null by 758.
+//			our current thinking on this is for consistency we cannot clear the binding.  Perhaps in the future we could have
+//			an instance level variable to hold the binding when the list is empty.  This would be non-trivial
+		};
+		
+		/**
+		 * @instance
+		 * @memberof SingleSelect
+		 * @method setSelectedItem
+		 * @param {ANY} value Value to set currently selected item to
+		 * @desc Set item selected in select control based on the value of the item/option
+		 */
+		this.constructor.prototype.setSelectedItem = function (value)
+		{
+			value = this._proto._mapBindingValue(this, value);			//jmacSEL
+			this._proto._setSelectedItem(this,value);						//jmacSEL			
+			this.context.binding.set("value", value);
+		};
+
+				
+		/**
+		 * @instance
+		 * @memberof SingleSelect
+		 * @method setSelectedItemAt
+		 * @param {ANY} value Value to set currently selected item to
+		 * @desc Set item selected in select control based on the value of the index
+		 */
+		this.constructor.prototype.setSelectedItemAt = function (idx)
+		{
+			if ( (idx >= 0 ) &&											//ensure index exists
+				//{#bug: BG-802 getItemCount, setItemTextAt issues}
+//			   (idx <= this._instance.itemList.items.length - 1) ) removed the -1 since it only affects the select control, not the list
+			   (idx <= this._instance.itemList.items.length ) ) 
+			{
+
+				if (this._instance._isSimpleBinding)
+					this.context.binding.set("value",this._instance.itemList.items[idx][this._instance._optValProp]);
+				else
+				{
+					var tObj = {};
+					tObj[this._instance._busValProp] = this._instance.itemList.items[idx][this._instance._optValProp];
+					tObj[this._instance._busDisProp] = this._instance.itemList.items[idx][this._instance._optDisProp];
+					this.context.binding.set("value",tObj);
+
+				}
+				this._proto._setSelectedItemByIndex(this,idx);
+			}
+//				this._instance.itemList.set("listSelectedIndex",idx);			//jmacSEL
+				
+		};
+
+		/**
+		 * @instance
+		 * @memberof SingleSelect
+		 * @method setTabIndex
+		 * @param {integer} tabIndex Tab indices start at 1 and may be set sparsely
+		 * @desc Sets tab index of select control
+		 */
+		this.constructor.prototype.setTabIndex = function (tabIndex)
+		{
+			return this.context.options.tabIndex.set("value", tabIndex);
+		};
+
+		/**
+		 * @instance
+		 * @memberof SingleSelect
+		 * @method getTabIndex
+		 * @desc Get tab index for select control
+		 * @returns {integer}
+		 */
+		this.constructor.prototype.getTabIndex = function ()
+		{
+			return domAttr.get(this._instance.select, "tabindex");
+		};
+		
+		/**
+		 * @instance
+		 * @memberof SingleSelect
+		 * @method focus
+		 * @desc Set focus on this control
+		 */
+		this.constructor.prototype.focus = function ()
+		{
+			this._instance.select.focus();
+		};
+
+		/**
+		 * @instance
+		 * @memberof SingleSelect
+		 * @method setServiceInputData
+		 * @param {ANY} data Default input data for service
+		 * @desc Specifies the default input for the list items AJAX service
+		 */		
+		this.constructor.prototype.setServiceInputData = function(data)
+		{ 
+			this.context.options.inputData.set("value", data);
+		};
+
+		/**
+		 * @instance
+		 * @memberof SingleSelect
+		 * @method getServiceInputData
+		 * @returns {ANY} 
+		 * @desc Returns the input for the list items AJAX service
+		 */
+		this.constructor.prototype.getServiceInputData = function()
+		{
+			return this.context.options.inputData.get("value");
+		};
+		
+		/**
+		 * @instance
+		 * @memberof SingleSelect
+		 * @method reloadServiceItems
+		 * @param {ANY} input Data to be passed to the AJAX Service retrieving the items for the control 
+		 * @desc Reloads the AJAX selection list
+		 */
+		this.constructor.prototype.reloadServiceItems = function(input)
+		{
+			if(input === undefined)
+				input = this.context.options.inputData.get("value");
+
+			// {bug: 540 error passing in complex data }
+			// Updated as per Erics Email for BUG FIX
+			if ( (input != null) && (typeof input == "object") && input.toJson)
+     		input = json.parse(input.toJson());
+
+
+			
+			input = {"data": input};
+			var view = this;
+			var viewId = view.context.viewid;
+			
+			var sargs = {
+				params: input,
+				load: function(data) {
+					try
+					{
+						domClass.remove(view._instance.input, "spin");
+						//"results" is the name of the ouput of the AJAX service
+						if(data.results)
+						{
+							delete data.results["@metadata"];
+							// {bug: 854 wierd javascript error when a simple type is returned as a list of 1 item and the value is "1" }
+							if ( (data.results.items.length > 0) && (typeof data.results.items[0] != "object") )
+							{
+								var nvps = [];
+								for (var i = 0; i < data.results.items.length; i++)
+								{
+									var obj = {};
+									obj[ view._instance._optValProp] = data.results.items[i];
+									obj[ view._instance._optDisProp] = data.results.items[i];
+									nvps[i] = obj;
+
+								}
+								data.results.items = nvps;
+							}
+							if(data.results.items)
+							{
+								view._instance.itemList = new com.ibm.bpm.coach.List(data.results.items, "svc.items");
+								//{#bug: * Fixed data mapping for AJAX services (previously data mappings weren't read correctly)}
+								view._proto._loadListItems(view, view._instance.itemList, view.context.binding.get("value"), view._instance._optValProp, view._instance._optDisProp, view._instance._busValProp, view._instance._busDisProp);
+								
+								if(!view.context.binding.get("value") && data.results.selected && data.results.selected.length) {
+									view._proto._setSelectedItemByIndex(view, data.results.selected[0]);
+								}
+							}
+						}
+						
+						//console.log("Service returned: " + bpmext.text.toString(data));
+						setTimeout(function(){
+							bpmext.ui.executeEventHandlingFunction(view, view._proto.EVT_ONSVCITEMS);
+						});
+					}
+					catch (e) {
+						//{#feature: US-1330 Added RT localization}
+						//bpmext.log.error("Error on AJAX item list fetching [" + view.context.viewid + "]: " + e);
+						bpmext.log.error(bpmext.localization.formatMsg("general", "ERROR_ONAJAX_ITEMLIST_FETCH") + " [" + viewId + "]: " + e);
+						if(e.stack) { 
+							//{#feature: US-1330 Added RT localization}
+							//bpmext.log.error("  Call stack: " + e.stack);
+							bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+						}
+					}							
+				},
+				error: function(error) {
+					try
+					{
+						domClass.remove(view._instance.input, "spin");
+						//console.log("Service returned w/ error");
+						
+						//TODO Show error on control?
+						setTimeout(function(){						
+							bpmext.ui.executeEventHandlingFunction(view, view._proto.EVT_ONSVCERROR);
+						});
+					}
+					catch (e) {
+						//{#feature: US-1330 Added RT localization}
+						//bpmext.log.error("Error on AJAX item list fetching [" + view.context.viewid + "]: " + e);
+						bpmext.log.error(bpmext.localization.formatMsg("general", "ERROR_ONAJAX_ITEMLIST_FETCH") + " [" + viewId + "]: " + e);
+						if(e.stack) { 
+							//{#feature: US-1330 Added RT localization}
+							//bpmext.log.error("  Call stack: " + e.stack);
+							bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+						}
+					}
+				}
+			};
+
+			domClass.add(this._instance.input, "spin");
+			this.context.options.itemService(sargs);			
+		};
+		
+		/**
+		 * @instance
+		 * @memberof SingleSelect
+		 * @method getType
+		 * @desc Get descriptive string representing the type of control
+		 * @returns {string}
+		 */
+		this.constructor.prototype.getType = function ()
+		{
+			return "singleSelect.3";
+		};
+		
+		//{#feature: US-696 ARIA labeling}
+		this.constructor.prototype._getHTMLInputElement = function () 
+		{
+			return this._instance.select;   //This is the element that will need its "aria-labelledby" attribute set
+		};
+		//End US-696
+
+		/**
+		 * @instance
+		 * @memberof SingleSelect
+		 * @method setHelpText
+		 * @param {string} helptext Help text for the control
+		 * @desc Set help text for the control
+		 */
+		this.constructor.prototype.setHelpText = function (text) {
+			this.context.options._metadata.helpText.set("value", text);
+		};
+
+		/**
+		 * @instance
+		 * @memberof SingleSelect
+		 * @method getHelpText
+		 * @desc Get help text associated with the control
+		 * @returns {string}
+		 */
+		this.constructor.prototype.getHelpText = function () {
+			return this.context.options._metadata.helpText.get("value");
+		};
+		
+		
+		/*
+		Coach NG Lifecycle methods *************************************************************
+		 */
+		this.constructor.prototype.load = function ()
+		{
+			try
+			{
+				var opts = this.context.options;
+				var mdt = opts._metadata;
+
+				this._instance.baseTxtDir = mdt.baseTextDirection && mdt.baseTextDirection.get("value") ? mdt.baseTextDirection.get("value") : utilities.BiDi.BASE_TEXT_DIRECTION._default;
+				this._instance.genPrefTextDir = this.context.bpm.system.baseTextDirection;
+				
+				//{#feature: * Allow for binding to Complex Types in addition to Simple Types; Added setSelectedItemAt public method}
+				//jmacSEL tagged items
+
+				this._proto._checkBindingType(this);
+
+				if (!opts.tabIndex)
+					bpmext.ui.substituteConfigOption(this, "tabIndex", null);
+
+				if (!opts.staticList)
+					bpmext.ui.substituteConfigOption(this, "staticList", []);
+
+				if (!opts.sizeStyle)
+					bpmext.ui.substituteConfigOption(this, "sizeStyle", "D");
+
+				if (!opts.colorStyle)
+					bpmext.ui.substituteConfigOption(this, "colorStyle", "D");
+					
+				if (!opts.width)
+					bpmext.ui.substituteConfigOption(this, "width", null);
+					
+				if(!opts.labelPlacement)
+					bpmext.ui.substituteConfigOption(this, "labelPlacement", "T");
+				
+				if(!opts.labelWidth)
+					bpmext.ui.substituteConfigOption(this, "labelWidth", null);
+		
+				if (!opts.placeHolder)
+					bpmext.ui.substituteConfigOption(this, "placeHolder", null);
+
+				if (!opts.itemLookupMode)
+					bpmext.ui.substituteConfigOption(this, "itemLookupMode", "E");
+
+				if (!opts.inputData)
+					bpmext.ui.substituteConfigOption(this, "inputData", null);
+
+				if (!opts.disableAutoCall)
+					bpmext.ui.substituteConfigOption(this, "disableAutoCall", false);
+
+				if (opts.dataMapping)
+				{
+					var dm = opts.dataMapping.get("value");
+					this._instance._optValProp = dm.optionValueProperty;
+					this._instance._optDisProp = dm.optionDisplayProperty;
+				}
+				
+				var lookupMode = opts.itemLookupMode.get("value");	
+				
+				if(this._instance._optValProp == null || lookupMode == "L")
+					this._instance._optValProp = "name";
+				
+				if(this._instance._optDisProp == null || lookupMode == "L")
+					this._instance._optDisProp = "value";
+				
+				this._instance.group = document.createElement("div");
+				domClass.add(this._instance.group, "form-group");
+
+				this._instance.select = document.createElement("select");
+				domAttr.set(this._instance.select, "id", "singleselect-" + this.context.controlidpath);
+				domClass.add(this._instance.select, "form-control");
+				//Added for TK-1069
+				
+				domAttr.set(this._instance.select,"aria-expanded","false");
+				//Ends
+				
+				
+				this._instance.input = document.createElement("div");
+				domClass.add(this._instance.input, "input");
+				
+				this._instance.group.appendChild(this._instance.input);
+
+				this._instance.input.appendChild(this._instance.select);
+				this._instance.group.appendChild(this._instance.input);
+				this.context.element.appendChild(this._instance.group);
+
+				bpmext.ui.setupFormulaTriggeredUpdates(
+					this,
+					null,
+					this.getSelectedItem
+					);
+				
+				bpmext.ui.loadView(this);
+				this._instance.vc = bpmext.ui.getNearestValidationContainer(this);
+
+				this._proto._setSizeStyle(this, opts.sizeStyle.get("value"));
+				this._proto._setWidth(this, opts.width.get("value"));
+				
+				//{#bug: 431 Label visibility fix}
+				this._proto._setLabel(this, opts._metadata.label.get("value"));
+				this._proto._setLabelVisibility(this, opts._metadata.labelVisibility.get("value"));
+				this._proto._setLabelPlacement(this, opts.labelPlacement.get("value"));
+				this._proto._setLabelWidth(this, opts.labelWidth.get("value"));                				
+				this._proto._setTabIndex(this, opts.tabIndex.get("value"));
+				
+				var tmp = mdt.helpText ? mdt.helpText.get("value") : null;
+				if (tmp && tmp.length > 0)
+				{
+					this._proto._setHelpText(this, tmp);
+				}
+				
+				//{#feature: * Pass newVal and oldVal to the Change event handler for greater context} 
+				bpmext.ui.registerEventHandlingFunction(this, this._proto.EVT_ONCHANGE, "newVal", "oldVal");
+				bpmext.ui.registerEventHandlingFunction(this, this._proto.EVT_ONFOCUS);
+				bpmext.ui.registerEventHandlingFunction(this, this._proto.EVT_ONBLUR);
+				
+				var view = this;
+				//Added for TK-1069
+				var toggleClick=false;
+				this._instance.placeholderTextHolder = document.createElement("span");
+				var spanId=view._instance.select.id+"_Sth";
+				domClass.add(this._instance.placeholderTextHolder,"sr-only");
+				domAttr.set(this._instance.placeholderTextHolder,'id',spanId);
+				domAttr.set(view._instance.select,'aria-describedby',spanId);
+				this._instance.group.appendChild(this._instance.placeholderTextHolder);
+				this._instance.placeholderTextHolder.innerHTML=view.context.options.placeHolder.get("value");
+				var visibilityValue = utilities.handleVisibility(view.context);
+				
+				if(visibilityValue=="REQUIRED")
+				{
+					domAttr.set(this._instance.select,"aria-required", "true");
+				}
+				if(visibilityValue=="READONLY")
+				{
+					domAttr.set(this._instance.select,"aria-disabled", "true");
+				}
+
+				this._instance.select.onclick=function(event)
+				{
+					if(!toggleClick)
+					{
+						domAttr.set(this,"aria-expanded","true");
+						toggleClick=true;
+					}
+					else
+					{
+							domAttr.set(this,"aria-expanded","false");
+							toggleClick=false;
+					}
+				};
+				this._instance.select.onblur=function(event)
+				{
+					
+					domAttr.set(this,"aria-expanded","false");
+					bpmext.ui.executeEventHandlingFunction(view, view._proto.EVT_ONBLUR);
+				};
+				 
+				this._instance.select.onfocus=function(event)
+				{
+					bpmext.ui.executeEventHandlingFunction(view, view._proto.EVT_ONFOCUS);
+				};
+
+				//Ends
+				this._instance.select.onchange = function(event)
+				{
+					/*
+					var idx = view._instance.select.selectedIndex;
+					if(idx > -1)
+						view.context.binding.set("value", view._instance.select.options[idx].value);
+					*/
+					
+					var selOpt = null;
+					var sidx = -1;
+					//Added for Tk-1069
+					//added extra forloop if as the inner existing will be breaking 
+					//and we dont want break for changing attribute for all
+						
+					for(var i = 0; i < this.options.length; i++){
+							if(this.options[i].selected)
+							{
+							domAttr.set(this.options[i],"aria-selected","true");
+							
+		
+						}else {
+							domAttr.set(this.options[i],"aria-selected","false");
+							}
+						}
+					//Ends
+					for(var i = 0; i < this.options.length; i++)
+					{
+						
+						if(this.options[i].selected)
+						{
+							if(this.options[i].dir) {
+								domAttr.set(view._instance.select, "dir", this.options[i].dir);
+							}
+							
+							selOpt = this.options[i].value;
+							
+							if (this.options[i].disabled === true) {
+							    //placeholder
+							    if (view._proto._hasPlaceholder(view)) {
+			                    domClass.add(view._instance.select, "placeHolder");
+							    }
+							} else {
+			                    domClass.remove(view._instance.select, "placeHolder");
+							}
+
+							if(view.context.options.itemLookupMode.get("value") == "B")
+							{
+								sidx = i - 1;
+							}
+							else
+							{
+								sidx = i;
+							}
+							
+							break;
+						}
+					}
+
+					if(selOpt != null)
+					{
+						// 	view.context.binding.set("value", view._proto._mapBindingValue(view, selOpt));	//jmacSEL
+						view._instance._stopSetItem = true;
+						try
+						{
+							if (view.context != null && view.context.binding != null) {
+								var val0 = view.context.binding.get("value");
+								if ( (view._instance._isSimpleBinding)  || (val0 == undefined) || (typeof val0!= "object") )  //LOOK HERE
+								{
+									view.context.binding.set("value", view._proto._mapBindingValue(view, selOpt));
+								}
+								else
+								{
+									var myObj = view.context.binding.get("value");
+									myObj[view._instance._busValProp] = view._proto._mapBindingValue(view, selOpt);	
+									myObj[view._instance._busDisProp] = view.getItemTextAt(view.getSelectedIndex());	
+									view.context.binding.set("value", myObj);
+								}
+							}
+							if(lookupMode == "B")
+							{
+								if(opts.itemList && !view._instance.bindingExists)
+								{
+									var l = opts.itemList.get("value");
+//									l.set("listSelectedIndex", sidx);
+									l.set("listAllSelectedIndices", [sidx]);
+								}
+							}					
+						}
+						finally
+						{
+							delete view._instance._stopSetItem;
+						}
+					}
+				};
+
+				if(lookupMode == "S" && opts.itemService) //S = Lookup from AJAX Service
+				{
+					bpmext.ui.registerEventHandlingFunction(this, this._proto.EVT_ONSVCITEMS);
+					bpmext.ui.registerEventHandlingFunction(this, this._proto.EVT_ONSVCERROR);
+					
+					this.reloadServiceItems();
+				}
+				else if(lookupMode == "L") //Static list
+				{
+					view._instance.itemList = opts.staticList.get("value");
+					if(!view._instance.itemList)
+						view._instance.itemList = new com.ibm.bpm.coach.List([], "static.items");
+
+					this._proto._loadListItems(this, view._instance.itemList, this.context.binding.get("value"), this._instance._optValProp, this._instance._optDisProp, this._instance._busValProp, this._instance._busDisProp);
+				}
+				else if(lookupMode == "B") // Config list
+				{
+					if(!opts.itemList)
+						bpmext.ui.substituteConfigOption(this, "itemList", []);						
+
+					view._instance.itemList = opts.itemList.get("value");
+
+					if(!view._instance.itemList)
+						//view._instance.itemList = new ItemList(this, function(){return view.context.binding.get("value")}, false);	
+						view._instance.itemList = new com.ibm.bpm.coach.List([], "list.items");
+					
+					var selectedValue = view._instance.bindingExists ? this.context.binding.get("value") : view._instance.itemList.listSelected;
+					this._proto._loadListItems(this, view._instance.itemList, selectedValue, this._instance._optValProp, this._instance._optDisProp, this._instance._busValProp, this._instance._busDisProp);
+				}
+				else //lookupMode == "E"
+				{
+					//{#bug: BG-398 Fire service load-related events when starting empty}
+					bpmext.ui.registerEventHandlingFunction(this, this._proto.EVT_ONSVCITEMS);
+					bpmext.ui.registerEventHandlingFunction(this, this._proto.EVT_ONSVCERROR);
+
+					view._instance.itemList = new com.ibm.bpm.coach.List([], "list2.items");
+					// missing last 2 operands.. not a problem maybe
+					this._proto._loadListItems(this, view._instance.itemList, this.context.binding.get("value"), this._instance._optValProp, this._instance._optDisProp);
+				}
+			}
+			catch (e)
+			{
+				//{#feature: US-1330 Added RT localization}
+				//bpmext.log.error("Error on load event [" + this.context.viewid + "]: " + e);
+				bpmext.log.error(bpmext.localization.formatMsg("general", "ERROR_ONLOAD_EVENT") + " [" + this.context.viewid + "]: " + e);
+				if(e.stack) { 
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.error("  Call stack: " + e.stack);
+					bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+				}
+			}
+		} // end .load;
+
+		this.constructor.prototype.view = function ()
+		{
+			try
+			{
+				this._proto._handleVisibility(this);
+			}
+			catch (e)
+			{
+				//{#feature: US-1330 Added RT localization}
+				//bpmext.log.error("Error on view event [" + this.ui.getAbsoluteName() + "]: " + e);
+				bpmext.log.error(bpmext.localization.formatMsg("general", "ERROR_ONVIEW_EVENT") + " [" + this.ui.getAbsoluteName() + "]: " + e);
+				if(e.stack) { 
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.error("  Call stack: " + e.stack);
+					bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+				}
+			}
+		};
+
+		this.constructor.prototype.change = function (event)
+		{
+			try
+			{
+
+				if (event.type == "config")
+				{
+					switch (event.property)
+					{
+						case "_metadata.label":
+						{
+							this._proto._setLabel(this, event.newVal);
+							this._proto._setHelpText(this, this.context.options._metadata.helpText.get("value"));
+							break;
+						}
+						case "_metadata.visibility":
+						{
+							this._proto._handleVisibility(this);
+							break;
+						}
+						case "_metadata.labelVisibility":
+						{
+							this._proto._setLabelVisibility(this, event.newVal);
+							break;
+						}
+						case "_metadata.helpText":
+                        {
+							this._proto._setHelpText(this, event.newVal);
+                            this._proto._updateControl(this);
+                            break;
+                        }
+						case "tabIndex":
+						{
+							this._proto._setTabIndex(this, event.newVal);
+							break;
+						}
+						case "sizeStyle":
+						{
+							this._proto._setSizeStyle(this, event.newVal);
+							break;
+						}
+						case "labelPlacement":
+						{
+							this._proto._setLabelPlacement(this, event.newVal);
+							break;
+						}
+						case "labelWidth":
+						{
+							this._proto._setLabelWidth(this, event.newVal);
+							break;
+						}
+						case "itemList":
+						{
+							this._instance.itemList = event.newVal;
+							this._proto._updateItemList(this, event, this._instance.itemList);
+							break;
+						}
+                        case "width":
+                        {
+                            this._proto._setWidth(this, event.newVal);
+                            break;
+                        }
+						case "inputData":
+						{
+							if (this.context.options.disableAutoCall.get("value")) {
+								// The view is configured to disable automatic calling of the service
+								break;
+							}
+							if(event.newVal != event.oldVal) {
+								this.reloadServiceItems(event.newVal);
+	
+								var binding = this.context.binding.get("value");
+								if (this._instance._isSimpleBinding  && binding)
+								{
+									this.context.binding.set("value", "");
+								}
+								else if (binding)
+								{
+									var myObj = binding;
+									myObj[this._instance._busValProp] = "";	
+									myObj[this._instance._busDisProp] = "";	
+									this.context.binding.set("value", myObj);
+								}
+							}
+							break;
+						}
+						case "placeHolder":
+						{
+							var ph = (!!event.newVal) ? this.context.htmlEscape(event.newVal) : "";
+							this._instance.placeholderTextHolder.innerHTML = ph;
+							if (!!this._instance.placeHolderOption) {
+								this._instance.placeHolderOption.innerHTML = ph;
+							}
+						}
+					}
+				}
+				else
+				{
+					this._proto._checkBindingType(this);
+
+					if(!this._instance._stopSetItem)
+					{
+						if (this._instance._isSimpleBinding || typeof event.newVal != "object" || event.newVal == null)	// jmacSEL
+							this._proto._setSelectedItem(this, event.newVal);
+						else
+						{
+							this._proto._setSelectedItem(this, event.newVal[this._instance._busValProp]);
+						}						
+					}					
+					if(event.newVal != event.oldVal)
+						bpmext.ui.executeEventHandlingFunction(this, this._proto.EVT_ONCHANGE, event.newVal, event.oldVal);
+					
+					bpmext.ui.broadcastExpressionTrigger(this, bpmext.ui.PHASE_NORMAL);					
+				}
+			}
+			catch (e)
+			{
+				//{#feature: US-1330 Added RT localization}
+				//bpmext.log.error("Error on change event [" + this.ui.getAbsoluteName() + "]: " + e);
+				bpmext.log.error(bpmext.localization.formatMsg("general", "ERROR_ONCHANGE_EVENT") + " [" + this.ui.getAbsoluteName() + "]: " + e);
+				if(e.stack) { 
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.error("  Call stack: " + e.stack);
+					bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+				}
+			}
+		};
+
+		this.constructor.prototype.validate = function (event)
+		{
+			try
+			{
+				bpmext.ui.updateViewValidationState(this, event);
+
+				this._proto._updateControl(this);
+				
+				if(this._instance.vc)
+					this._instance.vc.validate(event);
+			}
+			catch (e)
+			{
+				//{#feature: US-1330 Added RT localization}
+				//bpmext.log.error("Error on validate event [" + this.ui.getAbsoluteName() + "]: " + e);
+				bpmext.log.error(bpmext.localization.formatMsg("general", "ERROR_ONVALIDATE_EVENT") + " [" + this.ui.getAbsoluteName() + "]: " + e);
+				if(e.stack) { 
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.error("  Call stack: " + e.stack);
+					bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+				}
+			}		
+		};
+
+		/*
+		this.constructor.prototype.collaboration = function (event)
+		{
+		};
+		*/
+		
+		this.constructor.prototype.unload = function ()
+		{
+			if(this._instance._bindSelUpdHandle)
+				this._instance._bindSelUpdHandle.unbind();
+
+			if(this._instance._bindValueUpdHandle)
+				this._instance._bindValueUpdHandle.unbind();
+			
+			bpmext.ui.unloadView(this);
+		};
+	}
+}

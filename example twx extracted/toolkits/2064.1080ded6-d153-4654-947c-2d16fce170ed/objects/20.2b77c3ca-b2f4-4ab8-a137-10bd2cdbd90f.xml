@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<teamworks>
+    <layout id="20.2b77c3ca-b2f4-4ab8-a137-10bd2cdbd90f" name="SQL Standard - Series In Rows">
+        <lastModified>1361369073512</lastModified>
+        <lastModifiedBy>Internal TW Admin user</lastModifiedBy>
+        <layoutId>20.2b77c3ca-b2f4-4ab8-a137-10bd2cdbd90f</layoutId>
+        <metaDataLabel isNull="true" />
+        <metaDataUI isNull="true" />
+        <type>SCRIPT</type>
+        <url isNull="true" />
+        <documentType>datasource</documentType>
+        <imageUrl>datasource_images/datasource_twsql.jpg</imageUrl>
+        <layoutData>// Set the label column. Default one is 0, the first one
+var labelColumn = 0;
+var id = String(settings.labelColumnId);
+log.debug("label id == " + id);
+if ((id != "null") &amp;&amp; (id != ""))
+  labelColumn = Number(id);
+
+// Set the display column. Default one is 2, the third one.
+var displayColumn = 2;
+id = String(settings.displayColumnId);
+if ((id != "null") &amp;&amp; (id != ""))
+  displayColumn = Number(id);
+
+// Set the series Column. Default is 1, the second.
+var seriesColumn = 1;
+id = String(settings.seriesColumnId);
+if ((id != "null") &amp;&amp; (id != ""))
+  seriesColumn = Number(id);
+if (log.debugEnabled)
+  log.debug("Columns in rows - " + labelColumn + "," + seriesColumn + "," + displayColumn);
+
+// Validate input
+if (isNaN(labelColumn)) throw "Setting 'labelColumnId' is not a number";
+if (isNaN(displayColumn)) throw "Setting 'displayColumnId' is not a number";
+if (isNaN(seriesColumn)) throw "Setting 'seriesColumnId' is not a number";
+
+// Process integration connections
+for (var icidx = 0; icidx &lt; settings.ics.arrayLength; icidx++)
+{
+  log.debug("ic name is " + settings.ics[icidx]);
+
+  // Find and execute the IntegrationComponent
+  var ic = IntegrationComponent.getByName(settings.ics[icidx]);
+  ic.execute();
+  //log.debug("resultArray is " + ic.resultArray.describe());
+
+  if (typeof icresults != 'undefined')
+    icresults[icresults.arrayLength] = ic.resultArray;
+
+  var records = ic.resultArray[0].record;
+  // log.debug("adding ic result " + icidx + " , " + records.length);
+  if (records) {
+    addDataFromRecords(records);
+  }
+}
+
+// log.debug("reportSeries == " + reportSeries.describe());
+
+// Process integration services
+for (var idx = 0; idx &lt; settings.services.arrayLength; idx++)
+{
+  log.debug("Service name is " + settings.services[idx].name);
+
+  var resultMap = settings.services[idx].execute();
+  var result = resultMap.get("results");
+  var records = result.record;
+
+  // log.debug("adding service result " + idx + " , " + records.length);
+  if (records) {
+    addDataFromRecords(records);
+  }
+}
+
+function addDataFromRecords(records) {
+  for (var i = 0; i &lt; records.length; i++) {
+
+    var r = records[i];
+    // Finding the label
+    var labelValue = r.column[labelColumn].getText();
+    // Finding the serie
+    var seriesValue;
+    if (seriesColumn &gt;= 0)
+      seriesValue = r.column[seriesColumn].getText();
+    else
+      seriesValue = r.column[displayColumn].getAttribute("name");
+
+    // Finding display value
+    var displayValue = r.column[displayColumn].getText();
+
+    // Validating display value
+    if (isNaN(displayValue))
+      throw "display value for ic #" + icidx + ", row #" + i + " is not a number (was: " + displayValue + ")";
+
+    addDataToSeries(seriesValue, findLabelId(labelValue), displayValue);
+  }
+}</layoutData>
+        <description>This transformation can be used to transform sql or tw/sql results where labels are in the one column, the serie name in one column and the last column contain the value given the series and labels. All parameters are required. They need to be set to the index of the column containing the data (starting with 0 for the first result column).</description>
+        <guid>prePebbles:1985:11-25-2003 12:13:46</guid>
+        <versionId>7c8816b5-d60a-46e1-b3f1-ae0ddc672918</versionId>
+        <layoutParam name="labelColumnId">
+            <lastModified isNull="true" />
+            <lastModifiedBy isNull="true" />
+            <layoutParamId>2023.336f9002-bd37-4265-a21a-3319a6454154</layoutParamId>
+            <layoutId>20.2b77c3ca-b2f4-4ab8-a137-10bd2cdbd90f</layoutId>
+            <value isNull="true" />
+            <type isNull="true" />
+            <seq isNull="true" />
+            <guid>guid:197d4ddc90fc5427:-1c619ffe:11def1582ed:-7ff8</guid>
+            <versionId>ac234494-0d0d-4163-b539-820a5baa348d</versionId>
+        </layoutParam>
+        <layoutParam name="displayColumnId">
+            <lastModified isNull="true" />
+            <lastModifiedBy isNull="true" />
+            <layoutParamId>2023.d8513f25-372e-41f5-9287-07f4f075d969</layoutParamId>
+            <layoutId>20.2b77c3ca-b2f4-4ab8-a137-10bd2cdbd90f</layoutId>
+            <value isNull="true" />
+            <type isNull="true" />
+            <seq isNull="true" />
+            <guid>guid:197d4ddc90fc5427:-1c619ffe:11def1582ed:-7ff6</guid>
+            <versionId>c6058492-0ac1-4f9b-a933-4b968129df44</versionId>
+        </layoutParam>
+        <layoutParam name="seriesColumnId">
+            <lastModified isNull="true" />
+            <lastModifiedBy isNull="true" />
+            <layoutParamId>2023.85afb4dd-922d-4474-a39e-8d7e414c1c2c</layoutParamId>
+            <layoutId>20.2b77c3ca-b2f4-4ab8-a137-10bd2cdbd90f</layoutId>
+            <value isNull="true" />
+            <type isNull="true" />
+            <seq isNull="true" />
+            <guid>guid:197d4ddc90fc5427:-1c619ffe:11def1582ed:-7ff4</guid>
+            <versionId>cc24c80d-16ca-4d89-85fd-75db958e0e6c</versionId>
+        </layoutParam>
+    </layout>
+</teamworks>
+

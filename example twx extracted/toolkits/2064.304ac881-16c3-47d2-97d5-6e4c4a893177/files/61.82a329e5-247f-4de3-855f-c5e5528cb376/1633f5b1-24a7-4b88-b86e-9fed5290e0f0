@@ -1,0 +1,127 @@
+/*
+ * #BEGIN COPYRIGHT
+ *
+ * Licensed Materials - Property of IBM
+ * 5725-C95
+ * (C) Copyright IBM Corporation 2017. All Rights Reserved.
+ * US Government Users Restricted Rights- Use, duplication or disclosure
+ * restricted by GSA ADP Schedule Contract with IBM Corp.
+ *
+ * #END COPYRIGHT
+ */
+
+var mixObject = {
+    createPreview:function(containingDiv, labelText, callback){
+    	var bpmextUri = this.context.getManagedAssetUrl("BPMExt-Core-Designer.js", this.context.assetType_WEB, "SYSBPMUI");
+		require([ "dojo/dom-construct", "dojo/dom-class", bpmextUri], this.lang.hitch(this, function(domConstruct, domClass, bpmext){
+			this.context.coachViewData.containingDiv = containingDiv;
+			bpmext.uidesign.css.ensureSparkUIClass(containingDiv);
+			
+			this.context.coachViewData.progressbarWrapper = domConstruct.create("div");
+			
+			domClass.add(this.context.coachViewData.progressbarWrapper, "pbwrapper");
+        	this.context.coachViewData.defaultBorderRadius = "5px";
+        	this.context.coachViewData.defaultWidth = "100%";
+        	var borderRadiusStyleString = "border-radius: " + this.context.coachViewData.defaultBorderRadius + ";";
+        	var widthStyleString = "width: " + this.context.coachViewData.defaultWidth + ";";
+			var styleString = widthStyleString + " " + borderRadiusStyleString;
+			this.context.coachViewData.progressDiv = domConstruct.create("div", {style: styleString});
+			domClass.add(this.context.coachViewData.progressDiv, "progress");
+			dojo.attr(this.context.coachViewData.progressDiv, "role", "progressbar");
+			dojo.attr(this.context.coachViewData.progressDiv, "aria-valuemin", 0);
+			dojo.attr(this.context.coachViewData.progressDiv, "aria-valuemax", 100);
+			dojo.attr(this.context.coachViewData.progressDiv, "aria-valuenow", 50);
+			
+        	var progressDivWidthStyleString = "width: 50%;";
+			var progressDivStyleString = progressDivWidthStyleString + " " + borderRadiusStyleString;
+			this.context.coachViewData.progressBarDiv = domConstruct.create("div", {style: progressDivStyleString});
+			domClass.add(this.context.coachViewData.progressBarDiv, "progress-bar");
+			
+			this.context.coachViewData.progressDiv.appendChild(this.context.coachViewData.progressBarDiv);
+			this.context.coachViewData.progressbarWrapper.appendChild(this.context.coachViewData.progressDiv);
+			this.context.coachViewData.containingDiv.appendChild(this.context.coachViewData.progressbarWrapper);
+
+			callback();
+		}));
+    },
+	
+    propertyChanged:function(propertyName, propertyValue){
+		var configHelperUri = this.context.getManagedAssetUrl("BPMExt-Core-ConfigHelper.js",this.context.assetType_WEB, "SYSBPMUI");
+		require(["dojo/dom-style", "dojo/dom-class", configHelperUri], this.lang.hitch(this, function(domStyle, domClass, configHelper){
+			if(propertyName == "@label") {
+				dojo.attr(this.context.coachViewData.progressDiv, "aria-label", propertyValue);
+			} else if(propertyName ==  "@labelVisibility"){
+			} else if(propertyName == "@style"){
+				var width = configHelper.getResponsiveConfigOptionValue(this, "@width");
+				var minWidth = configHelper.getResponsiveConfigOptionValue(this, "@minWidth");
+				if(!!width || !!minWidth) {
+					this.context.coachViewData.containingDiv.style.width =  minWidth || width;
+				} else {
+					this.context.coachViewData.containingDiv.style.width = "";
+				}
+			} else if(propertyName == "radius"){
+				if(propertyValue===null || propertyValue===undefined || propertyValue == ""){
+					domStyle.set(this.context.coachViewData.progressDiv, "border-radius", this.context.coachViewData.defaultBorderRadius);
+					domStyle.set(this.context.coachViewData.progressBarDiv, "border-radius",this.context.coachViewData.defaultBorderRadius);
+				}else {
+					domStyle.set(this.context.coachViewData.progressDiv, "border-radius", isNaN(propertyValue) ? propertyValue : propertyValue+"px");
+					domStyle.set(this.context.coachViewData.progressBarDiv, "border-radius", isNaN(propertyValue) ? propertyValue : propertyValue+"px");
+				}				
+			} else if(propertyName == "active"){
+				if(propertyValue == "true" || propertyValue == true){
+					domClass.add(this.context.coachViewData.progressDiv, "active");
+				} else {
+					domClass.remove(this.context.coachViewData.progressDiv, "active");
+				}
+			} else if(propertyName == "striped"){
+				if(propertyValue == "true" || propertyValue == true){
+					domClass.add(this.context.coachViewData.progressDiv, "progress-striped");
+				} else {
+					domClass.remove(this.context.coachViewData.progressDiv, "progress-striped");
+				}
+			} else if(propertyName == "width"){
+				if(!!propertyValue) {
+					this.context.coachViewData.progressDiv.style.width = isNaN(propertyValue) ? propertyValue : (propertyValue+"px");
+				} else {
+					this.context.coachViewData.progressDiv.style.width = "";
+				}
+			} else if(propertyName == "height"){
+				if(!!propertyValue) {
+					this.context.coachViewData.progressDiv.style.height = isNaN(propertyValue) ? propertyValue : (propertyValue+"px");
+				} else {
+					this.context.coachViewData.progressDiv.style.height = "";
+				}
+			} else if(propertyName == "colorStyle"){
+				var colorStyle;
+				if(propertyValue == "P"){
+					colorStyle = "progress-bar-primary";
+				} else if(propertyValue == "I"){
+					colorStyle = "progress-bar-info";
+				} else if(propertyValue == "S"){
+					colorStyle = "progress-bar-success";
+				} else if(propertyValue == "W"){
+					colorStyle = "progress-bar-warning";
+				} else if(propertyValue == "G"){
+					colorStyle = "progress-bar-danger";
+				} else {
+					colorStyle = "";
+				}
+				domClass.replace(this.context.coachViewData.progressBarDiv, colorStyle, "progress-bar-primary progress-bar-info progress-bar-success progress-bar-warning progress-bar-danger");
+			}
+			else if(propertyName == "expression"){
+				if(propertyValue == ""){
+					this.context.coachViewData.progressBarDiv.style.width = "50%";
+					dojo.attr(this.context.coachViewData.progressDiv, "aria-valuenow", 50);
+				}else{
+					this.context.coachViewData.progressBarDiv.style.width = isNaN(propertyValue) ? propertyValue : (propertyValue+"%");
+					propertyValue = isNaN(propertyValue) ? propertyValue.replace(/[%]/g,"") : propertyValue;
+					dojo.attr(this.context.coachViewData.progressDiv, "aria-valuenow", propertyValue);
+				}
+			}
+		}));
+    },
+
+	modelChanged: function(propertyName, propertyValue) {
+		
+	}
+};

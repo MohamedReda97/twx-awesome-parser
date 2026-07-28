@@ -1,0 +1,277 @@
+/**
+ * @file SPARK - Password Control
+ */
+
+/** 
+ * @constructor Password
+ * @desc This constructor is <i>never</i> used explicitly.
+ * @augments com.ibm.bpm.coach.CoachView 
+ * @classdesc A Password control provides the following configuration properties in Process Designer:
+ *   <tr class=Prop>
+ *     <td class=SectionName colspan=3>Events</td>
+ *   </tr>
+ *   <tr class=Prop>
+ *     <td>On Load:</td>
+ *     <td colspan="2">
+ *       <table> 
+ *         <tr class=Prop>
+ *           <td>Description: </td>
+ *           <td>Triggers whenever the view is loaded.</td>
+ *         </tr>
+ *         <tr class=Prop>
+ *           <td>Example: </td>
+ *           <td><pre class="prettyprint"><code>me.setText("Some default text on load.")</code></pre></td>
+ *         </tr>
+ *       </table>
+ *     </td>
+ *   </tr>
+ *   <tr class=Prop>
+ *     <td>On Change:</td>
+ *     <td colspan="2">
+ *       <table> 
+ *         <tr class=Prop>
+ *           <td>Description: </td>
+ *           <td>This event is fired when the text is changed.</td>
+ *         </tr>
+ *         <tr class=Prop>
+ *           <td>Example: </td>
+ *           <td><pre class="prettyprint"><code>if(newText != oldText){return confirm ("Are you sure you want to change the text field?");}</code></pre></td>
+ *         </tr>
+ *       </table>
+ *       <table style="border: 1px solid black; border-collapse: collapse; ">
+ *         <tr style="border: 1px solid black; border-collapse: collapse;">
+ *           <th style="border: 1px solid black; border-collapse: collapse;padding: 5px;">Context Variables</th>
+ *           <th style="border: 1px solid black; border-collapse: collapse; padding: 5px;">newText</th>
+ *           <th style="border: 1px solid black; border-collapse: collapse; padding: 5px;">oldText</th>
+ *         </tr>
+ *       </table>
+ *     </td>
+ *   </tr>
+ *   <tr class=Prop>
+ *     <td>On Focus:</td>
+ *     <td colspan="2">
+ *       <table> 
+ *         <tr class=Prop>
+ *           <td>Description: </td>
+ *           <td>This event is fired when the user enters the text field.</td>
+ *         </tr>
+ *         <tr class=Prop>
+ *           <td>Example: </td>
+ *           <td><pre class="prettyprint"><code>me.setLabelPlacement("T")</code></pre></td>
+ *         </tr>
+ *       </table>
+ *     </td>
+ *   </tr>
+ *   <tr class=Prop>
+ *     <td>On Blur:</td>
+ *     <td colspan="2">
+ *       <table> 
+ *         <tr class=Prop>
+ *           <td>Description: </td>
+ *           <td>This event is fired when when the user exits the text field.</td>
+ *         </tr>
+ *         <tr class=Prop>
+ *           <td>Example: </td>
+ *           <td><pre class="prettyprint"><code>me.setLabelPlacement("L")</code></pre></td>
+ *         </tr>
+ *       </table>
+ *     </td>
+ *   </tr>
+ *   <tr class=Prop>
+ *     <td>On Input:</td>
+ *     <td colspan="2">
+ *       <table> 
+ *         <tr class=Prop>
+ *           <td>Description: </td>
+ *           <td>This event is fired when the user inputs text.</td>
+ *         </tr>
+ *         <tr class=Prop>
+ *           <td>Example: </td>
+ *           <td><pre class="prettyprint"><code>return potential.length<=10;</code></pre></td>
+ *         </tr>
+ *       </table>
+ *       <table style="border: 1px solid black; border-collapse: collapse; ">
+ *         <tr style="border: 1px solid black; border-collapse: collapse;">
+ *           <th style="border: 1px solid black; border-collapse: collapse;padding: 5px;">Context Variables</th>
+ *           <th style="border: 1px solid black; border-collapse: collapse; padding: 5px;">current</th>
+ *           <th style="border: 1px solid black; border-collapse: collapse; padding: 5px;">potential</th>
+ *           <th style="border: 1px solid black; border-collapse: collapse; padding: 5px;">selection</th>
+ *           <th style="border: 1px solid black; border-collapse: collapse; padding: 5px;">type</th>
+ *         </tr>
+ *         <tr style="border: 1px solid black; border-collapse: collapse;">
+ *           <td  rowspan="2" style= "border: 1px solid black; border-collapse: collapse;padding: 5px;">Properties</td>
+ *           <td style="color: black; font-weight: normal; border: 1px solid black; border-collapse: collapse;padding: 5px;">returns current value in the text control</td>
+ *           <td style="color: black; font-weight: normal; border: 1px solid black; border-collapse: collapse;padding: 5px;"><a href="http://www.w3schools.com/jsref/jsref_obj_string.asp">see JavaScript string methods</a></td>
+ *           <td style="color: black; font-weight: normal; border: 1px solid black; border-collapse: collapse;padding: 5px;">start</td>
+ *           <td style="color: black; font-weight: normal; border: 1px solid black; border-collapse: collapse;padding: 5px;">returns the type of event triggered</td>
+ *         </tr>
+ *         <tr style="border: 1px solid black; border-collapse: collapse;">
+ *           <td style="color: black; font-weight: normal; border: 1px solid black; border-collapse: collapse;padding: 5px;"></td>
+ *           <td style="color: black; font-weight: normal; border: 1px solid black; border-collapse: collapse;padding: 5px;"></td>
+ *           <td style="color: black; font-weight: normal; border: 1px solid black; border-collapse: collapse;padding: 5px;">end</td>
+ *         </tr>
+ *       </table>
+ *     </td>
+ *   </tr>
+ * </table>
+ */
+
+/**
+ * @instance
+ * @memberof Password
+ * @method setLabel
+ * @param {string} label the label for the control
+ * @desc Set label for password control
+ */
+
+/**
+ * @instance
+ * @memberof Password
+ * @method getLabel
+ * @desc Get label associated with password control
+ * @returns {string}
+ */
+
+/**
+ * @instance
+ * @memberof Password
+ * @method setLabelPlacement
+ * @param {string} placement "T"|"TOP"=Top | "L"|"LEFT"=Left
+ * @desc Set label placement for control.  NOTE: to avoid ambiguity always set the label placement using "T"|"L"
+* @example me.setLabelPlacement("L")
+ */
+
+/**
+ * @instance
+ * @memberof Password
+ * @method getLabelPlacement
+ * @desc Get label placement for control.  NOTE: This always returns the label placement as set, to avoid ambiguity always set the label placement using "T"|"L"
+ * @returns {string}
+*/
+
+/**
+ * @instance
+ * @memberof Password
+ * @method isLabelVisible
+ * @desc Get label visibility for password control
+ * @returns {boolean}
+ */
+
+/**
+ * @instance
+ * @memberof Password
+ * @method setLabelVisible
+ * @param {boolean} flag set visibility
+ * @desc Set label visibility for password control
+ */
+
+/**
+ * @instance
+ * @memberof Password
+ * @method getText
+ * @desc Get text for password control
+ * @returns {string}
+ */
+
+/**
+ * @instance
+ * @memberof Password
+ * @method setText
+ * @param {string} text set the text
+ * @desc Set text for password control
+ */
+
+/**
+ * @instance
+ * @memberof Password
+ * @method setPlaceholder
+ * @param {string} text sets placeholder text
+ * @desc Set placeholder text for password control
+ */
+
+/**
+ * @instance
+ * @memberof Password
+ * @method getPlaceholder
+ * @desc Get placeholder text associated with password control
+ * @returns {string}
+ */
+
+/**
+ * @instance
+ * @memberof Password
+ * @method setWidth
+ * @param {string} width sets the width of the control
+ * @desc Set width of password control (e.g. 50px, 20%, 2em - omitting the unit assumes px)
+ */
+
+/**
+ * @instance
+ * @memberof Password
+ * @method getWidth
+ * @desc Get configured width for password control (including unit)
+ * @returns {string}
+ */	
+
+/**
+ * @instance
+ * @memberof Password
+ * @method setSizeStyle
+ * @param {string} style "DEFAULT"|"DEF"|"NORMAL"|"D"=Default | "SMALL"|"S"=Small | "LARGE"|"L"=Large
+ * @desc Sets size style of control.  NOTE: to avoid ambiguity always set the size style using "D"|"S"|"L"
+*/		
+
+/**
+ * @instance
+ * @memberof Password
+ * @method getSizeStyle
+ * @desc Gets size style of control.  NOTE: This always returns the size style as set, to avoid ambiguity always set the size style using "D"|"S"|"L"
+ * @returns {string}
+*/		
+
+/**
+ * @instance
+ * @memberof Password
+ * @method setTabIndex
+ * @param {integer} tabIndex tab indices start at 1 and may be set sparsely
+ * @desc Sets tab index of password control
+ */
+
+/**
+ * @instance
+ * @memberof Password
+ * @method getTabIndex
+ * @desc Get tab index for password control
+ * @returns {integer}
+ */
+
+/**
+ * @instance
+ * @memberof Password
+ * @method setValidationExpression
+ * @param {string} re regular expression
+ * @desc Set validation (regular) expression of password control
+ */
+
+/**
+ * @instance
+ * @memberof Password
+ * @method getValidationExpression
+ * @desc Get validation (regular) expression for password control
+ * @returns {string}
+ */
+
+/**
+ * @instance
+ * @memberof Password
+ * @method focus
+ * @desc Set focus on this control
+ */
+
+/**
+ * @instance
+ * @memberof Password
+ * @method getType
+ * @desc Get descriptive string representing the type of control
+ * @returns {string}
+ */

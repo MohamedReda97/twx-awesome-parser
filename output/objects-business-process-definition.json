@@ -1,50 +1,800 @@
 {
   "typeName": "Business Process Definition",
-  "count": 5,
+  "count": 7,
   "objects": [
     {
-      "id": "25.96c4a0c7-8055-4af4-8adb-e0ff90566b97",
-      "versionId": "3252646c-337c-4ca2-a04a-6f0942cdc552",
-      "name": "",
-      "type": "bpd",
-      "typeName": "Business Process Definition",
-      "details": {},
-      "source": "application"
-    },
-    {
       "id": "25.8bd72fcf-6286-46f9-b8c6-fcfd060f8964",
-      "versionId": "8085dbb1-53f3-4f16-b3ba-7ce403f4f24e",
+      "versionId": "cea15752-3263-4f46-a901-ce703b5e9735",
       "name": "ODC Closure اقفال تحصيل مستندى تصدير",
       "type": "bpd",
       "typeName": "Business Process Definition",
-      "details": {},
+      "details": {
+        "elements": {
+          "scriptTasks": [
+            {
+              "name": "Check RPA",
+              "id": "7ad5ecfa-9e42-430a-8b9c-ae7e1ab888be",
+              "script": "var taskID = tw.local.Task_ID.split(\".\")[1];\r\r\nif(!tw.local.isSuccessfull){\r\r\n\tvar param = new tw.object.Map();\r\r\n\tparam.put(\"Status\",\"Failed\");\r\r\n\tparam.put(\"VersionNumber\",\"\");\r\r\n\tparam.put(\"FailureReason\",tw.local.errorMessage);\r\r\n\ttw.system.findTaskByID(taskID).complete(tw.system.org.findUserByName(\"bawadmin\"), param);\r\r\n}\r\r\n\r\r\nif(tw.local.timeout){\r\r\n\tvar param = new tw.object.Map();\r\r\n\tparam.put(\"Status\",\"Failed\");\r\r\n\tparam.put(\"VersionNumber\",\"\");\r\r\n\tparam.put(\"FailureReason\",\"Timeout\");\r\r\n\ttw.system.findTaskByID(taskID).complete(tw.system.org.findUserByName(\"bawadmin\"), param);\t\r\r\n}",
+              "lane": "back to exe hub maker",
+              "preAssignment": null,
+              "postAssignment": null
+            },
+            {
+              "name": "Audit User Task",
+              "id": "35c20c94-0404-4111-8a26-f817e1695dbe",
+              "script": "",
+              "lane": "System",
+              "preAssignment": null,
+              "postAssignment": null
+            }
+          ],
+          "callActivities": [
+            {
+              "name": "ACT01 Create ODC Closure Request",
+              "id": "68e55774-7619-4db3-8548-1d17e2918203",
+              "callsTarget": "ClosureACT01 - Create ODC Closure Request",
+              "callsTargetId": "1.2af38b7e-9461-4887-9ad2-24d4565ee49b",
+              "lane": "Branch / Hub Maker",
+              "preAssignment": "tw.local.StepName",
+              "postAssignment": "tw.local.isFirstTime"
+            },
+            {
+              "name": "ACT02 Review ODC Closure Request",
+              "id": "6bf177a9-2ccf-48dc-8575-5c4463d30254",
+              "callsTarget": "ClosureACT02 - Review ODC Closure Request by Compliance Rep",
+              "callsTargetId": "1.0694c1c7-863e-4809-8c83-bafbba3eb2bb",
+              "lane": "Branch Hub Compliance Rep",
+              "preAssignment": "tw.local.StepName",
+              "postAssignment": "tw.local.fromTradeFo"
+            },
+            {
+              "name": " ACT03 Review ODC Closure Request By Trade Fo",
+              "id": "fb9fca06-f077-4411-861c-9e7b74adf765",
+              "callsTarget": "ClosureACT03 - Review ODC Closure Request by Trade FO",
+              "callsTargetId": "1.4d1b706e-dacc-4a2d-94de-2a07343a4ea8",
+              "lane": "Trade Front Office",
+              "preAssignment": "tw.local.StepName",
+              "postAssignment": "tw.local.fromComplianceRep"
+            },
+            {
+              "name": "ACT04 Review ODC Closure Request By Trade Fo Checker",
+              "id": "7701697d-2665-4cc9-8960-93b07a3367aa",
+              "callsTarget": "ClosureACT04 - Review ODC Closure Request by Trade FO Checker",
+              "callsTargetId": "1.da205dca-ccab-4203-9f89-719cb8957cc5",
+              "lane": "Trade Front Office Checker",
+              "preAssignment": "tw.local.StepName",
+              "postAssignment": null
+            },
+            {
+              "name": "ACT05  ODC Closure Execution",
+              "id": "925db450-d9d8-4d13-83cc-f0508b787c62",
+              "callsTarget": "ClosureACT05 - ODC Closure Execution",
+              "callsTargetId": "1.93bd8272-8f96-42db-92a3-1bdb463c2c28",
+              "lane": "back to exe hub maker",
+              "preAssignment": "tw.local.StepName",
+              "postAssignment": "tw.local.fromComplianceRep"
+            },
+            {
+              "name": "RPA",
+              "id": "32735e3c-daa0-4975-8ec3-9cec2ad7d8dd",
+              "callsTarget": "",
+              "callsTargetId": "341e5684-f12d-4cf6-aac8-d2dc77d648ab/1.395aa648-74c1-4677-9c3d-ada4627e3a76",
+              "lane": "back to exe hub maker",
+              "preAssignment": null,
+              "postAssignment": null
+            },
+            {
+              "name": "Add Queue Reassign",
+              "id": "efa3a3ca-0fe3-4c37-8309-896619f22c8a",
+              "callsTarget": "",
+              "callsTargetId": "e7f5bcc3-f81d-4081-8e50-1313adb0bef4/1.f0f51c49-355f-4c64-8002-0173a3dc6759",
+              "lane": "back to exe hub maker",
+              "preAssignment": "tw.local.username",
+              "postAssignment": null
+            },
+            {
+              "name": "ACT06  ODC Closure Execution",
+              "id": "cab9b5ba-5485-402b-8bb5-862badcf84e5",
+              "callsTarget": "ClosureACT06 - ODC Closure Execution Review",
+              "callsTargetId": "1.1f1dbd1c-004f-40a3-bca6-511fc4094964",
+              "lane": "Execution Hub Checker",
+              "preAssignment": "tw.local.StepName",
+              "postAssignment": "tw.local.compApprovalInit"
+            },
+            {
+              "name": "send Escalation Mail",
+              "id": "975c2a34-b327-4628-89c0-703bc40eac9d",
+              "callsTarget": "Send Escalation Mail",
+              "callsTargetId": "1.d7acf968-6740-4e52-b037-2049466eeeb2",
+              "lane": "System",
+              "preAssignment": null,
+              "postAssignment": null
+            }
+          ],
+          "exclusiveGateways": [
+            {
+              "name": "Cancel?",
+              "id": "969dafeb-bdca-47fe-8b4a-7d20c5c6f986"
+            },
+            {
+              "name": "ACT02Decision",
+              "id": "bbb343ab-cad3-42e8-8cdf-927be59b54c7"
+            },
+            {
+              "name": "Exclusive Gateway",
+              "id": "908dbf99-2826-4345-84da-e978a05ad919"
+            },
+            {
+              "name": "ACT04Decision",
+              "id": "81f25fd5-a3ce-4e0e-8c8d-e7dd3fe4e6a1"
+            },
+            {
+              "name": "Closed?",
+              "id": "7a09581e-1a63-4dbc-862a-98ec00e26219"
+            },
+            {
+              "name": "ACT06Decision",
+              "id": "29265816-0f66-4a98-8df4-fb7790107405"
+            }
+          ],
+          "events": [
+            {
+              "name": "Start",
+              "id": "198ea770-2e81-49a9-8c6c-0e341b5f2c32",
+              "eventType": "start"
+            },
+            {
+              "name": "cancel",
+              "id": "96ed6632-0e83-41a4-8ad8-96e57d448f32",
+              "eventType": "end"
+            },
+            {
+              "name": "Terminate",
+              "id": "c58e107b-da02-48b8-8a6c-708b76fa25ed",
+              "eventType": "end"
+            },
+            {
+              "name": "End",
+              "id": "b195c491-a663-4844-8c35-e3372551941e",
+              "eventType": "end"
+            },
+            {
+              "name": "End Event",
+              "id": "ef030c4a-84df-4dec-868a-607a8059d8a4",
+              "eventType": "end"
+            },
+            {
+              "name": "End Event1",
+              "id": "40bc9c49-3420-4b68-82fe-da8c33a8ce6a",
+              "eventType": "end"
+            }
+          ]
+        }
+      },
+      "hasDetails": true,
+      "source": "application"
+    },
+    {
+      "id": "25.c13f83fb-bc9f-4bc7-8cc8-2d8242b2ea85",
+      "versionId": "404b010b-cb74-4a7d-a005-4a582d3fac33",
+      "name": "ODC Closure اقفال تحصيل مستندى تصدير_Trade Compliance Subprocess",
+      "type": "bpd",
+      "typeName": "Business Process Definition",
+      "details": {
+        "elements": {
+          "scriptTasks": [
+            {
+              "name": "Audit User Task Trade Compliance",
+              "id": "fa524e3d-5c49-4f3f-8305-a46ad4eb0e37",
+              "script": "",
+              "lane": "System",
+              "preAssignment": null,
+              "postAssignment": null
+            }
+          ],
+          "callActivities": [
+            {
+              "name": "Trade Compliance",
+              "id": "430b7ac0-72f3-440f-8d1b-2ad91e927862",
+              "callsTarget": "Trade Compliance",
+              "callsTargetId": "1.7276be8c-00f4-4766-949c-bcd033b050c3",
+              "lane": "Trade Compliance",
+              "preAssignment": "tw.local.StepName",
+              "postAssignment": null
+            },
+            {
+              "name": "Escalation email service",
+              "id": "6b3353cd-16e7-439b-8b82-968c32492c3e",
+              "callsTarget": "Send Escalation Mail",
+              "callsTargetId": "1.d7acf968-6740-4e52-b037-2049466eeeb2",
+              "lane": "System",
+              "preAssignment": null,
+              "postAssignment": null
+            }
+          ],
+          "exclusiveGateways": [],
+          "events": [
+            {
+              "name": "Subprocess Start",
+              "id": "a34011e4-e8d0-48ff-893c-5aa5f929ea11",
+              "eventType": "start"
+            },
+            {
+              "name": "Subprocess End",
+              "id": "75f13b2b-7d29-49e3-8ab5-4244120e8a8b",
+              "eventType": "end"
+            },
+            {
+              "name": "End Event2",
+              "id": "222e4e44-ac43-4694-8558-be764497aebb",
+              "eventType": "end"
+            }
+          ]
+        }
+      },
+      "hasDetails": true,
       "source": "application"
     },
     {
       "id": "25.0b754ec1-9413-443e-9edc-f7cc6429b0d6",
-      "versionId": "7af263f8-ec28-4d86-9715-bda0c6db59f3",
+      "versionId": "d8dd0be5-015a-4338-a783-23b55295562b",
       "name": "ODC Collection تسجيل حصائل على مستند تحصيل تصدير",
       "type": "bpd",
       "typeName": "Business Process Definition",
-      "details": {},
+      "details": {
+        "elements": {
+          "scriptTasks": [
+            {
+              "name": "Check RPA",
+              "id": "1c533ad1-cdae-4f9f-86ca-10ae6dbd784d",
+              "script": "var taskID = tw.local.Task_ID.split(\".\")[1];\r\r\nif(!tw.local.isSuccessfull){\r\r\n\tvar param = new tw.object.Map();\r\r\n\tparam.put(\"Status\",\"Failed\");\r\r\n\tparam.put(\"VersionNumber\",\"\");\r\r\n\tparam.put(\"FailureReason\",tw.local.errorMessage);\r\r\n\ttw.system.findTaskByID(taskID).complete(tw.system.org.findUserByName(\"bawadmin\"), param);\r\r\n}\r\r\n\r\r\nif(tw.local.timeout){\r\r\n\tvar param = new tw.object.Map();\r\r\n\tparam.put(\"Status\",\"Failed\");\r\r\n\tparam.put(\"VersionNumber\",\"\");\r\r\n\tparam.put(\"FailureReason\",\"Timeout\");\r\r\n\ttw.system.findTaskByID(taskID).complete(tw.system.org.findUserByName(\"bawadmin\"), param);\t\r\r\n}",
+              "lane": "Hub Maker",
+              "preAssignment": null,
+              "postAssignment": null
+            },
+            {
+              "name": "Add Queue Reassign",
+              "id": "4d19ac25-2c19-4603-83ce-946516a12cd2",
+              "script": "",
+              "lane": "Hub Maker",
+              "preAssignment": "tw.local.username",
+              "postAssignment": null
+            },
+            {
+              "name": "Audit User Task",
+              "id": "62a0333f-0004-4a4c-8d46-3bdfa95fe848",
+              "script": "",
+              "lane": "System",
+              "preAssignment": null,
+              "postAssignment": null
+            }
+          ],
+          "callActivities": [
+            {
+              "name": "Create ODC Collection Request ",
+              "id": "6c34a494-03cd-45bc-aa32-0c51125d02b3",
+              "callsTarget": "Col01 - Create ODC Collection Request",
+              "callsTargetId": "1.6255f65f-d7ce-452d-9058-3f856ea792e0",
+              "lane": "Hub Maker",
+              "preAssignment": "tw.local.StepName",
+              "postAssignment": "tw.local.isFirstTime"
+            },
+            {
+              "name": "RPA",
+              "id": "186ad443-2fc4-4403-8538-c745cba73ae2",
+              "callsTarget": "",
+              "callsTargetId": "341e5684-f12d-4cf6-aac8-d2dc77d648ab/1.395aa648-74c1-4677-9c3d-ada4627e3a76",
+              "lane": "Hub Maker",
+              "preAssignment": null,
+              "postAssignment": null
+            },
+            {
+              "name": "Review ODC Collection Request",
+              "id": "3bbe7551-846d-4a0d-88b3-cbeee15bc65b",
+              "callsTarget": "Col02 - Review ODC Collection Request",
+              "callsTargetId": "1.429675b0-3048-4910-8b11-e3d3eb0cd480",
+              "lane": "Hub Checker",
+              "preAssignment": "tw.local.StepName",
+              "postAssignment": null
+            },
+            {
+              "name": "Send Escalation Mail",
+              "id": "b8ccb671-17d0-4597-8b78-b1c858672409",
+              "callsTarget": "Send Escalation Mail",
+              "callsTargetId": "1.d7acf968-6740-4e52-b037-2049466eeeb2",
+              "lane": "System",
+              "preAssignment": null,
+              "postAssignment": null
+            },
+            {
+              "name": "Inform CAD",
+              "id": "e8be67ea-a52a-49f7-8390-eafcdd446497",
+              "callsTarget": "Send Mail to CAD Team",
+              "callsTargetId": "1.a6205b87-57cc-47bb-abfc-edff0743b08e",
+              "lane": "System",
+              "preAssignment": "tw.local.mailTo",
+              "postAssignment": null
+            }
+          ],
+          "exclusiveGateways": [
+            {
+              "name": "Collection?",
+              "id": "d68cfdf2-0f3d-4500-8b3b-a6851b24451e"
+            },
+            {
+              "name": "Check Action",
+              "id": "8d5488bb-0472-4bd1-8c3d-ed8a0fd2208f"
+            }
+          ],
+          "events": [
+            {
+              "name": "Start",
+              "id": "2300d98d-7703-498f-a179-da81156caffd",
+              "eventType": "start"
+            },
+            {
+              "name": "End",
+              "id": "cec1ddb6-3c42-4074-856d-540f65de1d59",
+              "eventType": "end"
+            },
+            {
+              "name": "End Authorize",
+              "id": "e3ff4aa9-775b-4509-9e93-4b2a929de6ad",
+              "eventType": "end"
+            },
+            {
+              "name": "End Cancel",
+              "id": "4548b365-e059-4b60-88e6-963bd9bdb102",
+              "eventType": "end"
+            },
+            {
+              "name": "End Event1",
+              "id": "e3080c20-6d98-42f1-85ae-ccf62f692b6e",
+              "eventType": "end"
+            }
+          ]
+        }
+      },
+      "hasDetails": true,
       "source": "application"
     },
     {
       "id": "25.82af5d84-ef2a-4494-91b9-42f60fbfd8d9",
-      "versionId": "8af1b4b7-9041-46d7-a78e-959b105f2457",
+      "versionId": "a1f00927-e66e-40b9-8153-5ddb1fec703e",
       "name": "ODC Creation and Amendment انشاء و تحديث تحصيل مستندى تصدير",
       "type": "bpd",
       "typeName": "Business Process Definition",
-      "details": {},
+      "details": {
+        "elements": {
+          "scriptTasks": [
+            {
+              "name": "Check RPA",
+              "id": "492e0a25-c9e8-414a-8a89-1e1427f01ec9",
+              "script": "var taskID = tw.local.Task_ID.split(\".\")[1];\r\r\nif(!tw.local.isSuccessfull){\r\r\n\tvar param = new tw.object.Map();\r\r\n\tparam.put(\"Status\",\"Failed\");\r\r\n\tparam.put(\"VersionNumber\",\"\");\r\r\n\tparam.put(\"FailureReason\",tw.local.errorMessageRPA);\r\r\n\ttw.system.findTaskByID(taskID).complete(tw.system.org.findUserByName(\"bawadmin\"), param);\r\r\n\t\t\r\r\n}\r\r\nif(tw.local.timeout){\r\r\n\tvar param = new tw.object.Map();\r\r\n\tparam.put(\"Status\",\"Failed\");\r\r\n\tparam.put(\"VersionNumber\",\"\");\r\r\n\tparam.put(\"FailureReason\",\"Timeout\");\r\r\n\ttw.system.findTaskByID(taskID).complete(tw.system.org.findUserByName(\"bawadmin\"), param);\r\r\n\r\r\n\r\r\n\t\r\r\n}",
+              "lane": "Execution Hub Maker",
+              "preAssignment": null,
+              "postAssignment": null
+            },
+            {
+              "name": "Audit User Task",
+              "id": "334c73e7-53ed-427c-89fc-6c12d4be0bdd",
+              "script": "",
+              "lane": "System",
+              "preAssignment": null,
+              "postAssignment": null
+            }
+          ],
+          "callActivities": [
+            {
+              "name": "ACT01-Create/Amend ODC Request",
+              "id": "4b4b129a-b268-4428-b193-f9f6d8e5c929",
+              "callsTarget": "Act01 - Create or Amend ODC Request",
+              "callsTargetId": "1.b1c1ff54-ed9e-4a3e-9cad-934dea1b2fd1",
+              "lane": "Branch / Hub Maker",
+              "preAssignment": "tw.local.StepName",
+              "postAssignment": "tw.local.isFirstTime"
+            },
+            {
+              "name": "Print Remittance Letter",
+              "id": "8b0ddbba-564f-4b55-8826-d9aa92c61f99",
+              "callsTarget": "ACT06 -Print Remittance Letter",
+              "callsTargetId": "1.bded59b5-cf5e-4dd0-91a9-dcaa169248e9",
+              "lane": "Branch / Hub Maker",
+              "preAssignment": "tw.local.StepName",
+              "postAssignment": null
+            },
+            {
+              "name": "Send Mail to Initiator/CAD team ",
+              "id": "8bc1cd19-36b6-47e8-8256-4e8e30cda2fe",
+              "callsTarget": "Send Rem Letter Mail",
+              "callsTargetId": "1.e6908115-4586-455f-bf73-b96b60019972",
+              "lane": "Branch / Hub Maker",
+              "preAssignment": null,
+              "postAssignment": null
+            },
+            {
+              "name": "ACT02-Review ODC Request By Compliace Rep.",
+              "id": "db23215a-a1e0-49ab-b38e-3edcc5d7ba2c",
+              "callsTarget": "ACT02 Review ODC Request By Compliance Rep",
+              "callsTargetId": "1.e31385fc-75d6-4686-b548-3d16aa42adf3",
+              "lane": "Branch / Hub compliance Rep.",
+              "preAssignment": "tw.local.StepName",
+              "postAssignment": "tw.local.fromTradeFo"
+            },
+            {
+              "name": "ACT03-Review ODC Request By Trade FO",
+              "id": "dad60095-00d8-4276-b6db-83336ef5acac",
+              "callsTarget": "Act03 -  Review ODC Request by Trade Front Office",
+              "callsTargetId": "1.bf8bbf75-6f66-437d-a0fd-8d9ce53f1046",
+              "lane": "Trade Front Office",
+              "preAssignment": "tw.local.StepName",
+              "postAssignment": "tw.local.fromComplianceRep"
+            },
+            {
+              "name": "ODC Execution - Initiation",
+              "id": "5baef4dc-ae97-4dde-9e23-d644b4267e2d",
+              "callsTarget": "ACT04 - ODC Execution Hub Initiation",
+              "callsTargetId": "1.9321de6e-e6a5-435e-accb-0fbbd129c48a",
+              "lane": "Execution Hub Maker",
+              "preAssignment": "tw.local.StepName",
+              "postAssignment": "tw.local.fromComplianceRep"
+            },
+            {
+              "name": "RPA",
+              "id": "be06e46f-9f5d-4908-8375-570460016ab8",
+              "callsTarget": "RPA",
+              "callsTargetId": "1.26ecc41c-4176-4332-926a-476017380f5a",
+              "lane": "Execution Hub Maker",
+              "preAssignment": null,
+              "postAssignment": null
+            },
+            {
+              "name": "Add Queue Reassign",
+              "id": "7758d67d-8899-437b-8f5c-12e1202ff64f",
+              "callsTarget": "",
+              "callsTargetId": "e7f5bcc3-f81d-4081-8e50-1313adb0bef4/1.f0f51c49-355f-4c64-8002-0173a3dc6759",
+              "lane": "Execution Hub Maker",
+              "preAssignment": "tw.local.Username",
+              "postAssignment": null
+            },
+            {
+              "name": "Act05 - ODC Execution - Initiation - review",
+              "id": "9e44cde9-a325-4fa2-a58c-5eb215044d87",
+              "callsTarget": "Act05 - ODC Execution Hub – Initiation Review",
+              "callsTargetId": "1.6d4e9c1d-5624-494c-96fb-3bd94584f975",
+              "lane": "Execution Hub Checker",
+              "preAssignment": "tw.local.StepName",
+              "postAssignment": "tw.local.compApprovalInit"
+            },
+            {
+              "name": "Send Escalation mail",
+              "id": "042391f2-3dba-4a35-839b-ae74a7f49733",
+              "callsTarget": "Send Escalation Mail",
+              "callsTargetId": "1.d7acf968-6740-4e52-b037-2049466eeeb2",
+              "lane": "System",
+              "preAssignment": null,
+              "postAssignment": null
+            }
+          ],
+          "exclusiveGateways": [
+            {
+              "name": "DecisionACT01?",
+              "id": "287e7737-bed8-434a-807f-3797db93e815"
+            },
+            {
+              "name": "Decision?",
+              "id": "326824ab-2799-49e6-8872-aebb656ee215"
+            },
+            {
+              "name": "DecisionACT02?",
+              "id": "5226f795-1fb6-4834-8181-f98a858d441f"
+            },
+            {
+              "name": "Decision03?",
+              "id": "6636bd3f-83bc-4c06-a6fa-ddd5ea4b7ad0"
+            },
+            {
+              "name": "Compliance requested from FO?",
+              "id": "eab0f5ea-2c91-4bb7-84db-78a5cb1144e6"
+            },
+            {
+              "name": "Recreate?",
+              "id": "f73a731f-45d3-4add-88f0-f91404de98f3"
+            },
+            {
+              "name": "Exclusive Gateway",
+              "id": "5585ce17-20f3-4fc4-8f33-ca744aa7e44a"
+            }
+          ],
+          "events": [
+            {
+              "name": "Start",
+              "id": "ad74e9b7-aca8-47bb-bdd4-b851c1e1eb66",
+              "eventType": "start"
+            },
+            {
+              "name": "TerminateAct01",
+              "id": "3dce5eb9-7e21-4bf0-ba6d-479c1e68ff49",
+              "eventType": "end"
+            },
+            {
+              "name": "End Event",
+              "id": "b5b64d78-cdaa-435a-8363-9a761092db3c",
+              "eventType": "end"
+            },
+            {
+              "name": "End Event1",
+              "id": "9b4225c3-d93b-46d8-84b4-540d959b0610",
+              "eventType": "end"
+            },
+            {
+              "name": "TerminateACt03",
+              "id": "65b61876-d96c-474b-b1e2-2fd925caebee",
+              "eventType": "end"
+            },
+            {
+              "name": "End",
+              "id": "8a008b6c-bafc-4df8-8c76-79b945576227",
+              "eventType": "end"
+            },
+            {
+              "name": "Terminate",
+              "id": "764873e6-cc4a-4397-8760-cf7a29db05c5",
+              "eventType": "end"
+            },
+            {
+              "name": "End ",
+              "id": "90150625-9d40-41d0-815e-977855cf26f3",
+              "eventType": "end"
+            }
+          ]
+        }
+      },
+      "hasDetails": true,
       "source": "application"
     },
     {
       "id": "25.933ae173-470f-4c1f-8a2b-6521da495a38",
-      "versionId": "06482096-b951-4eed-b5a7-b9c8ff257a6c",
+      "versionId": "705cdd4c-5a57-409a-ba86-1b9749413a85",
       "name": "ODC Reversal اعادة قيد تحصيل مستندى تصدير",
       "type": "bpd",
       "typeName": "Business Process Definition",
-      "details": {},
+      "details": {
+        "elements": {
+          "scriptTasks": [
+            {
+              "name": "Audit User Task",
+              "id": "3f520227-ddd8-4f18-8488-da8c32be1c97",
+              "script": "",
+              "lane": "System",
+              "preAssignment": null,
+              "postAssignment": null
+            }
+          ],
+          "callActivities": [
+            {
+              "name": "ACT01 Create ODC Reversal Request",
+              "id": "cfc9c782-1e15-4918-8597-81c8a226db13",
+              "callsTarget": "RACT01 - Create ODC Reversal Request",
+              "callsTargetId": "1.b9bf1811-6e1e-41a3-828b-39059fa168cb",
+              "lane": "Hub / center Maker",
+              "preAssignment": "tw.local.StepName",
+              "postAssignment": "tw.local.isFirstTime"
+            },
+            {
+              "name": "ACT02 Review ODC Reversal Request",
+              "id": "204734d8-ab45-42fa-8dde-9f2d35136f07",
+              "callsTarget": "RACT02 - Review ODC Reversal Request",
+              "callsTargetId": "1.c71c7233-23ac-4e5f-a241-09cd96502615",
+              "lane": "Hub / center Checker",
+              "preAssignment": "tw.local.StepName",
+              "postAssignment": null
+            },
+            {
+              "name": "Send Escalation mail",
+              "id": "956dcbec-d5f4-4a3d-8f90-86bed3f21e33",
+              "callsTarget": "Send Escalation Mail",
+              "callsTargetId": "1.d7acf968-6740-4e52-b037-2049466eeeb2",
+              "lane": "System",
+              "preAssignment": null,
+              "postAssignment": null
+            }
+          ],
+          "exclusiveGateways": [
+            {
+              "name": "Checker Decision Action",
+              "id": "a66b788f-eb9d-4662-8d5a-15e1618e166e"
+            }
+          ],
+          "events": [
+            {
+              "name": "Start",
+              "id": "4d00b4e6-b345-483f-af99-b6815f8ebb6f",
+              "eventType": "start"
+            },
+            {
+              "name": "Approve",
+              "id": "6869d68e-0a73-474c-a9da-f7c788cf4d26",
+              "eventType": "end"
+            },
+            {
+              "name": "Cancel",
+              "id": "60aa4589-527a-4330-8c62-e27d874075b2",
+              "eventType": "end"
+            },
+            {
+              "name": "End Event",
+              "id": "c8b8dc76-b1ba-4d4e-8653-ea6dc4248654",
+              "eventType": "end"
+            }
+          ]
+        }
+      },
+      "hasDetails": true,
+      "source": "application"
+    },
+    {
+      "id": "25.3b1d1e8d-7112-41e0-80a9-0fd5f5dd7448",
+      "versionId": "e30e9a37-e03a-4a50-9c35-ec1f319913e3",
+      "name": "Recreate RPA",
+      "type": "bpd",
+      "typeName": "Business Process Definition",
+      "details": {
+        "elements": {
+          "scriptTasks": [
+            {
+              "name": "Recreate Check RPA",
+              "id": "be9ca94f-638c-4cc4-8e19-78a6602dfd1b",
+              "script": "var taskID = tw.local.Task_ID.split(\".\")[1];\r\r\nif(!tw.local.isSuccessfull){\r\r\n\tvar param = new tw.object.Map();\r\r\n\tparam.put(\"Status\",\"Failed\");\r\r\n\tparam.put(\"VersionNumber\",\"\");\r\r\n\tparam.put(\"FailureReason\",tw.local.errorMessageRPA);\r\r\n\ttw.system.findTaskByID(taskID).complete(tw.system.org.findUserByName(\"bawadmin\"), param);\r\r\n\t\t\r\r\n}\r\r\nif(tw.local.timeout){\r\r\n\tvar param = new tw.object.Map();\r\r\n\tparam.put(\"Status\",\"Failed\");\r\r\n\tparam.put(\"VersionNumber\",\"\");\r\r\n\tparam.put(\"FailureReason\",\"Timeout\");\r\r\n\ttw.system.findTaskByID(taskID).complete(tw.system.org.findUserByName(\"bawadmin\"), param);\r\r\n\r\r\n\r\r\n\t\r\r\n}",
+              "lane": "Team",
+              "preAssignment": null,
+              "postAssignment": null
+            },
+            {
+              "name": " Check RPA",
+              "id": "a2f561bd-b6d5-42d3-886d-3198295c3a8f",
+              "script": "var taskID = tw.local.taskId2.split(\".\")[1];\r\r\nif(!tw.local.isSuccessfull){\r\r\n\tvar param = new tw.object.Map();\r\r\n\tparam.put(\"Status\",\"Failed\");\r\r\n\tparam.put(\"VersionNumber\",\"\");\r\r\n\tparam.put(\"FailureReason\",tw.local.errorMessageRPA);\r\r\n\ttw.system.findTaskByID(taskID).complete(tw.system.org.findUserByName(\"bawadmin\"), param);\r\r\n\t\t\r\r\n}\r\r\nif(tw.local.timeout2){\r\r\n\tvar param = new tw.object.Map();\r\r\n\tparam.put(\"Status\",\"Failed\");\r\r\n\tparam.put(\"VersionNumber\",\"\");\r\r\n\tparam.put(\"FailureReason\",\"Timeout\");\r\r\n\ttw.system.findTaskByID(taskID).complete(tw.system.org.findUserByName(\"bawadmin\"), param);\r\r\n\r\r\n\r\r\n\t\r\r\n}",
+              "lane": "Team",
+              "preAssignment": null,
+              "postAssignment": null
+            },
+            {
+              "name": "checkStatus",
+              "id": "cfd1b76c-ecd3-4532-8492-fbcfa2e11315",
+              "script": "if(tw.local.status1!=\"Success\"){\r\r\n\ttw.local.status =\"Failed\";\r\r\n\ttw.local.failureReason = tw.local.failerReson1;\r\r\n}\r\r\nif(tw.local.status2!=\"Success\"){\r\r\n\ttw.local.status =\"Failed\";\r\r\n\ttw.local.failureReason = tw.local.failerReson2;\r\r\n}",
+              "lane": "Team",
+              "preAssignment": null,
+              "postAssignment": null
+            },
+            {
+              "name": "bridge",
+              "id": "0822af12-76f9-4328-8b97-8b6a4a56fdee",
+              "script": "",
+              "lane": "Team",
+              "preAssignment": null,
+              "postAssignment": null
+            }
+          ],
+          "callActivities": [
+            {
+              "name": "First RPA",
+              "id": "c7fee43f-16fe-4311-8467-e12ad3104303",
+              "callsTarget": "",
+              "callsTargetId": "341e5684-f12d-4cf6-aac8-d2dc77d648ab/1.395aa648-74c1-4677-9c3d-ada4627e3a76",
+              "lane": "Team",
+              "preAssignment": null,
+              "postAssignment": null
+            },
+            {
+              "name": "Second RPA",
+              "id": "c9a2355c-75ce-47d4-8f7d-ab66e50b133f",
+              "callsTarget": "",
+              "callsTargetId": "341e5684-f12d-4cf6-aac8-d2dc77d648ab/1.395aa648-74c1-4677-9c3d-ada4627e3a76",
+              "lane": "Team",
+              "preAssignment": null,
+              "postAssignment": null
+            },
+            {
+              "name": " Add Queue Reassign",
+              "id": "9df246b7-5393-42fa-839e-58bb75ff396b",
+              "callsTarget": "",
+              "callsTargetId": "e7f5bcc3-f81d-4081-8e50-1313adb0bef4/1.f0f51c49-355f-4c64-8002-0173a3dc6759",
+              "lane": "Team",
+              "preAssignment": "tw.local.Username",
+              "postAssignment": null
+            },
+            {
+              "name": "Add Queue Reassign for second RPA",
+              "id": "ff1f5f35-d6eb-4950-8fd1-efeca427275a",
+              "callsTarget": "",
+              "callsTargetId": "e7f5bcc3-f81d-4081-8e50-1313adb0bef4/1.f0f51c49-355f-4c64-8002-0173a3dc6759",
+              "lane": "Team",
+              "preAssignment": "tw.local.Username",
+              "postAssignment": null
+            }
+          ],
+          "exclusiveGateways": [],
+          "events": [
+            {
+              "name": "Recreate Subprocess Start",
+              "id": "9a847c58-0cc1-4676-876f-15e2353918bd",
+              "eventType": "start"
+            },
+            {
+              "name": "First End",
+              "id": "1f415922-72a2-4235-875f-50f5800479cb",
+              "eventType": "end"
+            },
+            {
+              "name": "Second End",
+              "id": "c4f2c32d-29fd-43b0-8041-5a415433d5bd",
+              "eventType": "end"
+            }
+          ]
+        }
+      },
+      "hasDetails": true,
+      "source": "application"
+    },
+    {
+      "id": "25.96c4a0c7-8055-4af4-8adb-e0ff90566b97",
+      "versionId": "5dafbaf9-7984-4d74-b97c-ff507978f14f",
+      "name": "Trade Compliance Unified subprocess",
+      "type": "bpd",
+      "typeName": "Business Process Definition",
+      "details": {
+        "elements": {
+          "scriptTasks": [
+            {
+              "name": "Trade Compliance Audit User Task",
+              "id": "db050aa3-5b4b-44c8-8b14-0376c2bc3945",
+              "script": "",
+              "lane": "system",
+              "preAssignment": null,
+              "postAssignment": null
+            }
+          ],
+          "callActivities": [
+            {
+              "name": "ACT07- Review ODC By Compliance",
+              "id": "bc337dcc-6688-472a-8487-e99cca9b9d71",
+              "callsTarget": "Trade Compliance",
+              "callsTargetId": "1.7276be8c-00f4-4766-949c-bcd033b050c3",
+              "lane": "Compliance",
+              "preAssignment": "tw.local.StepName",
+              "postAssignment": null
+            },
+            {
+              "name": "Escalation email service",
+              "id": "726c29b6-ca92-4806-8dc0-3cea258f1845",
+              "callsTarget": "Send Escalation Mail",
+              "callsTargetId": "1.d7acf968-6740-4e52-b037-2049466eeeb2",
+              "lane": "system",
+              "preAssignment": null,
+              "postAssignment": null
+            }
+          ],
+          "exclusiveGateways": [],
+          "events": [
+            {
+              "name": "Subprocess Start",
+              "id": "90571470-899e-44db-b0da-bb2842927ca3",
+              "eventType": "start"
+            },
+            {
+              "name": "Subprocess End",
+              "id": "75ad6090-c994-431b-90d3-803dc6b15c5a",
+              "eventType": "end"
+            },
+            {
+              "name": "End Event2",
+              "id": "2285ed84-ab47-40b1-8b3e-5545fc5020f8",
+              "eventType": "end"
+            }
+          ]
+        }
+      },
+      "hasDetails": true,
       "source": "application"
     }
   ]

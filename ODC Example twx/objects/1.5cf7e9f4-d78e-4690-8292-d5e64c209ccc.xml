@@ -1,0 +1,2128 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<teamworks>
+    <process id="1.5cf7e9f4-d78e-4690-8292-d5e64c209ccc" name="cancel request">
+        <lastModified>1708022602883</lastModified>
+        <lastModifiedBy>Naira</lastModifiedBy>
+        <processId>1.5cf7e9f4-d78e-4690-8292-d5e64c209ccc</processId>
+        <image isNull="true" />
+        <tabGroup isNull="true" />
+        <startingProcessItemId>2025.86115b78-92a0-4e0d-87de-e57aa2612ac0</startingProcessItemId>
+        <isRootProcess>false</isRootProcess>
+        <processType>12</processType>
+        <isErrorHandlerEnabled>false</isErrorHandlerEnabled>
+        <errorHandlerItemId isNull="true" />
+        <isLoggingVariables>false</isLoggingVariables>
+        <isTransactional>false</isTransactional>
+        <processTimingLevel isNull="true" />
+        <participantRef isNull="true" />
+        <exposedType>0</exposedType>
+        <isTrackingEnabled>true</isTrackingEnabled>
+        <xmlData isNull="true" />
+        <cachingType>false</cachingType>
+        <itemLabel isNull="true" />
+        <cacheLength>0</cacheLength>
+        <mobileReady>false</mobileReady>
+        <sboSyncEnabled>true</sboSyncEnabled>
+        <externalId isNull="true" />
+        <isSecured>false</isSecured>
+        <isAjaxExposed>true</isAjaxExposed>
+        <description isNull="true" />
+        <guid>7b822ad2-58fd-4b42-8057-61e2c6632629</guid>
+        <versionId>40ddb122-c3fd-482f-b426-9ae42124b12a</versionId>
+        <dependencySummary>&lt;dependencySummary id="bpdid:4985b8f53aaab45f:-2099c5d4:18da7bca024:241e" /&gt;</dependencySummary>
+        <jsonData>{"rootElement":[{"flowElement":[{"parallelMultiple":false,"outgoing":["2027.fb0364dc-b48a-4fb9-b614-3d0641e140a4"],"isInterrupting":false,"extensionElements":{"nodeVisualInfo":[{"color":"#F8F8F8","width":24,"x":45,"y":80,"declaredType":"TNodeVisualInfo","height":24}]},"name":"Start","declaredType":"startEvent","id":"e0a93a43-022a-4cdc-8b2b-79320ac694ed"},{"incoming":["f0bdcf91-5019-4a70-a764-d93504789a2e"],"extensionElements":{"nodeVisualInfo":[{"color":"#F8F8F8","width":24,"x":770,"y":80,"declaredType":"TNodeVisualInfo","height":24}],"endStateId":["guid:7cf3b5b49b9bcdb8:3c4f5f27:18bd738e4b3:1e91"],"saveExecutionContext":[true]},"name":"End","declaredType":"endEvent","id":"9b9546e9-6a65-4839-b352-490ee13e150e"},{"targetRef":"86115b78-92a0-4e0d-87de-e57aa2612ac0","extensionElements":{"linkVisualInfo":[{"sourcePortLocation":"rightCenter","showCoachControlLabel":false,"labelPosition":0.0,"targetPortLocation":"leftCenter","declaredType":"TLinkVisualInfo","saveExecutionContext":false,"showLabel":false}]},"name":"To End","declaredType":"sequenceFlow","id":"2027.fb0364dc-b48a-4fb9-b614-3d0641e140a4","sourceRef":"e0a93a43-022a-4cdc-8b2b-79320ac694ed"},{"startQuantity":1,"outgoing":["cbe3139f-4e2f-44f8-b77d-4873167dd1c8"],"incoming":["2027.fb0364dc-b48a-4fb9-b614-3d0641e140a4"],"extensionElements":{"nodeVisualInfo":[{"width":95,"x":166,"y":57,"declaredType":"TNodeVisualInfo","height":70}],"preAssignmentScript":[]},"name":"Script Task","isForCompensation":false,"completionQuantity":1,"declaredType":"scriptTask","id":"86115b78-92a0-4e0d-87de-e57aa2612ac0","scriptFormat":"text\/x-javascript","script":{"content":["if (tw.local.idcRequest.parentRequestNo == \"\" || tw.local.idcRequest.parentRequestNo == null || tw.local.idcRequest.parentRequestNo == undefined ) {\r\n\ttw.local.cancelPath = tw.local.idcRequest.CustomerInfo.cif+\"\/DC Outward\/\"+tw.local.idcRequest.appInfo.instanceID+\"ODC\"+\"\/Canceled Cases\";\r\n}else{\r\n\ttw.local.cancelPath = tw.local.idcRequest.CustomerInfo.cif+\"\/DC Outward\/\"+tw.local.idcRequest.parentRequestNo+\"ODC\"+\"\/Canceled Cases\";\r\n}"]}},{"startQuantity":1,"outgoing":["f1bb5135-9115-4a75-aae9-343c5f573cd5"],"incoming":["cbe3139f-4e2f-44f8-b77d-4873167dd1c8"],"extensionElements":{"nodeVisualInfo":[{"width":95,"x":325,"y":57,"declaredType":"TNodeVisualInfo","height":70}],"activityType":["CalledProcess"]},"name":"Create Folder Structure","dataInputAssociation":[{"targetRef":"2055.5ece388e-34b7-4b8b-819b-bf5c7758c8ba","assignment":[{"from":{"evaluatesToTypeRef":"itm.12.db884a3c-c533-44b7-bb2d-47bec8ad4022","declaredType":"TFormalExpression","content":["tw.local.cancelPath"]}}]}],"isForCompensation":false,"completionQuantity":1,"declaredType":"callActivity","id":"a01002de-589b-4b3a-9565-66aeeb7364f4","dataOutputAssociation":[{"assignment":[{"to":{"evaluatesToTypeRef":"itm.12.3212d5b3-f692-41b3-a893-343dc5c3df01","declaredType":"TFormalExpression","content":["tw.local.targetFolderId"]}}],"sourceRef":["2055.c7d18e14-a2ff-4f70-be87-c140f0d82599"]}],"calledElement":"1.e2ffa7a5-7c4f-4625-90e6-1d620f946497"},{"targetRef":"940f1242-0491-49cd-91f6-99697343017a","extensionElements":{"sequenceFlowImplementation":[{"fireValidation":"Never","sboSyncEnabled":true,"declaredType":"com.ibm.bpmsdk.model.bpmn20.ibmext.TSequenceFlowImplementation"}],"endStateId":["guid:fef170a08f25d496:5466e087:189df5f8551:5666"],"linkVisualInfo":[{"sourcePortLocation":"rightCenter","showCoachControlLabel":false,"labelPosition":0.0,"targetPortLocation":"leftCenter","declaredType":"TLinkVisualInfo","saveExecutionContext":true,"showLabel":false}]},"name":"To Get Folder By Path","declaredType":"sequenceFlow","id":"f1bb5135-9115-4a75-aae9-343c5f573cd5","sourceRef":"a01002de-589b-4b3a-9565-66aeeb7364f4"},{"targetRef":"a01002de-589b-4b3a-9565-66aeeb7364f4","extensionElements":{"linkVisualInfo":[{"sourcePortLocation":"rightCenter","showCoachControlLabel":false,"labelPosition":0.0,"targetPortLocation":"leftCenter","declaredType":"TLinkVisualInfo","saveExecutionContext":false,"showLabel":false}]},"name":"To Create Folder Structure","declaredType":"sequenceFlow","id":"cbe3139f-4e2f-44f8-b77d-4873167dd1c8","sourceRef":"86115b78-92a0-4e0d-87de-e57aa2612ac0"},{"outgoing":["f0bdcf91-5019-4a70-a764-d93504789a2e"],"incoming":["efb87b96-b669-4ee8-8d35-5f18b9177144"],"matchAllSearchCriteria":true,"extensionElements":{"nodeVisualInfo":[{"width":95,"x":606,"y":57,"declaredType":"TNodeVisualInfo","height":70}],"activityType":["ContentTask"]},"operationRef":"FOLDER_OP_MOVE_FOLDER","implementation":"##WebService","serverName":"FileNet","declaredType":"com.ibm.bpmsdk.model.bpmn20.ibmwleext.TContentTask","startQuantity":1,"name":"Move Folder","dataInputAssociation":[{"targetRef":"FOLDER_ID","assignment":[{"from":{"evaluatesToTypeRef":"itm.12.3212d5b3-f692-41b3-a893-343dc5c3df01","declaredType":"TFormalExpression","content":["tw.local.folderId"]}}]},{"targetRef":"TARGET_FOLDER_ID","assignment":[{"from":{"evaluatesToTypeRef":"itm.12.3212d5b3-f692-41b3-a893-343dc5c3df01","declaredType":"TFormalExpression","content":["tw.local.targetFolderId"]}}]},{"targetRef":"SOURCE_FOLDER_ID","assignment":[{"from":{"evaluatesToTypeRef":"12.3212d5b3-f692-41b3-a893-343dc5c3df01","declaredType":"TFormalExpression","content":["tw.local.sourceFolderId.objectId"]}}]}],"isForCompensation":false,"useMappedVariable":true,"completionQuantity":1,"id":"05d72d29-382d-4811-92b5-ede72b7ebdc4","orderOverride":false},{"targetRef":"9b9546e9-6a65-4839-b352-490ee13e150e","extensionElements":{"sequenceFlowImplementation":[{"fireValidation":"Never","sboSyncEnabled":true,"declaredType":"com.ibm.bpmsdk.model.bpmn20.ibmext.TSequenceFlowImplementation"}],"linkVisualInfo":[{"sourcePortLocation":"rightCenter","showCoachControlLabel":false,"labelPosition":0.0,"targetPortLocation":"leftCenter","declaredType":"TLinkVisualInfo","saveExecutionContext":true,"showLabel":false}]},"name":"To End","declaredType":"sequenceFlow","id":"f0bdcf91-5019-4a70-a764-d93504789a2e","sourceRef":"05d72d29-382d-4811-92b5-ede72b7ebdc4"},{"itemSubjectRef":"itm.12.3212d5b3-f692-41b3-a893-343dc5c3df01","name":"targetFolderId","isCollection":false,"declaredType":"dataObject","id":"2056.0db90457-e4d6-4981-aaf4-373342e593de"},{"itemSubjectRef":"itm.12.240930df-e9da-40a6-a4e8-4b41b42bb183","name":"sourceFolderId","isCollection":false,"declaredType":"dataObject","id":"2056.330ce88b-be52-4eef-9263-be8ce517f717"},{"outgoing":["efb87b96-b669-4ee8-8d35-5f18b9177144"],"incoming":["f1bb5135-9115-4a75-aae9-343c5f573cd5"],"matchAllSearchCriteria":true,"extensionElements":{"nodeVisualInfo":[{"width":95,"x":475,"y":57,"declaredType":"TNodeVisualInfo","height":70}],"activityType":["ContentTask"]},"operationRef":"FOLDER_OP_GET_FOLDER_BY_PATH","implementation":"##WebService","serverName":"FileNet","declaredType":"com.ibm.bpmsdk.model.bpmn20.ibmwleext.TContentTask","startQuantity":1,"name":"Get Folder By Path","dataInputAssociation":[{"targetRef":"PATH","assignment":[{"from":{"evaluatesToTypeRef":"itm.12.db884a3c-c533-44b7-bb2d-47bec8ad4022","declaredType":"TFormalExpression","content":["tw.local.parentFolderPath"]}}]}],"isForCompensation":false,"useMappedVariable":true,"completionQuantity":1,"id":"940f1242-0491-49cd-91f6-99697343017a","dataOutputAssociation":[{"assignment":[{"to":{"evaluatesToTypeRef":"itm.12.3212d5b3-f692-41b3-a893-343dc5c3df01","declaredType":"TFormalExpression","content":["tw.local.sourceFolderId"]}}],"sourceRef":["FOLDER"]}],"orderOverride":false},{"targetRef":"05d72d29-382d-4811-92b5-ede72b7ebdc4","extensionElements":{"linkVisualInfo":[{"sourcePortLocation":"rightCenter","showCoachControlLabel":false,"labelPosition":0.0,"targetPortLocation":"leftCenter","declaredType":"TLinkVisualInfo","saveExecutionContext":false,"showLabel":false}]},"name":"To Move Folder","declaredType":"sequenceFlow","id":"efb87b96-b669-4ee8-8d35-5f18b9177144","sourceRef":"940f1242-0491-49cd-91f6-99697343017a"},{"parallelMultiple":false,"outgoing":["8ddff76f-3abd-41c7-a872-9c4899140f93"],"dataOutput":[{"itemSubjectRef":"itm.19e8dc33-1100-46be-89a6-36c9040f7b3e","name":"error","isCollection":false,"id":"4517bbe8-07af-421a-b602-d88c2aa33b8f"}],"eventDefinition":[{"extensionElements":{"errorEventSettings":[{"catchAll":true,"declaredType":"com.ibm.bpmsdk.model.bpmn20.ibmwleext.TErrorEventSettings"}]},"declaredType":"errorEventDefinition","id":"3eb763bc-7be7-4b50-ad91-a8dd87478aa9","otherAttributes":{"eventImplId":"21fdd705-2a83-477e-8a40-8202e0a53380"}}],"attachedToRef":"05d72d29-382d-4811-92b5-ede72b7ebdc4","extensionElements":{"nodeVisualInfo":[{"width":24,"x":641,"y":115,"declaredType":"TNodeVisualInfo","height":24}]},"cancelActivity":true,"name":"Error","declaredType":"boundaryEvent","id":"e23742f2-9bde-4c8e-8bdd-1adb66667d20","outputSet":{}},{"parallelMultiple":false,"outgoing":["a885bbe5-790a-4db8-973f-ccec32577074"],"dataOutput":[{"itemSubjectRef":"itm.19e8dc33-1100-46be-89a6-36c9040f7b3e","name":"error","isCollection":false,"id":"aada1dd7-a065-4614-8392-deace06f917a"}],"eventDefinition":[{"extensionElements":{"errorEventSettings":[{"catchAll":true,"declaredType":"com.ibm.bpmsdk.model.bpmn20.ibmwleext.TErrorEventSettings"}]},"declaredType":"errorEventDefinition","id":"beeceb9f-2b94-4a8c-b969-9cc202cf01a4","otherAttributes":{"eventImplId":"ae2490fc-2ede-4ba4-8425-d3a91254e8d1"}}],"attachedToRef":"940f1242-0491-49cd-91f6-99697343017a","extensionElements":{"nodeVisualInfo":[{"width":24,"x":510,"y":115,"declaredType":"TNodeVisualInfo","height":24}]},"cancelActivity":true,"name":"Error1","declaredType":"boundaryEvent","id":"0a461e98-4dd6-49a6-ace3-ac88c14e7396","outputSet":{}},{"parallelMultiple":false,"outgoing":["3c9147ae-8479-4010-9781-6ef91fc571ab"],"dataOutput":[{"itemSubjectRef":"itm.19e8dc33-1100-46be-89a6-36c9040f7b3e","name":"error","isCollection":false,"id":"5e2aa812-febd-4aba-ac46-ce56c897e83b"}],"eventDefinition":[{"extensionElements":{"errorEventSettings":[{"catchAll":true,"declaredType":"com.ibm.bpmsdk.model.bpmn20.ibmwleext.TErrorEventSettings"}]},"declaredType":"errorEventDefinition","id":"162a240f-7df5-45e9-8dfe-5e77cb82ca99","otherAttributes":{"eventImplId":"da7f9e90-e1a5-40e4-8684-aaba847f6006"}}],"attachedToRef":"86115b78-92a0-4e0d-87de-e57aa2612ac0","extensionElements":{"nodeVisualInfo":[{"width":24,"x":201,"y":115,"declaredType":"TNodeVisualInfo","height":24}]},"cancelActivity":true,"name":"Error3","declaredType":"boundaryEvent","id":"01d17c49-3728-4444-9b25-a9de0455db78","outputSet":{}},{"itemSubjectRef":"itm.12.db884a3c-c533-44b7-bb2d-47bec8ad4022","name":"errorMSG","isCollection":false,"declaredType":"dataObject","id":"2056.1900e4e0-c521-4a74-b521-268936e8029c"},{"targetRef":"d34b86f7-f4bf-4b14-8cbc-61f6473dd4de","extensionElements":{"linkVisualInfo":[{"sourcePortLocation":"bottomCenter","showCoachControlLabel":false,"labelPosition":0.0,"targetPortLocation":"leftCenter","declaredType":"TLinkVisualInfo","saveExecutionContext":false,"showLabel":false}]},"name":"To Catch Errors","declaredType":"sequenceFlow","id":"3c9147ae-8479-4010-9781-6ef91fc571ab","sourceRef":"01d17c49-3728-4444-9b25-a9de0455db78"},{"targetRef":"d34b86f7-f4bf-4b14-8cbc-61f6473dd4de","extensionElements":{"linkVisualInfo":[{"sourcePortLocation":"bottomCenter","showCoachControlLabel":false,"labelPosition":0.0,"targetPortLocation":"topCenter","declaredType":"TLinkVisualInfo","saveExecutionContext":false,"showLabel":false}]},"name":"To Catch Errors","declaredType":"sequenceFlow","id":"a885bbe5-790a-4db8-973f-ccec32577074","sourceRef":"0a461e98-4dd6-49a6-ace3-ac88c14e7396"},{"targetRef":"d34b86f7-f4bf-4b14-8cbc-61f6473dd4de","extensionElements":{"linkVisualInfo":[{"sourcePortLocation":"bottomCenter","showCoachControlLabel":false,"labelPosition":0.0,"targetPortLocation":"topCenter","declaredType":"TLinkVisualInfo","saveExecutionContext":false,"showLabel":false}]},"name":"To Catch Errors","declaredType":"sequenceFlow","id":"8ddff76f-3abd-41c7-a872-9c4899140f93","sourceRef":"e23742f2-9bde-4c8e-8bdd-1adb66667d20"},{"itemSubjectRef":"itm.12.db884a3c-c533-44b7-bb2d-47bec8ad4022","name":"errorCode","isCollection":false,"declaredType":"dataObject","id":"2056.982fa5a8-ee60-47c1-b4ef-3abea9af999d"},{"parallelMultiple":false,"outgoing":["a280059f-ceb6-41fb-921e-45db36c7b15e"],"dataOutput":[{"itemSubjectRef":"itm.19e8dc33-1100-46be-89a6-36c9040f7b3e","name":"error","isCollection":false,"id":"500d3894-608e-40eb-91f7-c4f6cfbcdecb"}],"eventDefinition":[{"extensionElements":{"errorEventSettings":[{"catchAll":true,"declaredType":"com.ibm.bpmsdk.model.bpmn20.ibmwleext.TErrorEventSettings"}]},"declaredType":"errorEventDefinition","id":"cd59327e-233d-4bb5-adbe-01f1e4055962","otherAttributes":{"eventImplId":"881f5d9c-eac5-429a-83cd-8ce2cb619c64"}}],"attachedToRef":"a01002de-589b-4b3a-9565-66aeeb7364f4","extensionElements":{"nodeVisualInfo":[{"width":24,"x":360,"y":115,"declaredType":"TNodeVisualInfo","height":24}]},"cancelActivity":true,"name":"Error2","declaredType":"boundaryEvent","id":"b44a9bf3-b043-471d-8abb-15d2e1fcf93e","outputSet":{}},{"targetRef":"d34b86f7-f4bf-4b14-8cbc-61f6473dd4de","extensionElements":{"linkVisualInfo":[{"sourcePortLocation":"bottomCenter","showCoachControlLabel":false,"labelPosition":0.0,"targetPortLocation":"leftCenter","declaredType":"TLinkVisualInfo","saveExecutionContext":false,"showLabel":false}]},"name":"To Catch Errors","declaredType":"sequenceFlow","id":"a280059f-ceb6-41fb-921e-45db36c7b15e","sourceRef":"b44a9bf3-b043-471d-8abb-15d2e1fcf93e"},{"itemSubjectRef":"itm.12.5551644c-3dc6-4161-a939-4e7f27f8ce45","name":"error","isCollection":false,"declaredType":"dataObject","id":"2056.3704dfb6-666c-496f-8588-53c9b53040cd"},{"startQuantity":1,"outgoing":["5b19ca35-c867-428e-83c3-7421a9aa31c4"],"incoming":["3c9147ae-8479-4010-9781-6ef91fc571ab","8ddff76f-3abd-41c7-a872-9c4899140f93","a885bbe5-790a-4db8-973f-ccec32577074","a280059f-ceb6-41fb-921e-45db36c7b15e"],"extensionElements":{"nodeVisualInfo":[{"color":"#FF7782","width":95,"x":571,"y":230,"declaredType":"TNodeVisualInfo","height":70}],"activityType":["CalledProcess"]},"name":"Exception Handling","dataInputAssociation":[{"targetRef":"2055.55dcd590-97c2-48df-82c6-0f812ab7177f","assignment":[{"from":{"evaluatesToTypeRef":"itm.12.db884a3c-c533-44b7-bb2d-47bec8ad4022","declaredType":"TFormalExpression","content":["tw.local.errorMSG"]}}]},{"targetRef":"2055.5ea77901-7a17-422a-8958-67bb0e9c991b","assignment":[{"from":{"evaluatesToTypeRef":"itm.12.db884a3c-c533-44b7-bb2d-47bec8ad4022","declaredType":"TFormalExpression","content":["tw.system.serviceFlow.name"]}}]}],"isForCompensation":false,"completionQuantity":1,"declaredType":"callActivity","id":"d34b86f7-f4bf-4b14-8cbc-61f6473dd4de","dataOutputAssociation":[{"assignment":[{"to":{"evaluatesToTypeRef":"itm.12.db884a3c-c533-44b7-bb2d-47bec8ad4022","declaredType":"TFormalExpression","content":["tw.local.errorMSG"]}}],"sourceRef":["2055.81b82125-a5aa-45f7-8c0f-4870667eebbf"]},{"assignment":[{"to":{"evaluatesToTypeRef":"itm.12.c09c9b6e-aabd-4897-bef2-ed61db106297","declaredType":"TFormalExpression"}}],"sourceRef":["2055.99eb514d-4b62-401e-8cdb-7edc096adffd"]}],"calledElement":"1.2b50ff68-f7d3-4895-88ad-a73a13fa91d0"},{"incoming":["5b19ca35-c867-428e-83c3-7421a9aa31c4"],"eventDefinition":[{"extensionElements":{"errorEventSettings":[{"catchAll":true,"errorCode":"","declaredType":"com.ibm.bpmsdk.model.bpmn20.ibmwleext.TErrorEventSettings"}]},"declaredType":"errorEventDefinition","id":"7d43e9cd-570a-4ada-84f6-4d3d417ba345","otherAttributes":{"eventImplId":"7f792515-63ab-4abb-87df-5516b7e54487"}}],"extensionElements":{"nodeVisualInfo":[{"width":24,"x":755,"y":255,"declaredType":"TNodeVisualInfo","height":24}]},"name":"End Event","dataInputAssociation":[{"assignment":[{"from":{"evaluatesToTypeRef":"itm.12.db884a3c-c533-44b7-bb2d-47bec8ad4022","declaredType":"TFormalExpression","content":["tw.local.errorMSG"]}}]}],"declaredType":"endEvent","id":"7ef7d4bd-4fc7-410d-831f-0944821f26bd"},{"targetRef":"7ef7d4bd-4fc7-410d-831f-0944821f26bd","extensionElements":{"sequenceFlowImplementation":[{"fireValidation":"Never","sboSyncEnabled":true,"declaredType":"com.ibm.bpmsdk.model.bpmn20.ibmext.TSequenceFlowImplementation"}],"endStateId":["guid:f6ffc3b64be5dfa5:4157166b:18ab80e0606:-6f83"],"linkVisualInfo":[{"sourcePortLocation":"rightCenter","showCoachControlLabel":false,"labelPosition":0.0,"targetPortLocation":"leftCenter","declaredType":"TLinkVisualInfo","saveExecutionContext":true,"showLabel":false}]},"name":"To End Event","declaredType":"sequenceFlow","id":"5b19ca35-c867-428e-83c3-7421a9aa31c4","sourceRef":"d34b86f7-f4bf-4b14-8cbc-61f6473dd4de"}],"laneSet":[{"id":"1b14b0ec-bc01-4492-818c-5a61a077962b","lane":[{"flowNodeRef":["e0a93a43-022a-4cdc-8b2b-79320ac694ed","9b9546e9-6a65-4839-b352-490ee13e150e","86115b78-92a0-4e0d-87de-e57aa2612ac0","a01002de-589b-4b3a-9565-66aeeb7364f4","05d72d29-382d-4811-92b5-ede72b7ebdc4","940f1242-0491-49cd-91f6-99697343017a","e23742f2-9bde-4c8e-8bdd-1adb66667d20","0a461e98-4dd6-49a6-ace3-ac88c14e7396","01d17c49-3728-4444-9b25-a9de0455db78","b44a9bf3-b043-471d-8abb-15d2e1fcf93e","d34b86f7-f4bf-4b14-8cbc-61f6473dd4de","7ef7d4bd-4fc7-410d-831f-0944821f26bd"],"extensionElements":{"nodeVisualInfo":[{"color":"#F8F8F8","width":3000,"x":0,"y":0,"declaredType":"TNodeVisualInfo","height":500}]},"name":"System","partitionElementRef":"24.6fd38d02-81cf-48ab-bd42-8ff4c0a1628b","declaredType":"lane","id":"35b8e090-8d67-4bf5-8037-65d77d993dc0","otherAttributes":{"{http:\/\/www.ibm.com\/xmlns\/prod\/bpm\/bpmn\/ext\/process\/wle}isSystemLane":"true"}}]}],"isClosed":false,"extensionElements":{"isSecured":[false],"isAjaxExposed":[true],"sboSyncEnabled":[true]},"documentation":[{"textFormat":"text\/plain"}],"name":"cancel request","declaredType":"process","id":"1.5cf7e9f4-d78e-4690-8292-d5e64c209ccc","processType":"None","otherAttributes":{"{http:\/\/www.ibm.com\/xmlns\/prod\/bpm\/bpmn\/ext\/process}executionMode":"microflow"},"ioSpecification":{"dataOutput":[{"itemSubjectRef":"itm.12.db884a3c-c533-44b7-bb2d-47bec8ad4022","name":"message","isCollection":false,"id":"2055.870b6d47-a51f-4132-8ee7-64b9deb6e00a"},{"itemSubjectRef":"itm.12.db884a3c-c533-44b7-bb2d-47bec8ad4022","name":"cancelPath","isCollection":false,"id":"2055.e82f276e-6aad-4948-89ea-84965553a7ec"}],"inputSet":[{"dataInputRefs":["2055.55a76aa1-e513-4fd3-835f-7fe160120af7","2055.77d2b3d6-2a2a-4520-ad08-31686157d431","2055.d602a747-fb6e-4103-bbc7-d4f4dffdb689"]}],"outputSet":[{"dataOutputRefs":["2055.870b6d47-a51f-4132-8ee7-64b9deb6e00a","2055.e82f276e-6aad-4948-89ea-84965553a7ec"]}],"dataInput":[{"extensionElements":{"defaultValue":[{"declaredType":"com.ibm.bpmsdk.model.bpmn20.ibmext.TDefaultValue","useDefault":true,"value":"var autoObject = new tw.object.ODCRequest();\nautoObject.initiator = \"\";\nautoObject.requestNature = new tw.object.toolkit.TWSYS.NameValuePair();\nautoObject.requestNature.name = \"\";\nautoObject.requestNature.value = \"\";\nautoObject.requestType = new tw.object.toolkit.TWSYS.NameValuePair();\nautoObject.requestType.name = \"\";\nautoObject.requestType.value = \"\";\nautoObject.cif = \"\";\nautoObject.customerName = \"\";\nautoObject.parentRequestNo = \"\";\nautoObject.requestDate = new TWDate();\nautoObject.ImporterName = \"\";\nautoObject.appInfo = new tw.object.toolkit.NBEC.AppInfo();\nautoObject.appInfo.requestDate = \"\";\nautoObject.appInfo.status = \"\";\nautoObject.appInfo.subStatus = \"\";\nautoObject.appInfo.initiator = \"\";\nautoObject.appInfo.branch = new tw.object.toolkit.TWSYS.NameValuePair();\nautoObject.appInfo.branch.name = \"\";\nautoObject.appInfo.branch.value = \"\";\nautoObject.appInfo.requestName = \"\";\nautoObject.appInfo.requestType = \"\";\nautoObject.appInfo.stepName = \"\";\nautoObject.appInfo.appRef = \"\";\nautoObject.appInfo.appID = \"\";\nautoObject.appInfo.instanceID = \"\";\nautoObject.CustomerInfo = new tw.object.CustomerInfo();\nautoObject.CustomerInfo.cif = \"\";\nautoObject.CustomerInfo.customerName = \"\";\nautoObject.CustomerInfo.addressLine1 = \"\";\nautoObject.CustomerInfo.addressLine2 = \"\";\nautoObject.CustomerInfo.addressLine3 = \"\";\nautoObject.CustomerInfo.customerSector = new tw.object.toolkit.TWSYS.NameValuePair();\nautoObject.CustomerInfo.customerSector.name = \"\";\nautoObject.CustomerInfo.customerSector.value = \"\";\nautoObject.CustomerInfo.customerType = \"\";\nautoObject.CustomerInfo.customerNoCBE = \"\";\nautoObject.CustomerInfo.facilityType = new tw.object.toolkit.TWSYS.NameValuePair();\nautoObject.CustomerInfo.facilityType.name = \"\";\nautoObject.CustomerInfo.facilityType.value = \"\";\nautoObject.CustomerInfo.commercialRegistrationNo = \"\";\nautoObject.CustomerInfo.commercialRegistrationOffice = \"\";\nautoObject.CustomerInfo.taxCardNo = \"\";\nautoObject.CustomerInfo.importCardNo = \"\";\nautoObject.CustomerInfo.initiationHub = \"\";\nautoObject.CustomerInfo.country = \"\";\nautoObject.BasicDetails = new tw.object.BasicDetails();\nautoObject.BasicDetails.requestNature = \"\";\nautoObject.BasicDetails.requestType = \"\";\nautoObject.BasicDetails.parentRequestNo = \"\";\nautoObject.BasicDetails.requestState = \"\";\nautoObject.BasicDetails.flexCubeContractNo = \"\";\nautoObject.BasicDetails.contractStage = \"\";\nautoObject.BasicDetails.exportPurpose = new tw.object.toolkit.TWSYS.NameValuePair();\nautoObject.BasicDetails.exportPurpose.name = \"\";\nautoObject.BasicDetails.exportPurpose.value = \"\";\nautoObject.BasicDetails.paymentTerms = new tw.object.toolkit.TWSYS.NameValuePair();\nautoObject.BasicDetails.paymentTerms.name = \"\";\nautoObject.BasicDetails.paymentTerms.value = \"\";\nautoObject.BasicDetails.productCategory = new tw.object.toolkit.TWSYS.NameValuePair();\nautoObject.BasicDetails.productCategory.name = \"\";\nautoObject.BasicDetails.productCategory.value = \"\";\nautoObject.BasicDetails.commodityDescription = \"\";\nautoObject.BasicDetails.CountryOfOrigin = new tw.object.toolkit.TWSYS.NameValuePair();\nautoObject.BasicDetails.CountryOfOrigin.name = \"\";\nautoObject.BasicDetails.CountryOfOrigin.value = \"\";\nautoObject.BasicDetails.Bills = new tw.object.listOf.Bills();\nautoObject.BasicDetails.Bills[0] = new tw.object.Bills();\nautoObject.BasicDetails.Bills[0].billOfLadingRef = \"\";\nautoObject.BasicDetails.Bills[0].billOfLadingDate = new TWDate();\nautoObject.BasicDetails.Invoice = new tw.object.listOf.Invoice();\nautoObject.BasicDetails.Invoice[0] = new tw.object.Invoice();\nautoObject.BasicDetails.Invoice[0].invoiceNo = \"\";\nautoObject.BasicDetails.Invoice[0].invoiceDate = new TWDate();\nautoObject.GeneratedDocumentInfo = new tw.object.GeneratedDocumentInfo();\nautoObject.GeneratedDocumentInfo.customerName = \"\";\nautoObject.GeneratedDocumentInfo.customerAddress = \"\";\nautoObject.GeneratedDocumentInfo.deliveryTerms = new tw.object.listOf.toolkit.TWSYS.String();\nautoObject.GeneratedDocumentInfo.deliveryTerms[0] = \"\";\nautoObject.GeneratedDocumentInfo.deliveryTermsExtra = new tw.object.listOf.toolkit.TWSYS.String();\nautoObject.GeneratedDocumentInfo.deliveryTermsExtra[0] = \"\";\nautoObject.GeneratedDocumentInfo.paymentInstructions = new tw.object.listOf.toolkit.TWSYS.String();\nautoObject.GeneratedDocumentInfo.paymentInstructions[0] = \"\";\nautoObject.GeneratedDocumentInfo.paymentInstructionsExtra = new tw.object.listOf.toolkit.TWSYS.String();\nautoObject.GeneratedDocumentInfo.paymentInstructionsExtra[0] = \"\";\nautoObject.GeneratedDocumentInfo.Instructions = new tw.object.listOf.toolkit.TWSYS.String();\nautoObject.GeneratedDocumentInfo.Instructions[0] = \"\";\nautoObject.GeneratedDocumentInfo.InstructionsExtra = new tw.object.listOf.toolkit.TWSYS.String();\nautoObject.GeneratedDocumentInfo.InstructionsExtra[0] = \"\";\nautoObject.GeneratedDocumentInfo.specialInstructions = new tw.object.listOf.toolkit.TWSYS.String();\nautoObject.GeneratedDocumentInfo.specialInstructions[0] = \"\";\nautoObject.GeneratedDocumentInfo.specialInstructionsExtra = new tw.object.listOf.toolkit.TWSYS.String();\nautoObject.GeneratedDocumentInfo.specialInstructionsExtra[0] = \"\";\nautoObject.GeneratedDocumentInfo.regenerateRemLetter = false;\nautoObject.GeneratedDocumentInfo.regenerateRemLetterOption = new tw.object.toolkit.TWSYS.NameValuePair();\nautoObject.GeneratedDocumentInfo.regenerateRemLetterOption.name = \"\";\nautoObject.GeneratedDocumentInfo.regenerateRemLetterOption.value = \"\";\nautoObject.GeneratedDocumentInfo.regenerateRemLetterTitle = \"\";\nautoObject.GeneratedDocumentInfo.destinationFolder = new tw.object.toolkit.SYSCM.ECMFolder();\nautoObject.GeneratedDocumentInfo.destinationFolder.objectId = \"\";\nautoObject.GeneratedDocumentInfo.destinationFolder.serverName = \"\";\nautoObject.GeneratedDocumentInfo.destinationFolder.repositoryId = \"\";\nautoObject.GeneratedDocumentInfo.destinationFolder.objectTypeId = \"\";\nautoObject.GeneratedDocumentInfo.destinationFolder.path = \"\";\nautoObject.GeneratedDocumentInfo.destinationFolder.parentId = \"\";\nautoObject.GeneratedDocumentInfo.destinationFolder.name = \"\";\nautoObject.GeneratedDocumentInfo.destinationFolder.creationDate = new TWDate();\nautoObject.GeneratedDocumentInfo.destinationFolder.createdBy = \"\";\nautoObject.GeneratedDocumentInfo.destinationFolder.lastModificationDate = new TWDate();\nautoObject.GeneratedDocumentInfo.destinationFolder.lastModifiedBy = \"\";\nautoObject.GeneratedDocumentInfo.destinationFolder.properties = new tw.object.listOf.toolkit.SYSCM.ECMProperty();\nautoObject.GeneratedDocumentInfo.destinationFolder.properties[0] = new tw.object.toolkit.SYSCM.ECMProperty();\nautoObject.GeneratedDocumentInfo.destinationFolder.properties[0].objectTypeId = \"\";\nautoObject.GeneratedDocumentInfo.destinationFolder.properties[0].value = null;\nautoObject.FinancialDetailsBR = new tw.object.FinancialDetailsBranch();\nautoObject.FinancialDetailsBR.documentAmount = 0.0;\nautoObject.FinancialDetailsBR.currency = new tw.object.toolkit.TWSYS.NameValuePair();\nautoObject.FinancialDetailsBR.currency.name = \"\";\nautoObject.FinancialDetailsBR.currency.value = \"\";\nautoObject.FinancialDetailsBR.maxCollectionDate = new TWDate();\nautoObject.FinancialDetailsBR.amountAdvanced = 0.0;\nautoObject.FinancialDetailsBR.chargesAndCommissionsAccount = new tw.object.toolkit.TWSYS.NameValuePair();\nautoObject.FinancialDetailsBR.chargesAndCommissionsAccount.name = \"\";\nautoObject.FinancialDetailsBR.chargesAndCommissionsAccount.value = \"\";\nautoObject.FinancialDetailsBR.collectionAccount = new tw.object.toolkit.TWSYS.NameValuePair();\nautoObject.FinancialDetailsBR.collectionAccount.name = \"\";\nautoObject.FinancialDetailsBR.collectionAccount.value = \"\";\nautoObject.FinancialDetailsBR.listOfAccounts = new tw.object.listOf.toolkit.TWSYS.NameValuePair();\nautoObject.FinancialDetailsBR.listOfAccounts[0] = new tw.object.toolkit.TWSYS.NameValuePair();\nautoObject.FinancialDetailsBR.listOfAccounts[0].name = \"\";\nautoObject.FinancialDetailsBR.listOfAccounts[0].value = \"\";\nautoObject.FcCollections = new tw.object.FCCollections();\nautoObject.FcCollections.currency = new tw.object.toolkit.TWSYS.NameValuePair();\nautoObject.FcCollections.currency.name = \"\";\nautoObject.FcCollections.currency.value = \"\";\nautoObject.FcCollections.standardExchangeRate = 0.0;\nautoObject.FcCollections.negotiatedExchangeRate = 0.0;\nautoObject.FcCollections.fromDate = new TWDate();\nautoObject.FcCollections.ToDate = new TWDate();\nautoObject.FcCollections.accountNo = new tw.object.toolkit.TWSYS.NameValuePair();\nautoObject.FcCollections.accountNo.name = \"\";\nautoObject.FcCollections.accountNo.value = \"\";\nautoObject.FcCollections.retrievedTransactions = new tw.object.listOf.FCTransactions();\nautoObject.FcCollections.retrievedTransactions[0] = new tw.object.FCTransactions();\nautoObject.FcCollections.retrievedTransactions[0].accountNo = \"\";\nautoObject.FcCollections.retrievedTransactions[0].referenceNumber = \"\";\nautoObject.FcCollections.retrievedTransactions[0].postingDate = new TWDate();\nautoObject.FcCollections.retrievedTransactions[0].valueDate = new TWDate();\nautoObject.FcCollections.retrievedTransactions[0].transactionAmount = 0.0;\nautoObject.FcCollections.retrievedTransactions[0].existAmount = 0.0;\nautoObject.FcCollections.retrievedTransactions[0].currency = \"\";\nautoObject.FcCollections.retrievedTransactions[0].amountAllocatedForCurrencyRequest = 0.0;\nautoObject.FcCollections.retrievedTransactions[0].allocatedAmountInRequestCurrency = 0.0;\nautoObject.FcCollections.selectedTransactions = new tw.object.listOf.FCTransactions();\nautoObject.FcCollections.selectedTransactions[0] = new tw.object.FCTransactions();\nautoObject.FcCollections.selectedTransactions[0].accountNo = \"\";\nautoObject.FcCollections.selectedTransactions[0].referenceNumber = \"\";\nautoObject.FcCollections.selectedTransactions[0].postingDate = new TWDate();\nautoObject.FcCollections.selectedTransactions[0].valueDate = new TWDate();\nautoObject.FcCollections.selectedTransactions[0].transactionAmount = 0.0;\nautoObject.FcCollections.selectedTransactions[0].existAmount = 0.0;\nautoObject.FcCollections.selectedTransactions[0].currency = \"\";\nautoObject.FcCollections.selectedTransactions[0].amountAllocatedForCurrencyRequest = 0.0;\nautoObject.FcCollections.selectedTransactions[0].allocatedAmountInRequestCurrency = 0.0;\nautoObject.FcCollections.isReversed = false;\nautoObject.FcCollections.usedAmount = 0.0;\nautoObject.FcCollections.calculatedAmount = 0.0;\nautoObject.FcCollections.totalAllocatedAmount = 0.0;\nautoObject.FcCollections.listOfAccounts = new tw.object.listOf.toolkit.TWSYS.NameValuePair();\nautoObject.FcCollections.listOfAccounts[0] = new tw.object.toolkit.TWSYS.NameValuePair();\nautoObject.FcCollections.listOfAccounts[0].name = \"\";\nautoObject.FcCollections.listOfAccounts[0].value = \"\";\nautoObject.FinancialDetailsFO = new tw.object.FinancialDetailsFO();\nautoObject.FinancialDetailsFO.discount = 0.0;\nautoObject.FinancialDetailsFO.extraCharges = 0.0;\nautoObject.FinancialDetailsFO.ourCharges = 0.0;\nautoObject.FinancialDetailsFO.amountSight = 0.0;\nautoObject.FinancialDetailsFO.amountDefNoAvalization = 0.0;\nautoObject.FinancialDetailsFO.amountDefAvalization = 0.0;\nautoObject.FinancialDetailsFO.collectableAmount = 0.0;\nautoObject.FinancialDetailsFO.outstandingAmount = 0.0;\nautoObject.FinancialDetailsFO.maturityDate = new TWDate();\nautoObject.FinancialDetailsFO.noOfDaysMaturity = 0;\nautoObject.FinancialDetailsFO.referenceNo = \"\";\nautoObject.FinancialDetailsFO.financeApprovalNo = \"\";\nautoObject.FinancialDetailsFO.executionHub = new tw.object.toolkit.TWSYS.NameValuePair();\nautoObject.FinancialDetailsFO.executionHub.name = \"\";\nautoObject.FinancialDetailsFO.executionHub.value = \"\";\nautoObject.FinancialDetailsFO.multiTenorDates = new tw.object.listOf.MultiTenorDates();\nautoObject.FinancialDetailsFO.multiTenorDates[0] = new tw.object.MultiTenorDates();\nautoObject.FinancialDetailsFO.multiTenorDates[0].date = new TWDate();\nautoObject.FinancialDetailsFO.multiTenorDates[0].amount = 0.0;\nautoObject.ImporterDetails = new tw.object.ImporterDetails();\nautoObject.ImporterDetails.importerName = \"\";\nautoObject.ImporterDetails.importerCountry = new tw.object.toolkit.TWSYS.NameValuePair();\nautoObject.ImporterDetails.importerCountry.name = \"\";\nautoObject.ImporterDetails.importerCountry.value = \"\";\nautoObject.ImporterDetails.importerAddress = \"\";\nautoObject.ImporterDetails.importerPhoneNo = \"\";\nautoObject.ImporterDetails.bank = \"\";\nautoObject.ImporterDetails.BICCode = \"\";\nautoObject.ImporterDetails.ibanAccount = \"\";\nautoObject.ImporterDetails.bankCountry = new tw.object.toolkit.TWSYS.NameValuePair();\nautoObject.ImporterDetails.bankCountry.name = \"\";\nautoObject.ImporterDetails.bankCountry.value = \"\";\nautoObject.ImporterDetails.bankAddress = \"\";\nautoObject.ImporterDetails.bankPhoneNo = \"\";\nautoObject.ImporterDetails.collectingBankReference = \"\";\nautoObject.ProductShipmentDetails = new tw.object.ProductShipmentDetails();\nautoObject.ProductShipmentDetails.CBECommodityClassification = new tw.object.toolkit.TWSYS.NameValuePair();\nautoObject.ProductShipmentDetails.CBECommodityClassification.name = \"\";\nautoObject.ProductShipmentDetails.CBECommodityClassification.value = \"\";\nautoObject.ProductShipmentDetails.shippingDate = new TWDate();\nautoObject.ProductShipmentDetails.shipmentMethod = new tw.object.toolkit.TWSYS.NameValuePair();\nautoObject.ProductShipmentDetails.shipmentMethod.name = \"\";\nautoObject.ProductShipmentDetails.shipmentMethod.value = \"\";\nautoObject.OdcCollection = new tw.object.ODCCollection();\nautoObject.OdcCollection.amount = 0.0;\nautoObject.OdcCollection.currency = \"\";\nautoObject.OdcCollection.informCADAboutTheCollection = false;\nautoObject.ReversalReason = new tw.object.ReversalReason();\nautoObject.ReversalReason.reversalReason = \"\";\nautoObject.ReversalReason.closureReason = \"\";\nautoObject.ReversalReason.executionHub = new tw.object.toolkit.TWSYS.NameValuePair();\nautoObject.ReversalReason.executionHub.name = \"\";\nautoObject.ReversalReason.executionHub.value = \"\";\nautoObject.ContractCreation = new tw.object.ContractCreation();\nautoObject.ContractCreation.productCode = new tw.object.toolkit.TWSYS.NameValuePair();\nautoObject.ContractCreation.productCode.name = \"\";\nautoObject.ContractCreation.productCode.value = \"\";\nautoObject.ContractCreation.productDescription = \"\";\nautoObject.ContractCreation.Stage = \"\";\nautoObject.ContractCreation.userReference = \"\";\nautoObject.ContractCreation.sourceReference = \"\";\nautoObject.ContractCreation.currency = \"\";\nautoObject.ContractCreation.amount = 0.0;\nautoObject.ContractCreation.baseDate = new TWDate();\nautoObject.ContractCreation.valueDate = new TWDate();\nautoObject.ContractCreation.tenorDays = 0;\nautoObject.ContractCreation.transitDays = 0;\nautoObject.ContractCreation.maturityDate = new TWDate();\nautoObject.Parties = new tw.object.odcParties();\nautoObject.Parties.Drawer = new tw.object.Drawer();\nautoObject.Parties.Drawer.partyId = \"\";\nautoObject.Parties.Drawer.partyName = \"\";\nautoObject.Parties.Drawer.country = \"\";\nautoObject.Parties.Drawer.Language = \"\";\nautoObject.Parties.Drawer.Reference = \"\";\nautoObject.Parties.Drawer.address1 = \"\";\nautoObject.Parties.Drawer.address2 = \"\";\nautoObject.Parties.Drawer.address3 = \"\";\nautoObject.Parties.Drawee = new tw.object.Drawee();\nautoObject.Parties.Drawee.partyId = \"\";\nautoObject.Parties.Drawee.partyName = \"\";\nautoObject.Parties.Drawee.country = \"\";\nautoObject.Parties.Drawee.Language = \"\";\nautoObject.Parties.Drawee.Reference = \"\";\nautoObject.Parties.Drawee.address1 = \"\";\nautoObject.Parties.Drawee.address2 = \"\";\nautoObject.Parties.Drawee.address3 = \"\";\nautoObject.Parties.collectingBank = new tw.object.CollectingBank();\nautoObject.Parties.collectingBank.id = \"\";\nautoObject.Parties.collectingBank.name = \"\";\nautoObject.Parties.collectingBank.country = \"\";\nautoObject.Parties.collectingBank.language = \"\";\nautoObject.Parties.collectingBank.reference = \"\";\nautoObject.Parties.collectingBank.address1 = \"\";\nautoObject.Parties.collectingBank.address2 = \"\";\nautoObject.Parties.collectingBank.address3 = \"\";\nautoObject.Parties.collectingBank.cif = \"\";\nautoObject.Parties.collectingBank.media = \"\";\nautoObject.Parties.collectingBank.address = \"\";\nautoObject.Parties.partyTypes = new tw.object.partyTypes();\nautoObject.Parties.partyTypes.partyCIF = \"\";\nautoObject.Parties.partyTypes.partyId = \"\";\nautoObject.Parties.partyTypes.partyName = \"\";\nautoObject.Parties.partyTypes.country = \"\";\nautoObject.Parties.partyTypes.language = \"\";\nautoObject.Parties.partyTypes.refrence = \"\";\nautoObject.Parties.partyTypes.address1 = \"\";\nautoObject.Parties.partyTypes.address2 = \"\";\nautoObject.Parties.partyTypes.address3 = \"\";\nautoObject.Parties.partyTypes.partyType = new tw.object.toolkit.TWSYS.NameValuePair();\nautoObject.Parties.partyTypes.partyType.name = \"\";\nautoObject.Parties.partyTypes.partyType.value = \"\";\nautoObject.ChargesAndCommissions = new tw.object.listOf.ChargesAndCommissions();\nautoObject.ChargesAndCommissions[0] = new tw.object.ChargesAndCommissions();\nautoObject.ChargesAndCommissions[0].component = \"\";\nautoObject.ChargesAndCommissions[0].defaultCurrency = new tw.object.toolkit.TWSYS.NameValuePair();\nautoObject.ChargesAndCommissions[0].defaultCurrency.name = \"\";\nautoObject.ChargesAndCommissions[0].defaultCurrency.value = \"\";\nautoObject.ChargesAndCommissions[0].changeAmount = 0.0;\nautoObject.ChargesAndCommissions[0].waiver = false;\nautoObject.ChargesAndCommissions[0].debitedAccount = new tw.object.AccountDetails();\nautoObject.ChargesAndCommissions[0].debitedAccount.accountClass = new tw.object.toolkit.TWSYS.NameValuePair();\nautoObject.ChargesAndCommissions[0].debitedAccount.accountClass.name = \"\";\nautoObject.ChargesAndCommissions[0].debitedAccount.accountClass.value = \"\";\nautoObject.ChargesAndCommissions[0].debitedAccount.glAccountNo = \"\";\nautoObject.ChargesAndCommissions[0].debitedAccount.customerAccountNo = \"\";\nautoObject.ChargesAndCommissions[0].debitedAccount.branchCode = \"\";\nautoObject.ChargesAndCommissions[0].debitedAccount.currency = new tw.object.toolkit.TWSYS.NameValuePair();\nautoObject.ChargesAndCommissions[0].debitedAccount.currency.name = \"\";\nautoObject.ChargesAndCommissions[0].debitedAccount.currency.value = \"\";\nautoObject.ChargesAndCommissions[0].debitedAccount.balance = 0.0;\nautoObject.ChargesAndCommissions[0].debitedAccount.balanceSign = \"\";\nautoObject.ChargesAndCommissions[0].debitedAccount.isOverDraft = false;\nautoObject.ChargesAndCommissions[0].debitedAmount = new tw.object.AmountDetails();\nautoObject.ChargesAndCommissions[0].debitedAmount.standardExRate = 0.0;\nautoObject.ChargesAndCommissions[0].debitedAmount.negotiatedExRate = 0.0;\nautoObject.ChargesAndCommissions[0].debitedAmount.amountInAccount = 0.0;\nautoObject.ChargesAndCommissions[0].rateType = \"\";\nautoObject.ChargesAndCommissions[0].description = \"\";\nautoObject.ChargesAndCommissions[0].defaultPercentage = 0.0;\nautoObject.ChargesAndCommissions[0].changePercentage = 0.0;\nautoObject.ChargesAndCommissions[0].defaultAmount = 0.0;\nautoObject.ChargesAndCommissions[0].basicAmountCurrency = \"\";\nautoObject.ChargesAndCommissions[0].flatAmount = 0.0;\nautoObject.ContractLiquidation = new tw.object.ContractLiquidation();\nautoObject.ContractLiquidation.liqAmount = 0.0;\nautoObject.ContractLiquidation.liqCurrency = \"\";\nautoObject.ContractLiquidation.debitValueDate = new TWDate();\nautoObject.ContractLiquidation.creditValueDate = new TWDate();\nautoObject.ContractLiquidation.debitedAccountNo = \"\";\nautoObject.ContractLiquidation.creditedAccount = new tw.object.AccountDetails();\nautoObject.ContractLiquidation.creditedAccount.accountClass = new tw.object.toolkit.TWSYS.NameValuePair();\nautoObject.ContractLiquidation.creditedAccount.accountClass.name = \"\";\nautoObject.ContractLiquidation.creditedAccount.accountClass.value = \"\";\nautoObject.ContractLiquidation.creditedAccount.glAccountNo = \"\";\nautoObject.ContractLiquidation.creditedAccount.customerAccountNo = \"\";\nautoObject.ContractLiquidation.creditedAccount.branchCode = \"\";\nautoObject.ContractLiquidation.creditedAccount.currency = new tw.object.toolkit.TWSYS.NameValuePair();\nautoObject.ContractLiquidation.creditedAccount.currency.name = \"\";\nautoObject.ContractLiquidation.creditedAccount.currency.value = \"\";\nautoObject.ContractLiquidation.creditedAccount.balance = 0.0;\nautoObject.ContractLiquidation.creditedAccount.balanceSign = \"\";\nautoObject.ContractLiquidation.creditedAccount.isOverDraft = false;\nautoObject.ContractLiquidation.creditedAmount = new tw.object.AmountDetails();\nautoObject.ContractLiquidation.creditedAmount.standardExRate = 0.0;\nautoObject.ContractLiquidation.creditedAmount.negotiatedExRate = 0.0;\nautoObject.ContractLiquidation.creditedAmount.amountInAccount = 0.0;\nautoObject.complianceApproval = false;\nautoObject.stepLog = new tw.object.StepLog();\nautoObject.stepLog.startTime = new TWDate();\nautoObject.stepLog.endTime = new TWDate();\nautoObject.stepLog.userName = \"\";\nautoObject.stepLog.role = \"\";\nautoObject.stepLog.step = \"\";\nautoObject.stepLog.action = \"\";\nautoObject.stepLog.comment = \"\";\nautoObject.stepLog.terminateReason = \"\";\nautoObject.stepLog.returnReason = \"\";\nautoObject.actions = new tw.object.listOf.toolkit.TWSYS.String();\nautoObject.actions[0] = \"\";\nautoObject.attachmentDetails = new tw.object.attachmentDetails();\nautoObject.attachmentDetails.folderID = \"\";\nautoObject.attachmentDetails.ecmProperties = new tw.object.ECMproperties();\nautoObject.attachmentDetails.ecmProperties.fullPath = \"\";\nautoObject.attachmentDetails.ecmProperties.cmisQuery = \"\";\nautoObject.attachmentDetails.ecmProperties.defaultProperties = new tw.object.listOf.toolkit.SYSCM.ECMDefaultProperty();\nautoObject.attachmentDetails.ecmProperties.defaultProperties[0] = new tw.object.toolkit.SYSCM.ECMDefaultProperty();\nautoObject.attachmentDetails.ecmProperties.defaultProperties[0].name = \"\";\nautoObject.attachmentDetails.ecmProperties.defaultProperties[0].value = null;\nautoObject.attachmentDetails.ecmProperties.defaultProperties[0].editable = false;\nautoObject.attachmentDetails.ecmProperties.defaultProperties[0].hidden = false;\nautoObject.attachmentDetails.attachment = new tw.object.listOf.Attachment();\nautoObject.attachmentDetails.attachment[0] = new tw.object.Attachment();\nautoObject.attachmentDetails.attachment[0].name = \"\";\nautoObject.attachmentDetails.attachment[0].description = \"\";\nautoObject.attachmentDetails.attachment[0].arabicName = \"\";\nautoObject.attachmentDetails.attachment[0].numOfOriginals = 0;\nautoObject.attachmentDetails.attachment[0].numOfCopies = 0;\nautoObject.complianceComments = new tw.object.listOf.StepLog();\nautoObject.complianceComments[0] = new tw.object.StepLog();\nautoObject.complianceComments[0].startTime = new TWDate();\nautoObject.complianceComments[0].endTime = new TWDate();\nautoObject.complianceComments[0].userName = \"\";\nautoObject.complianceComments[0].role = \"\";\nautoObject.complianceComments[0].step = \"\";\nautoObject.complianceComments[0].action = \"\";\nautoObject.complianceComments[0].comment = \"\";\nautoObject.complianceComments[0].terminateReason = \"\";\nautoObject.complianceComments[0].returnReason = \"\";\nautoObject.History = new tw.object.listOf.StepLog();\nautoObject.History[0] = new tw.object.StepLog();\nautoObject.History[0].startTime = new TWDate();\nautoObject.History[0].endTime = new TWDate();\nautoObject.History[0].userName = \"\";\nautoObject.History[0].role = \"\";\nautoObject.History[0].step = \"\";\nautoObject.History[0].action = \"\";\nautoObject.History[0].comment = \"\";\nautoObject.History[0].terminateReason = \"\";\nautoObject.History[0].returnReason = \"\";\nautoObject.documentSource = new tw.object.toolkit.TWSYS.NameValuePair();\nautoObject.documentSource.name = \"\";\nautoObject.documentSource.value = \"\";\nautoObject.folderID = \"\";\nautoObject.isLiquidated = false;\nautoObject.requestNo = \"\";\nautoObject.folderPath = \"\";\nautoObject.templateDocID = \"\";\nautoObject.approvalComment = \"\";\nautoObject"}]},"itemSubjectRef":"itm.12.5f8547c1-515a-481c-b74a-f20ec40faff9","name":"idcRequest","isCollection":false,"id":"2055.55a76aa1-e513-4fd3-835f-7fe160120af7"},{"extensionElements":{"defaultValue":[{"declaredType":"com.ibm.bpmsdk.model.bpmn20.ibmext.TDefaultValue","useDefault":true,"value":"\"{70F5C88B-0000-C34D-8412-F9BD2F55B960}\""}]},"itemSubjectRef":"itm.12.3212d5b3-f692-41b3-a893-343dc5c3df01","name":"folderId","isCollection":false,"id":"2055.77d2b3d6-2a2a-4520-ad08-31686157d431"},{"extensionElements":{"defaultValue":[{"declaredType":"com.ibm.bpmsdk.model.bpmn20.ibmext.TDefaultValue","useDefault":true,"value":"\"\/\u0623\u0631\u0634\u064a\u0641 \u0639\u0645\u0644\u0627\u0621 \u0627\u0644\u0628\u0646\u0643 \u0627\u0644\u0627\u0647\u0644\u064a\/\u0639\u0645\u0644\u0627\u0621 \u0627\u0644\u0628\u0646\u0643\/06316421\/DC Inward\/00102230001092 - IDC Execution\""}]},"itemSubjectRef":"itm.12.db884a3c-c533-44b7-bb2d-47bec8ad4022","name":"parentFolderPath","isCollection":false,"id":"2055.d602a747-fb6e-4103-bbc7-d4f4dffdb689"}]}}],"targetNamespace":"","typeLanguage":"http:\/\/www.w3.org\/2001\/XMLSchema","expressionLanguage":"http:\/\/www.ibm.com\/xmlns\/prod\/bpm\/expression-lang\/javascript"}</jsonData>
+        <field1 isNull="true" />
+        <field2 isNull="true" />
+        <field3>0</field3>
+        <field4 isNull="true" />
+        <field5>false</field5>
+        <clobField1 isNull="true" />
+        <blobField1 isNull="true" />
+        <processParameter name="idcRequest">
+            <lastModified isNull="true" />
+            <lastModifiedBy isNull="true" />
+            <processParameterId>2055.55a76aa1-e513-4fd3-835f-7fe160120af7</processParameterId>
+            <processId>1.5cf7e9f4-d78e-4690-8292-d5e64c209ccc</processId>
+            <parameterType>1</parameterType>
+            <isArrayOf>false</isArrayOf>
+            <classId>/12.5f8547c1-515a-481c-b74a-f20ec40faff9</classId>
+            <seq>1</seq>
+            <hasDefault>true</hasDefault>
+            <defaultValue>var autoObject = new tw.object.ODCRequest();
+autoObject.initiator = "";
+autoObject.requestNature = new tw.object.toolkit.TWSYS.NameValuePair();
+autoObject.requestNature.name = "";
+autoObject.requestNature.value = "";
+autoObject.requestType = new tw.object.toolkit.TWSYS.NameValuePair();
+autoObject.requestType.name = "";
+autoObject.requestType.value = "";
+autoObject.cif = "";
+autoObject.customerName = "";
+autoObject.parentRequestNo = "";
+autoObject.requestDate = new TWDate();
+autoObject.ImporterName = "";
+autoObject.appInfo = new tw.object.toolkit.NBEC.AppInfo();
+autoObject.appInfo.requestDate = "";
+autoObject.appInfo.status = "";
+autoObject.appInfo.subStatus = "";
+autoObject.appInfo.initiator = "";
+autoObject.appInfo.branch = new tw.object.toolkit.TWSYS.NameValuePair();
+autoObject.appInfo.branch.name = "";
+autoObject.appInfo.branch.value = "";
+autoObject.appInfo.requestName = "";
+autoObject.appInfo.requestType = "";
+autoObject.appInfo.stepName = "";
+autoObject.appInfo.appRef = "";
+autoObject.appInfo.appID = "";
+autoObject.appInfo.instanceID = "";
+autoObject.CustomerInfo = new tw.object.CustomerInfo();
+autoObject.CustomerInfo.cif = "";
+autoObject.CustomerInfo.customerName = "";
+autoObject.CustomerInfo.addressLine1 = "";
+autoObject.CustomerInfo.addressLine2 = "";
+autoObject.CustomerInfo.addressLine3 = "";
+autoObject.CustomerInfo.customerSector = new tw.object.toolkit.TWSYS.NameValuePair();
+autoObject.CustomerInfo.customerSector.name = "";
+autoObject.CustomerInfo.customerSector.value = "";
+autoObject.CustomerInfo.customerType = "";
+autoObject.CustomerInfo.customerNoCBE = "";
+autoObject.CustomerInfo.facilityType = new tw.object.toolkit.TWSYS.NameValuePair();
+autoObject.CustomerInfo.facilityType.name = "";
+autoObject.CustomerInfo.facilityType.value = "";
+autoObject.CustomerInfo.commercialRegistrationNo = "";
+autoObject.CustomerInfo.commercialRegistrationOffice = "";
+autoObject.CustomerInfo.taxCardNo = "";
+autoObject.CustomerInfo.importCardNo = "";
+autoObject.CustomerInfo.initiationHub = "";
+autoObject.CustomerInfo.country = "";
+autoObject.BasicDetails = new tw.object.BasicDetails();
+autoObject.BasicDetails.requestNature = "";
+autoObject.BasicDetails.requestType = "";
+autoObject.BasicDetails.parentRequestNo = "";
+autoObject.BasicDetails.requestState = "";
+autoObject.BasicDetails.flexCubeContractNo = "";
+autoObject.BasicDetails.contractStage = "";
+autoObject.BasicDetails.exportPurpose = new tw.object.toolkit.TWSYS.NameValuePair();
+autoObject.BasicDetails.exportPurpose.name = "";
+autoObject.BasicDetails.exportPurpose.value = "";
+autoObject.BasicDetails.paymentTerms = new tw.object.toolkit.TWSYS.NameValuePair();
+autoObject.BasicDetails.paymentTerms.name = "";
+autoObject.BasicDetails.paymentTerms.value = "";
+autoObject.BasicDetails.productCategory = new tw.object.toolkit.TWSYS.NameValuePair();
+autoObject.BasicDetails.productCategory.name = "";
+autoObject.BasicDetails.productCategory.value = "";
+autoObject.BasicDetails.commodityDescription = "";
+autoObject.BasicDetails.CountryOfOrigin = new tw.object.toolkit.TWSYS.NameValuePair();
+autoObject.BasicDetails.CountryOfOrigin.name = "";
+autoObject.BasicDetails.CountryOfOrigin.value = "";
+autoObject.BasicDetails.Bills = new tw.object.listOf.Bills();
+autoObject.BasicDetails.Bills[0] = new tw.object.Bills();
+autoObject.BasicDetails.Bills[0].billOfLadingRef = "";
+autoObject.BasicDetails.Bills[0].billOfLadingDate = new TWDate();
+autoObject.BasicDetails.Invoice = new tw.object.listOf.Invoice();
+autoObject.BasicDetails.Invoice[0] = new tw.object.Invoice();
+autoObject.BasicDetails.Invoice[0].invoiceNo = "";
+autoObject.BasicDetails.Invoice[0].invoiceDate = new TWDate();
+autoObject.GeneratedDocumentInfo = new tw.object.GeneratedDocumentInfo();
+autoObject.GeneratedDocumentInfo.customerName = "";
+autoObject.GeneratedDocumentInfo.customerAddress = "";
+autoObject.GeneratedDocumentInfo.deliveryTerms = new tw.object.listOf.toolkit.TWSYS.String();
+autoObject.GeneratedDocumentInfo.deliveryTerms[0] = "";
+autoObject.GeneratedDocumentInfo.deliveryTermsExtra = new tw.object.listOf.toolkit.TWSYS.String();
+autoObject.GeneratedDocumentInfo.deliveryTermsExtra[0] = "";
+autoObject.GeneratedDocumentInfo.paymentInstructions = new tw.object.listOf.toolkit.TWSYS.String();
+autoObject.GeneratedDocumentInfo.paymentInstructions[0] = "";
+autoObject.GeneratedDocumentInfo.paymentInstructionsExtra = new tw.object.listOf.toolkit.TWSYS.String();
+autoObject.GeneratedDocumentInfo.paymentInstructionsExtra[0] = "";
+autoObject.GeneratedDocumentInfo.Instructions = new tw.object.listOf.toolkit.TWSYS.String();
+autoObject.GeneratedDocumentInfo.Instructions[0] = "";
+autoObject.GeneratedDocumentInfo.InstructionsExtra = new tw.object.listOf.toolkit.TWSYS.String();
+autoObject.GeneratedDocumentInfo.InstructionsExtra[0] = "";
+autoObject.GeneratedDocumentInfo.specialInstructions = new tw.object.listOf.toolkit.TWSYS.String();
+autoObject.GeneratedDocumentInfo.specialInstructions[0] = "";
+autoObject.GeneratedDocumentInfo.specialInstructionsExtra = new tw.object.listOf.toolkit.TWSYS.String();
+autoObject.GeneratedDocumentInfo.specialInstructionsExtra[0] = "";
+autoObject.GeneratedDocumentInfo.regenerateRemLetter = false;
+autoObject.GeneratedDocumentInfo.regenerateRemLetterOption = new tw.object.toolkit.TWSYS.NameValuePair();
+autoObject.GeneratedDocumentInfo.regenerateRemLetterOption.name = "";
+autoObject.GeneratedDocumentInfo.regenerateRemLetterOption.value = "";
+autoObject.GeneratedDocumentInfo.regenerateRemLetterTitle = "";
+autoObject.GeneratedDocumentInfo.destinationFolder = new tw.object.toolkit.SYSCM.ECMFolder();
+autoObject.GeneratedDocumentInfo.destinationFolder.objectId = "";
+autoObject.GeneratedDocumentInfo.destinationFolder.serverName = "";
+autoObject.GeneratedDocumentInfo.destinationFolder.repositoryId = "";
+autoObject.GeneratedDocumentInfo.destinationFolder.objectTypeId = "";
+autoObject.GeneratedDocumentInfo.destinationFolder.path = "";
+autoObject.GeneratedDocumentInfo.destinationFolder.parentId = "";
+autoObject.GeneratedDocumentInfo.destinationFolder.name = "";
+autoObject.GeneratedDocumentInfo.destinationFolder.creationDate = new TWDate();
+autoObject.GeneratedDocumentInfo.destinationFolder.createdBy = "";
+autoObject.GeneratedDocumentInfo.destinationFolder.lastModificationDate = new TWDate();
+autoObject.GeneratedDocumentInfo.destinationFolder.lastModifiedBy = "";
+autoObject.GeneratedDocumentInfo.destinationFolder.properties = new tw.object.listOf.toolkit.SYSCM.ECMProperty();
+autoObject.GeneratedDocumentInfo.destinationFolder.properties[0] = new tw.object.toolkit.SYSCM.ECMProperty();
+autoObject.GeneratedDocumentInfo.destinationFolder.properties[0].objectTypeId = "";
+autoObject.GeneratedDocumentInfo.destinationFolder.properties[0].value = null;
+autoObject.FinancialDetailsBR = new tw.object.FinancialDetailsBranch();
+autoObject.FinancialDetailsBR.documentAmount = 0.0;
+autoObject.FinancialDetailsBR.currency = new tw.object.toolkit.TWSYS.NameValuePair();
+autoObject.FinancialDetailsBR.currency.name = "";
+autoObject.FinancialDetailsBR.currency.value = "";
+autoObject.FinancialDetailsBR.maxCollectionDate = new TWDate();
+autoObject.FinancialDetailsBR.amountAdvanced = 0.0;
+autoObject.FinancialDetailsBR.chargesAndCommissionsAccount = new tw.object.toolkit.TWSYS.NameValuePair();
+autoObject.FinancialDetailsBR.chargesAndCommissionsAccount.name = "";
+autoObject.FinancialDetailsBR.chargesAndCommissionsAccount.value = "";
+autoObject.FinancialDetailsBR.collectionAccount = new tw.object.toolkit.TWSYS.NameValuePair();
+autoObject.FinancialDetailsBR.collectionAccount.name = "";
+autoObject.FinancialDetailsBR.collectionAccount.value = "";
+autoObject.FinancialDetailsBR.listOfAccounts = new tw.object.listOf.toolkit.TWSYS.NameValuePair();
+autoObject.FinancialDetailsBR.listOfAccounts[0] = new tw.object.toolkit.TWSYS.NameValuePair();
+autoObject.FinancialDetailsBR.listOfAccounts[0].name = "";
+autoObject.FinancialDetailsBR.listOfAccounts[0].value = "";
+autoObject.FcCollections = new tw.object.FCCollections();
+autoObject.FcCollections.currency = new tw.object.toolkit.TWSYS.NameValuePair();
+autoObject.FcCollections.currency.name = "";
+autoObject.FcCollections.currency.value = "";
+autoObject.FcCollections.standardExchangeRate = 0.0;
+autoObject.FcCollections.negotiatedExchangeRate = 0.0;
+autoObject.FcCollections.fromDate = new TWDate();
+autoObject.FcCollections.ToDate = new TWDate();
+autoObject.FcCollections.accountNo = new tw.object.toolkit.TWSYS.NameValuePair();
+autoObject.FcCollections.accountNo.name = "";
+autoObject.FcCollections.accountNo.value = "";
+autoObject.FcCollections.retrievedTransactions = new tw.object.listOf.FCTransactions();
+autoObject.FcCollections.retrievedTransactions[0] = new tw.object.FCTransactions();
+autoObject.FcCollections.retrievedTransactions[0].accountNo = "";
+autoObject.FcCollections.retrievedTransactions[0].referenceNumber = "";
+autoObject.FcCollections.retrievedTransactions[0].postingDate = new TWDate();
+autoObject.FcCollections.retrievedTransactions[0].valueDate = new TWDate();
+autoObject.FcCollections.retrievedTransactions[0].transactionAmount = 0.0;
+autoObject.FcCollections.retrievedTransactions[0].existAmount = 0.0;
+autoObject.FcCollections.retrievedTransactions[0].currency = "";
+autoObject.FcCollections.retrievedTransactions[0].amountAllocatedForCurrencyRequest = 0.0;
+autoObject.FcCollections.retrievedTransactions[0].allocatedAmountInRequestCurrency = 0.0;
+autoObject.FcCollections.selectedTransactions = new tw.object.listOf.FCTransactions();
+autoObject.FcCollections.selectedTransactions[0] = new tw.object.FCTransactions();
+autoObject.FcCollections.selectedTransactions[0].accountNo = "";
+autoObject.FcCollections.selectedTransactions[0].referenceNumber = "";
+autoObject.FcCollections.selectedTransactions[0].postingDate = new TWDate();
+autoObject.FcCollections.selectedTransactions[0].valueDate = new TWDate();
+autoObject.FcCollections.selectedTransactions[0].transactionAmount = 0.0;
+autoObject.FcCollections.selectedTransactions[0].existAmount = 0.0;
+autoObject.FcCollections.selectedTransactions[0].currency = "";
+autoObject.FcCollections.selectedTransactions[0].amountAllocatedForCurrencyRequest = 0.0;
+autoObject.FcCollections.selectedTransactions[0].allocatedAmountInRequestCurrency = 0.0;
+autoObject.FcCollections.isReversed = false;
+autoObject.FcCollections.usedAmount = 0.0;
+autoObject.FcCollections.calculatedAmount = 0.0;
+autoObject.FcCollections.totalAllocatedAmount = 0.0;
+autoObject.FcCollections.listOfAccounts = new tw.object.listOf.toolkit.TWSYS.NameValuePair();
+autoObject.FcCollections.listOfAccounts[0] = new tw.object.toolkit.TWSYS.NameValuePair();
+autoObject.FcCollections.listOfAccounts[0].name = "";
+autoObject.FcCollections.listOfAccounts[0].value = "";
+autoObject.FinancialDetailsFO = new tw.object.FinancialDetailsFO();
+autoObject.FinancialDetailsFO.discount = 0.0;
+autoObject.FinancialDetailsFO.extraCharges = 0.0;
+autoObject.FinancialDetailsFO.ourCharges = 0.0;
+autoObject.FinancialDetailsFO.amountSight = 0.0;
+autoObject.FinancialDetailsFO.amountDefNoAvalization = 0.0;
+autoObject.FinancialDetailsFO.amountDefAvalization = 0.0;
+autoObject.FinancialDetailsFO.collectableAmount = 0.0;
+autoObject.FinancialDetailsFO.outstandingAmount = 0.0;
+autoObject.FinancialDetailsFO.maturityDate = new TWDate();
+autoObject.FinancialDetailsFO.noOfDaysMaturity = 0;
+autoObject.FinancialDetailsFO.referenceNo = "";
+autoObject.FinancialDetailsFO.financeApprovalNo = "";
+autoObject.FinancialDetailsFO.executionHub = new tw.object.toolkit.TWSYS.NameValuePair();
+autoObject.FinancialDetailsFO.executionHub.name = "";
+autoObject.FinancialDetailsFO.executionHub.value = "";
+autoObject.FinancialDetailsFO.multiTenorDates = new tw.object.listOf.MultiTenorDates();
+autoObject.FinancialDetailsFO.multiTenorDates[0] = new tw.object.MultiTenorDates();
+autoObject.FinancialDetailsFO.multiTenorDates[0].date = new TWDate();
+autoObject.FinancialDetailsFO.multiTenorDates[0].amount = 0.0;
+autoObject.ImporterDetails = new tw.object.ImporterDetails();
+autoObject.ImporterDetails.importerName = "";
+autoObject.ImporterDetails.importerCountry = new tw.object.toolkit.TWSYS.NameValuePair();
+autoObject.ImporterDetails.importerCountry.name = "";
+autoObject.ImporterDetails.importerCountry.value = "";
+autoObject.ImporterDetails.importerAddress = "";
+autoObject.ImporterDetails.importerPhoneNo = "";
+autoObject.ImporterDetails.bank = "";
+autoObject.ImporterDetails.BICCode = "";
+autoObject.ImporterDetails.ibanAccount = "";
+autoObject.ImporterDetails.bankCountry = new tw.object.toolkit.TWSYS.NameValuePair();
+autoObject.ImporterDetails.bankCountry.name = "";
+autoObject.ImporterDetails.bankCountry.value = "";
+autoObject.ImporterDetails.bankAddress = "";
+autoObject.ImporterDetails.bankPhoneNo = "";
+autoObject.ImporterDetails.collectingBankReference = "";
+autoObject.ProductShipmentDetails = new tw.object.ProductShipmentDetails();
+autoObject.ProductShipmentDetails.CBECommodityClassification = new tw.object.toolkit.TWSYS.NameValuePair();
+autoObject.ProductShipmentDetails.CBECommodityClassification.name = "";
+autoObject.ProductShipmentDetails.CBECommodityClassification.value = "";
+autoObject.ProductShipmentDetails.shippingDate = new TWDate();
+autoObject.ProductShipmentDetails.shipmentMethod = new tw.object.toolkit.TWSYS.NameValuePair();
+autoObject.ProductShipmentDetails.shipmentMethod.name = "";
+autoObject.ProductShipmentDetails.shipmentMethod.value = "";
+autoObject.OdcCollection = new tw.object.ODCCollection();
+autoObject.OdcCollection.amount = 0.0;
+autoObject.OdcCollection.currency = "";
+autoObject.OdcCollection.informCADAboutTheCollection = false;
+autoObject.ReversalReason = new tw.object.ReversalReason();
+autoObject.ReversalReason.reversalReason = "";
+autoObject.ReversalReason.closureReason = "";
+autoObject.ReversalReason.executionHub = new tw.object.toolkit.TWSYS.NameValuePair();
+autoObject.ReversalReason.executionHub.name = "";
+autoObject.ReversalReason.executionHub.value = "";
+autoObject.ContractCreation = new tw.object.ContractCreation();
+autoObject.ContractCreation.productCode = new tw.object.toolkit.TWSYS.NameValuePair();
+autoObject.ContractCreation.productCode.name = "";
+autoObject.ContractCreation.productCode.value = "";
+autoObject.ContractCreation.productDescription = "";
+autoObject.ContractCreation.Stage = "";
+autoObject.ContractCreation.userReference = "";
+autoObject.ContractCreation.sourceReference = "";
+autoObject.ContractCreation.currency = "";
+autoObject.ContractCreation.amount = 0.0;
+autoObject.ContractCreation.baseDate = new TWDate();
+autoObject.ContractCreation.valueDate = new TWDate();
+autoObject.ContractCreation.tenorDays = 0;
+autoObject.ContractCreation.transitDays = 0;
+autoObject.ContractCreation.maturityDate = new TWDate();
+autoObject.Parties = new tw.object.odcParties();
+autoObject.Parties.Drawer = new tw.object.Drawer();
+autoObject.Parties.Drawer.partyId = "";
+autoObject.Parties.Drawer.partyName = "";
+autoObject.Parties.Drawer.country = "";
+autoObject.Parties.Drawer.Language = "";
+autoObject.Parties.Drawer.Reference = "";
+autoObject.Parties.Drawer.address1 = "";
+autoObject.Parties.Drawer.address2 = "";
+autoObject.Parties.Drawer.address3 = "";
+autoObject.Parties.Drawee = new tw.object.Drawee();
+autoObject.Parties.Drawee.partyId = "";
+autoObject.Parties.Drawee.partyName = "";
+autoObject.Parties.Drawee.country = "";
+autoObject.Parties.Drawee.Language = "";
+autoObject.Parties.Drawee.Reference = "";
+autoObject.Parties.Drawee.address1 = "";
+autoObject.Parties.Drawee.address2 = "";
+autoObject.Parties.Drawee.address3 = "";
+autoObject.Parties.collectingBank = new tw.object.CollectingBank();
+autoObject.Parties.collectingBank.id = "";
+autoObject.Parties.collectingBank.name = "";
+autoObject.Parties.collectingBank.country = "";
+autoObject.Parties.collectingBank.language = "";
+autoObject.Parties.collectingBank.reference = "";
+autoObject.Parties.collectingBank.address1 = "";
+autoObject.Parties.collectingBank.address2 = "";
+autoObject.Parties.collectingBank.address3 = "";
+autoObject.Parties.collectingBank.cif = "";
+autoObject.Parties.collectingBank.media = "";
+autoObject.Parties.collectingBank.address = "";
+autoObject.Parties.partyTypes = new tw.object.partyTypes();
+autoObject.Parties.partyTypes.partyCIF = "";
+autoObject.Parties.partyTypes.partyId = "";
+autoObject.Parties.partyTypes.partyName = "";
+autoObject.Parties.partyTypes.country = "";
+autoObject.Parties.partyTypes.language = "";
+autoObject.Parties.partyTypes.refrence = "";
+autoObject.Parties.partyTypes.address1 = "";
+autoObject.Parties.partyTypes.address2 = "";
+autoObject.Parties.partyTypes.address3 = "";
+autoObject.Parties.partyTypes.partyType = new tw.object.toolkit.TWSYS.NameValuePair();
+autoObject.Parties.partyTypes.partyType.name = "";
+autoObject.Parties.partyTypes.partyType.value = "";
+autoObject.ChargesAndCommissions = new tw.object.listOf.ChargesAndCommissions();
+autoObject.ChargesAndCommissions[0] = new tw.object.ChargesAndCommissions();
+autoObject.ChargesAndCommissions[0].component = "";
+autoObject.ChargesAndCommissions[0].defaultCurrency = new tw.object.toolkit.TWSYS.NameValuePair();
+autoObject.ChargesAndCommissions[0].defaultCurrency.name = "";
+autoObject.ChargesAndCommissions[0].defaultCurrency.value = "";
+autoObject.ChargesAndCommissions[0].changeAmount = 0.0;
+autoObject.ChargesAndCommissions[0].waiver = false;
+autoObject.ChargesAndCommissions[0].debitedAccount = new tw.object.AccountDetails();
+autoObject.ChargesAndCommissions[0].debitedAccount.accountClass = new tw.object.toolkit.TWSYS.NameValuePair();
+autoObject.ChargesAndCommissions[0].debitedAccount.accountClass.name = "";
+autoObject.ChargesAndCommissions[0].debitedAccount.accountClass.value = "";
+autoObject.ChargesAndCommissions[0].debitedAccount.glAccountNo = "";
+autoObject.ChargesAndCommissions[0].debitedAccount.customerAccountNo = "";
+autoObject.ChargesAndCommissions[0].debitedAccount.branchCode = "";
+autoObject.ChargesAndCommissions[0].debitedAccount.currency = new tw.object.toolkit.TWSYS.NameValuePair();
+autoObject.ChargesAndCommissions[0].debitedAccount.currency.name = "";
+autoObject.ChargesAndCommissions[0].debitedAccount.currency.value = "";
+autoObject.ChargesAndCommissions[0].debitedAccount.balance = 0.0;
+autoObject.ChargesAndCommissions[0].debitedAccount.balanceSign = "";
+autoObject.ChargesAndCommissions[0].debitedAccount.isOverDraft = false;
+autoObject.ChargesAndCommissions[0].debitedAmount = new tw.object.AmountDetails();
+autoObject.ChargesAndCommissions[0].debitedAmount.standardExRate = 0.0;
+autoObject.ChargesAndCommissions[0].debitedAmount.negotiatedExRate = 0.0;
+autoObject.ChargesAndCommissions[0].debitedAmount.amountInAccount = 0.0;
+autoObject.ChargesAndCommissions[0].rateType = "";
+autoObject.ChargesAndCommissions[0].description = "";
+autoObject.ChargesAndCommissions[0].defaultPercentage = 0.0;
+autoObject.ChargesAndCommissions[0].changePercentage = 0.0;
+autoObject.ChargesAndCommissions[0].defaultAmount = 0.0;
+autoObject.ChargesAndCommissions[0].basicAmountCurrency = "";
+autoObject.ChargesAndCommissions[0].flatAmount = 0.0;
+autoObject.ContractLiquidation = new tw.object.ContractLiquidation();
+autoObject.ContractLiquidation.liqAmount = 0.0;
+autoObject.ContractLiquidation.liqCurrency = "";
+autoObject.ContractLiquidation.debitValueDate = new TWDate();
+autoObject.ContractLiquidation.creditValueDate = new TWDate();
+autoObject.ContractLiquidation.debitedAccountNo = "";
+autoObject.ContractLiquidation.creditedAccount = new tw.object.AccountDetails();
+autoObject.ContractLiquidation.creditedAccount.accountClass = new tw.object.toolkit.TWSYS.NameValuePair();
+autoObject.ContractLiquidation.creditedAccount.accountClass.name = "";
+autoObject.ContractLiquidation.creditedAccount.accountClass.value = "";
+autoObject.ContractLiquidation.creditedAccount.glAccountNo = "";
+autoObject.ContractLiquidation.creditedAccount.customerAccountNo = "";
+autoObject.ContractLiquidation.creditedAccount.branchCode = "";
+autoObject.ContractLiquidation.creditedAccount.currency = new tw.object.toolkit.TWSYS.NameValuePair();
+autoObject.ContractLiquidation.creditedAccount.currency.name = "";
+autoObject.ContractLiquidation.creditedAccount.currency.value = "";
+autoObject.ContractLiquidation.creditedAccount.balance = 0.0;
+autoObject.ContractLiquidation.creditedAccount.balanceSign = "";
+autoObject.ContractLiquidation.creditedAccount.isOverDraft = false;
+autoObject.ContractLiquidation.creditedAmount = new tw.object.AmountDetails();
+autoObject.ContractLiquidation.creditedAmount.standardExRate = 0.0;
+autoObject.ContractLiquidation.creditedAmount.negotiatedExRate = 0.0;
+autoObject.ContractLiquidation.creditedAmount.amountInAccount = 0.0;
+autoObject.complianceApproval = false;
+autoObject.stepLog = new tw.object.StepLog();
+autoObject.stepLog.startTime = new TWDate();
+autoObject.stepLog.endTime = new TWDate();
+autoObject.stepLog.userName = "";
+autoObject.stepLog.role = "";
+autoObject.stepLog.step = "";
+autoObject.stepLog.action = "";
+autoObject.stepLog.comment = "";
+autoObject.stepLog.terminateReason = "";
+autoObject.stepLog.returnReason = "";
+autoObject.actions = new tw.object.listOf.toolkit.TWSYS.String();
+autoObject.actions[0] = "";
+autoObject.attachmentDetails = new tw.object.attachmentDetails();
+autoObject.attachmentDetails.folderID = "";
+autoObject.attachmentDetails.ecmProperties = new tw.object.ECMproperties();
+autoObject.attachmentDetails.ecmProperties.fullPath = "";
+autoObject.attachmentDetails.ecmProperties.cmisQuery = "";
+autoObject.attachmentDetails.ecmProperties.defaultProperties = new tw.object.listOf.toolkit.SYSCM.ECMDefaultProperty();
+autoObject.attachmentDetails.ecmProperties.defaultProperties[0] = new tw.object.toolkit.SYSCM.ECMDefaultProperty();
+autoObject.attachmentDetails.ecmProperties.defaultProperties[0].name = "";
+autoObject.attachmentDetails.ecmProperties.defaultProperties[0].value = null;
+autoObject.attachmentDetails.ecmProperties.defaultProperties[0].editable = false;
+autoObject.attachmentDetails.ecmProperties.defaultProperties[0].hidden = false;
+autoObject.attachmentDetails.attachment = new tw.object.listOf.Attachment();
+autoObject.attachmentDetails.attachment[0] = new tw.object.Attachment();
+autoObject.attachmentDetails.attachment[0].name = "";
+autoObject.attachmentDetails.attachment[0].description = "";
+autoObject.attachmentDetails.attachment[0].arabicName = "";
+autoObject.attachmentDetails.attachment[0].numOfOriginals = 0;
+autoObject.attachmentDetails.attachment[0].numOfCopies = 0;
+autoObject.complianceComments = new tw.object.listOf.StepLog();
+autoObject.complianceComments[0] = new tw.object.StepLog();
+autoObject.complianceComments[0].startTime = new TWDate();
+autoObject.complianceComments[0].endTime = new TWDate();
+autoObject.complianceComments[0].userName = "";
+autoObject.complianceComments[0].role = "";
+autoObject.complianceComments[0].step = "";
+autoObject.complianceComments[0].action = "";
+autoObject.complianceComments[0].comment = "";
+autoObject.complianceComments[0].terminateReason = "";
+autoObject.complianceComments[0].returnReason = "";
+autoObject.History = new tw.object.listOf.StepLog();
+autoObject.History[0] = new tw.object.StepLog();
+autoObject.History[0].startTime = new TWDate();
+autoObject.History[0].endTime = new TWDate();
+autoObject.History[0].userName = "";
+autoObject.History[0].role = "";
+autoObject.History[0].step = "";
+autoObject.History[0].action = "";
+autoObject.History[0].comment = "";
+autoObject.History[0].terminateReason = "";
+autoObject.History[0].returnReason = "";
+autoObject.documentSource = new tw.object.toolkit.TWSYS.NameValuePair();
+autoObject.documentSource.name = "";
+autoObject.documentSource.value = "";
+autoObject.folderID = "";
+autoObject.isLiquidated = false;
+autoObject.requestNo = "";
+autoObject.folderPath = "";
+autoObject.templateDocID = "";
+autoObject.approvalComment = "";
+autoObject</defaultValue>
+            <isLocked>false</isLocked>
+            <description isNull="true" />
+            <guid>825a075c-98fc-421e-be99-09a86b2e6102</guid>
+            <versionId>e719a1f4-7206-421d-a952-1af2e7098aba</versionId>
+        </processParameter>
+        <processParameter name="folderId">
+            <lastModified isNull="true" />
+            <lastModifiedBy isNull="true" />
+            <processParameterId>2055.77d2b3d6-2a2a-4520-ad08-31686157d431</processParameterId>
+            <processId>1.5cf7e9f4-d78e-4690-8292-d5e64c209ccc</processId>
+            <parameterType>1</parameterType>
+            <isArrayOf>false</isArrayOf>
+            <classId>30ff1a81-49af-43c7-b3f4-9f36d5bc8365/12.3212d5b3-f692-41b3-a893-343dc5c3df01</classId>
+            <seq>2</seq>
+            <hasDefault>true</hasDefault>
+            <defaultValue>"{70F5C88B-0000-C34D-8412-F9BD2F55B960}"</defaultValue>
+            <isLocked>false</isLocked>
+            <description isNull="true" />
+            <guid>f9c72af4-a232-4f2e-90ca-b0bb4f99c52f</guid>
+            <versionId>18d8334f-cab4-478d-9d85-b3b552a1238c</versionId>
+        </processParameter>
+        <processParameter name="parentFolderPath">
+            <lastModified isNull="true" />
+            <lastModifiedBy isNull="true" />
+            <processParameterId>2055.d602a747-fb6e-4103-bbc7-d4f4dffdb689</processParameterId>
+            <processId>1.5cf7e9f4-d78e-4690-8292-d5e64c209ccc</processId>
+            <parameterType>1</parameterType>
+            <isArrayOf>false</isArrayOf>
+            <classId>b5a7448c-61c1-4e1e-9933-3912eb5c29ad/12.db884a3c-c533-44b7-bb2d-47bec8ad4022</classId>
+            <seq>3</seq>
+            <hasDefault>true</hasDefault>
+            <defaultValue>"/أرشيف عملاء البنك الاهلي/عملاء البنك/06316421/DC Inward/00102230001092 - IDC Execution"</defaultValue>
+            <isLocked>false</isLocked>
+            <description isNull="true" />
+            <guid>20efeec5-b739-4358-946b-14a591c02a81</guid>
+            <versionId>c748266f-5617-4742-8d21-ecbdae30d47d</versionId>
+        </processParameter>
+        <processParameter name="message">
+            <lastModified isNull="true" />
+            <lastModifiedBy isNull="true" />
+            <processParameterId>2055.870b6d47-a51f-4132-8ee7-64b9deb6e00a</processParameterId>
+            <processId>1.5cf7e9f4-d78e-4690-8292-d5e64c209ccc</processId>
+            <parameterType>2</parameterType>
+            <isArrayOf>false</isArrayOf>
+            <classId>b5a7448c-61c1-4e1e-9933-3912eb5c29ad/12.db884a3c-c533-44b7-bb2d-47bec8ad4022</classId>
+            <seq>4</seq>
+            <hasDefault>false</hasDefault>
+            <defaultValue isNull="true" />
+            <isLocked>false</isLocked>
+            <description isNull="true" />
+            <guid>1e6ac9d9-827b-4cb5-8bba-ed1d90593654</guid>
+            <versionId>6e11ca08-0ad0-4a24-969f-094569a2fe1b</versionId>
+        </processParameter>
+        <processParameter name="cancelPath">
+            <lastModified isNull="true" />
+            <lastModifiedBy isNull="true" />
+            <processParameterId>2055.e82f276e-6aad-4948-89ea-84965553a7ec</processParameterId>
+            <processId>1.5cf7e9f4-d78e-4690-8292-d5e64c209ccc</processId>
+            <parameterType>2</parameterType>
+            <isArrayOf>false</isArrayOf>
+            <classId>b5a7448c-61c1-4e1e-9933-3912eb5c29ad/12.db884a3c-c533-44b7-bb2d-47bec8ad4022</classId>
+            <seq>5</seq>
+            <hasDefault>false</hasDefault>
+            <defaultValue isNull="true" />
+            <isLocked>false</isLocked>
+            <description isNull="true" />
+            <guid>56686246-0a8a-4b0c-9941-2897e2416f79</guid>
+            <versionId>7e1508ef-8c18-4bc7-a916-ce46fe781ab7</versionId>
+        </processParameter>
+        <processParameter name="">
+            <lastModified isNull="true" />
+            <lastModifiedBy isNull="true" />
+            <processParameterId>2055.0b755149-5359-4a51-a912-3e945ef48ece</processParameterId>
+            <processId>1.5cf7e9f4-d78e-4690-8292-d5e64c209ccc</processId>
+            <parameterType>3</parameterType>
+            <isArrayOf>false</isArrayOf>
+            <classId>b5a7448c-61c1-4e1e-9933-3912eb5c29ad/12.db884a3c-c533-44b7-bb2d-47bec8ad4022</classId>
+            <seq>86</seq>
+            <hasDefault>false</hasDefault>
+            <defaultValue isNull="true" />
+            <isLocked>false</isLocked>
+            <description isNull="true" />
+            <guid>f4d6d48a-5217-4387-b741-f8d9e7b09add</guid>
+            <versionId>b5b95f20-549b-43df-8a85-0f6b852fa17d</versionId>
+        </processParameter>
+        <processParameter name="ECMError">
+            <lastModified isNull="true" />
+            <lastModifiedBy isNull="true" />
+            <processParameterId>2055.7f45c2e3-a8b9-4663-9d80-987ab09bf95c</processParameterId>
+            <processId>1.5cf7e9f4-d78e-4690-8292-d5e64c209ccc</processId>
+            <parameterType>3</parameterType>
+            <isArrayOf>false</isArrayOf>
+            <classId>30ff1a81-49af-43c7-b3f4-9f36d5bc8365/12.bfb48b9b-8247-49fb-8f78-82b738b817a6</classId>
+            <seq>90</seq>
+            <hasDefault>false</hasDefault>
+            <defaultValue>ECMError</defaultValue>
+            <isLocked>false</isLocked>
+            <description isNull="true" />
+            <guid>3f8cb7ee-0b0d-43cb-b343-a07095b4c0bd</guid>
+            <versionId>40f963c5-d529-4519-8bb3-56b8d85e3f46</versionId>
+        </processParameter>
+        <processVariable name="targetFolderId">
+            <lastModified isNull="true" />
+            <lastModifiedBy isNull="true" />
+            <processVariableId>2056.0db90457-e4d6-4981-aaf4-373342e593de</processVariableId>
+            <description isNull="true" />
+            <processId>1.5cf7e9f4-d78e-4690-8292-d5e64c209ccc</processId>
+            <namespace>2</namespace>
+            <seq>1</seq>
+            <isArrayOf>false</isArrayOf>
+            <isTransient>false</isTransient>
+            <classId>30ff1a81-49af-43c7-b3f4-9f36d5bc8365/12.3212d5b3-f692-41b3-a893-343dc5c3df01</classId>
+            <hasDefault>false</hasDefault>
+            <defaultValue isNull="true" />
+            <guid>b23f6d6d-f668-4ac9-a93a-17b04851b5fd</guid>
+            <versionId>36cd0f29-ef66-4fd6-a99b-41319562fc1c</versionId>
+        </processVariable>
+        <processVariable name="sourceFolderId">
+            <lastModified isNull="true" />
+            <lastModifiedBy isNull="true" />
+            <processVariableId>2056.330ce88b-be52-4eef-9263-be8ce517f717</processVariableId>
+            <description isNull="true" />
+            <processId>1.5cf7e9f4-d78e-4690-8292-d5e64c209ccc</processId>
+            <namespace>2</namespace>
+            <seq>2</seq>
+            <isArrayOf>false</isArrayOf>
+            <isTransient>false</isTransient>
+            <classId>30ff1a81-49af-43c7-b3f4-9f36d5bc8365/12.240930df-e9da-40a6-a4e8-4b41b42bb183</classId>
+            <hasDefault>false</hasDefault>
+            <defaultValue isNull="true" />
+            <guid>6df1abb0-07e6-429e-8f7e-5c6df9c939ba</guid>
+            <versionId>4726f236-9cf1-4c48-bf0f-7d4ee08c2362</versionId>
+        </processVariable>
+        <processVariable name="errorMSG">
+            <lastModified isNull="true" />
+            <lastModifiedBy isNull="true" />
+            <processVariableId>2056.1900e4e0-c521-4a74-b521-268936e8029c</processVariableId>
+            <description isNull="true" />
+            <processId>1.5cf7e9f4-d78e-4690-8292-d5e64c209ccc</processId>
+            <namespace>2</namespace>
+            <seq>3</seq>
+            <isArrayOf>false</isArrayOf>
+            <isTransient>false</isTransient>
+            <classId>b5a7448c-61c1-4e1e-9933-3912eb5c29ad/12.db884a3c-c533-44b7-bb2d-47bec8ad4022</classId>
+            <hasDefault>false</hasDefault>
+            <defaultValue isNull="true" />
+            <guid>0b22266b-6c66-47c8-8036-2c512199c480</guid>
+            <versionId>1ed0ec10-a635-4cf1-baa3-8df7df62d48d</versionId>
+        </processVariable>
+        <processVariable name="errorCode">
+            <lastModified isNull="true" />
+            <lastModifiedBy isNull="true" />
+            <processVariableId>2056.982fa5a8-ee60-47c1-b4ef-3abea9af999d</processVariableId>
+            <description isNull="true" />
+            <processId>1.5cf7e9f4-d78e-4690-8292-d5e64c209ccc</processId>
+            <namespace>2</namespace>
+            <seq>4</seq>
+            <isArrayOf>false</isArrayOf>
+            <isTransient>false</isTransient>
+            <classId>b5a7448c-61c1-4e1e-9933-3912eb5c29ad/12.db884a3c-c533-44b7-bb2d-47bec8ad4022</classId>
+            <hasDefault>false</hasDefault>
+            <defaultValue isNull="true" />
+            <guid>1c26598a-d3a6-4e04-9f94-b899fd8cf79b</guid>
+            <versionId>ac2e0056-c0cd-4d9c-aa03-e0aeb1d41b58</versionId>
+        </processVariable>
+        <processVariable name="error">
+            <lastModified isNull="true" />
+            <lastModifiedBy isNull="true" />
+            <processVariableId>2056.3704dfb6-666c-496f-8588-53c9b53040cd</processVariableId>
+            <description isNull="true" />
+            <processId>1.5cf7e9f4-d78e-4690-8292-d5e64c209ccc</processId>
+            <namespace>2</namespace>
+            <seq>5</seq>
+            <isArrayOf>false</isArrayOf>
+            <isTransient>false</isTransient>
+            <classId>28e0abf4-f65e-4a08-bd7b-dfe602249008/12.5551644c-3dc6-4161-a939-4e7f27f8ce45</classId>
+            <hasDefault>false</hasDefault>
+            <defaultValue isNull="true" />
+            <guid>23658b60-bc60-4bb9-bb22-c50216b41b7a</guid>
+            <versionId>3c193c67-acad-49c8-86ae-96d76aa4bf3f</versionId>
+        </processVariable>
+        <item>
+            <lastModified isNull="true" />
+            <lastModifiedBy isNull="true" />
+            <processItemId>2025.9b9546e9-6a65-4839-b352-490ee13e150e</processItemId>
+            <processId>1.5cf7e9f4-d78e-4690-8292-d5e64c209ccc</processId>
+            <name>End</name>
+            <tWComponentName>ExitPoint</tWComponentName>
+            <tWComponentId>3008.b0c3cb6b-64b8-4e40-ab16-746c4a0cef83</tWComponentId>
+            <isLogEnabled>false</isLogEnabled>
+            <isTraceEnabled>false</isTraceEnabled>
+            <traceCategory isNull="true" />
+            <traceLevel isNull="true" />
+            <traceMessage isNull="true" />
+            <traceSymbolTable isNull="true" />
+            <isExecutionContextTraced>false</isExecutionContextTraced>
+            <saveExecutionContext>true</saveExecutionContext>
+            <documentation isNull="true" />
+            <isErrorHandlerEnabled>false</isErrorHandlerEnabled>
+            <errorHandlerItemId isNull="true" />
+            <guid>guid:7cf3b5b49b9bcdb8:3c4f5f27:18bd738e4b3:1e91</guid>
+            <versionId>0550f50a-fc8e-4fe1-91b3-799b7ae5c872</versionId>
+            <externalServiceRef isNull="true" />
+            <externalServiceOp isNull="true" />
+            <nodeColor isNull="true" />
+            <layoutData x="770" y="80">
+                <errorLink>
+                    <controlPoints />
+                    <showEndState>false</showEndState>
+                    <showName>false</showName>
+                </errorLink>
+            </layoutData>
+            <TWComponent>
+                <lastModified isNull="true" />
+                <lastModifiedBy isNull="true" />
+                <exitPointId>3008.b0c3cb6b-64b8-4e40-ab16-746c4a0cef83</exitPointId>
+                <haltProcess>false</haltProcess>
+                <guid>1da2f3d1-996c-4e98-ba47-2ba4d33f41a4</guid>
+                <versionId>3f7dba01-6894-4d88-9c1e-9ab05f7cb24b</versionId>
+            </TWComponent>
+        </item>
+        <item>
+            <lastModified isNull="true" />
+            <lastModifiedBy isNull="true" />
+            <processItemId>2025.7ef7d4bd-4fc7-410d-831f-0944821f26bd</processItemId>
+            <processId>1.5cf7e9f4-d78e-4690-8292-d5e64c209ccc</processId>
+            <name>End Event</name>
+            <tWComponentName>Exception</tWComponentName>
+            <tWComponentId>3007.95eb29d6-eea6-4459-9ef1-39467969801e</tWComponentId>
+            <isLogEnabled>false</isLogEnabled>
+            <isTraceEnabled>false</isTraceEnabled>
+            <traceCategory isNull="true" />
+            <traceLevel isNull="true" />
+            <traceMessage isNull="true" />
+            <traceSymbolTable isNull="true" />
+            <isExecutionContextTraced>false</isExecutionContextTraced>
+            <saveExecutionContext>false</saveExecutionContext>
+            <documentation isNull="true" />
+            <isErrorHandlerEnabled>false</isErrorHandlerEnabled>
+            <errorHandlerItemId isNull="true" />
+            <guid>guid:2542dce8e3ac49c7:3b9eab55:18bfd03a604:-f5a</guid>
+            <versionId>4be03398-c01b-4a65-9191-b10ef8aec16f</versionId>
+            <externalServiceRef isNull="true" />
+            <externalServiceOp isNull="true" />
+            <nodeColor isNull="true" />
+            <layoutData x="755" y="255">
+                <errorLink>
+                    <controlPoints />
+                    <showEndState>false</showEndState>
+                    <showName>false</showName>
+                </errorLink>
+            </layoutData>
+            <TWComponent>
+                <lastModified isNull="true" />
+                <lastModifiedBy isNull="true" />
+                <exceptionId>3007.95eb29d6-eea6-4459-9ef1-39467969801e</exceptionId>
+                <message></message>
+                <faultStyle>1</faultStyle>
+                <guid>2dc4b30e-5c90-4c23-bb77-fb2a225dbd5f</guid>
+                <versionId>db3246b3-432d-4574-857e-967e82ee5716</versionId>
+                <parameterMapping name="">
+                    <lastModified isNull="true" />
+                    <lastModifiedBy isNull="true" />
+                    <parameterMappingId>2054.d812b497-dca9-4af5-bfb7-2754a843d452</parameterMappingId>
+                    <processParameterId>2055.0b755149-5359-4a51-a912-3e945ef48ece</processParameterId>
+                    <parameterMappingParentId>3007.95eb29d6-eea6-4459-9ef1-39467969801e</parameterMappingParentId>
+                    <useDefault>false</useDefault>
+                    <value>tw.local.errorMSG</value>
+                    <classRef>b5a7448c-61c1-4e1e-9933-3912eb5c29ad/12.db884a3c-c533-44b7-bb2d-47bec8ad4022</classRef>
+                    <isList>false</isList>
+                    <isInput>false</isInput>
+                    <guid>554870de-3d47-49ab-a514-c65f66246308</guid>
+                    <versionId>78d8744b-b506-4857-9e30-8f8a64240ba9</versionId>
+                    <description isNull="true" />
+                </parameterMapping>
+            </TWComponent>
+        </item>
+        <item>
+            <lastModified isNull="true" />
+            <lastModifiedBy isNull="true" />
+            <processItemId>2025.940f1242-0491-49cd-91f6-99697343017a</processItemId>
+            <processId>1.5cf7e9f4-d78e-4690-8292-d5e64c209ccc</processId>
+            <name>Get Folder By Path</name>
+            <tWComponentName>ECMConnector</tWComponentName>
+            <tWComponentId>3030.4d456051-d53e-4ead-a798-0caa9da828f6</tWComponentId>
+            <isLogEnabled>false</isLogEnabled>
+            <isTraceEnabled>false</isTraceEnabled>
+            <traceCategory isNull="true" />
+            <traceLevel isNull="true" />
+            <traceMessage isNull="true" />
+            <traceSymbolTable isNull="true" />
+            <isExecutionContextTraced>false</isExecutionContextTraced>
+            <saveExecutionContext>false</saveExecutionContext>
+            <documentation isNull="true" />
+            <isErrorHandlerEnabled>true</isErrorHandlerEnabled>
+            <errorHandlerItemId>2025.d34b86f7-f4bf-4b14-8cbc-61f6473dd4de</errorHandlerItemId>
+            <guid>guid:7cf3b5b49b9bcdb8:3c4f5f27:18bd738e4b3:1e8f</guid>
+            <versionId>52f278ee-7f3b-4bbf-9fbf-c85d1686c937</versionId>
+            <externalServiceRef isNull="true" />
+            <externalServiceOp isNull="true" />
+            <nodeColor isNull="true" />
+            <layoutData x="475" y="57">
+                <errorLink>
+                    <controlPoints />
+                    <showEndState>false</showEndState>
+                    <showName>false</showName>
+                </errorLink>
+            </layoutData>
+            <errorHandler>
+                <name>Error1</name>
+                <locationId>bottomCenter</locationId>
+                <faultStyle>1</faultStyle>
+                <isCatchAll>true</isCatchAll>
+                <errorHandlerItem>guid:2542dce8e3ac49c7:3b9eab55:18bfd03a604:-f5b</errorHandlerItem>
+                <errorHandlerItemId>2025.d34b86f7-f4bf-4b14-8cbc-61f6473dd4de</errorHandlerItemId>
+                <errorHandlerLink>
+                    <fromPort locationId="bottomCenter" portType="1" />
+                    <toPort locationId="topCenter" portType="2" />
+                    <layoutData>
+                        <controlPoints />
+                        <showEndState>false</showEndState>
+                        <showName>false</showName>
+                    </layoutData>
+                </errorHandlerLink>
+            </errorHandler>
+            <TWComponent>
+                <lastModified isNull="true" />
+                <lastModifiedBy isNull="true" />
+                <ecmConnectorId>3030.4d456051-d53e-4ead-a798-0caa9da828f6</ecmConnectorId>
+                <definition>&lt;config type="com.lombardisoftware.client.persistence.ECMConnectorConfiguration"&gt;
+  &lt;inputParameters&gt;
+    &lt;parameter&gt;
+      &lt;name&gt;path&lt;/name&gt;
+      &lt;type&gt;String&lt;/type&gt;
+      &lt;description /&gt;
+      &lt;defaultValue /&gt;
+      &lt;argumentVariable&gt;tw.local.parentFolderPath&lt;/argumentVariable&gt;
+      &lt;isArray /&gt;
+      &lt;isList&gt;false&lt;/isList&gt;
+    &lt;/parameter&gt;
+    &lt;parameter&gt;
+      &lt;name&gt;serverName&lt;/name&gt;
+      &lt;type&gt;String&lt;/type&gt;
+      &lt;description /&gt;
+      &lt;defaultValue /&gt;
+      &lt;isArray /&gt;
+      &lt;isList&gt;false&lt;/isList&gt;
+    &lt;/parameter&gt;
+  &lt;/inputParameters&gt;
+  &lt;outputParameters&gt;
+    &lt;parameter&gt;
+      &lt;name&gt;folder&lt;/name&gt;
+      &lt;type&gt;ECMFolder&lt;/type&gt;
+      &lt;description /&gt;
+      &lt;defaultValue /&gt;
+      &lt;argumentVariable&gt;tw.local.sourceFolderId&lt;/argumentVariable&gt;
+      &lt;isArray /&gt;
+      &lt;isList&gt;false&lt;/isList&gt;
+    &lt;/parameter&gt;
+  &lt;/outputParameters&gt;
+  &lt;matchAllSearchCriteria&gt;true&lt;/matchAllSearchCriteria&gt;
+  &lt;searchParameters /&gt;
+  &lt;selectParameters /&gt;
+  &lt;orderOverride&gt;false&lt;/orderOverride&gt;
+  &lt;orderOverrideValue /&gt;
+  &lt;operationType&gt;FOLDER_OP_GET_FOLDER_BY_PATH&lt;/operationType&gt;
+  &lt;server&gt;FileNet&lt;/server&gt;
+  &lt;objectTypeSelection&gt;DOCUMENT&lt;/objectTypeSelection&gt;
+  &lt;useMappedVariable&gt;true&lt;/useMappedVariable&gt;
+&lt;/config&gt;</definition>
+                <guid>cbc9fcb9-e7ca-4fe7-865c-d70e1c280fdf</guid>
+                <versionId>6aad00f7-1af7-4099-bd94-cccb506a446a</versionId>
+            </TWComponent>
+        </item>
+        <item>
+            <lastModified isNull="true" />
+            <lastModifiedBy isNull="true" />
+            <processItemId>2025.d34b86f7-f4bf-4b14-8cbc-61f6473dd4de</processItemId>
+            <processId>1.5cf7e9f4-d78e-4690-8292-d5e64c209ccc</processId>
+            <name>Exception Handling</name>
+            <tWComponentName>SubProcess</tWComponentName>
+            <tWComponentId>3012.e5a5edd0-e47d-4301-8a98-a5d51e65e6ba</tWComponentId>
+            <isLogEnabled>false</isLogEnabled>
+            <isTraceEnabled>false</isTraceEnabled>
+            <traceCategory isNull="true" />
+            <traceLevel isNull="true" />
+            <traceMessage isNull="true" />
+            <traceSymbolTable isNull="true" />
+            <isExecutionContextTraced>false</isExecutionContextTraced>
+            <saveExecutionContext>false</saveExecutionContext>
+            <documentation isNull="true" />
+            <isErrorHandlerEnabled>false</isErrorHandlerEnabled>
+            <errorHandlerItemId isNull="true" />
+            <guid>guid:2542dce8e3ac49c7:3b9eab55:18bfd03a604:-f5b</guid>
+            <versionId>79c5c20e-fbb1-4bd3-a5c3-ae5de144977e</versionId>
+            <externalServiceRef isNull="true" />
+            <externalServiceOp isNull="true" />
+            <nodeColor>#FF7782</nodeColor>
+            <layoutData x="571" y="230">
+                <errorLink>
+                    <controlPoints />
+                    <showEndState>false</showEndState>
+                    <showName>false</showName>
+                </errorLink>
+            </layoutData>
+            <TWComponent>
+                <lastModified isNull="true" />
+                <lastModifiedBy isNull="true" />
+                <subProcessId>3012.e5a5edd0-e47d-4301-8a98-a5d51e65e6ba</subProcessId>
+                <attachedProcessRef>/1.2b50ff68-f7d3-4895-88ad-a73a13fa91d0</attachedProcessRef>
+                <guid>eda6b265-271b-460f-b7b7-8f74717df534</guid>
+                <versionId>915faa34-81ee-4bb0-9bbc-7f48f186d01f</versionId>
+                <parameterMapping name="serviceName">
+                    <lastModified isNull="true" />
+                    <lastModifiedBy isNull="true" />
+                    <parameterMappingId>2054.00ffbebb-7dad-4e5c-a7ce-e262bf238af8</parameterMappingId>
+                    <processParameterId>2055.5ea77901-7a17-422a-8958-67bb0e9c991b</processParameterId>
+                    <parameterMappingParentId>3012.e5a5edd0-e47d-4301-8a98-a5d51e65e6ba</parameterMappingParentId>
+                    <useDefault>false</useDefault>
+                    <value>tw.system.serviceFlow.name</value>
+                    <classRef>b5a7448c-61c1-4e1e-9933-3912eb5c29ad/12.db884a3c-c533-44b7-bb2d-47bec8ad4022</classRef>
+                    <isList>false</isList>
+                    <isInput>true</isInput>
+                    <guid>ffd75bac-6231-4041-bd0c-f4de1109e0a8</guid>
+                    <versionId>19b390e9-e5f7-4d52-a2ad-31938182842f</versionId>
+                    <description isNull="true" />
+                </parameterMapping>
+                <parameterMapping name="errorMSG">
+                    <lastModified isNull="true" />
+                    <lastModifiedBy isNull="true" />
+                    <parameterMappingId>2054.b1f4e032-0774-4b3f-9419-f87431b2a8b1</parameterMappingId>
+                    <processParameterId>2055.81b82125-a5aa-45f7-8c0f-4870667eebbf</processParameterId>
+                    <parameterMappingParentId>3012.e5a5edd0-e47d-4301-8a98-a5d51e65e6ba</parameterMappingParentId>
+                    <useDefault>false</useDefault>
+                    <value>tw.local.errorMSG</value>
+                    <classRef>b5a7448c-61c1-4e1e-9933-3912eb5c29ad/12.db884a3c-c533-44b7-bb2d-47bec8ad4022</classRef>
+                    <isList>false</isList>
+                    <isInput>false</isInput>
+                    <guid>5a8738ff-714e-49db-a1e5-4808d77cc957</guid>
+                    <versionId>32eb635c-1338-4ff2-b0bc-b29e27153f35</versionId>
+                    <description isNull="true" />
+                </parameterMapping>
+                <parameterMapping name="isSuccessful">
+                    <lastModified isNull="true" />
+                    <lastModifiedBy isNull="true" />
+                    <parameterMappingId>2054.aba4d162-b645-4a9f-bb92-9ef67e57b33c</parameterMappingId>
+                    <processParameterId>2055.99eb514d-4b62-401e-8cdb-7edc096adffd</processParameterId>
+                    <parameterMappingParentId>3012.e5a5edd0-e47d-4301-8a98-a5d51e65e6ba</parameterMappingParentId>
+                    <useDefault>false</useDefault>
+                    <value isNull="true" />
+                    <classRef>b5a7448c-61c1-4e1e-9933-3912eb5c29ad/12.83ff975e-8dbc-42e5-b738-fa8bc08274a2</classRef>
+                    <isList>false</isList>
+                    <isInput>false</isInput>
+                    <guid>98c0931b-d59b-4da0-a0e0-feccbbfa5288</guid>
+                    <versionId>3f9c28ef-298d-4e93-b8ee-d5a47e536f8d</versionId>
+                    <description isNull="true" />
+                </parameterMapping>
+                <parameterMapping name="serviceErrorMsg">
+                    <lastModified isNull="true" />
+                    <lastModifiedBy isNull="true" />
+                    <parameterMappingId>2054.6c452255-164c-4309-a1d6-7ac16914906c</parameterMappingId>
+                    <processParameterId>2055.55dcd590-97c2-48df-82c6-0f812ab7177f</processParameterId>
+                    <parameterMappingParentId>3012.e5a5edd0-e47d-4301-8a98-a5d51e65e6ba</parameterMappingParentId>
+                    <useDefault>false</useDefault>
+                    <value>tw.local.errorMSG</value>
+                    <classRef>b5a7448c-61c1-4e1e-9933-3912eb5c29ad/12.db884a3c-c533-44b7-bb2d-47bec8ad4022</classRef>
+                    <isList>false</isList>
+                    <isInput>true</isInput>
+                    <guid>9b218b29-56ef-4574-bb74-641a23bedc02</guid>
+                    <versionId>7e2df829-e84a-49bd-abdd-b25ab31e7f1b</versionId>
+                    <description isNull="true" />
+                </parameterMapping>
+            </TWComponent>
+        </item>
+        <item>
+            <lastModified isNull="true" />
+            <lastModifiedBy isNull="true" />
+            <processItemId>2025.86115b78-92a0-4e0d-87de-e57aa2612ac0</processItemId>
+            <processId>1.5cf7e9f4-d78e-4690-8292-d5e64c209ccc</processId>
+            <name>Script Task</name>
+            <tWComponentName>Script</tWComponentName>
+            <tWComponentId>3011.1ba5e903-20ad-4b98-8684-490e7e0e3e3e</tWComponentId>
+            <isLogEnabled>false</isLogEnabled>
+            <isTraceEnabled>false</isTraceEnabled>
+            <traceCategory isNull="true" />
+            <traceLevel isNull="true" />
+            <traceMessage isNull="true" />
+            <traceSymbolTable isNull="true" />
+            <isExecutionContextTraced>false</isExecutionContextTraced>
+            <saveExecutionContext>false</saveExecutionContext>
+            <documentation isNull="true" />
+            <isErrorHandlerEnabled>true</isErrorHandlerEnabled>
+            <errorHandlerItemId>2025.d34b86f7-f4bf-4b14-8cbc-61f6473dd4de</errorHandlerItemId>
+            <guid>guid:7cf3b5b49b9bcdb8:3c4f5f27:18bd738e4b3:1e94</guid>
+            <versionId>79fdc1b0-e2f3-4dc2-82b1-765a5ffb6544</versionId>
+            <externalServiceRef isNull="true" />
+            <externalServiceOp isNull="true" />
+            <nodeColor isNull="true" />
+            <processPrePosts>
+                <lastModified isNull="true" />
+                <lastModifiedBy isNull="true" />
+                <processItemPrePostId>2029.feaff1f7-d8de-469d-82fc-8c388a91fb38</processItemPrePostId>
+                <processItemId>2025.86115b78-92a0-4e0d-87de-e57aa2612ac0</processItemId>
+                <location>1</location>
+                <script isNull="true" />
+                <guid>1530dabc-c008-4f82-b498-36d6619e623c</guid>
+                <versionId>9a4c672a-5f44-42bc-a840-c5716e54ef75</versionId>
+            </processPrePosts>
+            <layoutData x="166" y="57">
+                <errorLink>
+                    <controlPoints />
+                    <showEndState>false</showEndState>
+                    <showName>false</showName>
+                </errorLink>
+            </layoutData>
+            <errorHandler>
+                <name>Error3</name>
+                <locationId>bottomCenter</locationId>
+                <faultStyle>1</faultStyle>
+                <isCatchAll>true</isCatchAll>
+                <errorHandlerItem>guid:2542dce8e3ac49c7:3b9eab55:18bfd03a604:-f5b</errorHandlerItem>
+                <errorHandlerItemId>2025.d34b86f7-f4bf-4b14-8cbc-61f6473dd4de</errorHandlerItemId>
+                <errorHandlerLink>
+                    <fromPort locationId="bottomCenter" portType="1" />
+                    <toPort locationId="leftCenter" portType="2" />
+                    <layoutData>
+                        <controlPoints />
+                        <showEndState>false</showEndState>
+                        <showName>false</showName>
+                    </layoutData>
+                </errorHandlerLink>
+            </errorHandler>
+            <TWComponent>
+                <lastModified isNull="true" />
+                <lastModifiedBy isNull="true" />
+                <scriptId>3011.1ba5e903-20ad-4b98-8684-490e7e0e3e3e</scriptId>
+                <scriptTypeId>2</scriptTypeId>
+                <isActive>true</isActive>
+                <script>if (tw.local.idcRequest.parentRequestNo == "" || tw.local.idcRequest.parentRequestNo == null || tw.local.idcRequest.parentRequestNo == undefined ) {&#xD;
+	tw.local.cancelPath = tw.local.idcRequest.CustomerInfo.cif+"/DC Outward/"+tw.local.idcRequest.appInfo.instanceID+"ODC"+"/Canceled Cases";&#xD;
+}else{&#xD;
+	tw.local.cancelPath = tw.local.idcRequest.CustomerInfo.cif+"/DC Outward/"+tw.local.idcRequest.parentRequestNo+"ODC"+"/Canceled Cases";&#xD;
+}</script>
+                <isRule>false</isRule>
+                <guid>482252f3-2880-45ba-b3d1-bfb554261e76</guid>
+                <versionId>14edb2f3-2bd3-40fe-9e78-4ab7e672cf17</versionId>
+            </TWComponent>
+        </item>
+        <item>
+            <lastModified isNull="true" />
+            <lastModifiedBy isNull="true" />
+            <processItemId>2025.05d72d29-382d-4811-92b5-ede72b7ebdc4</processItemId>
+            <processId>1.5cf7e9f4-d78e-4690-8292-d5e64c209ccc</processId>
+            <name>Move Folder</name>
+            <tWComponentName>ECMConnector</tWComponentName>
+            <tWComponentId>3030.7d3c7f29-1686-4e25-b588-9c37ba117745</tWComponentId>
+            <isLogEnabled>false</isLogEnabled>
+            <isTraceEnabled>false</isTraceEnabled>
+            <traceCategory isNull="true" />
+            <traceLevel isNull="true" />
+            <traceMessage isNull="true" />
+            <traceSymbolTable isNull="true" />
+            <isExecutionContextTraced>false</isExecutionContextTraced>
+            <saveExecutionContext>false</saveExecutionContext>
+            <documentation isNull="true" />
+            <isErrorHandlerEnabled>true</isErrorHandlerEnabled>
+            <errorHandlerItemId>2025.d34b86f7-f4bf-4b14-8cbc-61f6473dd4de</errorHandlerItemId>
+            <guid>guid:7cf3b5b49b9bcdb8:3c4f5f27:18bd738e4b3:1e90</guid>
+            <versionId>8d198c77-b74b-4342-b47e-eaeab5ddd1c4</versionId>
+            <externalServiceRef isNull="true" />
+            <externalServiceOp isNull="true" />
+            <nodeColor isNull="true" />
+            <layoutData x="606" y="57">
+                <errorLink>
+                    <controlPoints />
+                    <showEndState>false</showEndState>
+                    <showName>false</showName>
+                </errorLink>
+            </layoutData>
+            <errorHandler>
+                <name>Error</name>
+                <locationId>bottomCenter</locationId>
+                <faultStyle>1</faultStyle>
+                <isCatchAll>true</isCatchAll>
+                <errorHandlerItem>guid:2542dce8e3ac49c7:3b9eab55:18bfd03a604:-f5b</errorHandlerItem>
+                <errorHandlerItemId>2025.d34b86f7-f4bf-4b14-8cbc-61f6473dd4de</errorHandlerItemId>
+                <errorHandlerLink>
+                    <fromPort locationId="bottomCenter" portType="1" />
+                    <toPort locationId="topCenter" portType="2" />
+                    <layoutData>
+                        <controlPoints />
+                        <showEndState>false</showEndState>
+                        <showName>false</showName>
+                    </layoutData>
+                </errorHandlerLink>
+            </errorHandler>
+            <TWComponent>
+                <lastModified isNull="true" />
+                <lastModifiedBy isNull="true" />
+                <ecmConnectorId>3030.7d3c7f29-1686-4e25-b588-9c37ba117745</ecmConnectorId>
+                <definition>&lt;config type="com.lombardisoftware.client.persistence.ECMConnectorConfiguration"&gt;
+  &lt;inputParameters&gt;
+    &lt;parameter&gt;
+      &lt;name&gt;folderId&lt;/name&gt;
+      &lt;type&gt;ECMID&lt;/type&gt;
+      &lt;description /&gt;
+      &lt;defaultValue /&gt;
+      &lt;argumentVariable&gt;tw.local.folderId&lt;/argumentVariable&gt;
+      &lt;isArray /&gt;
+      &lt;isList&gt;false&lt;/isList&gt;
+    &lt;/parameter&gt;
+    &lt;parameter&gt;
+      &lt;name&gt;targetFolderId&lt;/name&gt;
+      &lt;type&gt;ECMID&lt;/type&gt;
+      &lt;description /&gt;
+      &lt;defaultValue /&gt;
+      &lt;argumentVariable&gt;tw.local.targetFolderId&lt;/argumentVariable&gt;
+      &lt;isArray /&gt;
+      &lt;isList&gt;false&lt;/isList&gt;
+    &lt;/parameter&gt;
+    &lt;parameter&gt;
+      &lt;name&gt;sourceFolderId&lt;/name&gt;
+      &lt;type&gt;ECMID&lt;/type&gt;
+      &lt;description /&gt;
+      &lt;defaultValue /&gt;
+      &lt;argumentVariable&gt;tw.local.sourceFolderId.objectId&lt;/argumentVariable&gt;
+      &lt;isArray /&gt;
+      &lt;isList&gt;false&lt;/isList&gt;
+    &lt;/parameter&gt;
+    &lt;parameter&gt;
+      &lt;name&gt;serverName&lt;/name&gt;
+      &lt;type&gt;String&lt;/type&gt;
+      &lt;description /&gt;
+      &lt;defaultValue /&gt;
+      &lt;isArray /&gt;
+      &lt;isList&gt;false&lt;/isList&gt;
+    &lt;/parameter&gt;
+  &lt;/inputParameters&gt;
+  &lt;outputParameters /&gt;
+  &lt;matchAllSearchCriteria&gt;true&lt;/matchAllSearchCriteria&gt;
+  &lt;searchParameters /&gt;
+  &lt;selectParameters /&gt;
+  &lt;orderOverride&gt;false&lt;/orderOverride&gt;
+  &lt;orderOverrideValue /&gt;
+  &lt;operationType&gt;FOLDER_OP_MOVE_FOLDER&lt;/operationType&gt;
+  &lt;server&gt;FileNet&lt;/server&gt;
+  &lt;objectTypeSelection&gt;DOCUMENT&lt;/objectTypeSelection&gt;
+  &lt;useMappedVariable&gt;true&lt;/useMappedVariable&gt;
+&lt;/config&gt;</definition>
+                <guid>28f7c286-348c-4b83-ad83-2b3f91bb4ace</guid>
+                <versionId>3ea75f45-add5-461b-b6b2-734459acb04f</versionId>
+            </TWComponent>
+        </item>
+        <item>
+            <lastModified isNull="true" />
+            <lastModifiedBy isNull="true" />
+            <processItemId>2025.a01002de-589b-4b3a-9565-66aeeb7364f4</processItemId>
+            <processId>1.5cf7e9f4-d78e-4690-8292-d5e64c209ccc</processId>
+            <name>Create Folder Structure</name>
+            <tWComponentName>SubProcess</tWComponentName>
+            <tWComponentId>3012.09cc5359-a265-4c4c-bc23-0bc80bfb649f</tWComponentId>
+            <isLogEnabled>false</isLogEnabled>
+            <isTraceEnabled>false</isTraceEnabled>
+            <traceCategory isNull="true" />
+            <traceLevel isNull="true" />
+            <traceMessage isNull="true" />
+            <traceSymbolTable isNull="true" />
+            <isExecutionContextTraced>false</isExecutionContextTraced>
+            <saveExecutionContext>false</saveExecutionContext>
+            <documentation isNull="true" />
+            <isErrorHandlerEnabled>true</isErrorHandlerEnabled>
+            <errorHandlerItemId>2025.d34b86f7-f4bf-4b14-8cbc-61f6473dd4de</errorHandlerItemId>
+            <guid>guid:7cf3b5b49b9bcdb8:3c4f5f27:18bd738e4b3:1e92</guid>
+            <versionId>f3775dfc-5cc5-491a-8be5-0a7b3935887e</versionId>
+            <externalServiceRef isNull="true" />
+            <externalServiceOp isNull="true" />
+            <nodeColor isNull="true" />
+            <layoutData x="325" y="57">
+                <errorLink>
+                    <controlPoints />
+                    <showEndState>false</showEndState>
+                    <showName>false</showName>
+                </errorLink>
+            </layoutData>
+            <errorHandler>
+                <name>Error2</name>
+                <locationId>bottomCenter</locationId>
+                <faultStyle>1</faultStyle>
+                <isCatchAll>true</isCatchAll>
+                <errorHandlerItem>guid:2542dce8e3ac49c7:3b9eab55:18bfd03a604:-f5b</errorHandlerItem>
+                <errorHandlerItemId>2025.d34b86f7-f4bf-4b14-8cbc-61f6473dd4de</errorHandlerItemId>
+                <errorHandlerLink>
+                    <fromPort locationId="bottomCenter" portType="1" />
+                    <toPort locationId="leftCenter" portType="2" />
+                    <layoutData>
+                        <controlPoints />
+                        <showEndState>false</showEndState>
+                        <showName>false</showName>
+                    </layoutData>
+                </errorHandlerLink>
+            </errorHandler>
+            <TWComponent>
+                <lastModified isNull="true" />
+                <lastModifiedBy isNull="true" />
+                <subProcessId>3012.09cc5359-a265-4c4c-bc23-0bc80bfb649f</subProcessId>
+                <attachedProcessRef>/1.e2ffa7a5-7c4f-4625-90e6-1d620f946497</attachedProcessRef>
+                <guid>0faedf85-b4dc-4ac4-855d-61152eab283b</guid>
+                <versionId>22092dc1-be3d-4811-9184-a5c441ba6c9c</versionId>
+                <parameterMapping name="fullPath">
+                    <lastModified isNull="true" />
+                    <lastModifiedBy isNull="true" />
+                    <parameterMappingId>2054.e554cdb3-613c-429b-a19c-443aaed28497</parameterMappingId>
+                    <processParameterId>2055.5ece388e-34b7-4b8b-819b-bf5c7758c8ba</processParameterId>
+                    <parameterMappingParentId>3012.09cc5359-a265-4c4c-bc23-0bc80bfb649f</parameterMappingParentId>
+                    <useDefault>false</useDefault>
+                    <value>tw.local.cancelPath</value>
+                    <classRef>b5a7448c-61c1-4e1e-9933-3912eb5c29ad/12.db884a3c-c533-44b7-bb2d-47bec8ad4022</classRef>
+                    <isList>false</isList>
+                    <isInput>true</isInput>
+                    <guid>37f71611-11ff-4344-8b87-748515e7bab5</guid>
+                    <versionId>85e653fc-a0d3-4e55-8be0-375c3ee81581</versionId>
+                    <description isNull="true" />
+                </parameterMapping>
+                <parameterMapping name="folderID">
+                    <lastModified isNull="true" />
+                    <lastModifiedBy isNull="true" />
+                    <parameterMappingId>2054.56dc5763-c4b5-4dcf-b117-a3363099ca3a</parameterMappingId>
+                    <processParameterId>2055.c7d18e14-a2ff-4f70-be87-c140f0d82599</processParameterId>
+                    <parameterMappingParentId>3012.09cc5359-a265-4c4c-bc23-0bc80bfb649f</parameterMappingParentId>
+                    <useDefault>false</useDefault>
+                    <value>tw.local.targetFolderId</value>
+                    <classRef>30ff1a81-49af-43c7-b3f4-9f36d5bc8365/12.3212d5b3-f692-41b3-a893-343dc5c3df01</classRef>
+                    <isList>false</isList>
+                    <isInput>false</isInput>
+                    <guid>d6d37a91-e01e-43ba-aa9a-e8961f926c2e</guid>
+                    <versionId>9198531f-eb44-494b-a4c7-cfc38d248782</versionId>
+                    <description isNull="true" />
+                </parameterMapping>
+            </TWComponent>
+        </item>
+        <startingProcessItemId>2025.86115b78-92a0-4e0d-87de-e57aa2612ac0</startingProcessItemId>
+        <errorHandlerItemId isNull="true" />
+        <layoutData noConversion="true">
+            <errorLink>
+                <controlPoints />
+                <showEndState>false</showEndState>
+                <showName>false</showName>
+            </errorLink>
+        </layoutData>
+        <startPoint>
+            <layoutData x="45" y="80">
+                <errorLink>
+                    <controlPoints />
+                    <showEndState>false</showEndState>
+                    <showName>false</showName>
+                </errorLink>
+            </layoutData>
+        </startPoint>
+        <startLink>
+            <fromPort locationId="rightCenter" portType="1" />
+            <toPort locationId="leftCenter" portType="2" />
+            <layoutData>
+                <controlPoints />
+                <showEndState>false</showEndState>
+                <showName>false</showName>
+            </layoutData>
+        </startLink>
+        <bpmn2Model>
+            <ns16:definitions xmlns:ns16="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:ns2="http://www.ibm.com/xmlns/prod/bpm/bpmn/ext/trackinggroup" xmlns:ns3="http://www.ibm.com/xmlns/prod/bpm/bpmn/ext/process" xmlns:ns4="http://www.ibm.com/xmlns/prod/bpm/bpmn/ext/process/wle" xmlns:ns5="http://www.ibm.com/xmlns/prod/bpm/bpmn/ext/process/case" xmlns:ns6="http://www.ibm.com/bpm/Extensions" xmlns:ns7="http://www.ibm.com/xmlns/prod/bpm/uca" xmlns:ns8="http://www.ibm.com/xmlns/prod/bpm/bpmn/ext/team" xmlns:ns9="http://www.ibm.com/xmlns/bpmnx/20100524/v1/BusinessVocabulary" xmlns:ns10="http://www.omg.org/spec/DD/20100524/DI" xmlns:ns11="http://www.omg.org/spec/DD/20100524/DC" xmlns:ns12="http://www.omg.org/spec/BPMN/20100524/BPMNDI" xmlns:ns13="http://www.ibm.com/xmlns/prod/bpm/graph" xmlns:ns14="http://www.ibm.com/xmlns/prod/bpm/bpmn/ext/process/auth" xmlns:ns15="http://www.ibm.com/xmlns/prod/bpm/bpmn/ext/extservice" xmlns:ns17="http://www.ibm.com/bpm/processappsettings" xmlns:ns18="http://www.ibm.com/xmlns/links" xmlns:ns19="http://www.ibm.com/bpm/CoachDesignerNG" xmlns:ns20="http://www.ibm.com/xmlns/tagging" xmlns:ns21="http://www.ibm.com/bpm/uitheme" xmlns:ns22="http://www.ibm.com/bpm/coachview" targetNamespace="" expressionLanguage="http://www.ibm.com/xmlns/prod/bpm/expression-lang/javascript" typeLanguage="http://www.w3.org/2001/XMLSchema">
+                <ns16:process name="cancel request" id="1.5cf7e9f4-d78e-4690-8292-d5e64c209ccc" ns3:executionMode="microflow">
+                    <ns16:documentation textFormat="text/plain" />
+                    <ns16:extensionElements>
+                        <ns3:sboSyncEnabled>true</ns3:sboSyncEnabled>
+                        <ns3:isSecured>false</ns3:isSecured>
+                        <ns3:isAjaxExposed>true</ns3:isAjaxExposed>
+                    </ns16:extensionElements>
+                    <ns16:ioSpecification>
+                        <ns16:dataInput name="idcRequest" itemSubjectRef="itm.12.5f8547c1-515a-481c-b74a-f20ec40faff9" isCollection="false" id="2055.55a76aa1-e513-4fd3-835f-7fe160120af7">
+                            <ns16:extensionElements>
+                                <ns3:defaultValue useDefault="true">var autoObject = new tw.object.ODCRequest();
+autoObject.initiator = "";
+autoObject.requestNature = new tw.object.toolkit.TWSYS.NameValuePair();
+autoObject.requestNature.name = "";
+autoObject.requestNature.value = "";
+autoObject.requestType = new tw.object.toolkit.TWSYS.NameValuePair();
+autoObject.requestType.name = "";
+autoObject.requestType.value = "";
+autoObject.cif = "";
+autoObject.customerName = "";
+autoObject.parentRequestNo = "";
+autoObject.requestDate = new TWDate();
+autoObject.ImporterName = "";
+autoObject.appInfo = new tw.object.toolkit.NBEC.AppInfo();
+autoObject.appInfo.requestDate = "";
+autoObject.appInfo.status = "";
+autoObject.appInfo.subStatus = "";
+autoObject.appInfo.initiator = "";
+autoObject.appInfo.branch = new tw.object.toolkit.TWSYS.NameValuePair();
+autoObject.appInfo.branch.name = "";
+autoObject.appInfo.branch.value = "";
+autoObject.appInfo.requestName = "";
+autoObject.appInfo.requestType = "";
+autoObject.appInfo.stepName = "";
+autoObject.appInfo.appRef = "";
+autoObject.appInfo.appID = "";
+autoObject.appInfo.instanceID = "";
+autoObject.CustomerInfo = new tw.object.CustomerInfo();
+autoObject.CustomerInfo.cif = "";
+autoObject.CustomerInfo.customerName = "";
+autoObject.CustomerInfo.addressLine1 = "";
+autoObject.CustomerInfo.addressLine2 = "";
+autoObject.CustomerInfo.addressLine3 = "";
+autoObject.CustomerInfo.customerSector = new tw.object.toolkit.TWSYS.NameValuePair();
+autoObject.CustomerInfo.customerSector.name = "";
+autoObject.CustomerInfo.customerSector.value = "";
+autoObject.CustomerInfo.customerType = "";
+autoObject.CustomerInfo.customerNoCBE = "";
+autoObject.CustomerInfo.facilityType = new tw.object.toolkit.TWSYS.NameValuePair();
+autoObject.CustomerInfo.facilityType.name = "";
+autoObject.CustomerInfo.facilityType.value = "";
+autoObject.CustomerInfo.commercialRegistrationNo = "";
+autoObject.CustomerInfo.commercialRegistrationOffice = "";
+autoObject.CustomerInfo.taxCardNo = "";
+autoObject.CustomerInfo.importCardNo = "";
+autoObject.CustomerInfo.initiationHub = "";
+autoObject.CustomerInfo.country = "";
+autoObject.BasicDetails = new tw.object.BasicDetails();
+autoObject.BasicDetails.requestNature = "";
+autoObject.BasicDetails.requestType = "";
+autoObject.BasicDetails.parentRequestNo = "";
+autoObject.BasicDetails.requestState = "";
+autoObject.BasicDetails.flexCubeContractNo = "";
+autoObject.BasicDetails.contractStage = "";
+autoObject.BasicDetails.exportPurpose = new tw.object.toolkit.TWSYS.NameValuePair();
+autoObject.BasicDetails.exportPurpose.name = "";
+autoObject.BasicDetails.exportPurpose.value = "";
+autoObject.BasicDetails.paymentTerms = new tw.object.toolkit.TWSYS.NameValuePair();
+autoObject.BasicDetails.paymentTerms.name = "";
+autoObject.BasicDetails.paymentTerms.value = "";
+autoObject.BasicDetails.productCategory = new tw.object.toolkit.TWSYS.NameValuePair();
+autoObject.BasicDetails.productCategory.name = "";
+autoObject.BasicDetails.productCategory.value = "";
+autoObject.BasicDetails.commodityDescription = "";
+autoObject.BasicDetails.CountryOfOrigin = new tw.object.toolkit.TWSYS.NameValuePair();
+autoObject.BasicDetails.CountryOfOrigin.name = "";
+autoObject.BasicDetails.CountryOfOrigin.value = "";
+autoObject.BasicDetails.Bills = new tw.object.listOf.Bills();
+autoObject.BasicDetails.Bills[0] = new tw.object.Bills();
+autoObject.BasicDetails.Bills[0].billOfLadingRef = "";
+autoObject.BasicDetails.Bills[0].billOfLadingDate = new TWDate();
+autoObject.BasicDetails.Invoice = new tw.object.listOf.Invoice();
+autoObject.BasicDetails.Invoice[0] = new tw.object.Invoice();
+autoObject.BasicDetails.Invoice[0].invoiceNo = "";
+autoObject.BasicDetails.Invoice[0].invoiceDate = new TWDate();
+autoObject.GeneratedDocumentInfo = new tw.object.GeneratedDocumentInfo();
+autoObject.GeneratedDocumentInfo.customerName = "";
+autoObject.GeneratedDocumentInfo.customerAddress = "";
+autoObject.GeneratedDocumentInfo.deliveryTerms = new tw.object.listOf.toolkit.TWSYS.String();
+autoObject.GeneratedDocumentInfo.deliveryTerms[0] = "";
+autoObject.GeneratedDocumentInfo.deliveryTermsExtra = new tw.object.listOf.toolkit.TWSYS.String();
+autoObject.GeneratedDocumentInfo.deliveryTermsExtra[0] = "";
+autoObject.GeneratedDocumentInfo.paymentInstructions = new tw.object.listOf.toolkit.TWSYS.String();
+autoObject.GeneratedDocumentInfo.paymentInstructions[0] = "";
+autoObject.GeneratedDocumentInfo.paymentInstructionsExtra = new tw.object.listOf.toolkit.TWSYS.String();
+autoObject.GeneratedDocumentInfo.paymentInstructionsExtra[0] = "";
+autoObject.GeneratedDocumentInfo.Instructions = new tw.object.listOf.toolkit.TWSYS.String();
+autoObject.GeneratedDocumentInfo.Instructions[0] = "";
+autoObject.GeneratedDocumentInfo.InstructionsExtra = new tw.object.listOf.toolkit.TWSYS.String();
+autoObject.GeneratedDocumentInfo.InstructionsExtra[0] = "";
+autoObject.GeneratedDocumentInfo.specialInstructions = new tw.object.listOf.toolkit.TWSYS.String();
+autoObject.GeneratedDocumentInfo.specialInstructions[0] = "";
+autoObject.GeneratedDocumentInfo.specialInstructionsExtra = new tw.object.listOf.toolkit.TWSYS.String();
+autoObject.GeneratedDocumentInfo.specialInstructionsExtra[0] = "";
+autoObject.GeneratedDocumentInfo.regenerateRemLetter = false;
+autoObject.GeneratedDocumentInfo.regenerateRemLetterOption = new tw.object.toolkit.TWSYS.NameValuePair();
+autoObject.GeneratedDocumentInfo.regenerateRemLetterOption.name = "";
+autoObject.GeneratedDocumentInfo.regenerateRemLetterOption.value = "";
+autoObject.GeneratedDocumentInfo.regenerateRemLetterTitle = "";
+autoObject.GeneratedDocumentInfo.destinationFolder = new tw.object.toolkit.SYSCM.ECMFolder();
+autoObject.GeneratedDocumentInfo.destinationFolder.objectId = "";
+autoObject.GeneratedDocumentInfo.destinationFolder.serverName = "";
+autoObject.GeneratedDocumentInfo.destinationFolder.repositoryId = "";
+autoObject.GeneratedDocumentInfo.destinationFolder.objectTypeId = "";
+autoObject.GeneratedDocumentInfo.destinationFolder.path = "";
+autoObject.GeneratedDocumentInfo.destinationFolder.parentId = "";
+autoObject.GeneratedDocumentInfo.destinationFolder.name = "";
+autoObject.GeneratedDocumentInfo.destinationFolder.creationDate = new TWDate();
+autoObject.GeneratedDocumentInfo.destinationFolder.createdBy = "";
+autoObject.GeneratedDocumentInfo.destinationFolder.lastModificationDate = new TWDate();
+autoObject.GeneratedDocumentInfo.destinationFolder.lastModifiedBy = "";
+autoObject.GeneratedDocumentInfo.destinationFolder.properties = new tw.object.listOf.toolkit.SYSCM.ECMProperty();
+autoObject.GeneratedDocumentInfo.destinationFolder.properties[0] = new tw.object.toolkit.SYSCM.ECMProperty();
+autoObject.GeneratedDocumentInfo.destinationFolder.properties[0].objectTypeId = "";
+autoObject.GeneratedDocumentInfo.destinationFolder.properties[0].value = null;
+autoObject.FinancialDetailsBR = new tw.object.FinancialDetailsBranch();
+autoObject.FinancialDetailsBR.documentAmount = 0.0;
+autoObject.FinancialDetailsBR.currency = new tw.object.toolkit.TWSYS.NameValuePair();
+autoObject.FinancialDetailsBR.currency.name = "";
+autoObject.FinancialDetailsBR.currency.value = "";
+autoObject.FinancialDetailsBR.maxCollectionDate = new TWDate();
+autoObject.FinancialDetailsBR.amountAdvanced = 0.0;
+autoObject.FinancialDetailsBR.chargesAndCommissionsAccount = new tw.object.toolkit.TWSYS.NameValuePair();
+autoObject.FinancialDetailsBR.chargesAndCommissionsAccount.name = "";
+autoObject.FinancialDetailsBR.chargesAndCommissionsAccount.value = "";
+autoObject.FinancialDetailsBR.collectionAccount = new tw.object.toolkit.TWSYS.NameValuePair();
+autoObject.FinancialDetailsBR.collectionAccount.name = "";
+autoObject.FinancialDetailsBR.collectionAccount.value = "";
+autoObject.FinancialDetailsBR.listOfAccounts = new tw.object.listOf.toolkit.TWSYS.NameValuePair();
+autoObject.FinancialDetailsBR.listOfAccounts[0] = new tw.object.toolkit.TWSYS.NameValuePair();
+autoObject.FinancialDetailsBR.listOfAccounts[0].name = "";
+autoObject.FinancialDetailsBR.listOfAccounts[0].value = "";
+autoObject.FcCollections = new tw.object.FCCollections();
+autoObject.FcCollections.currency = new tw.object.toolkit.TWSYS.NameValuePair();
+autoObject.FcCollections.currency.name = "";
+autoObject.FcCollections.currency.value = "";
+autoObject.FcCollections.standardExchangeRate = 0.0;
+autoObject.FcCollections.negotiatedExchangeRate = 0.0;
+autoObject.FcCollections.fromDate = new TWDate();
+autoObject.FcCollections.ToDate = new TWDate();
+autoObject.FcCollections.accountNo = new tw.object.toolkit.TWSYS.NameValuePair();
+autoObject.FcCollections.accountNo.name = "";
+autoObject.FcCollections.accountNo.value = "";
+autoObject.FcCollections.retrievedTransactions = new tw.object.listOf.FCTransactions();
+autoObject.FcCollections.retrievedTransactions[0] = new tw.object.FCTransactions();
+autoObject.FcCollections.retrievedTransactions[0].accountNo = "";
+autoObject.FcCollections.retrievedTransactions[0].referenceNumber = "";
+autoObject.FcCollections.retrievedTransactions[0].postingDate = new TWDate();
+autoObject.FcCollections.retrievedTransactions[0].valueDate = new TWDate();
+autoObject.FcCollections.retrievedTransactions[0].transactionAmount = 0.0;
+autoObject.FcCollections.retrievedTransactions[0].existAmount = 0.0;
+autoObject.FcCollections.retrievedTransactions[0].currency = "";
+autoObject.FcCollections.retrievedTransactions[0].amountAllocatedForCurrencyRequest = 0.0;
+autoObject.FcCollections.retrievedTransactions[0].allocatedAmountInRequestCurrency = 0.0;
+autoObject.FcCollections.selectedTransactions = new tw.object.listOf.FCTransactions();
+autoObject.FcCollections.selectedTransactions[0] = new tw.object.FCTransactions();
+autoObject.FcCollections.selectedTransactions[0].accountNo = "";
+autoObject.FcCollections.selectedTransactions[0].referenceNumber = "";
+autoObject.FcCollections.selectedTransactions[0].postingDate = new TWDate();
+autoObject.FcCollections.selectedTransactions[0].valueDate = new TWDate();
+autoObject.FcCollections.selectedTransactions[0].transactionAmount = 0.0;
+autoObject.FcCollections.selectedTransactions[0].existAmount = 0.0;
+autoObject.FcCollections.selectedTransactions[0].currency = "";
+autoObject.FcCollections.selectedTransactions[0].amountAllocatedForCurrencyRequest = 0.0;
+autoObject.FcCollections.selectedTransactions[0].allocatedAmountInRequestCurrency = 0.0;
+autoObject.FcCollections.isReversed = false;
+autoObject.FcCollections.usedAmount = 0.0;
+autoObject.FcCollections.calculatedAmount = 0.0;
+autoObject.FcCollections.totalAllocatedAmount = 0.0;
+autoObject.FcCollections.listOfAccounts = new tw.object.listOf.toolkit.TWSYS.NameValuePair();
+autoObject.FcCollections.listOfAccounts[0] = new tw.object.toolkit.TWSYS.NameValuePair();
+autoObject.FcCollections.listOfAccounts[0].name = "";
+autoObject.FcCollections.listOfAccounts[0].value = "";
+autoObject.FinancialDetailsFO = new tw.object.FinancialDetailsFO();
+autoObject.FinancialDetailsFO.discount = 0.0;
+autoObject.FinancialDetailsFO.extraCharges = 0.0;
+autoObject.FinancialDetailsFO.ourCharges = 0.0;
+autoObject.FinancialDetailsFO.amountSight = 0.0;
+autoObject.FinancialDetailsFO.amountDefNoAvalization = 0.0;
+autoObject.FinancialDetailsFO.amountDefAvalization = 0.0;
+autoObject.FinancialDetailsFO.collectableAmount = 0.0;
+autoObject.FinancialDetailsFO.outstandingAmount = 0.0;
+autoObject.FinancialDetailsFO.maturityDate = new TWDate();
+autoObject.FinancialDetailsFO.noOfDaysMaturity = 0;
+autoObject.FinancialDetailsFO.referenceNo = "";
+autoObject.FinancialDetailsFO.financeApprovalNo = "";
+autoObject.FinancialDetailsFO.executionHub = new tw.object.toolkit.TWSYS.NameValuePair();
+autoObject.FinancialDetailsFO.executionHub.name = "";
+autoObject.FinancialDetailsFO.executionHub.value = "";
+autoObject.FinancialDetailsFO.multiTenorDates = new tw.object.listOf.MultiTenorDates();
+autoObject.FinancialDetailsFO.multiTenorDates[0] = new tw.object.MultiTenorDates();
+autoObject.FinancialDetailsFO.multiTenorDates[0].date = new TWDate();
+autoObject.FinancialDetailsFO.multiTenorDates[0].amount = 0.0;
+autoObject.ImporterDetails = new tw.object.ImporterDetails();
+autoObject.ImporterDetails.importerName = "";
+autoObject.ImporterDetails.importerCountry = new tw.object.toolkit.TWSYS.NameValuePair();
+autoObject.ImporterDetails.importerCountry.name = "";
+autoObject.ImporterDetails.importerCountry.value = "";
+autoObject.ImporterDetails.importerAddress = "";
+autoObject.ImporterDetails.importerPhoneNo = "";
+autoObject.ImporterDetails.bank = "";
+autoObject.ImporterDetails.BICCode = "";
+autoObject.ImporterDetails.ibanAccount = "";
+autoObject.ImporterDetails.bankCountry = new tw.object.toolkit.TWSYS.NameValuePair();
+autoObject.ImporterDetails.bankCountry.name = "";
+autoObject.ImporterDetails.bankCountry.value = "";
+autoObject.ImporterDetails.bankAddress = "";
+autoObject.ImporterDetails.bankPhoneNo = "";
+autoObject.ImporterDetails.collectingBankReference = "";
+autoObject.ProductShipmentDetails = new tw.object.ProductShipmentDetails();
+autoObject.ProductShipmentDetails.CBECommodityClassification = new tw.object.toolkit.TWSYS.NameValuePair();
+autoObject.ProductShipmentDetails.CBECommodityClassification.name = "";
+autoObject.ProductShipmentDetails.CBECommodityClassification.value = "";
+autoObject.ProductShipmentDetails.shippingDate = new TWDate();
+autoObject.ProductShipmentDetails.shipmentMethod = new tw.object.toolkit.TWSYS.NameValuePair();
+autoObject.ProductShipmentDetails.shipmentMethod.name = "";
+autoObject.ProductShipmentDetails.shipmentMethod.value = "";
+autoObject.OdcCollection = new tw.object.ODCCollection();
+autoObject.OdcCollection.amount = 0.0;
+autoObject.OdcCollection.currency = "";
+autoObject.OdcCollection.informCADAboutTheCollection = false;
+autoObject.ReversalReason = new tw.object.ReversalReason();
+autoObject.ReversalReason.reversalReason = "";
+autoObject.ReversalReason.closureReason = "";
+autoObject.ReversalReason.executionHub = new tw.object.toolkit.TWSYS.NameValuePair();
+autoObject.ReversalReason.executionHub.name = "";
+autoObject.ReversalReason.executionHub.value = "";
+autoObject.ContractCreation = new tw.object.ContractCreation();
+autoObject.ContractCreation.productCode = new tw.object.toolkit.TWSYS.NameValuePair();
+autoObject.ContractCreation.productCode.name = "";
+autoObject.ContractCreation.productCode.value = "";
+autoObject.ContractCreation.productDescription = "";
+autoObject.ContractCreation.Stage = "";
+autoObject.ContractCreation.userReference = "";
+autoObject.ContractCreation.sourceReference = "";
+autoObject.ContractCreation.currency = "";
+autoObject.ContractCreation.amount = 0.0;
+autoObject.ContractCreation.baseDate = new TWDate();
+autoObject.ContractCreation.valueDate = new TWDate();
+autoObject.ContractCreation.tenorDays = 0;
+autoObject.ContractCreation.transitDays = 0;
+autoObject.ContractCreation.maturityDate = new TWDate();
+autoObject.Parties = new tw.object.odcParties();
+autoObject.Parties.Drawer = new tw.object.Drawer();
+autoObject.Parties.Drawer.partyId = "";
+autoObject.Parties.Drawer.partyName = "";
+autoObject.Parties.Drawer.country = "";
+autoObject.Parties.Drawer.Language = "";
+autoObject.Parties.Drawer.Reference = "";
+autoObject.Parties.Drawer.address1 = "";
+autoObject.Parties.Drawer.address2 = "";
+autoObject.Parties.Drawer.address3 = "";
+autoObject.Parties.Drawee = new tw.object.Drawee();
+autoObject.Parties.Drawee.partyId = "";
+autoObject.Parties.Drawee.partyName = "";
+autoObject.Parties.Drawee.country = "";
+autoObject.Parties.Drawee.Language = "";
+autoObject.Parties.Drawee.Reference = "";
+autoObject.Parties.Drawee.address1 = "";
+autoObject.Parties.Drawee.address2 = "";
+autoObject.Parties.Drawee.address3 = "";
+autoObject.Parties.collectingBank = new tw.object.CollectingBank();
+autoObject.Parties.collectingBank.id = "";
+autoObject.Parties.collectingBank.name = "";
+autoObject.Parties.collectingBank.country = "";
+autoObject.Parties.collectingBank.language = "";
+autoObject.Parties.collectingBank.reference = "";
+autoObject.Parties.collectingBank.address1 = "";
+autoObject.Parties.collectingBank.address2 = "";
+autoObject.Parties.collectingBank.address3 = "";
+autoObject.Parties.collectingBank.cif = "";
+autoObject.Parties.collectingBank.media = "";
+autoObject.Parties.collectingBank.address = "";
+autoObject.Parties.partyTypes = new tw.object.partyTypes();
+autoObject.Parties.partyTypes.partyCIF = "";
+autoObject.Parties.partyTypes.partyId = "";
+autoObject.Parties.partyTypes.partyName = "";
+autoObject.Parties.partyTypes.country = "";
+autoObject.Parties.partyTypes.language = "";
+autoObject.Parties.partyTypes.refrence = "";
+autoObject.Parties.partyTypes.address1 = "";
+autoObject.Parties.partyTypes.address2 = "";
+autoObject.Parties.partyTypes.address3 = "";
+autoObject.Parties.partyTypes.partyType = new tw.object.toolkit.TWSYS.NameValuePair();
+autoObject.Parties.partyTypes.partyType.name = "";
+autoObject.Parties.partyTypes.partyType.value = "";
+autoObject.ChargesAndCommissions = new tw.object.listOf.ChargesAndCommissions();
+autoObject.ChargesAndCommissions[0] = new tw.object.ChargesAndCommissions();
+autoObject.ChargesAndCommissions[0].component = "";
+autoObject.ChargesAndCommissions[0].defaultCurrency = new tw.object.toolkit.TWSYS.NameValuePair();
+autoObject.ChargesAndCommissions[0].defaultCurrency.name = "";
+autoObject.ChargesAndCommissions[0].defaultCurrency.value = "";
+autoObject.ChargesAndCommissions[0].changeAmount = 0.0;
+autoObject.ChargesAndCommissions[0].waiver = false;
+autoObject.ChargesAndCommissions[0].debitedAccount = new tw.object.AccountDetails();
+autoObject.ChargesAndCommissions[0].debitedAccount.accountClass = new tw.object.toolkit.TWSYS.NameValuePair();
+autoObject.ChargesAndCommissions[0].debitedAccount.accountClass.name = "";
+autoObject.ChargesAndCommissions[0].debitedAccount.accountClass.value = "";
+autoObject.ChargesAndCommissions[0].debitedAccount.glAccountNo = "";
+autoObject.ChargesAndCommissions[0].debitedAccount.customerAccountNo = "";
+autoObject.ChargesAndCommissions[0].debitedAccount.branchCode = "";
+autoObject.ChargesAndCommissions[0].debitedAccount.currency = new tw.object.toolkit.TWSYS.NameValuePair();
+autoObject.ChargesAndCommissions[0].debitedAccount.currency.name = "";
+autoObject.ChargesAndCommissions[0].debitedAccount.currency.value = "";
+autoObject.ChargesAndCommissions[0].debitedAccount.balance = 0.0;
+autoObject.ChargesAndCommissions[0].debitedAccount.balanceSign = "";
+autoObject.ChargesAndCommissions[0].debitedAccount.isOverDraft = false;
+autoObject.ChargesAndCommissions[0].debitedAmount = new tw.object.AmountDetails();
+autoObject.ChargesAndCommissions[0].debitedAmount.standardExRate = 0.0;
+autoObject.ChargesAndCommissions[0].debitedAmount.negotiatedExRate = 0.0;
+autoObject.ChargesAndCommissions[0].debitedAmount.amountInAccount = 0.0;
+autoObject.ChargesAndCommissions[0].rateType = "";
+autoObject.ChargesAndCommissions[0].description = "";
+autoObject.ChargesAndCommissions[0].defaultPercentage = 0.0;
+autoObject.ChargesAndCommissions[0].changePercentage = 0.0;
+autoObject.ChargesAndCommissions[0].defaultAmount = 0.0;
+autoObject.ChargesAndCommissions[0].basicAmountCurrency = "";
+autoObject.ChargesAndCommissions[0].flatAmount = 0.0;
+autoObject.ContractLiquidation = new tw.object.ContractLiquidation();
+autoObject.ContractLiquidation.liqAmount = 0.0;
+autoObject.ContractLiquidation.liqCurrency = "";
+autoObject.ContractLiquidation.debitValueDate = new TWDate();
+autoObject.ContractLiquidation.creditValueDate = new TWDate();
+autoObject.ContractLiquidation.debitedAccountNo = "";
+autoObject.ContractLiquidation.creditedAccount = new tw.object.AccountDetails();
+autoObject.ContractLiquidation.creditedAccount.accountClass = new tw.object.toolkit.TWSYS.NameValuePair();
+autoObject.ContractLiquidation.creditedAccount.accountClass.name = "";
+autoObject.ContractLiquidation.creditedAccount.accountClass.value = "";
+autoObject.ContractLiquidation.creditedAccount.glAccountNo = "";
+autoObject.ContractLiquidation.creditedAccount.customerAccountNo = "";
+autoObject.ContractLiquidation.creditedAccount.branchCode = "";
+autoObject.ContractLiquidation.creditedAccount.currency = new tw.object.toolkit.TWSYS.NameValuePair();
+autoObject.ContractLiquidation.creditedAccount.currency.name = "";
+autoObject.ContractLiquidation.creditedAccount.currency.value = "";
+autoObject.ContractLiquidation.creditedAccount.balance = 0.0;
+autoObject.ContractLiquidation.creditedAccount.balanceSign = "";
+autoObject.ContractLiquidation.creditedAccount.isOverDraft = false;
+autoObject.ContractLiquidation.creditedAmount = new tw.object.AmountDetails();
+autoObject.ContractLiquidation.creditedAmount.standardExRate = 0.0;
+autoObject.ContractLiquidation.creditedAmount.negotiatedExRate = 0.0;
+autoObject.ContractLiquidation.creditedAmount.amountInAccount = 0.0;
+autoObject.complianceApproval = false;
+autoObject.stepLog = new tw.object.StepLog();
+autoObject.stepLog.startTime = new TWDate();
+autoObject.stepLog.endTime = new TWDate();
+autoObject.stepLog.userName = "";
+autoObject.stepLog.role = "";
+autoObject.stepLog.step = "";
+autoObject.stepLog.action = "";
+autoObject.stepLog.comment = "";
+autoObject.stepLog.terminateReason = "";
+autoObject.stepLog.returnReason = "";
+autoObject.actions = new tw.object.listOf.toolkit.TWSYS.String();
+autoObject.actions[0] = "";
+autoObject.attachmentDetails = new tw.object.attachmentDetails();
+autoObject.attachmentDetails.folderID = "";
+autoObject.attachmentDetails.ecmProperties = new tw.object.ECMproperties();
+autoObject.attachmentDetails.ecmProperties.fullPath = "";
+autoObject.attachmentDetails.ecmProperties.cmisQuery = "";
+autoObject.attachmentDetails.ecmProperties.defaultProperties = new tw.object.listOf.toolkit.SYSCM.ECMDefaultProperty();
+autoObject.attachmentDetails.ecmProperties.defaultProperties[0] = new tw.object.toolkit.SYSCM.ECMDefaultProperty();
+autoObject.attachmentDetails.ecmProperties.defaultProperties[0].name = "";
+autoObject.attachmentDetails.ecmProperties.defaultProperties[0].value = null;
+autoObject.attachmentDetails.ecmProperties.defaultProperties[0].editable = false;
+autoObject.attachmentDetails.ecmProperties.defaultProperties[0].hidden = false;
+autoObject.attachmentDetails.attachment = new tw.object.listOf.Attachment();
+autoObject.attachmentDetails.attachment[0] = new tw.object.Attachment();
+autoObject.attachmentDetails.attachment[0].name = "";
+autoObject.attachmentDetails.attachment[0].description = "";
+autoObject.attachmentDetails.attachment[0].arabicName = "";
+autoObject.attachmentDetails.attachment[0].numOfOriginals = 0;
+autoObject.attachmentDetails.attachment[0].numOfCopies = 0;
+autoObject.complianceComments = new tw.object.listOf.StepLog();
+autoObject.complianceComments[0] = new tw.object.StepLog();
+autoObject.complianceComments[0].startTime = new TWDate();
+autoObject.complianceComments[0].endTime = new TWDate();
+autoObject.complianceComments[0].userName = "";
+autoObject.complianceComments[0].role = "";
+autoObject.complianceComments[0].step = "";
+autoObject.complianceComments[0].action = "";
+autoObject.complianceComments[0].comment = "";
+autoObject.complianceComments[0].terminateReason = "";
+autoObject.complianceComments[0].returnReason = "";
+autoObject.History = new tw.object.listOf.StepLog();
+autoObject.History[0] = new tw.object.StepLog();
+autoObject.History[0].startTime = new TWDate();
+autoObject.History[0].endTime = new TWDate();
+autoObject.History[0].userName = "";
+autoObject.History[0].role = "";
+autoObject.History[0].step = "";
+autoObject.History[0].action = "";
+autoObject.History[0].comment = "";
+autoObject.History[0].terminateReason = "";
+autoObject.History[0].returnReason = "";
+autoObject.documentSource = new tw.object.toolkit.TWSYS.NameValuePair();
+autoObject.documentSource.name = "";
+autoObject.documentSource.value = "";
+autoObject.folderID = "";
+autoObject.isLiquidated = false;
+autoObject.requestNo = "";
+autoObject.folderPath = "";
+autoObject.templateDocID = "";
+autoObject.approvalComment = "";
+autoObject</ns3:defaultValue>
+                            </ns16:extensionElements>
+                        </ns16:dataInput>
+                        <ns16:dataInput name="folderId" itemSubjectRef="itm.12.3212d5b3-f692-41b3-a893-343dc5c3df01" isCollection="false" id="2055.77d2b3d6-2a2a-4520-ad08-31686157d431">
+                            <ns16:extensionElements>
+                                <ns3:defaultValue useDefault="true">"{70F5C88B-0000-C34D-8412-F9BD2F55B960}"</ns3:defaultValue>
+                            </ns16:extensionElements>
+                        </ns16:dataInput>
+                        <ns16:dataInput name="parentFolderPath" itemSubjectRef="itm.12.db884a3c-c533-44b7-bb2d-47bec8ad4022" isCollection="false" id="2055.d602a747-fb6e-4103-bbc7-d4f4dffdb689">
+                            <ns16:extensionElements>
+                                <ns3:defaultValue useDefault="true">"/أرشيف عملاء البنك الاهلي/عملاء البنك/06316421/DC Inward/00102230001092 - IDC Execution"</ns3:defaultValue>
+                            </ns16:extensionElements>
+                        </ns16:dataInput>
+                        <ns16:dataOutput name="message" itemSubjectRef="itm.12.db884a3c-c533-44b7-bb2d-47bec8ad4022" isCollection="false" id="2055.870b6d47-a51f-4132-8ee7-64b9deb6e00a" />
+                        <ns16:dataOutput name="cancelPath" itemSubjectRef="itm.12.db884a3c-c533-44b7-bb2d-47bec8ad4022" isCollection="false" id="2055.e82f276e-6aad-4948-89ea-84965553a7ec" />
+                        <ns16:inputSet>
+                            <ns16:dataInputRefs>2055.55a76aa1-e513-4fd3-835f-7fe160120af7</ns16:dataInputRefs>
+                            <ns16:dataInputRefs>2055.77d2b3d6-2a2a-4520-ad08-31686157d431</ns16:dataInputRefs>
+                            <ns16:dataInputRefs>2055.d602a747-fb6e-4103-bbc7-d4f4dffdb689</ns16:dataInputRefs>
+                        </ns16:inputSet>
+                        <ns16:outputSet>
+                            <ns16:dataOutputRefs>2055.870b6d47-a51f-4132-8ee7-64b9deb6e00a</ns16:dataOutputRefs>
+                            <ns16:dataOutputRefs>2055.e82f276e-6aad-4948-89ea-84965553a7ec</ns16:dataOutputRefs>
+                        </ns16:outputSet>
+                    </ns16:ioSpecification>
+                    <ns16:laneSet id="1b14b0ec-bc01-4492-818c-5a61a077962b">
+                        <ns16:lane name="System" partitionElementRef="24.6fd38d02-81cf-48ab-bd42-8ff4c0a1628b" id="35b8e090-8d67-4bf5-8037-65d77d993dc0" ns4:isSystemLane="true">
+                            <ns16:extensionElements>
+                                <ns13:nodeVisualInfo x="0" y="0" width="3000" height="500" color="#F8F8F8" />
+                            </ns16:extensionElements>
+                            <ns16:flowNodeRef>e0a93a43-022a-4cdc-8b2b-79320ac694ed</ns16:flowNodeRef>
+                            <ns16:flowNodeRef>9b9546e9-6a65-4839-b352-490ee13e150e</ns16:flowNodeRef>
+                            <ns16:flowNodeRef>86115b78-92a0-4e0d-87de-e57aa2612ac0</ns16:flowNodeRef>
+                            <ns16:flowNodeRef>a01002de-589b-4b3a-9565-66aeeb7364f4</ns16:flowNodeRef>
+                            <ns16:flowNodeRef>05d72d29-382d-4811-92b5-ede72b7ebdc4</ns16:flowNodeRef>
+                            <ns16:flowNodeRef>940f1242-0491-49cd-91f6-99697343017a</ns16:flowNodeRef>
+                            <ns16:flowNodeRef>e23742f2-9bde-4c8e-8bdd-1adb66667d20</ns16:flowNodeRef>
+                            <ns16:flowNodeRef>0a461e98-4dd6-49a6-ace3-ac88c14e7396</ns16:flowNodeRef>
+                            <ns16:flowNodeRef>01d17c49-3728-4444-9b25-a9de0455db78</ns16:flowNodeRef>
+                            <ns16:flowNodeRef>b44a9bf3-b043-471d-8abb-15d2e1fcf93e</ns16:flowNodeRef>
+                            <ns16:flowNodeRef>d34b86f7-f4bf-4b14-8cbc-61f6473dd4de</ns16:flowNodeRef>
+                            <ns16:flowNodeRef>7ef7d4bd-4fc7-410d-831f-0944821f26bd</ns16:flowNodeRef>
+                        </ns16:lane>
+                    </ns16:laneSet>
+                    <ns16:startEvent isInterrupting="false" parallelMultiple="false" name="Start" id="e0a93a43-022a-4cdc-8b2b-79320ac694ed">
+                        <ns16:extensionElements>
+                            <ns13:nodeVisualInfo x="45" y="80" width="24" height="24" color="#F8F8F8" />
+                        </ns16:extensionElements>
+                        <ns16:outgoing>2027.fb0364dc-b48a-4fb9-b614-3d0641e140a4</ns16:outgoing>
+                    </ns16:startEvent>
+                    <ns16:endEvent name="End" id="9b9546e9-6a65-4839-b352-490ee13e150e">
+                        <ns16:extensionElements>
+                            <ns13:nodeVisualInfo x="770" y="80" width="24" height="24" color="#F8F8F8" />
+                            <ns4:saveExecutionContext>true</ns4:saveExecutionContext>
+                            <ns3:endStateId>guid:7cf3b5b49b9bcdb8:3c4f5f27:18bd738e4b3:1e91</ns3:endStateId>
+                        </ns16:extensionElements>
+                        <ns16:incoming>f0bdcf91-5019-4a70-a764-d93504789a2e</ns16:incoming>
+                    </ns16:endEvent>
+                    <ns16:sequenceFlow sourceRef="e0a93a43-022a-4cdc-8b2b-79320ac694ed" targetRef="86115b78-92a0-4e0d-87de-e57aa2612ac0" name="To End" id="2027.fb0364dc-b48a-4fb9-b614-3d0641e140a4">
+                        <ns16:extensionElements>
+                            <ns13:linkVisualInfo>
+                                <ns13:sourcePortLocation>rightCenter</ns13:sourcePortLocation>
+                                <ns13:targetPortLocation>leftCenter</ns13:targetPortLocation>
+                                <ns13:showLabel>false</ns13:showLabel>
+                                <ns13:showCoachControlLabel>false</ns13:showCoachControlLabel>
+                                <ns13:labelPosition>0.0</ns13:labelPosition>
+                                <ns13:saveExecutionContext>false</ns13:saveExecutionContext>
+                            </ns13:linkVisualInfo>
+                        </ns16:extensionElements>
+                    </ns16:sequenceFlow>
+                    <ns16:scriptTask scriptFormat="text/x-javascript" isForCompensation="false" startQuantity="1" completionQuantity="1" name="Script Task" id="86115b78-92a0-4e0d-87de-e57aa2612ac0">
+                        <ns16:extensionElements>
+                            <ns13:nodeVisualInfo x="166" y="57" width="95" height="70" />
+                            <ns3:preAssignmentScript />
+                        </ns16:extensionElements>
+                        <ns16:incoming>2027.fb0364dc-b48a-4fb9-b614-3d0641e140a4</ns16:incoming>
+                        <ns16:outgoing>cbe3139f-4e2f-44f8-b77d-4873167dd1c8</ns16:outgoing>
+                        <ns16:script>if (tw.local.idcRequest.parentRequestNo == "" || tw.local.idcRequest.parentRequestNo == null || tw.local.idcRequest.parentRequestNo == undefined ) {&#xD;
+	tw.local.cancelPath = tw.local.idcRequest.CustomerInfo.cif+"/DC Outward/"+tw.local.idcRequest.appInfo.instanceID+"ODC"+"/Canceled Cases";&#xD;
+}else{&#xD;
+	tw.local.cancelPath = tw.local.idcRequest.CustomerInfo.cif+"/DC Outward/"+tw.local.idcRequest.parentRequestNo+"ODC"+"/Canceled Cases";&#xD;
+}</ns16:script>
+                    </ns16:scriptTask>
+                    <ns16:callActivity calledElement="1.e2ffa7a5-7c4f-4625-90e6-1d620f946497" isForCompensation="false" startQuantity="1" completionQuantity="1" name="Create Folder Structure" id="a01002de-589b-4b3a-9565-66aeeb7364f4">
+                        <ns16:extensionElements>
+                            <ns13:nodeVisualInfo x="325" y="57" width="95" height="70" />
+                            <ns4:activityType>CalledProcess</ns4:activityType>
+                        </ns16:extensionElements>
+                        <ns16:incoming>cbe3139f-4e2f-44f8-b77d-4873167dd1c8</ns16:incoming>
+                        <ns16:outgoing>f1bb5135-9115-4a75-aae9-343c5f573cd5</ns16:outgoing>
+                        <ns16:dataInputAssociation>
+                            <ns16:targetRef>2055.5ece388e-34b7-4b8b-819b-bf5c7758c8ba</ns16:targetRef>
+                            <ns16:assignment>
+                                <ns16:from xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="ns16:tFormalExpression" evaluatesToTypeRef="itm.12.db884a3c-c533-44b7-bb2d-47bec8ad4022">tw.local.cancelPath</ns16:from>
+                            </ns16:assignment>
+                        </ns16:dataInputAssociation>
+                        <ns16:dataOutputAssociation>
+                            <ns16:sourceRef>2055.c7d18e14-a2ff-4f70-be87-c140f0d82599</ns16:sourceRef>
+                            <ns16:assignment>
+                                <ns16:to xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="ns16:tFormalExpression" evaluatesToTypeRef="itm.12.3212d5b3-f692-41b3-a893-343dc5c3df01">tw.local.targetFolderId</ns16:to>
+                            </ns16:assignment>
+                        </ns16:dataOutputAssociation>
+                    </ns16:callActivity>
+                    <ns16:sequenceFlow sourceRef="a01002de-589b-4b3a-9565-66aeeb7364f4" targetRef="940f1242-0491-49cd-91f6-99697343017a" name="To Get Folder By Path" id="f1bb5135-9115-4a75-aae9-343c5f573cd5">
+                        <ns16:extensionElements>
+                            <ns3:sequenceFlowImplementation sboSyncEnabled="true" />
+                            <ns13:linkVisualInfo>
+                                <ns13:sourcePortLocation>rightCenter</ns13:sourcePortLocation>
+                                <ns13:targetPortLocation>leftCenter</ns13:targetPortLocation>
+                                <ns13:showLabel>false</ns13:showLabel>
+                                <ns13:showCoachControlLabel>false</ns13:showCoachControlLabel>
+                                <ns13:labelPosition>0.0</ns13:labelPosition>
+                                <ns13:saveExecutionContext>true</ns13:saveExecutionContext>
+                            </ns13:linkVisualInfo>
+                            <ns3:endStateId>guid:fef170a08f25d496:5466e087:189df5f8551:5666</ns3:endStateId>
+                        </ns16:extensionElements>
+                    </ns16:sequenceFlow>
+                    <ns16:sequenceFlow sourceRef="86115b78-92a0-4e0d-87de-e57aa2612ac0" targetRef="a01002de-589b-4b3a-9565-66aeeb7364f4" name="To Create Folder Structure" id="cbe3139f-4e2f-44f8-b77d-4873167dd1c8">
+                        <ns16:extensionElements>
+                            <ns13:linkVisualInfo>
+                                <ns13:sourcePortLocation>rightCenter</ns13:sourcePortLocation>
+                                <ns13:targetPortLocation>leftCenter</ns13:targetPortLocation>
+                                <ns13:showLabel>false</ns13:showLabel>
+                                <ns13:showCoachControlLabel>false</ns13:showCoachControlLabel>
+                                <ns13:labelPosition>0.0</ns13:labelPosition>
+                                <ns13:saveExecutionContext>false</ns13:saveExecutionContext>
+                            </ns13:linkVisualInfo>
+                        </ns16:extensionElements>
+                    </ns16:sequenceFlow>
+                    <ns4:contentTask serverName="FileNet" operationRef="FOLDER_OP_MOVE_FOLDER" name="Move Folder" id="05d72d29-382d-4811-92b5-ede72b7ebdc4">
+                        <ns16:extensionElements>
+                            <ns13:nodeVisualInfo x="606" y="57" width="95" height="70" />
+                            <ns4:activityType>ContentTask</ns4:activityType>
+                        </ns16:extensionElements>
+                        <ns16:incoming>efb87b96-b669-4ee8-8d35-5f18b9177144</ns16:incoming>
+                        <ns16:outgoing>f0bdcf91-5019-4a70-a764-d93504789a2e</ns16:outgoing>
+                        <ns16:dataInputAssociation>
+                            <ns16:targetRef>FOLDER_ID</ns16:targetRef>
+                            <ns16:assignment>
+                                <ns16:from xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="ns16:tFormalExpression" evaluatesToTypeRef="itm.12.3212d5b3-f692-41b3-a893-343dc5c3df01">tw.local.folderId</ns16:from>
+                            </ns16:assignment>
+                        </ns16:dataInputAssociation>
+                        <ns16:dataInputAssociation>
+                            <ns16:targetRef>TARGET_FOLDER_ID</ns16:targetRef>
+                            <ns16:assignment>
+                                <ns16:from xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="ns16:tFormalExpression" evaluatesToTypeRef="itm.12.3212d5b3-f692-41b3-a893-343dc5c3df01">tw.local.targetFolderId</ns16:from>
+                            </ns16:assignment>
+                        </ns16:dataInputAssociation>
+                        <ns16:dataInputAssociation>
+                            <ns16:targetRef>SOURCE_FOLDER_ID</ns16:targetRef>
+                            <ns16:assignment>
+                                <ns16:from xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="ns16:tFormalExpression" evaluatesToTypeRef="12.3212d5b3-f692-41b3-a893-343dc5c3df01">tw.local.sourceFolderId.objectId</ns16:from>
+                            </ns16:assignment>
+                        </ns16:dataInputAssociation>
+                    </ns4:contentTask>
+                    <ns16:sequenceFlow sourceRef="05d72d29-382d-4811-92b5-ede72b7ebdc4" targetRef="9b9546e9-6a65-4839-b352-490ee13e150e" name="To End" id="f0bdcf91-5019-4a70-a764-d93504789a2e">
+                        <ns16:extensionElements>
+                            <ns3:sequenceFlowImplementation sboSyncEnabled="true" />
+                            <ns13:linkVisualInfo>
+                                <ns13:sourcePortLocation>rightCenter</ns13:sourcePortLocation>
+                                <ns13:targetPortLocation>leftCenter</ns13:targetPortLocation>
+                                <ns13:showLabel>false</ns13:showLabel>
+                                <ns13:showCoachControlLabel>false</ns13:showCoachControlLabel>
+                                <ns13:labelPosition>0.0</ns13:labelPosition>
+                                <ns13:saveExecutionContext>true</ns13:saveExecutionContext>
+                            </ns13:linkVisualInfo>
+                        </ns16:extensionElements>
+                    </ns16:sequenceFlow>
+                    <ns16:dataObject itemSubjectRef="itm.12.3212d5b3-f692-41b3-a893-343dc5c3df01" isCollection="false" name="targetFolderId" id="2056.0db90457-e4d6-4981-aaf4-373342e593de" />
+                    <ns16:dataObject itemSubjectRef="itm.12.240930df-e9da-40a6-a4e8-4b41b42bb183" isCollection="false" name="sourceFolderId" id="2056.330ce88b-be52-4eef-9263-be8ce517f717" />
+                    <ns4:contentTask serverName="FileNet" operationRef="FOLDER_OP_GET_FOLDER_BY_PATH" name="Get Folder By Path" id="940f1242-0491-49cd-91f6-99697343017a">
+                        <ns16:extensionElements>
+                            <ns13:nodeVisualInfo x="475" y="57" width="95" height="70" />
+                            <ns4:activityType>ContentTask</ns4:activityType>
+                        </ns16:extensionElements>
+                        <ns16:incoming>f1bb5135-9115-4a75-aae9-343c5f573cd5</ns16:incoming>
+                        <ns16:outgoing>efb87b96-b669-4ee8-8d35-5f18b9177144</ns16:outgoing>
+                        <ns16:dataInputAssociation>
+                            <ns16:targetRef>PATH</ns16:targetRef>
+                            <ns16:assignment>
+                                <ns16:from xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="ns16:tFormalExpression" evaluatesToTypeRef="itm.12.db884a3c-c533-44b7-bb2d-47bec8ad4022">tw.local.parentFolderPath</ns16:from>
+                            </ns16:assignment>
+                        </ns16:dataInputAssociation>
+                        <ns16:dataOutputAssociation>
+                            <ns16:sourceRef>FOLDER</ns16:sourceRef>
+                            <ns16:assignment>
+                                <ns16:to xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="ns16:tFormalExpression" evaluatesToTypeRef="itm.12.3212d5b3-f692-41b3-a893-343dc5c3df01">tw.local.sourceFolderId</ns16:to>
+                            </ns16:assignment>
+                        </ns16:dataOutputAssociation>
+                    </ns4:contentTask>
+                    <ns16:sequenceFlow sourceRef="940f1242-0491-49cd-91f6-99697343017a" targetRef="05d72d29-382d-4811-92b5-ede72b7ebdc4" name="To Move Folder" id="efb87b96-b669-4ee8-8d35-5f18b9177144">
+                        <ns16:extensionElements>
+                            <ns13:linkVisualInfo>
+                                <ns13:sourcePortLocation>rightCenter</ns13:sourcePortLocation>
+                                <ns13:targetPortLocation>leftCenter</ns13:targetPortLocation>
+                                <ns13:showLabel>false</ns13:showLabel>
+                                <ns13:showCoachControlLabel>false</ns13:showCoachControlLabel>
+                                <ns13:labelPosition>0.0</ns13:labelPosition>
+                                <ns13:saveExecutionContext>false</ns13:saveExecutionContext>
+                            </ns13:linkVisualInfo>
+                        </ns16:extensionElements>
+                    </ns16:sequenceFlow>
+                    <ns16:boundaryEvent cancelActivity="true" attachedToRef="05d72d29-382d-4811-92b5-ede72b7ebdc4" parallelMultiple="false" name="Error" id="e23742f2-9bde-4c8e-8bdd-1adb66667d20">
+                        <ns16:extensionElements>
+                            <ns13:nodeVisualInfo x="641" y="115" width="24" height="24" />
+                        </ns16:extensionElements>
+                        <ns16:outgoing>8ddff76f-3abd-41c7-a872-9c4899140f93</ns16:outgoing>
+                        <ns16:dataOutput name="error" itemSubjectRef="itm.19e8dc33-1100-46be-89a6-36c9040f7b3e" isCollection="false" id="4517bbe8-07af-421a-b602-d88c2aa33b8f" />
+                        <ns16:outputSet />
+                        <ns16:errorEventDefinition id="3eb763bc-7be7-4b50-ad91-a8dd87478aa9" eventImplId="21fdd705-2a83-477e-8a40-8202e0a53380">
+                            <ns16:extensionElements>
+                                <ns4:errorEventSettings>
+                                    <ns4:catchAll>true</ns4:catchAll>
+                                </ns4:errorEventSettings>
+                            </ns16:extensionElements>
+                        </ns16:errorEventDefinition>
+                    </ns16:boundaryEvent>
+                    <ns16:boundaryEvent cancelActivity="true" attachedToRef="940f1242-0491-49cd-91f6-99697343017a" parallelMultiple="false" name="Error1" id="0a461e98-4dd6-49a6-ace3-ac88c14e7396">
+                        <ns16:extensionElements>
+                            <ns13:nodeVisualInfo x="510" y="115" width="24" height="24" />
+                        </ns16:extensionElements>
+                        <ns16:outgoing>a885bbe5-790a-4db8-973f-ccec32577074</ns16:outgoing>
+                        <ns16:dataOutput name="error" itemSubjectRef="itm.19e8dc33-1100-46be-89a6-36c9040f7b3e" isCollection="false" id="aada1dd7-a065-4614-8392-deace06f917a" />
+                        <ns16:outputSet />
+                        <ns16:errorEventDefinition id="beeceb9f-2b94-4a8c-b969-9cc202cf01a4" eventImplId="ae2490fc-2ede-4ba4-8425-d3a91254e8d1">
+                            <ns16:extensionElements>
+                                <ns4:errorEventSettings>
+                                    <ns4:catchAll>true</ns4:catchAll>
+                                </ns4:errorEventSettings>
+                            </ns16:extensionElements>
+                        </ns16:errorEventDefinition>
+                    </ns16:boundaryEvent>
+                    <ns16:boundaryEvent cancelActivity="true" attachedToRef="86115b78-92a0-4e0d-87de-e57aa2612ac0" parallelMultiple="false" name="Error3" id="01d17c49-3728-4444-9b25-a9de0455db78">
+                        <ns16:extensionElements>
+                            <ns13:nodeVisualInfo x="201" y="115" width="24" height="24" />
+                        </ns16:extensionElements>
+                        <ns16:outgoing>3c9147ae-8479-4010-9781-6ef91fc571ab</ns16:outgoing>
+                        <ns16:dataOutput name="error" itemSubjectRef="itm.19e8dc33-1100-46be-89a6-36c9040f7b3e" isCollection="false" id="5e2aa812-febd-4aba-ac46-ce56c897e83b" />
+                        <ns16:outputSet />
+                        <ns16:errorEventDefinition id="162a240f-7df5-45e9-8dfe-5e77cb82ca99" eventImplId="da7f9e90-e1a5-40e4-8684-aaba847f6006">
+                            <ns16:extensionElements>
+                                <ns4:errorEventSettings>
+                                    <ns4:catchAll>true</ns4:catchAll>
+                                </ns4:errorEventSettings>
+                            </ns16:extensionElements>
+                        </ns16:errorEventDefinition>
+                    </ns16:boundaryEvent>
+                    <ns16:dataObject itemSubjectRef="itm.12.db884a3c-c533-44b7-bb2d-47bec8ad4022" isCollection="false" name="errorMSG" id="2056.1900e4e0-c521-4a74-b521-268936e8029c" />
+                    <ns16:sequenceFlow sourceRef="01d17c49-3728-4444-9b25-a9de0455db78" targetRef="d34b86f7-f4bf-4b14-8cbc-61f6473dd4de" name="To Catch Errors" id="3c9147ae-8479-4010-9781-6ef91fc571ab">
+                        <ns16:extensionElements>
+                            <ns13:linkVisualInfo>
+                                <ns13:sourcePortLocation>bottomCenter</ns13:sourcePortLocation>
+                                <ns13:targetPortLocation>leftCenter</ns13:targetPortLocation>
+                                <ns13:showLabel>false</ns13:showLabel>
+                                <ns13:showCoachControlLabel>false</ns13:showCoachControlLabel>
+                                <ns13:labelPosition>0.0</ns13:labelPosition>
+                                <ns13:saveExecutionContext>false</ns13:saveExecutionContext>
+                            </ns13:linkVisualInfo>
+                        </ns16:extensionElements>
+                    </ns16:sequenceFlow>
+                    <ns16:sequenceFlow sourceRef="0a461e98-4dd6-49a6-ace3-ac88c14e7396" targetRef="d34b86f7-f4bf-4b14-8cbc-61f6473dd4de" name="To Catch Errors" id="a885bbe5-790a-4db8-973f-ccec32577074">
+                        <ns16:extensionElements>
+                            <ns13:linkVisualInfo>
+                                <ns13:sourcePortLocation>bottomCenter</ns13:sourcePortLocation>
+                                <ns13:targetPortLocation>topCenter</ns13:targetPortLocation>
+                                <ns13:showLabel>false</ns13:showLabel>
+                                <ns13:showCoachControlLabel>false</ns13:showCoachControlLabel>
+                                <ns13:labelPosition>0.0</ns13:labelPosition>
+                                <ns13:saveExecutionContext>false</ns13:saveExecutionContext>
+                            </ns13:linkVisualInfo>
+                        </ns16:extensionElements>
+                    </ns16:sequenceFlow>
+                    <ns16:sequenceFlow sourceRef="e23742f2-9bde-4c8e-8bdd-1adb66667d20" targetRef="d34b86f7-f4bf-4b14-8cbc-61f6473dd4de" name="To Catch Errors" id="8ddff76f-3abd-41c7-a872-9c4899140f93">
+                        <ns16:extensionElements>
+                            <ns13:linkVisualInfo>
+                                <ns13:sourcePortLocation>bottomCenter</ns13:sourcePortLocation>
+                                <ns13:targetPortLocation>topCenter</ns13:targetPortLocation>
+                                <ns13:showLabel>false</ns13:showLabel>
+                                <ns13:showCoachControlLabel>false</ns13:showCoachControlLabel>
+                                <ns13:labelPosition>0.0</ns13:labelPosition>
+                                <ns13:saveExecutionContext>false</ns13:saveExecutionContext>
+                            </ns13:linkVisualInfo>
+                        </ns16:extensionElements>
+                    </ns16:sequenceFlow>
+                    <ns16:dataObject itemSubjectRef="itm.12.db884a3c-c533-44b7-bb2d-47bec8ad4022" isCollection="false" name="errorCode" id="2056.982fa5a8-ee60-47c1-b4ef-3abea9af999d" />
+                    <ns16:boundaryEvent cancelActivity="true" attachedToRef="a01002de-589b-4b3a-9565-66aeeb7364f4" parallelMultiple="false" name="Error2" id="b44a9bf3-b043-471d-8abb-15d2e1fcf93e">
+                        <ns16:extensionElements>
+                            <ns13:nodeVisualInfo x="360" y="115" width="24" height="24" />
+                        </ns16:extensionElements>
+                        <ns16:outgoing>a280059f-ceb6-41fb-921e-45db36c7b15e</ns16:outgoing>
+                        <ns16:dataOutput name="error" itemSubjectRef="itm.19e8dc33-1100-46be-89a6-36c9040f7b3e" isCollection="false" id="500d3894-608e-40eb-91f7-c4f6cfbcdecb" />
+                        <ns16:outputSet />
+                        <ns16:errorEventDefinition id="cd59327e-233d-4bb5-adbe-01f1e4055962" eventImplId="881f5d9c-eac5-429a-83cd-8ce2cb619c64">
+                            <ns16:extensionElements>
+                                <ns4:errorEventSettings>
+                                    <ns4:catchAll>true</ns4:catchAll>
+                                </ns4:errorEventSettings>
+                            </ns16:extensionElements>
+                        </ns16:errorEventDefinition>
+                    </ns16:boundaryEvent>
+                    <ns16:sequenceFlow sourceRef="b44a9bf3-b043-471d-8abb-15d2e1fcf93e" targetRef="d34b86f7-f4bf-4b14-8cbc-61f6473dd4de" name="To Catch Errors" id="a280059f-ceb6-41fb-921e-45db36c7b15e">
+                        <ns16:extensionElements>
+                            <ns13:linkVisualInfo>
+                                <ns13:sourcePortLocation>bottomCenter</ns13:sourcePortLocation>
+                                <ns13:targetPortLocation>leftCenter</ns13:targetPortLocation>
+                                <ns13:showLabel>false</ns13:showLabel>
+                                <ns13:showCoachControlLabel>false</ns13:showCoachControlLabel>
+                                <ns13:labelPosition>0.0</ns13:labelPosition>
+                                <ns13:saveExecutionContext>false</ns13:saveExecutionContext>
+                            </ns13:linkVisualInfo>
+                        </ns16:extensionElements>
+                    </ns16:sequenceFlow>
+                    <ns16:dataObject itemSubjectRef="itm.12.5551644c-3dc6-4161-a939-4e7f27f8ce45" isCollection="false" name="error" id="2056.3704dfb6-666c-496f-8588-53c9b53040cd" />
+                    <ns16:callActivity calledElement="1.2b50ff68-f7d3-4895-88ad-a73a13fa91d0" isForCompensation="false" startQuantity="1" completionQuantity="1" name="Exception Handling" id="d34b86f7-f4bf-4b14-8cbc-61f6473dd4de">
+                        <ns16:extensionElements>
+                            <ns13:nodeVisualInfo x="571" y="230" width="95" height="70" color="#FF7782" />
+                            <ns4:activityType>CalledProcess</ns4:activityType>
+                        </ns16:extensionElements>
+                        <ns16:incoming>3c9147ae-8479-4010-9781-6ef91fc571ab</ns16:incoming>
+                        <ns16:incoming>8ddff76f-3abd-41c7-a872-9c4899140f93</ns16:incoming>
+                        <ns16:incoming>a885bbe5-790a-4db8-973f-ccec32577074</ns16:incoming>
+                        <ns16:incoming>a280059f-ceb6-41fb-921e-45db36c7b15e</ns16:incoming>
+                        <ns16:outgoing>5b19ca35-c867-428e-83c3-7421a9aa31c4</ns16:outgoing>
+                        <ns16:dataInputAssociation>
+                            <ns16:targetRef>2055.55dcd590-97c2-48df-82c6-0f812ab7177f</ns16:targetRef>
+                            <ns16:assignment>
+                                <ns16:from xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="ns16:tFormalExpression" evaluatesToTypeRef="itm.12.db884a3c-c533-44b7-bb2d-47bec8ad4022">tw.local.errorMSG</ns16:from>
+                            </ns16:assignment>
+                        </ns16:dataInputAssociation>
+                        <ns16:dataInputAssociation>
+                            <ns16:targetRef>2055.5ea77901-7a17-422a-8958-67bb0e9c991b</ns16:targetRef>
+                            <ns16:assignment>
+                                <ns16:from xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="ns16:tFormalExpression" evaluatesToTypeRef="itm.12.db884a3c-c533-44b7-bb2d-47bec8ad4022">tw.system.serviceFlow.name</ns16:from>
+                            </ns16:assignment>
+                        </ns16:dataInputAssociation>
+                        <ns16:dataOutputAssociation>
+                            <ns16:sourceRef>2055.81b82125-a5aa-45f7-8c0f-4870667eebbf</ns16:sourceRef>
+                            <ns16:assignment>
+                                <ns16:to xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="ns16:tFormalExpression" evaluatesToTypeRef="itm.12.db884a3c-c533-44b7-bb2d-47bec8ad4022">tw.local.errorMSG</ns16:to>
+                            </ns16:assignment>
+                        </ns16:dataOutputAssociation>
+                        <ns16:dataOutputAssociation>
+                            <ns16:sourceRef>2055.99eb514d-4b62-401e-8cdb-7edc096adffd</ns16:sourceRef>
+                            <ns16:assignment>
+                                <ns16:to xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="ns16:tFormalExpression" evaluatesToTypeRef="itm.12.c09c9b6e-aabd-4897-bef2-ed61db106297" />
+                            </ns16:assignment>
+                        </ns16:dataOutputAssociation>
+                    </ns16:callActivity>
+                    <ns16:endEvent name="End Event" id="7ef7d4bd-4fc7-410d-831f-0944821f26bd">
+                        <ns16:extensionElements>
+                            <ns13:nodeVisualInfo x="755" y="255" width="24" height="24" />
+                        </ns16:extensionElements>
+                        <ns16:incoming>5b19ca35-c867-428e-83c3-7421a9aa31c4</ns16:incoming>
+                        <ns16:dataInputAssociation>
+                            <ns16:assignment>
+                                <ns16:from xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="ns16:tFormalExpression" evaluatesToTypeRef="itm.12.db884a3c-c533-44b7-bb2d-47bec8ad4022">tw.local.errorMSG</ns16:from>
+                            </ns16:assignment>
+                        </ns16:dataInputAssociation>
+                        <ns16:errorEventDefinition id="7d43e9cd-570a-4ada-84f6-4d3d417ba345" eventImplId="7f792515-63ab-4abb-87df-5516b7e54487">
+                            <ns16:extensionElements>
+                                <ns4:errorEventSettings>
+                                    <ns4:catchAll>true</ns4:catchAll>
+                                    <ns4:errorCode />
+                                </ns4:errorEventSettings>
+                            </ns16:extensionElements>
+                        </ns16:errorEventDefinition>
+                    </ns16:endEvent>
+                    <ns16:sequenceFlow sourceRef="d34b86f7-f4bf-4b14-8cbc-61f6473dd4de" targetRef="7ef7d4bd-4fc7-410d-831f-0944821f26bd" name="To End Event" id="5b19ca35-c867-428e-83c3-7421a9aa31c4">
+                        <ns16:extensionElements>
+                            <ns3:sequenceFlowImplementation sboSyncEnabled="true" />
+                            <ns3:endStateId>guid:f6ffc3b64be5dfa5:4157166b:18ab80e0606:-6f83</ns3:endStateId>
+                            <ns13:linkVisualInfo>
+                                <ns13:sourcePortLocation>rightCenter</ns13:sourcePortLocation>
+                                <ns13:targetPortLocation>leftCenter</ns13:targetPortLocation>
+                                <ns13:showLabel>false</ns13:showLabel>
+                                <ns13:showCoachControlLabel>false</ns13:showCoachControlLabel>
+                                <ns13:labelPosition>0.0</ns13:labelPosition>
+                                <ns13:saveExecutionContext>true</ns13:saveExecutionContext>
+                            </ns13:linkVisualInfo>
+                        </ns16:extensionElements>
+                    </ns16:sequenceFlow>
+                </ns16:process>
+            </ns16:definitions>
+        </bpmn2Model>
+        <link name="To Create Folder Structure">
+            <lastModified isNull="true" />
+            <lastModifiedBy isNull="true" />
+            <processLinkId>2027.cbe3139f-4e2f-44f8-b77d-4873167dd1c8</processLinkId>
+            <processId>1.5cf7e9f4-d78e-4690-8292-d5e64c209ccc</processId>
+            <description isNull="true" />
+            <fromProcessItemId>2025.86115b78-92a0-4e0d-87de-e57aa2612ac0</fromProcessItemId>
+            <endStateId>Out</endStateId>
+            <toProcessItemId>2025.a01002de-589b-4b3a-9565-66aeeb7364f4</toProcessItemId>
+            <guid>4040ff70-bb2a-48df-a0f1-222eff5978f7</guid>
+            <versionId>3e562740-a626-488f-8161-77c5b4b89692</versionId>
+            <layoutData>
+                <controlPoints />
+                <showEndState>false</showEndState>
+                <showName>false</showName>
+            </layoutData>
+            <fromItemPort locationId="rightCenter" portType="1" />
+            <toItemPort locationId="leftCenter" portType="2" />
+            <fromProcessItemId>2025.86115b78-92a0-4e0d-87de-e57aa2612ac0</fromProcessItemId>
+            <toProcessItemId>2025.a01002de-589b-4b3a-9565-66aeeb7364f4</toProcessItemId>
+        </link>
+        <link name="To Get Folder By Path">
+            <lastModified isNull="true" />
+            <lastModifiedBy isNull="true" />
+            <processLinkId>2027.f1bb5135-9115-4a75-aae9-343c5f573cd5</processLinkId>
+            <processId>1.5cf7e9f4-d78e-4690-8292-d5e64c209ccc</processId>
+            <description isNull="true" />
+            <fromProcessItemId>2025.a01002de-589b-4b3a-9565-66aeeb7364f4</fromProcessItemId>
+            <endStateId>guid:fef170a08f25d496:5466e087:189df5f8551:5666</endStateId>
+            <toProcessItemId>2025.940f1242-0491-49cd-91f6-99697343017a</toProcessItemId>
+            <guid>06ed599f-80ac-4694-999a-054bff6b6d2c</guid>
+            <versionId>66a73368-becb-4acb-bcaa-e9eb580ddf0a</versionId>
+            <layoutData>
+                <controlPoints />
+                <showEndState>false</showEndState>
+                <showName>false</showName>
+            </layoutData>
+            <fromItemPort locationId="rightCenter" portType="1" />
+            <toItemPort locationId="leftCenter" portType="2" />
+            <fromProcessItemId>2025.a01002de-589b-4b3a-9565-66aeeb7364f4</fromProcessItemId>
+            <toProcessItemId>2025.940f1242-0491-49cd-91f6-99697343017a</toProcessItemId>
+        </link>
+        <link name="To Move Folder">
+            <lastModified isNull="true" />
+            <lastModifiedBy isNull="true" />
+            <processLinkId>2027.efb87b96-b669-4ee8-8d35-5f18b9177144</processLinkId>
+            <processId>1.5cf7e9f4-d78e-4690-8292-d5e64c209ccc</processId>
+            <description isNull="true" />
+            <fromProcessItemId>2025.940f1242-0491-49cd-91f6-99697343017a</fromProcessItemId>
+            <endStateId>Out</endStateId>
+            <toProcessItemId>2025.05d72d29-382d-4811-92b5-ede72b7ebdc4</toProcessItemId>
+            <guid>47cdd72d-0054-4bd0-827f-34382841a696</guid>
+            <versionId>733b647c-5169-4fea-9886-c85e0923dd56</versionId>
+            <layoutData>
+                <controlPoints />
+                <showEndState>false</showEndState>
+                <showName>false</showName>
+            </layoutData>
+            <fromItemPort locationId="rightCenter" portType="1" />
+            <toItemPort locationId="leftCenter" portType="2" />
+            <fromProcessItemId>2025.940f1242-0491-49cd-91f6-99697343017a</fromProcessItemId>
+            <toProcessItemId>2025.05d72d29-382d-4811-92b5-ede72b7ebdc4</toProcessItemId>
+        </link>
+        <link name="To End">
+            <lastModified isNull="true" />
+            <lastModifiedBy isNull="true" />
+            <processLinkId>2027.f0bdcf91-5019-4a70-a764-d93504789a2e</processLinkId>
+            <processId>1.5cf7e9f4-d78e-4690-8292-d5e64c209ccc</processId>
+            <description isNull="true" />
+            <fromProcessItemId>2025.05d72d29-382d-4811-92b5-ede72b7ebdc4</fromProcessItemId>
+            <endStateId>Out</endStateId>
+            <toProcessItemId>2025.9b9546e9-6a65-4839-b352-490ee13e150e</toProcessItemId>
+            <guid>52a32599-3450-4237-9d75-b3f8c85f8271</guid>
+            <versionId>c96357c9-53b9-43f1-917b-8ba05b6ef184</versionId>
+            <layoutData>
+                <controlPoints />
+                <showEndState>false</showEndState>
+                <showName>false</showName>
+            </layoutData>
+            <fromItemPort locationId="rightCenter" portType="1" />
+            <toItemPort locationId="leftCenter" portType="2" />
+            <fromProcessItemId>2025.05d72d29-382d-4811-92b5-ede72b7ebdc4</fromProcessItemId>
+            <toProcessItemId>2025.9b9546e9-6a65-4839-b352-490ee13e150e</toProcessItemId>
+        </link>
+        <link name="To End Event">
+            <lastModified isNull="true" />
+            <lastModifiedBy isNull="true" />
+            <processLinkId>2027.5b19ca35-c867-428e-83c3-7421a9aa31c4</processLinkId>
+            <processId>1.5cf7e9f4-d78e-4690-8292-d5e64c209ccc</processId>
+            <description isNull="true" />
+            <fromProcessItemId>2025.d34b86f7-f4bf-4b14-8cbc-61f6473dd4de</fromProcessItemId>
+            <endStateId>guid:f6ffc3b64be5dfa5:4157166b:18ab80e0606:-6f83</endStateId>
+            <toProcessItemId>2025.7ef7d4bd-4fc7-410d-831f-0944821f26bd</toProcessItemId>
+            <guid>099e96bf-6905-42bc-922f-5a6bf6c50c43</guid>
+            <versionId>ca4a49f4-9133-4e9d-88b6-32885a190853</versionId>
+            <layoutData>
+                <controlPoints />
+                <showEndState>false</showEndState>
+                <showName>false</showName>
+            </layoutData>
+            <fromItemPort locationId="rightCenter" portType="1" />
+            <toItemPort locationId="leftCenter" portType="2" />
+            <fromProcessItemId>2025.d34b86f7-f4bf-4b14-8cbc-61f6473dd4de</fromProcessItemId>
+            <toProcessItemId>2025.7ef7d4bd-4fc7-410d-831f-0944821f26bd</toProcessItemId>
+        </link>
+    </process>
+</teamworks>
+

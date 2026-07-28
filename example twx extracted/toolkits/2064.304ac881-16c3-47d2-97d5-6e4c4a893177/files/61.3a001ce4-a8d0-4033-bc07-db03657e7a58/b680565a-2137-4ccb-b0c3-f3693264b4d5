@@ -1,0 +1,118 @@
+/*
+ * #BEGIN COPYRIGHT
+ *
+ * Licensed Materials - Property of IBM
+ * 5725-C95
+ * (C) Copyright IBM Corporation 2017. All Rights Reserved.
+ * US Government Users Restricted Rights- Use, duplication or disclosure
+ * restricted by GSA ADP Schedule Contract with IBM Corp.
+ *
+ * #END COPYRIGHT
+ */
+
+/** 
+ *   <tr class=Prop>
+ *     <td class=SectionName colspan=3>Events</td>
+ *   </tr>
+ *   <tr class=Prop>
+ *     <td>On Load:</td>
+ *     <td><pre class="prettyprint"><code>confirm("You will be using the OpenLayers API");<code></pre></td>
+ *     <td><i>Javascript expression</i></td>
+ *   </tr>
+ *   <tr class=Prop>
+ *     <td>On API Loaded:</td>
+ *     <td><pre class="prettyprint"><code>confirm("OpenLayers API has loaded");</code></pre></td>
+ *     <td><i>Javascript expression</i></td>
+ *   </tr>
+ * </table>
+ */
+bpmext_control_InitOpenLayersAPI = function(bpmext)
+{
+	this._instance= {};
+	
+	if(!this.constructor.prototype._proto)
+	{
+		this.constructor.prototype._proto = 
+		{
+			EVT_ONAPILOADED: "eventON_APILOADED"
+		}
+		
+		/**
+		 * @instance
+		 * @memberof OpenLayersAPI
+		 * @method getType
+		 * @desc Get descriptive string representing the type of control
+		 * @returns {string} 
+		 */
+		this.constructor.prototype.getType = function()
+		{
+			return "openLayersAPI.3";
+		}
+		
+		/*
+		Coach NG Lifecycle methods *************************************************************
+		 */
+		this.constructor.prototype.load = function()
+		{
+			try
+			{					
+				var apiKey = this.context.options.APIKey ? this.context.options.APIKey.get("value") : null;
+
+				bpmext.ui.registerEventHandlingFunction(this, this._proto.EVT_ONAPILOADED);
+				bpmext.ui.loadView(this);				
+				
+				var view = this;
+				require([    
+					'dojo/dom',
+					'dojo/domReady!'
+				], function() {	
+					bpmext.ui.publishEvent("OPENLAYERS_APIS_LOADED", apiKey, true);
+					bpmext.ui.executeEventHandlingFunction(view, view._proto.EVT_ONAPILOADED);
+				});
+				
+			}
+			catch (e)
+			{
+				//{#feature: US-1330 Added RT localization}
+				//bpmext.log.error("Error on load event [" + this.context.viewid + "]: " + e);
+				bpmext.log.error(bpmext.localization.formatMsg("general", "ERROR_ONLOAD_EVENT") + " [" + this.context.viewid + "]: " + e);
+				if(e.stack) { 
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.error("  Call stack: " + e.stack);
+					bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+				}
+			}
+		}
+		this.constructor.prototype.view = function()
+		{
+		
+		};
+		
+		this.constructor.prototype.change = function(event)
+		{
+		    /*
+			try
+			{
+
+			}
+			catch (e)
+			{
+				//{#feature: US-1330 Added RT localization}
+				//bpmext.log.error("Error on change event [" + this.ui.getAbsoluteName() + "]: " + e);
+				bpmext.log.error(bpmext.localization.formatMsg("general", "ERROR_ONCHANGE_EVENT") + " [" + this.ui.getAbsoluteName() + "]: " + e);
+				if(e.stack) { 
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.error("  Call stack: " + e.stack);
+					bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+				}
+			}
+			*/
+		};
+
+		this.constructor.prototype.unload = function()
+		{
+			bpmext.ui.unloadView(this);
+		};		
+	}
+
+}

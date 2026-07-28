@@ -1,0 +1,987 @@
+/*
+ * #BEGIN COPYRIGHT
+ *
+ * Licensed Materials - Property of IBM
+ * 5725-C95
+ * (C) Copyright IBM Corporation 2017. All Rights Reserved.
+ * US Government Users Restricted Rights- Use, duplication or disclosure
+ * restricted by GSA ADP Schedule Contract with IBM Corp.
+ *
+ * #END COPYRIGHT
+ */
+ 
+/**
+ * @ignore
+ * @instance
+ * @memberof RangeSlider
+ * @method isLabelVisible
+ */
+
+/**
+ * @ignore
+ * @instance
+ * @memberof RangeSlider
+ * @method setLabelVisible
+ */
+
+/**
+ * @ignore
+ * @instance
+ * @memberof RangeSlider
+ * @method isValid
+ */
+
+/**
+ * @ignore
+ * @instance
+ * @memberof RangeSlider
+ * @method setValid
+ */ 
+
+
+/**
+ *	<table>
+ *		<tr class=Prop>
+ *			<td class=SectionName colspan=3>Events</td>
+ *		</tr>
+ *   <tr class=Prop>
+ *     <td>On Load:</td>
+ *     <td colspan="2">
+ *       <table>
+ *         <tr class=Prop>
+ *           <td>Description: </td>
+ *           <td>Triggers when control loads</td>
+ *         </tr>
+ *         <tr class=Prop>
+ *           <td>Example: </td>
+ *           <td><pre class="prettyprint"><code>me.setValue(50)</code></pre></td>
+ *         </tr>
+ *       </table>
+ *     </td>
+ *   </tr>
+ *   <tr class=Prop>
+ *     <td>On Change:</td>
+ *     <td colspan="2">
+ *       <table>
+ *         <tr class=Prop>
+ *           <td>Description: </td>
+ *           <td>This event is fired when the slider value is changed.</td>
+ *         </tr>
+ *         <tr class=Prop>
+ *           <td>Example: </td>
+ *           <td><pre class="prettyprint"><code>if (newVal > 50) {${icon}.setIcon("smile-o");} else {${icon}.setIcon("frown-o");}</code></pre></td>
+ *         </tr>
+ *       </table>
+ *       <table style="border: 1px solid black; border-collapse: collapse; ">
+ *         <tr style="border: 1px solid black; border-collapse: collapse;">
+ *           <th style="border: 1px solid black; border-collapse: collapse;padding: 5px;">Context Variables</th>
+ *           <th style="border: 1px solid black; border-collapse: collapse; padding: 5px;">newVal {numeric}</th>
+ *           <th style="border: 1px solid black; border-collapse: collapse; padding: 5px;">oldVal {numeric}</th>
+ *         </tr>
+ *       </table>
+ *     </td>
+ *   </tr>
+ * </table>
+ */
+
+bpmext_control_InitRangeSlider = function (domClass, domAttr, rangeslider, bpmext, utilities)
+{
+	this._instance = {};
+
+	if (!this.constructor.prototype._proto)
+	{
+		this.constructor.prototype._proto =
+		{
+			OPTS_COL_STLZ :
+			{
+				"D" : "",
+				"P" : "cs-primary",
+				"I" : "cs-info",
+				"S" : "cs-success",
+				"W" : "cs-warning",
+				"E" : "cs-danger"
+			},
+			EVT_ONCHANGE : "eventON_CHANGE",
+			_setTabIndex : function (view, index)
+			{
+				if(index != null)
+					domAttr.set(view._instance._handleElt, "tabindex", index);
+				else
+					domAttr.set(view._instance._handleElt, "tabindex", 0);
+			},
+			_setColorStyle : function (view, newVal, oldVal)
+			{
+				if (!oldVal)
+					oldVal = view._instance.oldColStyle;
+
+				newVal = bpmext.ui.util.normalizeColorStyle(newVal);
+				oldVal = bpmext.ui.util.normalizeColorStyle(oldVal);
+
+				bpmext.ui.util.replaceCSSClass(view.context.element, this.OPTS_COL_STLZ, newVal, oldVal);
+				view._instance.oldColStyle = newVal;
+			},
+			_setRadius : function (view, newVal)
+			{
+				if (newVal != null && newVal.length > 0)
+				{
+					if (!isNaN(newVal))
+						newVal += "px";
+				}
+				else
+					newVal = 0;
+
+				var inner = view._instance.sliderDiv.querySelector(".noUi-origin");
+
+				view._instance.sliderDiv.style.borderRadius = newVal;
+				inner.style.borderRadius = null;
+
+				if (view.context.options.vertical.get("value"))
+				{
+					inner.style.borderBottomLeftRadius = newVal;
+					inner.style.borderBottomRightRadius = newVal;
+				}
+				else
+				{
+					inner.style.borderTopRightRadius = newVal;
+					inner.style.borderBottomRightRadius = newVal;
+				}
+			},
+			_setWidth : function (view, newVal)
+			{
+				var elt = view.context.element.querySelector(".noUi-target");
+				if (newVal != null && newVal.length > 0)
+				{
+					if (!isNaN(newVal))
+						newVal += "px";
+					if (!view.context.options.vertical.get("value")) {
+						view.context.element.style.width = null;
+						elt.style.width = newVal;
+					}
+					else {
+						elt.style.width = null;
+						view.context.element.style.width = newVal;
+					}
+				}
+				else {
+					newVal = "100%";
+					elt.style.width = null;
+					view.context.element.style.width = newVal;
+				}
+			},
+			_setHandleClick : function (view) {
+				view._instance._handleElt.onmousedown = function (event) {
+					if(utilities.handleVisibility(view.context) == "READONLY") {
+						event.preventDefault();
+						return;
+					}
+					view._instance._handleElt.focus();
+				}
+
+				view._instance._handleElt.onfocus = function () { 
+					if(utilities.handleVisibility(view.context) == "READONLY") {
+						event.preventDefault();
+						return;
+					}                           
+					domClass.add(view._instance.sliderContainer, "focus")
+					view._instance._handleElt.onblur = function () {
+						domClass.remove(view._instance.sliderContainer, "focus")
+					};
+				}
+			},
+			_setHandleWidth : function (view, newVal)
+			{
+				if (newVal != null && newVal.length > 0)
+				{
+					if (!isNaN(newVal))
+						newVal += "px";
+				}
+
+				if (newVal == null)
+				{
+					newVal = (view._instance._handleElt.offsetHeight != 0) ? (view._instance._handleElt.offsetHeight + "px") : null;
+				}
+
+				view._instance._handleElt.style.width = newVal;
+			},
+			_setHeight : function (view, newVal)
+			{
+				var elt = view.context.element.querySelector(".noUi-target");
+				if (newVal != null && newVal.length > 0)
+				{
+					if (!isNaN(newVal))
+						newVal += "px";
+					if (view.context.options.vertical.get("value")) {
+						view.context.element.style.height = null;
+						elt.style.height = newVal;
+					}
+					else {
+						elt.style.height = null;
+						view.context.element.style.height = newVal;
+					}
+				}
+				else {
+					elt.style.height = null;
+					view.context.element.style.height = newVal;
+				}
+			},
+			_setHandleRadius : function (view, newVal)
+			{
+				if (newVal != null && newVal.length > 0)
+				{
+					if (!isNaN(newVal))
+						newVal += "px";
+				}
+
+				view._instance._handleElt.style.borderRadius = newVal;
+			},
+			_setHandleStyle : function (view)
+			{
+				if (utilities.getActiveTheme() !== '"CARBON"') {
+					return;
+				}
+				domClass.add(view._instance.sliderContainer, "carbon");
+			},
+			_setLimitValues : function (view) {
+				if (view.context.options.showLimitValues.get("value")) {
+					view._instance.minLabel = document.createElement("span");
+					domClass.add(view._instance.minLabel, "min-label");
+					view._instance.minLabel.innerText = view.context.options.min.get("value");
+					view._instance.sliderContainer.appendChild(view._instance.minLabel);
+
+					view._instance.maxLabel = document.createElement("span");
+					domClass.add(view._instance.maxLabel, "max-label");
+					view._instance.maxLabel.innerText = view.context.options.max.get("value");
+					view._instance.sliderContainer.appendChild(view._instance.maxLabel);
+
+					if (view.context.options.vertical.get("value")) {
+						view._instance.sliderContainer.insertBefore(view._instance.minLabel, view._instance.sliderContainer.firstChild);
+						view._instance.sliderContainer.insertBefore(view._instance.sliderDiv, view._instance.minLabel);
+						view._instance.sliderContainer.insertBefore(view._instance.maxLabel, view._instance.sliderDiv);
+					}
+					else {
+						view._instance.sliderContainer.insertBefore(view._instance.maxLabel, view._instance.sliderContainer.firstChild);
+						view._instance.sliderContainer.insertBefore(view._instance.sliderDiv, view._instance.maxLabel);
+						view._instance.sliderContainer.insertBefore(view._instance.minLabel, view._instance.sliderDiv);
+					}
+				}
+				else {
+					if (view._instance.minLabel) {
+						view._instance.sliderContainer.removeChild(view._instance.minLabel);
+						view._instance.sliderContainer.removeChild(view._instance.maxLabel);
+					}
+				}
+			},
+			_setShowCurrentValue : function (view)
+			{
+				if (view.context.options.showCurrentValue.get("value")) {
+					var step = view.context.options.step.get("value");
+					if (step === null)
+						step = undefined;
+					else
+						step = Number(step);
+
+					var startVal = view.context.binding.get("value");
+					if (startVal == null)
+						startVal = view.context.options.min.get("value");
+
+					view._instance.valueInputField = document.createElement("input");
+					domClass.add(view._instance.valueInputField, "form-control slider-value");
+					domAttr.set(view._instance.valueInputField, "type", "number");
+					domAttr.set(view._instance.valueInputField, "value", startVal);
+					domAttr.set(view._instance.valueInputField, "step", step);
+					domAttr.set(view._instance.valueInputField, "min", view.context.options.min.get("value"));
+					domAttr.set(view._instance.valueInputField, "max", view.context.options.max.get("value"));
+
+					view._instance.sliderContainer.appendChild(view._instance.valueInputField);
+					view._proto._setValueInputChange(view);
+				}
+				else {
+					if (view._instance.valueInputField) {
+						view._instance.sliderContainer.removeChild(view._instance.valueInputField);
+					}
+				}
+			},
+			_handleVisibility : function (view)
+			{
+				var vis = utilities.handleVisibility(view.context);
+
+				if (vis != "NONE")
+				{
+					if (view.context.options.showCurrentValue.get("value"))
+						view._instance.valueInputField.disabled = (vis === "READONLY");
+
+					if (vis == "READONLY")
+					{
+						domClass.add(view.context.element, "disabled");
+						view._instance.sliderDiv.setAttribute("disabled", true);
+					}
+					else
+					{
+						domClass.remove(view.context.element, "disabled");
+						view._instance.sliderDiv.removeAttribute("disabled");
+					}
+				}
+
+				// Updates for WAI
+                if (domAttr.has(view._instance.sliderDiv, "disabled")) {										
+                    domAttr.set(view._instance.sliderDiv, "aria-disabled", "true");
+                } else {					
+                    domAttr.remove(view._instance.sliderDiv, "aria-disabled");
+				}
+			},
+			_setMin : function (view, newVal)  {
+				domAttr.set(view._instance._handleElt, "aria-valuemin", newVal);
+				if (view.context.options.showLimitValues.get("value"))
+					view._instance.minLabel.innerText = newVal;
+				if (view.context.options.showCurrentValue.get("value"))
+					domAttr.set(view._instance.valueInputField, "min", newVal);
+			},
+			_setMax : function (view, newVal)  {
+				domAttr.set(view._instance._handleElt, "aria-valuemax", newVal);
+				if (view.context.options.showLimitValues.get("value"))
+					view._instance.maxLabel.innerText = newVal;
+				if (view.context.options.showCurrentValue.get("value"))
+					domAttr.set(view._instance.valueInputField, "max", newVal);
+			},
+			_setValue : function (view, val)
+			{
+				if (typeof val != "number")
+					val = Number(val);
+
+				var max = view.context.options.max.get("value");
+				var min = view.context.options.min.get("value");
+
+				if(val <= max && val >= min) {
+					view._instance.sliderDiv.noUiSlider.set(val);
+					domAttr.set(view._instance._handleElt, "aria-valuenow", val);
+
+					if (view.context.options.showCurrentValue.get("value") && view.context.binding.get("changed")) {
+						domAttr.set(view._instance.valueInputField, "value", val);
+					}
+				} else {
+					bpmext.log.error(bpmext.localization.formatMsg("controlRangeSlider", "RS_OUT_OF_RANGE"));
+				}
+
+				// IE: Focus on the handle when value changes
+				if (utilities.isIE()) {
+					view._instance._handleElt.focus();
+				}
+			},
+			_setValueInputChange : function (view) {
+				view._instance.valueInputField.oninput = function() {
+					var newVal = view._instance.valueInputField.value;
+
+					if (newVal < view.context.options.min.get("value")) {
+						newVal = view.context.options.min.get("value");
+					} else if (newVal > view.context.options.max.get("value")) {
+						newVal = view.context.options.max.get("value");
+					}
+
+					view.context.binding.set("changed", false);
+					view.context.binding.set("value", newVal);
+				}
+
+				view._instance.valueInputField.onkeydown = function (event) {
+					if(utilities.handleVisibility(view.context) == "READONLY") {
+						event.preventDefault();
+						return;
+					}
+
+					var sliderVal = Number(view._instance.sliderDiv.noUiSlider.get());
+					var stepArray = view._instance.sliderDiv.noUiSlider.steps();
+					var stepSize = stepArray[0];
+
+					if (!stepSize[0])
+						stepSize[0] = view.context.options.max.get("value") / 100; // If no step size has been set, set to the de facto default step size of the slider
+
+					if (!stepSize[1])
+						stepSize[1] = view.context.options.max.get("value") / 100;
+
+					var newVal = sliderVal;
+					switch (event.which) {
+						case 38:
+							newVal = sliderVal + stepSize[1];
+							break;
+						case 40:
+							newVal = sliderVal - stepSize[0];
+							break;
+					}
+					if (newVal < view.context.options.min.get("value")) {
+						newVal = view.context.options.min.get("value");
+					} else if (newVal > view.context.options.max.get("value")) {
+						newVal = view.context.options.max.get("value");
+					}
+					view.context.binding.set("changed", false);
+					view.context.binding.set("value", newVal);
+				};
+			},
+			/* {#feature: 357 implemented this method for use with responsiveness} */
+			_setVertical : function (view, val)
+			{
+				if ((val && !domClass.contains(view.context.element, "sr-vertical")) || (!val && domClass.contains(view.context.element, "sr-vertical")))
+					{
+						view._instance.sliderControl.destroy();
+
+						var step = view.context.options.step.get("value");
+						if (step === null)
+							step = undefined;
+						else
+							step = Number(step);
+
+						var startVal = view.context.binding.get("value");
+						if (startVal == null)
+							startVal = view.context.options.min.get("value");
+
+						var initOptions =
+						{
+							start : startVal,
+							connect : "lower",
+							orientation : (val ? "vertical" : "horizontal"),
+							range :
+							{
+								'min' : view.context.options.min.get("value"),
+								'max' : view.context.options.max.get("value")
+							},
+							step : step
+						};
+
+						if (val || (view._proto._getDirection(document.body) == "rtl" && domClass.contains(document.body, "CoachViewRTL")))
+						{
+							initOptions.direction = "rtl";
+							//val && (initOptions.connect = "upper");
+						}
+
+						view._instance.sliderControl = rangeslider.create(view._instance.sliderDiv, initOptions);
+
+						view._instance.sliderBase = view._instance.sliderDiv.querySelector(".noUi-base");
+						
+						view._instance._handleElt = view._instance.sliderDiv.querySelector(".noUi-handle");
+						domAttr.set(view._instance._handleElt, "role", "slider");
+						domAttr.set(view._instance._handleElt, "aria-valuenow", initOptions.start);
+						domAttr.set(view._instance._handleElt, "aria-label", view.context.options._metadata.label.get("value"));
+						view._proto._setHandleClick(view);
+
+						if (view.context.options.showLimitValues.get("value")) {
+							view._instance.sliderContainer.insertBefore(view._instance.minLabel, view._instance.sliderContainer.firstChild);
+							view._instance.sliderContainer.insertBefore(view._instance.sliderDiv, view._instance.minLabel);
+							view._instance.sliderContainer.insertBefore(view._instance.maxLabel, view._instance.sliderDiv);
+						}
+
+						view._instance._handleElt.onkeydown = function (event) {
+							if(utilities.handleVisibility(view.context) == "READONLY") {
+								event.preventDefault();
+								return;
+							}
+							var sliderVal = Number(view._instance.sliderDiv.noUiSlider.get());
+							var stepArray = view._instance.sliderDiv.noUiSlider.steps();
+							var stepSize = stepArray[1];
+							
+							if (!stepSize[0])
+								stepSize[0] = view.context.options.max.get("value") / 100; // If no step size has been set, set to the de facto default step size of the slider
+							
+							if (!stepSize[1])
+								stepSize[1] = view.context.options.max.get("value") / 100;
+							
+							var newVal = sliderVal;
+							
+							switch (event.which) {
+								case 33:
+									newVal = sliderVal + 10 * stepSize[0];
+									break;
+								case 34:
+									newVal = sliderVal - 10 * stepSize[1];
+									break;
+								case 36:
+									newVal = view.context.options.min.get("value");
+									break;
+								case 35:
+									newVal = view.context.options.max.get("value");
+									break;
+								case 38:
+								case 39:
+									newVal = sliderVal + stepSize[0];
+									break;
+								case 37:
+								case 40:
+									newVal = sliderVal - stepSize[1];
+									break;
+							}
+							
+							if (newVal < view.context.options.min.get("value")) {
+								newVal = view.context.options.min.get("value");
+							} else if (newVal > view.context.options.max.get("value")) {
+								newVal = view.context.options.max.get("value");
+							}
+
+							view.context.binding.set("changed", true);
+							view.context.binding.set("value", newVal);
+						};
+
+						view._instance.sliderDiv.noUiSlider.on('slide', function (arg1, arg2, arg3, arg4)
+						{
+							var sliderVal = view._instance.sliderDiv.noUiSlider.get();
+							view.context.binding.set("changed", true);
+							view.context.binding.set("value", sliderVal);
+						}
+						);
+
+						if (val)
+						{
+							domClass.add(view.context.element, "sr-vertical");
+						}
+						else
+						{
+							domClass.remove(view.context.element, "sr-vertical");
+						}
+						
+						view._proto._setTabIndex(view, view.context.options.tabIndex.get("value"));
+						view._proto._setColorStyle(view, view.context.options.colorStyle.get("value"));
+						view._proto._setRadius(view, view.context.options.radius.get("value"));
+						view._proto._setHeight(view, view.context.options.height.get("value"));
+						view._proto._setWidth(view, view.context.options.width.get("value"));
+						view._proto._setHandleRadius(view, view.context.options.handleRadius.get("value"));
+						view._proto._setHandleWidth(view, view.context.options.handleWidth.get("value"));
+						view._proto._setHandleStyle(view);
+						view._proto._setMin(view, view.context.options.min.get("value"));
+						view._proto._setMax(view, view.context.options.max.get("value"));
+					}
+				},
+				_getDirection : function (element)
+				{
+					var result = null;
+					if (element)
+					{
+						if (window.getComputedStyle)
+						{
+							result = window.getComputedStyle(element, null).direction;
+						}
+						else if (element.currentStyle)
+						{
+							result = element.currentStyle.direction;
+						}
+					}
+
+					return result;
+				}
+			};
+
+			/*
+			Public control methods *************************************************************
+			 */
+
+			/**
+			 * @instance
+			 * @memberof RangeSlider
+			 * @method setTabIndex
+			 * @param {integer} tabIndex Tab indices start at 1 and may be set sparsely
+			 * @desc Sets tab index of text control
+			 */
+			this.constructor.prototype.setTabIndex = function (tabIndex)
+			{
+				this.context.options.tabIndex.set("value", tabIndex);
+			};
+
+			/**
+			 * @instance
+			 * @memberof RangeSlider
+			 * @method getTabIndex
+			 * @desc Get tab index for text control
+			 * @returns {integer}
+			 */
+			this.constructor.prototype.getTabIndex = function ()
+			{
+				//return domAttr.get(this._instance.text, "tabindex");
+			};
+
+			/**
+			 * @instance
+			 * @memberof RangeSlider
+			 * @method focus
+			 * @desc Set focus on this control
+			 */
+			this.constructor.prototype.focus = function ()
+			{
+				//this._instance.text.focus();
+			};
+
+			/**
+			 * @instance
+			 * @memberof RangeSlider
+			 * @method getValue
+			 * @desc Get the current value this control is set to
+			 * @returns {numeric}
+			 */
+			this.constructor.prototype.getValue = function ()
+			{
+				return this.context.binding.get("value") || parseFloat(this._instance.sliderDiv.noUiSlider.get());
+			};
+
+			/**
+			 * @instance
+			 * @memberof RangeSlider
+			 * @method setValue
+			 * @param {numeric} val Value to set control to
+			 * @desc Sets the value of the control
+			 */
+			this.constructor.prototype.setValue = function (val)
+			{
+				if (typeof val != "number")
+					val = Number(val);
+
+				var max = this.context.options.max.get("value");
+				var min = this.context.options.min.get("value");
+
+				if(val <= max && val >= min) {
+					this.context.binding.set("changed", true);
+					this.context.binding.set("value", val);
+				} else {
+					bpmext.log.error(bpmext.localization.formatMsg("controlRangeSlider", "RS_OUT_OF_RANGE"));
+				}
+			};
+
+			/**
+			 * @instance
+			 * @memberof RangeSlider
+			 * @method getType
+			 * @desc Get descriptive string representing the type of control
+			 * @returns {string}
+			 */
+			this.constructor.prototype.getType = function ()
+			{
+				return "rangeSlider.3";
+			};
+
+			/*
+			Coach NG Lifecycle methods *************************************************************
+			 */
+			this.constructor.prototype.load = function ()
+			{
+				try
+				{
+					var opts = this.context.options;
+					var mdt = opts._metadata;
+
+					if (!this.context.binding)
+						this.context.binding = bpmext.ui.substituteObject(this);
+
+					if (!opts.tabIndex)
+						bpmext.ui.substituteConfigOption(this, "tabIndex", null);
+
+						if (!opts.colorStyle)
+							bpmext.ui.substituteConfigOption(this, "colorStyle", "D");
+
+						if (!opts.radius)
+							bpmext.ui.substituteConfigOption(this, "radius", null);
+
+						if (!opts.width)
+							bpmext.ui.substituteConfigOption(this, "width", "100%");
+
+						if (!opts.height)
+							bpmext.ui.substituteConfigOption(this, "height", null);
+
+						if (!opts.handleWidth)
+							bpmext.ui.substituteConfigOption(this, "handleWidth", null);
+
+						if (!opts.handleRadius)
+							bpmext.ui.substituteConfigOption(this, "handleRadius", null);
+
+						if (!opts.showCurrentValue)
+							bpmext.ui.substituteConfigOption(this, "showCurrentValue", false);
+
+						if (!opts.showLimitValues)
+							bpmext.ui.substituteConfigOption(this, "showLimitValues", false);
+
+						if (!opts.min)
+							bpmext.ui.substituteConfigOption(this, "min", 0);
+
+						if (!opts.max)
+							bpmext.ui.substituteConfigOption(this, "max", 100);
+
+						if (!opts.vertical)
+							bpmext.ui.substituteConfigOption(this, "vertical", false);
+
+						//if(!opts.showTooltip)
+						//	bpmext.ui.substituteConfigOption(this, "showTooltip", false);
+
+						if (!opts.step)
+							bpmext.ui.substituteConfigOption(this, "step", null);
+
+						var view = this;
+
+						this._instance.sliderDiv = document.createElement("div");
+
+						var startVal = this.context.binding.get("value");
+						if (startVal == null)
+							startVal = opts.min.get("value");
+
+						var step = opts.step.get("value");
+						if (step === null)
+							step = undefined;
+						else
+							step = Number(step);
+
+						var initOptions =
+						{
+							start : startVal,
+							connect : "lower",
+							orientation : (opts.vertical.get("value") ? "vertical" : "horizontal"),
+							range :
+							{
+								'min' : opts.min.get("value"),
+								'max' : opts.max.get("value")
+							},
+							animate: false,
+							animationDuration: 10,
+							step : step
+							//tooltips: opts.showTooltip.get("value")
+						};
+
+						if (opts.vertical.get("value") || (this._proto._getDirection(document.body) == "rtl" && domClass.contains(document.body, "CoachViewRTL")))
+						{
+							initOptions.direction = "rtl";
+						}
+
+						this._instance.sliderContainer = document.createElement("div");
+						domClass.add(this._instance.sliderContainer, "slider-container");
+
+						this._instance.sliderControl = rangeslider.create(this._instance.sliderDiv, initOptions);
+
+						this._instance.sliderBase = this._instance.sliderDiv.querySelector(".noUi-base");
+
+						this._instance.sliderContainer.appendChild(this._instance.sliderDiv);
+						this._instance._handleElt = this._instance.sliderDiv.querySelector(".noUi-handle");
+						domAttr.set(this._instance._handleElt, "role", "slider");
+						domAttr.set(this._instance._handleElt, "aria-valuenow", startVal);
+						domAttr.set(this._instance._handleElt, "aria-label", opts._metadata.label.get("value"));
+
+						this.context.element.appendChild(this._instance.sliderContainer);
+						this._proto._setHandleClick(this);
+
+						// Enable keyboard support for the slider
+						this._instance._handleElt.onkeydown = function (event) {
+							if(utilities.handleVisibility(view.context) == "READONLY") {
+								event.preventDefault();
+								return;
+							}
+							var sliderPosition = opts.vertical.get("value") ? 1 : 0;
+							var sliderVal = Number(view._instance.sliderDiv.noUiSlider.get());
+							var stepArray = view._instance.sliderDiv.noUiSlider.steps();
+							var stepSize = stepArray[sliderPosition];
+
+							if (!stepSize[0])
+								stepSize[0] = view.context.options.max.get("value") / 100; // If no step size has been set, set to the de facto default step size of the slider
+
+							if (!stepSize[1])
+								stepSize[1] = view.context.options.max.get("value") / 100;
+
+							var newVal = sliderVal;
+
+							switch (event.which) {
+								case 33:
+									newVal = sliderVal + 10 * stepSize[1 - sliderPosition];
+									break;
+								case 34:
+									newVal = sliderVal - 10 * stepSize[sliderPosition];
+									break;
+								case 36:
+									newVal = view.context.options.min.get("value");
+									break;
+								case 35:
+									newVal = view.context.options.max.get("value");
+									break;
+								case 38:
+								case 39:
+									newVal = sliderVal + stepSize[1 - sliderPosition];
+									break;
+								case 37:
+								case 40:
+									newVal = sliderVal - stepSize[sliderPosition];
+									break;
+							}
+
+							if (newVal < view.context.options.min.get("value")) {
+								newVal = view.context.options.min.get("value");
+							} else if (newVal > view.context.options.max.get("value")) {
+								newVal = view.context.options.max.get("value");
+							}
+
+							view.context.binding.set("changed", true);
+							view.context.binding.set("value", newVal);
+						};
+
+						// Bind the changing-handling function
+						// to the slide event.
+						this._instance.sliderDiv.noUiSlider.on('slide', function (arg1, arg2, arg3, arg4)
+						{
+							var val = Number(view._instance.sliderDiv.noUiSlider.get());
+							view.context.binding.set("changed", true);
+							view.context.binding.set("value", val);
+						}
+						);
+
+						if (opts.vertical.get("value"))
+						{
+							domClass.add(this.context.element, "sr-vertical");
+						}
+
+						this._proto._setLimitValues(this);
+						this._proto._setShowCurrentValue(this);
+						this._proto._setTabIndex(this, opts.tabIndex.get("value"));
+						this._proto._setColorStyle(this, opts.colorStyle.get("value"));
+						this._proto._setRadius(this, opts.radius.get("value"));
+						this._proto._setHeight(this, opts.height.get("value"));
+						this._proto._setWidth(this, opts.width.get("value"));
+						this._proto._setHandleRadius(this, opts.handleRadius.get("value"));
+						this._proto._setHandleWidth(this, opts.handleWidth.get("value"));
+						this._proto._setHandleStyle(this);
+						this._proto._setMin(this, opts.min.get("value"));
+						this._proto._setMax(this, opts.max.get("value"));
+
+						if (opts[view._proto.EVT_ONCHANGE])
+						{
+							bpmext.ui.registerEventHandlingFunction(view, view._proto.EVT_ONCHANGE, "newVal", "oldVal");
+						}
+
+						bpmext.ui.setupFormulaTriggeredUpdates(
+							this,
+							function (expResult)
+						{
+							if (expResult == undefined)
+							{
+								expResult = opts.min.get("value");
+							}
+
+							view.setValue(expResult);
+						},
+							this.getValue);
+
+						bpmext.ui.loadView(this);
+					}
+					catch (e)
+					{
+						bpmext.log.error("Error on load event [" + this.context.viewid + "]: " + e);
+						if (e.stack)
+							bpmext.log.error("  Call stack: " + e.stack);
+					}
+				};
+
+				this.constructor.prototype.view = function ()
+				{
+					try
+					{
+						this._proto._handleVisibility(this);
+					}
+					catch (e)
+					{
+						bpmext.log.error("Error on view event [" + this.ui.getAbsoluteName() + "]: " + e);
+						if (e.stack)
+							bpmext.log.error("  Call stack: " + e.stack);
+					}
+				};
+
+				this.constructor.prototype.change = function (event)
+				{
+					var view = this;
+					try
+					{
+						if (event.type == "config")
+						{
+							switch (event.property)
+							{
+							case "_metadata.label":
+								{
+									this._proto._setLabel(this, event.newVal);
+									break;
+								}
+							case "_metadata.visibility":
+								{
+									this._proto._handleVisibility(this);
+									break;
+								}
+							case "width":
+								{
+									this._proto._setWidth(this, event.newVal);
+									break;
+								}
+							case "height":
+								{
+									this._proto._setHeight(this, event.newVal);
+									break;
+								}
+							case "radius":
+								{
+									this._proto._setRadius(this, event.newVal);
+									break;
+								}
+							case "handleWidth":
+								{
+									this._proto._setHandleWidth(this, event.newVal);
+									break;
+								}
+							case "handleRadius":
+								{
+									this._proto._setHandleRadius(this, event.newVal);
+									break;
+								}
+							case "showLimitValues":
+								{
+									this._proto._setLimitValues(this);
+									break;
+								}
+							case "showCurrentValue":
+								{
+									this._proto._setShowCurrentValue(this);
+									break;
+								}
+							case "colorStyle":
+								{
+									this._proto._setColorStyle(this, event.newVal, event.oldVal);
+									break;
+								}
+							case "min":
+								{
+									this._proto._setMin(this, event.newVal, event.oldVal);
+									break;
+								}
+							case "max":
+								{
+									this._proto._setMax(this, event.newVal, event.oldVal);
+									break;
+								}
+							case "tabIndex":
+								{
+									this._proto._setTabIndex(this, event.newVal);
+									break;
+								}
+								/* {#feature: 357 changes to enable control orientation as responsive in webpd} */
+							case "vertical":
+								{
+									this._proto._setVertical(this, event.newVal);
+									break;
+								}
+							}
+						}
+						else if (event.insertedInto == event.removedFrom)
+						{
+							view._proto._setValue(view, event.newVal);
+
+							if (event.newVal != event.oldVal)
+								bpmext.ui.executeEventHandlingFunction(view, view._proto.EVT_ONCHANGE, event.newVal, event.oldVal);
+
+							bpmext.ui.broadcastExpressionTrigger(this, bpmext.ui.PHASE_NORMAL);
+						}
+					}
+					catch (e)
+					{
+						bpmext.log.error("Error on change event [" + this.ui.getAbsoluteName() + "]: " + e);
+						if (e.stack)
+							bpmext.log.error("  Call stack: " + e.stack);
+					}
+				};
+
+				this.constructor.prototype.unload = function ()
+				{
+					bpmext.ui.unloadView(this);
+				};
+			}
+		};

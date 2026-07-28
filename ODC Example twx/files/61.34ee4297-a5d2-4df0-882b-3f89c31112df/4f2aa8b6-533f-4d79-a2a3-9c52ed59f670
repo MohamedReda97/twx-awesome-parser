@@ -1,0 +1,22 @@
+function validateTab(tabIndex)
+{
+    const tab = document.querySelector("#tabs-Tab_Section1-tab-text".concat(tabIndex));
+    const redStar = document.createElement("p");
+    redStar.textContent = " *";
+    redStar.style.color = "#ff0000db";
+    redStar.style.display = "inline";
+    tab.appendChild(redStar);
+}
+
+function clear()
+{
+    const tabs = document.querySelectorAll("[id^='tabs-Tab_Section1-tab-text']");
+    tabs.forEach( tab => {
+        try
+        {
+            const child = tab.childNodes[1];
+            child != null ? tab.removeChild(child) : "";    
+        }
+        catch (error) {}    
+    });
+}

@@ -1,0 +1,1439 @@
+/*
+ * #BEGIN COPYRIGHT
+ *
+ * Licensed Materials - Property of IBM
+ * 5725-C95
+ * (C) Copyright IBM Corporation 2017, 2020. All Rights Reserved.
+ * US Government Users Restricted Rights- Use, duplication or disclosure
+ * restricted by GSA ADP Schedule Contract with IBM Corp.
+ *
+ * #END COPYRIGHT
+ */
+
+/**
+ * @ignore
+ * @instance
+ * @memberof Layout
+ * @method isValid
+ */  
+
+/**
+ * @ignore
+ * @instance
+ * @memberof Layout
+ * @method setValid
+ */
+
+/**
+ * @ignore
+ * @instance
+ * @memberof Layout
+ * @method recalculate
+ */
+
+/**
+ * @ignore
+ * @instance
+ * @memberof Layout
+ * @method getData
+ */
+
+/**
+ * @ignore
+ * @instance
+ * @memberof Layout
+ * @method setData
+ */ 
+
+/** 
+ *   <tr class=Prop>
+ *     <td class=SectionName colspan=3>Events</td>
+ *   </tr>
+ *   <tr class=Prop>
+ *     <td>On Load:</td>
+ *     <td><pre class="prettyprint"><code>me.setWidth("100%");<code></pre></td>
+ *     <td><i>Javascript expression</i></td>
+ *   </tr>
+ *	 <tr class=Prop>
+ *     <td>On Responsive Update:</td>
+ *     <td></td>
+ *     <td><code>string</code></td>
+ *   </tr>
+ * </table>
+ */
+bpmext_control_InitLayout = function (utilities, bpmext, domClass, domAttr, domConstruct, layoutFlow)
+{
+	this._instance =
+	{
+		hAlignment: "J",
+		vAlignment: "T",
+		defaultLayoutFlow: layoutFlow,
+		boxFactors: {},
+		cssStyleClasses: {},
+		cssCWClasses: {},
+		loadedRowCount: 0
+	};
+
+	if (!this.constructor.prototype._proto)
+	{
+		this.constructor.prototype.IS_ADDRESS_INVISIBLE = true;
+		this.constructor.prototype._proto =
+		{
+			EVT_ONRESUPD : "eventON_RESUPD",
+			_setHelpText : function (view, text)
+			{
+				try
+				{
+					var mdt = view.context.options._metadata;
+				}
+				catch (e)
+				{
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.error("Button._setHelpText() error: " + e);
+					bpmext.log.error("Button._setHelpText() " + bpmext.localization.formatMsg("general", "ERROR") + ": " + e);
+					if(e.stack) { 
+						//{#feature: US-1330 Added RT localization}
+						//bpmext.log.error("  Call stack: " + e.stack);
+						bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+					}
+				}
+			},
+			_getContentBox : function(view)
+			{
+				if(!view._instance.contentBox)
+				{
+					var children = view.context.element.children;
+					for(var i = 0; i < children.length; i++)
+					{
+						var child = children[i];
+						if(child.className && /\bContentBox\b/.test(child.className))
+						{
+							view._instance.contentBox = child;
+							break;
+						}
+					}				
+				}
+				
+				return view._instance.contentBox;
+			},
+			_setWidth : function (view, width)
+			{
+				try
+				{
+					if (width != null && width != "")
+					{
+						if (!isNaN(width))
+							width += "px";
+
+						view.context.element.style.width = width;
+					} else
+					{
+						view.context.element.style.width = null;
+					}
+				}
+				catch (e)
+				{
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.error("Layout._setWidth() error: " + e);
+					bpmext.log.error("Layout._setWidth() " + bpmext.localization.formatMsg("general", "ERROR") + ": " + e);
+					if(e.stack) { 
+						//{#feature: US-1330 Added RT localization}
+						//bpmext.log.error("  Call stack: " + e.stack);
+						bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+					}
+				}
+			},
+			_setHeight : function (view, height)
+			{
+				try
+				{
+					if (height != null && height != "")
+					{
+						if (!isNaN(height))
+							height += "px";
+
+						view.context.element.style.height = height;
+						domClass.add(view.context.element, "heightSpec");
+					}
+					else
+					{
+						//{#bug: * Reset layout height if height not specified}
+						view.context.element.style.height = "";
+						domClass.remove(view.context.element, "heightSpec");
+					}
+				}
+				catch (e)
+				{
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.error("Layout._setHeight() error: " + e);
+					bpmext.log.error("Layout._setHeight() " + bpmext.localization.formatMsg("general", "ERROR") + ": " + e);
+					if(e.stack) { 
+						//{#feature: US-1330 Added RT localization}
+						//bpmext.log.error("  Call stack: " + e.stack);
+						bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+					}
+				}
+			},
+			_getHAlignmentCls : function(hAlign)
+			{
+				switch(hAlign)
+				{
+					case "L":
+						return "alignLeft";
+					case "C":
+						return "alignCenter";
+					case "R":
+						return "alignRight";
+					case "J":
+					default:
+						return "alignJustify";
+				};
+			},
+			_getVAlignmentCls : function(vAlign)
+			{
+				switch(vAlign)
+				{
+					case "T":
+						return "valignTop";
+					case "M":
+						return "valignMiddle";
+					case "B":
+						return "valignBottom";
+					case "D":
+					default:
+						return "valignTop";
+						//return "valignDefault";
+				};
+			},
+			_normalizeHorizontalAlignment: function(alignment)
+			{
+					// case "L":
+						// return "alignLeft";
+					// case "C":
+						// return "alignCenter";
+					// case "R":
+						// return "alignRight";
+					// case "J":
+					// default:
+						// return "alignJustify";
+				if(!alignment)
+					alignment = "J";
+				
+				alignment = alignment.toUpperCase();
+				if(alignment.length > 1)
+				{
+					switch (alignment)
+					{
+						case "DEFAULT":
+						case "DEF":
+						case "JUSTIFY":
+							alignment = "J";
+							break;
+						case "LEFT":
+							alignment = "L";
+							break;
+						case "CENTER":
+							alignment = "C";
+							break;
+						case "RIGHT":
+							alignment = "R";
+							break;
+						default:
+							//{#feature: US-1330 Added RT localization}
+							//bpmext.log.warn("Unexpected horizontal alignment: " + alignment);
+							bpmext.log.warn(bpmext.localization.formatMsg("controlLayout", "HALIGN_WARNING", alignment));
+					}
+				}
+
+				return alignment;
+			},
+			_setHAlignment : function (view, newVal, oldVal)
+			{
+				if(!oldVal)
+					oldVal = view._instance.hAlignment;
+				
+				newVal = this._normalizeHorizontalAlignment(newVal);
+				oldVal = this._normalizeHorizontalAlignment(oldVal);
+				
+				var nAlignCls = view._proto._getHAlignmentCls(newVal);
+				var oAlignCls = view._proto._getHAlignmentCls(oldVal);
+				
+				domClass.replace(view.context.element, nAlignCls, oAlignCls);
+				view._instance.hAlignment = newVal;
+			},
+			_normalizeVerticalAlignment: function(alignment)
+			{
+					// case "T":
+						// return "valignTop";
+					// case "M":
+						// return "valignMiddle";
+					// case "B":
+						// return "valignBottom";
+					// case "D":
+					// default:
+						// return "valignTop";
+				if(!alignment)
+					alignment = "T";
+				
+				alignment = alignment.toUpperCase();
+				if(alignment.length > 1)
+				{
+					switch (alignment)
+					{
+						case "DEFAULT":
+						case "DEF":
+						case "TOP":
+							alignment = "T";
+							break;
+						case "MIDDLE":
+						case "MID":
+							alignment = "M";
+							break;
+						case "BOTTOM":
+						case "BOT":
+							alignment = "B";
+							break;
+						default:
+							//{#feature: US-1330 Added RT localization}
+							//bpmext.log.warn("Unexpected vertical alignment: " + alignment);
+							bpmext.log.warn(bpmext.localization.formatMsg("controlLayout", "VALIGN_WARNING", alignment));
+					}
+				}
+
+				return alignment;
+			},
+			_setVAlignment : function (view, newVal, oldVal)
+			{
+				if(!oldVal)
+					oldVal = view._instance.vAlignment;
+				
+				newVal = this._normalizeVerticalAlignment(newVal);
+				oldVal = this._normalizeVerticalAlignment(oldVal);
+				
+				var nAlignCls = view._proto._getVAlignmentCls(newVal);
+				var oAlignCls = view._proto._getVAlignmentCls(oldVal);
+				
+				domClass.replace(view._instance.contentBox, nAlignCls, oAlignCls);
+				view._instance.vAlignment = newVal;
+			},
+			_getLayoutFlowCls : function(layoutFlow)
+			{
+				switch(layoutFlow)
+				{
+					case "H":
+					case "I":
+					case "P":
+						return "hChild";
+					case "W":
+						return "hwChild";
+					case "V":
+					case "Y":
+					default:
+						return "vChild";
+				};
+			},
+			_normalizeLayoutFlow: function(flow, defaultLayoutFlow)
+			{
+					// case "H":
+					// case "I":
+					// case "P":
+						// return "hChild";
+					// case "W":
+						// return "hwChild";
+					// case "V":
+					// case "Y":
+					// default:
+						// return "vChild";
+				if(!flow)
+					flow = defaultLayoutFlow;
+				
+				flow = flow.toUpperCase();
+				if(flow.length > 1)
+				{
+					switch (flow)
+					{
+						case "DEFAULT":
+						case "DEF":
+						case "HORIZONTAL":
+						case "HORIZ":
+							flow = "P";
+							break;
+						case "HORIZONTAL INLINE SCROLL":
+						case "INLINE SCROLL":
+						case "INLINE":
+						case "SCROLL":
+							flow = "H";
+							break;
+						case "HORIZONTAL TIGHT":
+						case "HORIZ TIGHT":
+							flow = "I";
+							break;
+						case "HORIZONTAL AUTO-WRAP":
+						case "AUTO-WRAP":
+						case "AUTO":
+						case "WRAP":
+							flow = "W";
+							break;
+						case "VERTICAL":
+						case "VERT":
+							flow = "V";
+							break;
+						case "VERTICAL TIGHT":
+						case "VERT TIGHT":
+							flow = "Y";
+							break;
+						default:
+							//{#feature: US-1330 Added RT localization}
+							//bpmext.log.warn("Unexpected layout flow: " + flow);
+							bpmext.log.warn(bpmext.localization.formatMsg("controlLayout", "LAYOUT_FLOW_WARNING", flow));
+					}
+				}
+
+				return flow;
+			},
+			_setLayoutFlow : function (view, newVal, oldVal)
+			{
+				if(!oldVal)
+					oldVal = view._instance.layoutFlow;
+				
+				newVal = this._normalizeLayoutFlow(newVal, view._instance.defaultLayoutFlow);
+				oldVal = this._normalizeLayoutFlow(oldVal, view._instance.defaultLayoutFlow);
+				
+				var nFlowCls = this._getLayoutFlowCls(newVal);
+				var oFlowCls = this._getLayoutFlowCls(oldVal);
+				
+				domClass.replace(view._instance.contentBox, nFlowCls, oFlowCls);
+
+				if(newVal == 'I' || newVal == 'Y')
+					domClass.add(view.context.element, "shrinkwrap");
+				else
+					domClass.remove(view.context.element, "shrinkwrap");
+				
+				//{#bug: BG-857 (ED)}
+				//if(newVal == 'P' || newVal == 'I')
+				//	domClass.add(view.context.element, "noIScroll");
+				//else
+				//	domClass.remove(view.context.element, "noIScroll");
+				
+				if(newVal == "H")
+					domClass.remove(view.context.element, "noIScroll");
+				else
+					domClass.add(view.context.element, "noIScroll");
+				//End BG-857 (ED)
+				
+				view._instance.layoutFlow = newVal;
+			},
+			_updContentBox : function (view, hAlign, vAlign, layoutFlow)
+			{
+				this._setHAlignment(view, hAlign ? hAlign : view.context.options.hAlignment.get("value"));
+				this._setVAlignment(view, vAlign ? vAlign : view.context.options.vAlignment.get("value"));
+				this._setLayoutFlow(view, layoutFlow ? layoutFlow : view.context.options.layoutFlow.get("value"));
+			},
+			_eventName : function (boxFactorName, sensorRef)
+			{
+				return "NTF_RESD_" + boxFactorName + "@" + sensorRef;
+			},
+			_cssClassName : function (view, boxFactorName)
+			{
+				//TODO: Implement better character check for boxFactorName...
+				if(boxFactorName == null || boxFactorName == "" || boxFactorName == "+")
+					boxFactorName = "PLUS";
+			
+				var anm = view.ui.getAbsoluteName();
+				anm = anm.replace(/\[[\d]+\]/mg, "");
+				anm = anm.replace(/\//mg, "_");
+				
+				return anm + "-" + boxFactorName;
+			},
+			_getSensorRef : function (view, sensorName)
+			{
+				var pv = view;
+
+				if(sensorName != null && sensorName != "?")
+				{
+					sensorName = bpmext.text.trim(sensorName);
+					
+					if(bpmext.text.startsWith(sensorName, "${")) //Be accomodating for control address
+						sensorName = sensorName.substring(2, sensorname.length - 1);
+					
+					do
+					{
+						pv = pv.context.parentView();
+						if(pv && pv.context && pv.context.viewid == sensorName)
+						{
+							return pv;
+						}
+					}
+					while(pv);
+				}
+				else //Find first available sensor up the parent chain
+				{
+					bpmext.log.debug("No sensor name specified - looking up sensor in parent chain...", view)
+					
+					do
+					{
+						pv = pv.context.parentView();
+						if(pv.getType)
+						{
+							var type = pv.getType();
+							if(type == "responsiveSensor.3")
+							{
+								if(bpmext.log.isDebugging)
+									bpmext.log.debug("Sensor found: " + (pv.ui ? pv.ui.getAbsoluteName() : pv.context.viewid), view);
+								
+								return pv;
+							}
+						}
+					}
+					while(pv);
+				}
+				
+				return null;
+			},
+			_setBehaviors : function (view, newBehaviors, oldBehaviors)
+			{
+				var sensor = view.context.options.sensor.get("value");
+				var sensorRef = this._getSensorRef(view, sensor);
+
+				if(sensorRef && sensorRef.addListener)
+				{
+					if(oldBehaviors)
+					{
+						for(var i = 0; i < oldBehaviors.items.length; i++)
+						{
+							var b = oldBehaviors.items[i];
+							delete view._instance.boxFactors[b.boxFactorName];
+						}
+					}
+
+					var b = view._instance.boxFactors["*"];
+					if(!b)
+					{
+						b = {
+							boxFactorName: "*",
+							childLayout: view.context.options.layoutFlow.get("value"),
+							childAlign: view.context.options.hAlignment.get("value"),
+							width: view.context.options.width.get("value"),
+							height: view.context.options.height.get("value")
+						};
+						
+						view._instance.boxFactors[b.boxFactorName] = b;
+					}
+					
+					for(var i = 0; i < newBehaviors.items.length; i++)
+					{
+						b = newBehaviors.items[i];
+						view._instance.boxFactors[b.boxFactorName] = b;
+
+						if(b.cssStyle != null || b.childWidth != null)
+						{
+							var cssClsName = this._cssClassName(view, b.boxFactorName);
+
+							view._instance.cssStyleClasses[b.boxFactorName] = cssClsName;
+
+							if(!document.getElementById(cssClsName))
+							{
+								var styleSpec = "";
+								
+								if(b.cssStyle != null && b.cssStyle != "")
+								{
+									styleSpec += "." + cssClsName + "{" + b.cssStyle + "}";
+								}
+								
+								if(b.childWidth != null && b.childWidth != "")
+								{
+									if(styleSpec.length > 0)
+										styleSpec += "\n";
+									
+									var cws = b.childWidth.split(/[ *|,|;]/);
+									var cws2 = [];
+									for(var j = 0; j < cws.length; j++)
+									{
+										if(cws[j].length != 0)
+											cws2.push(cws[j]);
+									}
+									
+									for(var j = 0; j < cws2.length; j++)
+									{
+										styleSpec += "." + cssClsName + " > .ContentBox > div:nth-child(" + 
+											cws2.length + "n+" + (j+1) + ") {width:" + cws2[j] + " !important}";									
+									}
+								}
+
+								var stl = document.createElement("style");
+								stl.setAttribute("type", "text/css");
+								stl.setAttribute("id", cssClsName);
+								stl.innerHTML = styleSpec;
+								document.head.appendChild(stl);
+							}
+						}
+					}
+
+					//Need to first remove any old listeners
+					sensorRef.removeListener(view.ui.getAbsoluteName());
+
+					sensorRef.addListener(
+						view.ui.getAbsoluteName(), 
+						function(inf)
+						{
+							try
+							{
+							    if (view.context) {
+	                                var bf = view._instance.boxFactors[inf.boxFactor];
+	                                
+	                                if(!bf)
+	                                {
+	                                    if(view._instance._prevBf != "*")
+	                                    {
+	                                        bf = view._instance.boxFactors["*"];
+	                                        inf.boxFactor = null;
+	                                        inf.lowerIdx = null;
+	                                        inf.upperIdx = null;
+	                                        
+	                                        if(bpmext.log.isDebugging)
+	                                            bpmext.log.debug("LAYOUT [" + view.ui.getAbsoluteName() + "]: Applying defaults");
+	                                    }
+	                                    else
+	                                        return;
+	                                }
+	                                
+	                                view._instance._prevBf = bf.boxFactorName;
+	                            
+	                                if(bpmext.log.isDebugging)
+	                                    bpmext.log.debug("LAYOUT [" + view.ui.getAbsoluteName() + "]: Box factor=" + inf.boxFactor + "; Lower bound=" + inf.lowerIdx + " ; Upper bound=" + inf.upperIdx);
+
+	                                view._instance._bfInf = {
+	                                    name: inf.boxFactor,
+	                                    lowerBound: inf.lowerIdx,
+	                                    upperBound: inf.upperIdx
+	                                };
+	                                    
+	                                //TODO: Optimize the logic below: Do a single large CSS update instead or multiple small ones
+	                                view._proto._updContentBox(view, bf.childAlign, view._instance.vAlignment, bf.childLayout);
+	                                view._proto._setWidth(view, bf.width);
+	                                view._proto._setHeight(view, bf.height);
+	                                
+	                                if(view._instance.oldCssClass != null)
+	                                {
+	                                    domClass.remove(view.context.element, view._instance.oldCssClass);
+	                                    delete view._instance.oldCssClass;
+	                                }   
+
+	                                //{#bug: * Better manage configured css classes on a layout based on responsive behavior}
+	                                if(view._instance.oldCssClass2 != null)
+	                                {
+	                                    domClass.remove(view.context.element, view._instance.oldCssClass2);
+	                                    delete view._instance.oldCssClass2;
+	                                }
+	                                
+	                                if(bf.cssClass)
+	                                {
+	                                    domClass.add(view.context.element, bf.cssClass);
+	                                    view._instance.oldCssClass2 = bf.cssClass;
+	                                }
+	                                
+	                                var cssClsName = view._instance.cssStyleClasses[inf.boxFactor];
+	                                if(cssClsName)
+	                                {
+	                                    domClass.add(view.context.element, cssClsName);
+	                                    view._instance.oldCssClass = cssClsName;
+	                                }
+	                                //End optimization
+	                                
+	                                switch(bf.visibility)
+	                                {
+	                                    case "V":
+	                                        view.setVisible(true);
+	                                        break;
+	                                    case "H":
+	                                        view.setVisible(false, false);
+	                                        break;
+	                                    case "N":
+	                                        view.setVisible(false, true);
+	                                        break;
+	                                }
+	                                
+	                                bpmext.ui.executeEventHandlingFunction(view, view._proto.EVT_ONRESUPD);                                     
+							    }
+							}
+							catch (e)
+							{
+								//{#feature: US-1330 Added RT localization}
+								//bpmext.log.error("Layout [on behavior boundary] error: " + e);
+								bpmext.log.error(bpmext.localization.formatMsg("controlLayout", "LAYOUT_ERROR") + ": " + e);
+							}
+						}							
+					);
+					
+					//trigger a refresh on the responsive sensor
+					sensorRef.refreshLayout();
+				}
+				else
+				{
+					if(sensor != null){
+						//{#feature: US-1330 Added RT localization}
+						//bpmext.log.warn("Responsive behavior specified but sensor [" + sensor + "] was not found");
+						bpmext.log.warn(bpmext.localization.formatMsg("controlLayout", "LAYOUT_WITH_RESP_SENSOR_WARNING", sensor));
+					}else{
+						//{#feature: US-1330 Added RT localization}
+						//bpmext.log.warn("Responsive behavior specified but no sensor was not found");
+						bpmext.log.warn(bpmext.localization.formatMsg("controlLayout", "LAYOUT_WITH_NO_RESP_SENSOR_WARNING"));
+					}
+				}
+			},
+			_reloadList : function(view, val)
+			{
+				if(!view._instance.contentBoxTemplate)
+				{
+					var cBoxT = cBox = this._getContentBox(view);
+					var cBox2 = document.createElement("div");
+
+					cBox2.className = cBox.className;
+					if(domClass.contains(cBox, "ContentBox")){
+						cBox.className = "ContentBoxTemplate";
+					}
+					view.context.element.appendChild(cBox2);
+					
+					view._instance.contentBox = cBox2;
+					view._instance.contentBoxTemplate = cBoxT;
+
+					view._instance.recordSize = view._instance.contentBoxTemplate.children.length;
+				}
+				
+				var children = view._instance.contentBox.children;
+				for(var i = children.length - 1; i >= 0; i--)
+				{
+					var child = children[i];
+					view.context.deleteView(child);
+					view._instance.contentBox.removeChild(child);
+				}
+
+				view._instance.loadedRowCount = 0;
+				this._rebindAllUpdates(view);
+
+				if (val) {
+					if(!view.context.options.deferLoad.get("value"))
+						this._addRowsSync(view, val.items);
+					else
+						this._addRowsAsync(view, val.items, 0, 0, val.items.length);
+				}
+			},
+			_addRowsSync : function(view, items)
+			{
+				var cs = view._instance.contentBoxTemplate.children;				
+				for(var j = 0; j < items.length; j++)
+				{
+					for(var i = 0; i < cs.length; i++)
+					{
+						var child = cs[i];
+						
+						this._addCell(view, child, j);
+					}		
+				}			
+			},
+			_addRowsAsync : function(view, items, i, lowerIdx, upperIdx)
+			{
+				setTimeout(
+					function()
+					{
+						if(items.length > 0)
+						{
+							var cs = view._instance.contentBoxTemplate.children;
+							var batchSize = view.context.options.loadBatchSize.get("value")
+							for(var j = 0; j < batchSize && i <= upperIdx; j++) //j = batch size
+							{
+								for(var k = 0; k < cs.length; k++)
+								{
+									var child = cs[k];
+
+									view._proto._addCell(view, child, i);
+								}
+
+								view._instance.loadedRowCount++;
+								i++;
+							}
+							
+							if(i < upperIdx)
+								view._proto._addRowsAsync(view, items, i, lowerIdx, upperIdx);
+							else
+								view._proto._onLoadAsyncComplete(view, view._instance.loadedRowCount >= items.length);
+						}
+						else
+							view._proto._onLoadAsyncComplete(view, view._instance.loadedRowCount >= items.length);
+					});
+				},
+			_addCell : function(view, child, idx)
+			{
+				var c = child.cloneNode(true);
+
+				//Defect#333074
+				if(domAttr.has(child, "data-viewid")) {
+					view._instance.contentBox.appendChild(c);
+					view.context.createView(c, idx, view);
+				} else {
+					var elm = document.createElement("div");
+					elm.appendChild(c);
+
+					c = elm;
+					view._instance.contentBox.appendChild(c);
+				}
+
+				domClass.add(c, "layoutCell");
+			},
+			_onLoadAsyncComplete : function(view, allRowsLoaded)
+			{
+				console.log("Async load complete...");
+			},
+			_onListUpdated : function(view, event)
+			{
+				if(view._instance.recordSize)
+				{
+					if(event.insertedInto >= 0 && event.insertedInto != event.removedFrom)
+					{
+						this._rebindAllUpdates(view);						
+						
+						var list = view.context.binding.get("value");
+						if(event.insertedInto == list.length() - 1) //If inserted at end
+						{
+							var j = event.insertedInto;
+							var children = view._instance.contentBoxTemplate.children;
+							
+							for(var i = 0; i < view._instance.recordSize; i++)
+							{
+								var child = children[i];
+								
+								this._addCell(view, child, j);
+							}
+						}
+						else
+						{
+							//{#feature: US-1330 Added RT localization}
+							//bpmext.log.error("Mid-list inserts not supported by Coach NG API yet");
+							bpmext.log.error(bpmext.localization.formatMsg("general", "MID_LIST_INSERT_COACH_NG_ERROR"));
+						}
+					}
+					else if(event.removedFrom >= 0 && event.removedFrom != event.insertedInto)
+					{
+						this._rebindAllUpdates(view);						
+
+						if(!view._instance.refreshLayout) {
+							var children = view._instance.contentBox.children;
+							var recordSize = view._instance.recordSize;
+							var recIdx = event.removedFrom;
+							
+							for(var i = 0, j = recIdx * recordSize; i < recordSize; i++)
+							{
+								var node = children[j];
+								view.context.deleteView(node);
+								node.parentNode.removeChild(node);
+							}
+							
+							setTimeout(function(){
+								for(var viewid in view.context.subview)
+								{
+									var subviews = view.context.getSubview(viewid, true);
+									for(var j = event.removedFrom; j < subviews.length; j++)
+									{
+										subviews[j].context.refreshView();
+									}
+								}	
+							});
+						} else {
+							view.context.refreshView();
+						}
+					}
+					else //Just a value change...
+					{
+						
+					}
+				}
+				
+				//debugger;
+			},
+			_rebindAllUpdates : function(view)
+			{
+				if(view._instance.bindAllHandle)
+					view._instance.bindAllHandle.unbind();
+
+				if(view.context.binding)
+				{
+					var _this = this;
+					var binding = view.context.binding.get("value");
+
+					//{#bug: * Added proper/defensive handling for empty bound values}
+					if(binding != null)
+						view._instance.bindAllHandle = 
+							view.context.binding.get("value").bindAllWithIds(function(event){_this._onListUpdated(view, event)}, view);			
+				}
+			},
+			_getChildViewIndices : function(view, childViews)
+			{
+				var idxs = [];
+
+				for(var i = 0; i < childViews.length; i++)
+				{
+					var v = childViews[i];
+					if(!isNaN(v))
+						idxs.push(v);
+					else
+					{
+						var objDBRT = domAttr.get(v.context.element, "data-bindingrt");
+						var viewElts = view._instance.contentBox.children;
+
+						for(var j = 0; j < viewElts.length; j++)
+						{
+							viewDBRT = domAttr.get(viewElts[j], "data-bindingrt");
+							if(objDBRT == viewDBRT)
+							{
+								idxs.push(j);
+								break;
+							}
+						}			
+					}
+				}
+				
+				return idxs;
+			},
+			_getAllChildViewsIndices : function(view)
+			{
+				var viewElts = view._instance.contentBox.children;
+				var idxs = [];
+
+				if(flag)
+				{
+					for(var i = 0; i < viewElts.length; i++)
+						idxs.push(i);
+				}
+				
+				return idxs;
+			},
+			_handleVisibility : function (view)
+			{
+				var visibility = bpmext.ui.getEffectiveVisibility(view);
+				
+				view.context.setDisplay(visibility != "NONE");
+				view.context.setVisibility(visibility != "HIDDEN");
+				
+				/*
+				if (visibility != "NONE")
+				{
+					if (visibility == "READONLY")
+					{
+						//Do nothing special for a layout control
+					}
+					else
+					{
+						//Do nothing special for a layout control
+					}
+				}
+				*/
+			}			
+		};
+		
+
+		/*
+		Public control methods *************************************************************
+		 */
+		/**
+		 * @instance
+		 * @memberof Layout
+		 * @method getActiveBoxFactor
+		 * @desc Returns "Behaviors" attributes, the vertical layout must be nested within Responsive Sensor control in order for it to work, and set the responsive sensor in the vertical layout.
+		 * @return {object}
+		 * <table class=Config>
+		 *   <tr class=Prop>
+		 *     <td class=SectionName>JSON Structure of the Object</td>
+         *   </tr>
+		 *   <tr class=Prop>
+		 *	   <td>{<br>&nbsp&nbsp&nbsp&nbsp"name" : activeBoxFactorName<br>&nbsp&nbsp&nbsp&nbsp"lowerBound" : boxFactorLowerBound<br>&nbsp&nbsp&nbsp&nbsp"upperBound" : boxFactorUpperBound<br>}</td>
+		 *   </tr> 
+         * </table>
+		 */
+		this.constructor.prototype.getActiveBoxFactor = function()
+		{
+			return this._instance._bfInf != null ? this._instance._bfInf : {};
+		};
+		 
+		/**
+		 * @instance
+		 * @memberof Layout
+		 * @method setHelpText
+		 * @param {string} text sets the help text for the section
+		 * @desc Set help text for section
+		 */
+		this.constructor.prototype.setHelpText = function (text)
+		{
+			this.context.options._metadata.helpText.set("value", text);
+		};
+
+		/**
+		 * @instance
+		 * @memberof Layout
+		 * @method getHelpText
+		 * @desc Get help text for section
+		 * @returns {string}
+		 */
+		this.constructor.prototype.getHelpText = function ()
+		{
+			return this.context.options._metadata.helpText.get("value");
+		};
+
+		/**
+		 * @instance
+		 * @memberof Layout
+		 * @method setWidth
+		 * @param {string} width sets the width of the section
+		 * @desc Set width of section (e.g. 50px, 20%, 2em - omitting the unit assumes px)
+		 */
+		this.constructor.prototype.setWidth = function (width)
+		{
+			this.context.options.width.set("value", width);
+		};
+
+		/**
+		 * @instance
+		 * @memberof Layout
+		 * @method getWidth
+		 * @desc Get configured width for section (including unit)
+		 * @returns {string}
+		 */	
+		this.constructor.prototype.getWidth = function ()
+		{
+			return this.context.options.width.get("value");
+		};
+
+		/**
+		 * @instance
+		 * @memberof Layout
+		 * @method setHeight
+		 * @param {string} height sets the height of the section
+		 * @desc Set height of section (e.g. 50px, 20%, 2em - omitting the unit assumes px)
+		 */
+		this.constructor.prototype.setHeight = function (height)
+		{
+			this.context.options.height.set("value", height);
+		};
+
+		/**
+		 * @instance
+		 * @memberof Layout
+		 * @method getHeight
+		 * @desc Get configured height for section (including unit)
+		 * @returns {string}
+		 */	
+		this.constructor.prototype.getHeight = function ()
+		{
+			return this.context.options.height.get("value");
+		};
+		
+		/**
+		 * @instance
+		 * @memberof Layout
+		 * @method setSelected
+		 * @param {object} obj Object to modify selection of
+		 * @param {boolean} flag Set whether object is selected or not {true | false}
+		 * @desc Sets whether or not an object is selected
+		 */
+		this.constructor.prototype.setSelected = function(obj, flag)
+		{
+			var val = this.context.binding ? this.context.binding.get("value") : null;
+
+			if(obj !== null && obj !==undefined)
+			{
+				if(val && val instanceof com.ibm.bpm.coach.List)
+				{
+					var idxs = obj.constructor === Array ? this._proto._getChildViewIndices(this, obj) : this._proto._getChildViewIndices(this, [obj]);
+
+					if(!flag)
+					{
+						var sidxs = val.get("listAllSelectedIndices");
+						var idxMap = {};
+						
+						for(var i = 0; i < idxs.length; i++)
+							idxMap[i] = true;
+						
+						idxs = [];
+						
+						for(var i = 0; i < sidxs.length; i++)
+							if(!idxMap[sidxs[i]])
+								idxs.push(sidxs[i]);
+					}
+				}
+			}
+			else if(val && val instanceof com.ibm.bpm.coach.List)
+			{
+				var idxs = flag ? this._proto._getAllChildViewIndices(this) : [];
+			}
+
+			if(idxs !== undefined)
+				val.set("listAllSelectedIndices", idxs);
+		};
+		
+		/**
+		 * @instance
+		 * @memberof Layout
+		 * @method appendElement
+		 * @desc Adds the specified layout element (created by createListElement) to the table
+		 * @param {object} obj	The layout element to be added
+		 */	
+		this.constructor.prototype.appendElement = this.constructor.prototype.add = function(elt)
+		{
+			if(this.context.binding)
+			{
+				var boundList = this.context.binding.get("value");
+				if(boundList instanceof com.ibm.bpm.coach.List)
+				{
+				    //BG-1069 adding support for appending simple types
+				    if((typeof(elt) != "object") || (elt instanceof Date))
+				    {
+				        boundList.add(elt);
+				    } else {
+    					var obj = boundList.createListElement();
+    					for(var key in elt)
+    					{
+    						obj[key] = elt[key];
+    					}
+    					
+    					boundList.add(obj);
+				    }
+				}
+			}			
+		};
+		
+		/**
+		 * @instance
+		 * @memberof Layout
+		 * @method removeElement
+		 * @desc Remove the specified layout element
+		 * @param {integer} index The index of the layout element to be removed
+		 */	
+		this.constructor.prototype.removeElement = function(index)
+		{
+			if(this.context.binding)
+			{
+				var boundList = this.context.binding.get("value");
+				if(boundList instanceof com.ibm.bpm.coach.List)
+				{
+					boundList.remove(parseInt(index));
+				}
+			}
+		};
+		
+		/**
+		 * @instance
+		 * @memberof Layout
+		 * @method getType
+		 * @desc Get descriptive string representing the type of control
+		 * @returns {string}
+		 */
+		this.constructor.prototype.getType = function ()
+		{
+			return "layout.3";
+		};
+		
+		this.constructor.prototype.removeNonRepeatingChildren = function() {
+			while (this._instance.layoutAddedDomClasses.length > 0) {
+				domClass.add(this._instance.layoutAddedDomClasses.pop(), "layoutCell");
+			}
+			while (this._instance.layoutCreatedCVs.length > 0) {
+				this.context.deleteView(this._instance.layoutCreatedCVs.pop().context.element);
+			}
+		};
+
+		/*
+		* Hopefully a temporary function
+		* This function attempts to resolve an issue when its contents are being repeated inside another repeating layout
+		* Example: data-bindingrt="local.workstreamDefintion.tasks[0].runtimeAssignments.assignee[0].displayName"
+		* When an item is removed from the middle of the parent list(tasks) the "data-bindingrt" attributes of the views(displayName) inside the inner repeating layout(assignee) are out of sync with the underlying list/binding
+		* therefore the data is either not displayed or invalid for subsequent items
+		* For example: if there are three tasks and the full path for the three items looks as follows:
+		* data-bindingrt="local.workstreamDefintion.tasks[0].runtimeAssignments.assignee[0].displayName"
+		* data-bindingrt="local.workstreamDefintion.tasks[1].runtimeAssignments.assignee[0].displayName"
+		* data-bindingrt="local.workstreamDefintion.tasks[2].runtimeAssignments.assignee[0].displayName"
+		* If we delete the middle task we are left with:
+		* data-bindingrt="local.workstreamDefintion.tasks[0].runtimeAssignments.assignee[0].displayName"
+		* data-bindingrt="local.workstreamDefintion.tasks[2].runtimeAssignments.assignee[0].displayName"
+		* The layout control being "VIEW" managed does not have the code to update the index for the task to 1 "local.workstreamDefintion.tasks[2]"
+		*/
+		this.constructor.prototype.refreshLayout = function refreshLayout(refreshLayout)
+		{
+			this._instance.refreshLayout = refreshLayout;
+		};
+		
+		
+		/*
+		Coach NG Lifecycle methods *************************************************************
+		 */
+		this.constructor.prototype.load = function ()
+		{
+			try
+			{
+				bpmext.ui.registerEventHandlingFunction(this, this._proto.EVT_ONRESUPD);
+
+				var opts = this.context.options;
+				var mdt = opts._metadata;
+				
+				//for cleanup of non-repeating CVs
+				this._instance.layoutCreatedCVs = [];
+				this._instance.layoutAddedDomClasses = [];
+
+				if(!opts.hAlignment)
+					bpmext.ui.substituteConfigOption(this, "hAlignment", this._instance.hAlignment);
+				else
+					this._instance.hAlignment = opts.hAlignment.get("value");
+
+				if(!opts.vAlignment)
+					bpmext.ui.substituteConfigOption(this, "vAlignment", this._instance.vAlignment);
+				else
+					this._instance.vAlignment = opts.vAlignment.get("value");
+
+				if (!opts.width)
+					bpmext.ui.substituteConfigOption(this, "width", ""); //"100%"
+
+				if (!opts.height)
+					bpmext.ui.substituteConfigOption(this, "height", "");
+					
+				if(!opts.layoutFlow)
+					bpmext.ui.substituteConfigOption(this, "layoutFlow", this._instance.defaultLayoutFlow);
+				//{#bug: BG-857 Text control Validation message is clipped when Horizontal Layout set to alignment other than Justified in CSHS only}
+				//else
+					this._instance.layoutFlow = opts.layoutFlow.get("value");
+
+				if(!opts.sensor)
+					bpmext.ui.substituteConfigOption(this, "sensor", null);
+
+				if(!opts.behaviors)
+					bpmext.ui.substituteConfigOption(this, "behaviors", {"items":[]});
+
+				if(!opts.deferLoad)
+					bpmext.ui.substituteConfigOption(this, "deferLoad", false);
+
+				if(!opts.loadBatchSize)
+					bpmext.ui.substituteConfigOption(this, "loadBatchSize", 1);
+				
+				if(!opts.startEmpty)
+					bpmext.ui.substituteConfigOption(this, "startEmpty", false);
+				
+				var val = this.context.binding ? this.context.binding.get("value") : null;
+				
+				if(val && val instanceof com.ibm.bpm.coach.List)
+				{
+					this._proto._reloadList(this, val);
+				}
+				else if (opts.startEmpty.get("value") != true)
+				{
+					var cBox = this._proto._getContentBox(this);
+					var cs = cBox.children;
+					
+					for(var i = 0; i < cs.length; i++)
+					{
+						var child = cs[i];
+						if(domClass.contains(child, "ContentBox"))
+						{
+							var cs2 = child.children;
+							for(var j = 0; j < cs2.length; j++)
+							{
+								var child2 = cs2[j];
+								if(domAttr.has(child2, "data-viewid"))
+								{
+									try
+									{
+										this._instance.layoutCreatedCVs.push(this.context.createView(child2, null, this));
+									}
+									catch(e)
+									{
+										//{#feature: US-1330 Added RT localization}
+										//bpmext.log.error("Error on creating child layout view: " + domAttr.get(child2, "data-viewid") + "\n" + e);
+										bpmext.log.error(bpmext.localization.formatMsg("controlLayout", "CHILD_LAYOUT_CREATION_ERROR") + ": " + domAttr.get(child2, "data-viewid") + "\n" + e);										
+										if(e.stack) { 
+											//{#feature: US-1330 Added RT localization}
+											//bpmext.log.error("  Call stack: " + e.stack);
+											bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+										}
+									}
+								}
+							}
+						}
+						else if(domAttr.has(child, "data-viewid"))
+						{
+							try
+							{
+								this._instance.layoutCreatedCVs.push(this.context.createView(child, null, this));
+							}
+							catch(e)
+							{
+								//{#feature: US-1330 Added RT localization}
+								//bpmext.log.error("Error on creating child layout view: " + domAttr.get(child, "data-viewid") + "\n" + e);
+								bpmext.log.error(bpmext.localization.formatMsg("controlLayout", "CHILD_LAYOUT_CREATION_ERROR") + ": " + domAttr.get(child, "data-viewid") + "\n" + e);										
+								if(e.stack) { 
+									//{#feature: US-1330 Added RT localization}
+									//bpmext.log.error("  Call stack: " + e.stack);
+									bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+								}
+							}
+						}
+						
+						domClass.add(child, "layoutCell");
+						this._instance.layoutAddedDomClasses.push(child);
+					}
+				}
+				
+				var tmp = mdt.helpText ? mdt.helpText.get("value") : null;
+				if (tmp && tmp.length > 0)
+				{
+					this._proto._setHelpText(this, tmp);
+				}
+
+				var children = this.context.element.childNodes;
+				for(var i = 0; i < children.length; i++)
+				{
+					var child = children[i];
+					if(child.className && /\bContentBox\b/.test(child.className))
+					{
+						this._instance.contentBox = child;
+						break;
+					}
+				}
+
+				domClass.add(this._instance.contentBox, "layoutSec");				
+				
+				bpmext.ui.loadContainer(this);
+
+				var behaviors = opts.behaviors.get("value");
+
+				if(behaviors.items.length > 0)
+				{
+					this._proto._setBehaviors(this, behaviors);
+				}
+				else
+				{
+					this._proto._updContentBox(this, this._instance.hAlignment, this._instance.vAlignment, this._instance.layoutFlow);
+					this._proto._setWidth(this, opts.width.get("value"));				
+					this._proto._setHeight(this, opts.height.get("value"));
+				}
+			}
+			catch (e)
+			{
+				//{#feature: US-1330 Added RT localization}
+				//bpmext.log.error("Error on load event [" + this.context.viewid + "]: " + e);
+				bpmext.log.error(bpmext.localization.formatMsg("general", "ERROR_ONLOAD_EVENT") + " [" + this.context.viewid + "]: " + e);
+				if(e.stack) { 
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.error("  Call stack: " + e.stack);
+					bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+				}
+			}
+		};
+
+		this.constructor.prototype.view = function ()
+		{
+			try
+			{
+				this._proto._handleVisibility(this);
+			}
+			catch (e)
+			{
+				//{#feature: US-1330 Added RT localization}
+				//bpmext.log.error("Error on view event [" + this.ui.getAbsoluteName() + "]: " + e);
+				bpmext.log.error(bpmext.localization.formatMsg("general", "ERROR_ONVIEW_EVENT") + " [" + this.ui.getAbsoluteName() + "]: " + e);
+				if(e.stack) { 
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.error("  Call stack: " + e.stack);
+					bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+				}
+			}
+		};
+
+		this.constructor.prototype.change = function (event)
+		{
+			try
+			{
+				if (event.type == "config")
+				{
+					switch (event.property)
+					{
+						case "_metadata.visibility":
+						{
+							this._proto._handleVisibility(this);
+						}
+						case "_metadata.helpText":
+						{
+							this._proto._setHelpText(this, event.newVal);
+							break;
+						}
+						case "hAlignment":
+						{
+							this._proto._setHAlignment(this, event.newVal, event.oldVal);
+							break;
+						}
+						case "vAlignment":
+						{
+							this._proto._setVAlignment(this, event.newVal, event.oldVal);
+							break;
+						}
+						case "layoutFlow":
+						{
+							this._proto._setLayoutFlow(this, event.newVal, event.oldVal);
+							break;
+						}
+						case "width":
+						{
+							this._proto._setWidth(this, event.newVal);
+							break;
+						}
+						case "height":
+						{
+							this._proto._setHeight(this, event.newVal);
+							break;
+						}
+						case "behaviors":
+						{
+							this._proto._setBehaviors(this, event.newVal, event.oldVal);
+							break;
+						}
+					}
+				}
+				else
+				{
+					var _this = this;
+					setTimeout(function(){
+						if(_this.context && _this.context.binding) {
+							_this._proto._reloadList(_this, _this.context.binding.get("value"));
+						}
+					}, 50);
+					
+				}
+			}
+			catch (e)
+			{
+				//{#feature: US-1330 Added RT localization}
+				//bpmext.log.error("Error on change event [" + this.ui.getAbsoluteName() + "]: " + e);
+				bpmext.log.error(bpmext.localization.formatMsg("general", "ERROR_ONCHANGE_EVENT") + " [" + this.ui.getAbsoluteName() + "]: " + e);
+				if(e.stack) { 
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.error("  Call stack: " + e.stack);
+					bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+				}
+			}
+		};
+
+		/*
+		this.constructor.prototype.validate = function (event)
+		{};
+
+		this.constructor.prototype.collaboration = function (event)
+		{};
+		*/
+		
+		this.constructor.prototype.unload = function ()
+		{
+			if(this._instance.bindAllHandle)
+			{
+				this._instance.bindAllHandle.unbind();
+				delete this._instance.bindAllHandle;
+			}
+			
+			bpmext.ui.unloadContainer(this);
+		};
+	}
+}

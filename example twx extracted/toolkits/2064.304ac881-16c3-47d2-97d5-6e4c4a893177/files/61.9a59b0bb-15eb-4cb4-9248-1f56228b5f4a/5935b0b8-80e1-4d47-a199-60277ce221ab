@@ -1,0 +1,585 @@
+/*
+ * #BEGIN COPYRIGHT
+ *
+ * Licensed Materials - Property of IBM
+ * 5725-C95
+ * (C) Copyright IBM Corporation 2017, 2021. All Rights Reserved.
+ * US Government Users Restricted Rights- Use, duplication or disclosure
+ * restricted by GSA ADP Schedule Contract with IBM Corp.
+ *
+ * #END COPYRIGHT
+ */
+
+/** 
+ *   <tr class=Prop>
+ *     <td class=SectionName colspan=3>Events</td>
+ *   </tr>
+ *   <tr class=Prop>
+ *     <td>On Load:</td>
+ *     <td colspan="2">
+ *       <table> 
+ *         <tr class=Prop>
+ *           <td>Description: </td>
+ *           <td>Triggers whenever the view is loaded.</td>
+ *         </tr>
+ *         <tr class=Prop>
+ *           <td>Example: </td>
+ *           <td><pre class="prettyprint"><code>me.setChecked(false);</code></pre></td>
+ *         </tr>
+ *       </table>
+ *     </td>
+ *   </tr>
+ *   <tr class=Prop>
+ *     <td>On Change:</td>
+ *     <td colspan="2">
+ *       <table> 
+ *         <tr class=Prop>
+ *           <td>Description: </td>
+ *           <td>Triggers when the bound data changes (such as upon checking the box).</td>
+ *         </tr>
+ *         <tr class=Prop>
+ *           <td>Example: </td>
+ *           <td><pre class="prettyprint"><code>me.isChecked() ? ${Section1}.setVisible(true) : ${Section1}.setVisible(false);</code></pre></td>
+ *         </tr>
+ *       </table>
+ *     </td>
+ *   </tr>
+ * </table>
+ */
+bpmext_control_InitCheckbox = function (bpmext, utilities, domClass, domAttr, domConstruct, fastclick)
+{
+	this._instance = {};
+
+	if (!this.constructor.prototype._proto)
+	{
+		this.constructor.prototype._proto =
+		{
+			EVT_ONCHANGE : "eventON_CHANGE",
+			EVT_ONFOCUS : "eventON_FOCUS",
+			EVT_ONBLUR : "eventON_BLUR",
+			_setChecked : function (view, checked)
+			{
+				try
+				{
+					if(checked == null)
+						checked = true;
+					
+					if(checked){
+						//domAttr.set(view._instance.input, "checked", "");
+						view._instance.input.checked = true;
+						domAttr.set(view._instance.input, "aria-checked", "true");		//US-1235
+					}
+					else{
+						//domAttr.remove(view._instance.input, "checked");
+						view._instance.input.checked = false;
+						domAttr.set(view._instance.input, "aria-checked", "false");		//US-1235
+					}
+				}
+				catch (e)
+				{
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.error("Checkbox._setChecked() error: " + e);
+					bpmext.log.error("Checkbox._setChecked() " + bpmext.localization.formatMsg("general", "ERROR") + ": " + e);
+					if(e.stack) { 
+						//{#feature: US-1330 Added RT localization}
+						//bpmext.log.error("  Call stack: " + e.stack);
+						bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+					}
+				}
+			},
+			_setLabel : function (view, label)
+			{
+				try
+				{
+					var visibility = bpmext.ui.getEffectiveVisibility(view);
+					var labelVisibility = view.context.options._metadata.labelVisibility.get("value");
+					if(labelVisibility == "SHOW" && label != null && label.length > 0)
+					{
+						view._instance.label.innerHTML = view.context.htmlEscape(label);
+						utilities.BiDi.applyTextDir(
+							view._instance.label, 
+							view._instance.label.innerHTML, 
+							view._instance.baseTxtDir, 
+							view._instance.genPrefTextDir
+						);
+
+						//Reset the bpmRequiredMarker
+						if(visibility == "REQUIRED") {
+							domClass.add(view.context.element, "bpmRequiredMarker");
+						}
+					}
+					else {
+						view._instance.label.innerHTML = "&nbsp";
+						
+						domClass.remove(view.context.element, "bpmRequiredMarker");
+					}
+				}
+				catch (e)
+				{
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.error("Checkbox._setLabel() error: " + e);
+					bpmext.log.error("Checkbox._setLabel() " + bpmext.localization.formatMsg("general", "ERROR") + ": " + e);
+					if(e.stack) { 
+						//{#feature: US-1330 Added RT localization}
+						//bpmext.log.error("  Call stack: " + e.stack);
+						bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+					}
+				}
+			},
+			_setTabIndex : function (view, index)
+			{
+				if(index != null)
+					domAttr.set(view._instance.input, "tabindex", index);
+				else
+					domAttr.remove(view._instance.input, "tabindex");
+			},
+			_handleVisibility : function (view)
+			{
+				var visibility = bpmext.ui.getEffectiveVisibility(view);
+				
+				view.context.setDisplay(visibility != "NONE");
+				view.context.setVisibility(visibility != "HIDDEN");
+				
+				view._instance.input.disabled = (visibility == "READONLY");
+
+				// Updates for WAI
+				if (view._instance.input.disabled) {										
+					domAttr.set(view._instance.input, "aria-disabled", "true");		//US-1235
+				} else {					
+					domAttr.remove(view._instance.input, "aria-disabled");		//US-1235
+				}
+
+				if(visibility == "REQUIRED") {
+					domAttr.set(view._instance.input, "aria-required", "true");		//US-1235
+					domClass.add(view.context.element, "bpmRequiredMarker");
+				} else {
+					domAttr.remove(view._instance.input, "aria-required");
+					domClass.remove(view.context.element, "bpmRequiredMarker");
+				}
+			},	// end _loadListItems
+			_updateControl : function (view)
+			{
+				var errors = bpmext.ui.getViewValidationErrors(view);
+				
+				//Color style
+				var colStyle = errors ? "E" : "D";  //{#bug: BG-777 }
+				
+				bpmext.ui.util.replaceCSSClass(view.context.element, bpmext.ui.util.OPTS_COL_STL_CLZ, colStyle, view._instance.oldColStyle);
+				view._instance.oldColStyle = colStyle;
+				
+				//Validation Error Icon
+				if(view._instance.icon)
+				{
+					bpmext.ui.util.closeTooltip(view._instance.iconTT, view.context.element);
+					delete view._instance.iconTT;
+					
+					view.context.element.removeChild(view._instance.icon);
+					delete view._instance.icon;
+				}
+				
+				if(errors)
+				{
+					domClass.add(view.context.element, "has-feedback has-error");
+					view._instance.icon = document.createElement("span");
+					view.context.element.appendChild(view._instance.icon);
+					
+					if (view.context.options.showValidationMarker.get("value") === true) {
+						domClass.add(view._instance.icon, "fa form-control-feedback fa-exclamation-circle");
+
+						var ttOpts = {
+							horizontalPos: "right", 
+							verticalPos: "top", 
+							cssClass: "validationError",
+							plainText: false,
+							smartPositioning: true
+						};
+					
+						view._instance.iconTT = bpmext.ui.util.showTooltip(
+							view.context.element, 
+							bpmext.ui.util.formatErrors(errors), 
+							ttOpts
+						);
+
+						view._instance.errorMessage = document.createElement("div");
+						view._instance.errorMessage.id = view._instance.input.id + "-error-msg";
+						view._instance.errorMessage.classList.add("hide");
+						view._instance.errorMessage.innerHTML = bpmext.ui.util.formatErrors(errors);
+						view._instance.input.appendChild(view._instance.errorMessage);
+						domAttr.set(view._instance.input, "aria-describedby", view._instance.errorMessage.id);
+						domAttr.set(view._instance.input, "aria-invalid", "true");
+					}
+				}
+				else
+				{
+					domClass.remove(view.context.element, "has-feedback has-error");	
+					if (view._instance.errorMessage) { view._instance.errorMessage.remove(); }
+					domAttr.remove(view._instance.input, "aria-describedby");
+					domAttr.remove(view._instance.input, "aria-invalid");				
+				}
+			}
+		};
+
+		/*
+		Public control methods *************************************************************
+		 */
+		 
+		/**
+		 * @instance
+		 * @memberof Checkbox
+		 * @method setLabel
+		 * @param {string} text Text to be set for label
+		 * @desc Set label for checkbox control
+		 */
+		this.constructor.prototype.setLabel = function (text)
+		{
+			this.context.options._metadata.label.set("value", text);
+		};
+
+		/**
+		 * @instance
+		 * @memberof Checkbox
+		 * @method getLabel
+		 * @desc Get label associated with checkbox control
+		 * @returns {string}
+		 */
+		this.constructor.prototype.getLabel = function ()
+		{
+			return this.context.options._metadata.label.get("value");
+		}
+		
+		/**
+		 * @instance
+		 * @memberof Checkbox
+		 * @method isLabelVisible
+		 * @desc Get label visibility for checkbox control
+		 * @returns {boolean}
+		 */
+		this.constructor.prototype.isLabelVisible = function ()
+		{
+			return this.context.options._metadata.labelVisibility.get("value") == "SHOW";
+		}
+
+		/**
+		 * @instance
+		 * @memberof Checkbox
+		 * @method setLabelVisible
+		 * @param {boolean} flag {true | false}
+		 * @desc Set label visibility for checkbox control
+		 */
+		this.constructor.prototype.setLabelVisible = function (flag)
+		{
+			this.context.options._metadata.labelVisibility.set("value", flag ? "SHOW" : "HIDE");
+		};
+		
+		/**
+		 * @instance
+		 * @memberof Checkbox
+		 * @method isChecked
+		 * @desc Get checked state for checkbox control
+		 * @returns {boolean}
+		 */
+		this.constructor.prototype.isChecked = function ()
+		{
+			var res = this.context.binding.get("value");
+			return res == null ? false : res;
+		}
+
+		/**
+		 * @instance
+		 * @memberof Checkbox
+		 * @method setChecked
+		 * @param {boolean} checked {true | false}
+		 * @desc Set checked state for checkbox control
+		 */
+		this.constructor.prototype.setChecked = function (checked)
+		{
+			this.context.binding.set("value", checked);
+		}
+
+		/**
+		 * @instance
+		 * @memberof Checkbox
+		 * @method setTabIndex
+		 * @param {integer} tabIndex Tab indices start at 1 and may be set sparsely
+		 * @desc Sets tab index of checkbox control
+		 */
+		this.constructor.prototype.setTabIndex = function (tabIndex)
+		{
+			return this.context.options.tabIndex.set("value", tabIndex);  // Intentionally NOT documented since it makes no sense
+		}
+
+		/**
+		 * @instance
+		 * @memberof Checkbox
+		 * @method getTabIndex
+		 * @desc Get tab index for checkbox control
+		 * @returns {integer}
+		 */
+		this.constructor.prototype.getTabIndex = function ()
+		{
+			return domAttr.get(this._instance.input, "tabindex");
+		}
+		
+		/**
+		 * @instance
+		 * @memberof Checkbox
+		 * @method focus
+		 * @desc Set focus on this control
+		 */
+		this.constructor.prototype.focus = function ()
+		{
+			this._instance.input.focus();
+		}
+		
+		/**
+		 * @instance
+		 * @memberof Checkbox
+		 * @method getType
+		 * @desc Get descriptive string representing the type of control
+		 * @returns {string}
+		 */
+		this.constructor.prototype.getType = function ()
+		{
+			return "checkbox.3";
+		}
+		
+		//{#feature: US-696 ARIA labeling}
+		this.constructor.prototype._getHTMLInputElement = function () 
+		{
+			return this._instance.input;  //This is the element that will need its "aria-labelledby" attribute set
+		}
+		//End US-696
+				
+		/*
+		Coach NG Lifecycle methods *************************************************************
+		 */
+		this.constructor.prototype.load = function ()
+		{
+			try
+			{
+				var opts = this.context.options;
+				var mdt = opts._metadata;
+
+				this._instance.baseTxtDir = mdt.baseTextDirection && mdt.baseTextDirection.get("value") ? mdt.baseTextDirection.get("value") : utilities.BiDi.BASE_TEXT_DIRECTION._default;
+				this._instance.genPrefTextDir = this.context.bpm.system.baseTextDirection;
+				
+				if (!this.context.binding)
+					this.context.binding = bpmext.ui.substituteObject(this, null, null, false);
+
+				if (!opts.tabIndex)
+					bpmext.ui.substituteConfigOption(this, "tabIndex", null);
+
+				if (!opts.showValidationMarker)
+					bpmext.ui.substituteConfigOption(this, "showValidationMarker", false);
+
+				if (opts.showValidationMarker.get("value") === true) {
+					domClass.add(this.context.element, "showValidation");
+				}
+				//domClass.add(this.context.element, "checkbox");
+					
+				this._instance.wrapper = document.createElement("span");
+				domClass.add(this._instance.wrapper, "checkbox3");
+				
+				this._instance.input = document.createElement("input");
+				domAttr.set(this._instance.input, "type", "checkbox");
+				domAttr.set(this._instance.input, "role", "checkbox");		//US-1235
+				domAttr.set(this._instance.input, "id", "checkbox-input-" + this.context.controlidpath);
+				
+				//fastclick.attach(this._instance.input);
+				fastclick.attach(this._instance.wrapper);
+
+				var _cbUid="checkbox-label-" + this.context.controlidpath;
+				this._instance.label = document.createElement("span");
+				domAttr.set(this._instance.label,"id",_cbUid);		//US-1235
+				domAttr.set(this._instance.input, "aria-labelledby", _cbUid);		//US-1235
+				
+				this._instance.wrapper.appendChild(this._instance.input);
+				this._instance.wrapper.appendChild(this._instance.label);
+				this.context.element.appendChild(this._instance.wrapper);
+				
+				//{#bug: 814, issue with IE10 compatability}
+				var view = this;				// moved up 
+
+				this._instance.label.onclick = function () 
+				{  
+					view._instance.input.click();
+				}; 
+				
+				bpmext.ui.setupFormulaTriggeredUpdates(
+					this,
+					null,
+					this.isChecked
+					);				
+				
+				bpmext.ui.loadView(this);
+				
+				this._instance.vc = bpmext.ui.getNearestValidationContainer(view);
+
+				this._proto._setLabel(this, opts._metadata.label.get("value"));
+				this._proto._setTabIndex(this, opts.tabIndex.get("value"));
+				this._proto._setChecked(this, this.context.binding.get("value"));
+
+				this._proto._updateControl(this);
+				
+				bpmext.ui.registerEventHandlingFunction(this, this._proto.EVT_ONCHANGE);
+				
+				
+				if(opts[this._proto.EVT_ONFOCUS])
+				{
+					this._instance.input.onfocus = function(event) {
+						bpmext.ui.executeEventHandlingFunction(view, view._proto.EVT_ONFOCUS);
+                        if(!!this.nextElementSibling) {
+                            this.nextElementSibling.classList.add("checkboxFocus");
+                        }
+					}
+
+					bpmext.ui.registerEventHandlingFunction(this, this._proto.EVT_ONFOCUS);
+				} else {
+                    this._instance.input.onfocus = function(event) {
+                        if(!!this.nextElementSibling) {
+                            this.nextElementSibling.classList.add("checkboxFocus");
+                        }
+                    }				    
+				}
+
+				if(opts[this._proto.EVT_ONBLUR])
+				{
+					this._instance.input.onblur = function(event) {
+						bpmext.ui.executeEventHandlingFunction(view, view._proto.EVT_ONBLUR);
+                        if(!!this.nextElementSibling) {
+                            this.nextElementSibling.classList.remove("checkboxFocus");
+                        }
+					}
+
+					bpmext.ui.registerEventHandlingFunction(this, this._proto.EVT_ONBLUR);
+				} else {
+                    this._instance.input.onblur = function(event) {
+                        if(!!this.nextElementSibling) {
+                            this.nextElementSibling.classList.remove("checkboxFocus");
+                        }
+                    }
+				}
+
+				this._instance.input.onclick = function(event)
+				{
+					view.context.binding.set("value", !view.context.binding.get("value"));
+				}				
+			}
+			catch (e)
+			{
+				//{#feature: US-1330 Added RT localization}
+				//bpmext.log.error("Error on load event [" + this.context.viewid + "]: " + e);
+				bpmext.log.error(bpmext.localization.formatMsg("general", "ERROR_ONLOAD_EVENT") + " [" + this.context.viewid + "]: " + e);
+				if(e.stack) { 
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.error("  Call stack: " + e.stack);
+					bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+				}
+			}
+		};
+
+		this.constructor.prototype.view = function ()
+		{
+			try
+			{
+				this._proto._handleVisibility(this);
+			}
+			catch (e)
+			{
+				//{#feature: US-1330 Added RT localization}
+				//bpmext.log.error("Error on view event [" + this.ui.getAbsoluteName() + "]: " + e);
+				bpmext.log.error(bpmext.localization.formatMsg("general", "ERROR_ONVIEW_EVENT") + " [" + this.ui.getAbsoluteName() + "]: " + e);
+				if(e.stack) { 
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.error("  Call stack: " + e.stack);
+					bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+				}
+			}
+		};
+
+		this.constructor.prototype.change = function (event)
+		{
+			try
+			{
+				if (event.type == "config")
+				{
+					switch (event.property)
+					{
+						case "_metadata.label":
+						{
+							this._proto._setLabel(this, event.newVal);
+							break;
+						}
+						case "_metadata.visibility":
+						{
+							this._proto._handleVisibility(this);
+							break;
+						}
+						case "_metadata.labelVisibility":
+						{
+							this._proto._setLabel(this, this.context.options._metadata.label.get("value"));
+							break;
+						}
+						case "tabIndex":
+						{
+							this._proto._setTabIndex(this, event.newVal);
+							break;
+						}
+					}
+				}
+				else
+				{
+					this._proto._setChecked(this, event.newVal);
+					
+					if(event.newVal != event.oldVal)
+						bpmext.ui.executeEventHandlingFunction(this, this._proto.EVT_ONCHANGE);
+				}
+			}
+			catch (e)
+			{
+				//{#feature: US-1330 Added RT localization}
+				//bpmext.log.error("Error on change event [" + this.ui.getAbsoluteName() + "]: " + e);
+				bpmext.log.error(bpmext.localization.formatMsg("general", "ERROR_ONCHANGE_EVENT") + " [" + this.ui.getAbsoluteName() + "]: " + e);
+				if(e.stack) { 
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.error("  Call stack: " + e.stack);
+					bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+				}
+			}
+		};
+
+		this.constructor.prototype.validate = function (event)
+		{
+			try
+			{
+				bpmext.ui.updateViewValidationState(this, event);
+
+				this._proto._updateControl(this);
+				if(this._instance.vc)
+					this._instance.vc.validate(event);
+			}
+			catch (e)
+			{
+				//{#feature: US-1330 Added RT localization}
+				//bpmext.log.error("Error on validate event [" + this.ui.getAbsoluteName() + "]: " + e);
+				bpmext.log.error(bpmext.localization.formatMsg("general", "ERROR_ONVALIDATE_EVENT") + " [" + this.ui.getAbsoluteName() + "]: " + e);
+				if(e.stack) { 
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.error("  Call stack: " + e.stack);
+					bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+				}
+			}			
+		};
+
+		/*
+		this.constructor.prototype.collaboration = function (event)
+		{
+		};
+		*/
+		
+		this.constructor.prototype.unload = function ()
+		{
+			bpmext.ui.unloadView(this);
+		};
+	}
+}

@@ -1,0 +1,442 @@
+/*
+ * #BEGIN COPYRIGHT
+ *
+ * Licensed Materials - Property of IBM
+ * 5725-C95
+ * (C) Copyright IBM Corporation 2017. All Rights Reserved.
+ * US Government Users Restricted Rights- Use, duplication or disclosure
+ * restricted by GSA ADP Schedule Contract with IBM Corp.
+ *
+ * #END COPYRIGHT
+ */
+
+/**
+ * @ignore
+ * @instance
+ * @memberof GeoCoder
+ * @method isValid
+ */  
+
+/**
+ * @ignore
+ * @instance
+ * @memberof GeoCoder
+ * @method setValid
+ */
+
+/**
+ * @ignore
+ * @instance
+ * @memberof GeoCoder
+ * @method recalculate
+ */
+
+/**
+ * @ignore
+ * @instance
+ * @memberof GeoCoder
+ * @method getData
+ */
+
+/**
+ * @ignore
+ * @instance
+ * @memberof GeoCoder
+ * @method setData
+ */
+ 
+/**
+ * @ignore
+ * @instance
+ * @memberof GeoCoder
+ * @method isEnabled
+ */
+
+/**
+ * @ignore
+ * @instance
+ * @memberof GeoCoder
+ * @method isLabelVisible
+ */
+
+/**
+ * @ignore
+ * @instance
+ * @memberof GeoCoder
+ * @method isVisible
+ */
+
+/**
+ * @ignore
+ * @instance
+ * @memberof GeoCoder
+ * @method setLabelVisible
+ */ 
+
+/**
+ * @ignore
+ * @instance
+ * @memberof GeoCoder
+ * @method setEnabled
+ */ 
+
+/**
+ * @ignore
+ * @instance
+ * @memberof GeoCoder
+ * @method setVisible
+ */ 
+
+/**
+ * @ignore
+ * @instance
+ * @memberof GeoCoder
+ * @method show
+ */ 
+
+/**
+ * @ignore
+ * @instance
+ * @memberof GeoCoder
+ * @method hide
+ */ 
+  
+
+/** 
+ *   <tr class=Prop>
+ *     <td class=SectionName colspan=3>Events</td>
+ *   </tr>
+ 
+ *   <tr class=Prop>
+ *     <td>On Load:</td>
+ *     <td colspan="2">
+ *       <table> 
+ *         <tr class=Prop>
+ *           <td>Description: </td>
+ *           <td>Triggers whenever the view is loaded.</td>
+ *         </tr>
+ *         <tr class=Prop>
+ *           <td>Example: </td>
+ *           <td><pre class="prettyprint"><code>me.requestAddressLookup(${Geolocation}.getData().latitude, ${GeoLocation}.getData().longitude)</code></pre></td>
+ *         </tr>
+ *       </table>
+ *     </td>
+ *   </tr>
+ *   <tr class=Prop>
+ *     <td>On Address Requested:</td>
+ *     <td colspan="2">
+ *       <table> 
+ *         <tr class=Prop>
+ *           <td>Description: </td>
+ *           <td>Triggers when an address is requested</td>
+ *         </tr>
+ *         <tr class=Prop>
+ *           <td>Example: </td>
+ *           <td><pre class="prettyprint"><code>console.log("Address requested")</code></pre></td>
+ *         </tr>
+ *       </table>
+ *     </td>
+ *   </tr>
+ *   <tr class=Prop>
+ *     <td>On Address Resolved:</td>
+ *     <td colspan="2">
+ *       <table> 
+ *         <tr class=Prop>
+ *           <td>Description: </td>
+ *           <td>Triggers when an address is returned.</td>
+ *         </tr>
+ *         <tr class=Prop>
+ *           <td>Example: </td>
+ *           <td><pre class="prettyprint"><code>${Location}.setText(address.formatted);</code></pre></td>
+ *         </tr>
+ *       </table>
+ *       <table style="border: 1px solid black; border-collapse: collapse; ">
+ *         <tr style="border: 1px solid black; border-collapse: collapse;">
+ *           <th style="border: 1px solid black; border-collapse: collapse;padding: 5px;">Context Variables</th>
+ *           <th style="border: 1px solid black; border-collapse: collapse; padding: 5px;">address{object}</th>
+ *         </tr>
+ *         <tr style="border: 1px solid black; border-collapse: collapse;">
+ *           <td rowspan="11" style= "border: 1px solid black; border-collapse: collapse;padding: 5px;">Properties</td>
+ *           <td style="color: black; font-weight: normal; border: 1px solid black; border-collapse: collapse;padding: 5px;">streetNumber</td>
+ *         </tr>
+ *         <tr  style= "border: 1px solid black; border-collapse: collapse;">
+ *           <td style="color: black; font-weight: normal; border: 1px solid black; border-collapse: collapse;padding: 5px;">route</td>
+ *         </tr>
+ *         <tr  style= "border: 1px solid black; border-collapse: collapse;">
+ *           <td style="color: black; font-weight: normal; border: 1px solid black; border-collapse: collapse;padding: 5px;">locality</td>
+ *         </tr>
+ *         <tr  style= "border: 1px solid black; border-collapse: collapse;">
+ *           <td style="color: black; font-weight: normal; border: 1px solid black; border-collapse: collapse;padding: 5px;">postalCode</td>
+ *         </tr>
+ *         <tr  style= "border: 1px solid black; border-collapse: collapse;">
+ *           <td style="color: black; font-weight: normal; border: 1px solid black; border-collapse: collapse;padding: 5px;">country</td>
+ *         </tr>
+ *         <tr  style= "border: 1px solid black; border-collapse: collapse;">
+ *           <td style="color: black; font-weight: normal; border: 1px solid black; border-collapse: collapse;padding: 5px;">components {locality, postal_code, country}</td>
+ *         </tr>
+ *         <tr  style= "border: 1px solid black; border-collapse: collapse;">
+ *           <td style="color: black; font-weight: normal; border: 1px solid black; border-collapse: collapse;padding: 5px;">formatted</td>
+ *         </tr>
+ *       </table>
+ *     </td>
+ *   </tr>
+ *   <tr class=Prop>
+ *     <td>On Address Error:</td>
+ *     <td colspan="2">
+ *       <table> 
+ *         <tr class=Prop>
+ *           <td>Description: </td>
+ *           <td>Triggers when there is an error getting the address.</td>
+ *         </tr>
+ *         <tr class=Prop>
+ *           <td>Example: </td>
+ *           <td><pre class="prettyprint"><code>${LocationErrorText}.setVisible(true)</code></pre></td>
+ *         </tr>
+ *       </table>
+ *       <table style="border: 1px solid black; border-collapse: collapse; ">
+ *         <tr style="border: 1px solid black; border-collapse: collapse;">
+ *           <th style="border: 1px solid black; border-collapse: collapse;padding: 5px;">Context Variables</th>
+ *           <th style="border: 1px solid black; border-collapse: collapse; padding: 5px;">error {object}</th>
+ *         </tr>
+ *         <tr style="border: 1px solid black; border-collapse: collapse;">
+ *           <td rowspan="4" style= "border: 1px solid black; border-collapse: collapse;padding: 5px;">Properties</td>
+ *           <td style="color: black; font-weight: normal; border: 1px solid black; border-collapse: collapse;padding: 5px;">message</td>
+ *         </tr>
+ *         <tr  style= "border: 1px solid black; border-collapse: collapse;">
+ *           <td style="color: black; font-weight: normal; border: 1px solid black; border-collapse: collapse;padding: 5px;">code</td>
+ *         </tr>
+ *         <tr  style= "border: 1px solid black; border-collapse: collapse;">
+ *           <td style="color: black; font-weight: normal; border: 1px solid black; border-collapse: collapse;padding: 5px;">status</td>
+ *         </tr>
+ *       </table>
+ *     </td>
+ *   </tr>
+ * </table>
+ */
+ 
+ bpmext_control_InitGeoCoder = function (utilities, bpmext, domClass, domAttr, domConstruct, ol)
+ {
+	 	this._instance =
+	{
+	};
+
+	if (!this.constructor.prototype._proto)
+	{
+		this.constructor.prototype._proto =
+		{
+			EVT_ONADDRESSREQ : "eventON_ADDRESSREQ",
+			EVT_ONADDRESS : "eventON_ADDRESS",
+			EVT_ONADDRESSERR : "eventON_ADDRESSERR",
+			_geocodePosition : function(view, location)
+			{
+				try{	
+					var streetAddress = {};
+					
+					var lat = location.latitude;
+					var lon = location.longitude;
+					
+					/*
+					// save this for later. functionality for forward search.
+					// will need to use the Location BO that will contain address.
+					//var address = location.address; 
+					//var url = 'https://nominatim.openstreetmap.org/search?format=json&q=' + address;
+					*/
+					
+					var url = 'https://nominatim.openstreetmap.org/reverse?format=json&lat='+lat+'&lon='+lon+'&addressdetails=1';
+					
+					var getJSON = function(url) {
+						return new Promise(function(resolve, reject) {
+							var xhr = new XMLHttpRequest();
+							xhr.open('get', url, true);
+							xhr.responseType = 'json';
+							xhr.onload = function() {
+								var status = xhr.status;
+								if (status == 200) {
+									resolve(xhr.response);
+								} else {
+									reject(status);
+								}
+							};
+							xhr.send();
+						});
+					};
+
+					getJSON(url).then(function(data) {
+						//console.log(data);
+							//* future functionality *// 
+						//this.context.options.location.set("value", {latitude: data[0].lat, longitude: data[0].lon});
+						//myLocation.latitude = data[0].lat;
+						//myLocation.longitude = data[0].lon;
+						
+						// could change this to a concatenated version instead of using the 'display_name'.
+						if(data.address){
+							
+							streetAddress.streetNumber = data.address.house_number;
+							streetAddress.route = data.address.road;
+							streetAddress.locality = data.address.city;
+							streetAddress.postal_Code = data.address.postcode;
+							streetAddress.country = data.address.country;				
+							streetAddress.formatted = [data.address.house_number, data.address.road, data.address.city, data.address.county, data.address.state, data.address.postcode, data.address.country].filter(function(val){return val;}).join(', ');;		
+							streetAddress.components = {
+								locality: data.address.city,
+								postal_code: data.address.postcode,
+								country: data.address.country,
+							}
+						}
+						view._instance.curAddress = streetAddress;
+						
+						bpmext.ui.executeEventHandlingFunction(view, view._proto.EVT_ONADDRESS, streetAddress);
+							
+					}, function(status) { //error detection....
+							  console.log('Something went wrong.');
+							  //{#feature: US-1330 Added RT localization}
+							  //bpmext.ui.executeEventHandlingFunction(view, view._proto.EVT_ONADDRESSERR, {message: "No address at location", code: -2, status: status});
+							  bpmext.ui.executeEventHandlingFunction(view, view._proto.EVT_ONADDRESSERR, {message: bpmext.localization.formatMsg("controlGeoCoder", "GC_NO_ADDR_AT_LOCATION"), code: -2, status: status});
+					});	
+				}
+				catch(e)
+				{
+					bpmext.ui.executeEventHandlingFunction(view, view._proto.EVT_ONADDRESSERR, {message: e.message, code: -1});
+				}
+			},
+			_requestAddressLookup: function(view, location)
+			{
+				var loc = (location == null) ? view.context.options.location.get("value") : location;
+				
+				bpmext.ui.executeEventHandlingFunction(view, this.EVT_ONADDRESSREQ);
+				
+				this._geocodePosition(view, loc);
+			}
+		}
+				/*
+		Public control methods *************************************************************
+		 */
+		
+		/**
+		 * @instance
+		 * @memberof GeoCoder
+		 * @method getType
+		 * @desc Get descriptive string representing the type of control
+		 * @returns {string}
+		 */
+		this.constructor.prototype.getType = function ()
+		{
+			return "geoCoder.3";
+		}
+		
+		/**
+		 * @instance
+		 * @memberof GeoCoder
+		 * @method getLastAddressInfo
+		 * @desc Get the information of the last address
+		 * @returns {string}
+		 */
+		this.constructor.prototype.getLastAddressInfo = function()
+		{
+			return this._instance.curAddress;
+		}
+		
+		this.constructor.prototype.requestAddressLookup = function(latitude, longitude)
+		{
+			this.context.options.location.set("value", {latitude: latitude, longitude: longitude});
+		}
+		/*
+		Coach NG Lifecycle methods *************************************************************
+		 */
+		this.constructor.prototype.load = function ()
+		{
+			try
+			{
+				bpmext.ui.registerEventHandlingFunction(this, this._proto.EVT_ONADDRESSREQ);
+				bpmext.ui.registerEventHandlingFunction(this, this._proto.EVT_ONADDRESS, "address");
+				bpmext.ui.registerEventHandlingFunction(this, this._proto.EVT_ONADDRESSERR, "error");
+				
+				var opts = this.context.options;
+				var mdt = opts._metadata;
+				
+				if (!this.context.binding)
+					this.context.binding = bpmext.ui.substituteObject(this, null, null, null);
+				
+				if (!opts.location)
+					bpmext.ui.substituteConfigOption(this, "location", null);
+				
+				var location = this.context.options.location.get("value");
+				
+				bpmext.ui.loadView(this);
+				
+				var view = this;
+				
+
+				bpmext.ui.addEventSubscription("OPENLAYERS_APIS_LOADED", function(evtName, payLoad)
+				{
+					try
+					{		
+						view._proto._geocodePosition(this, location);	
+					}
+					catch(e)
+					{
+						//{#feature: US-1330 Added RT localization}
+						//bpmext.log.error("Error on API loaded event [" + view.context.viewid + "]: " + e);
+						bpmext.log.error(bpmext.localization.formatMsg("controlGeoCoder", "GC_ERROR_ON_API_LOADED_EVENT") + " [" + view.context.viewid + "]: " + e);
+						if(e.stack) { 
+							//{#feature: US-1330 Added RT localization}
+							//bpmext.log.error("  Call stack: " + e.stack);
+							bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+						}						
+					}
+				},
+				this,
+				true
+				);
+			}
+			catch (e)
+			{
+				//{#feature: US-1330 Added RT localization}
+				//bpmext.log.error("Error on load event [" + this.context.viewid + "]: " + e);
+				bpmext.log.error(bpmext.localization.formatMsg("general", "ERROR_ONLOAD_EVENT") + " [" + this.context.viewid + "]: " + e);
+				if(e.stack) { 
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.error("  Call stack: " + e.stack);
+					bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+				}
+			}
+		}
+		
+		this.constructor.prototype.view = function ()
+		{
+		};
+		
+		this.constructor.prototype.change = function (event)
+		{
+			try
+			{
+				if (event.type == "config")
+				{
+					switch (event.property)
+					{
+						case "location":
+							this._proto._requestAddressLookup(this);
+							break;
+					}
+				}
+			}
+			catch (e)
+			{
+				//{#feature: US-1330 Added RT localization}
+				//bpmext.log.error("Error on change event [" + this.ui.getAbsoluteName() + "]: " + e);
+				bpmext.log.error(bpmext.localization.formatMsg("general", "ERROR_ONCHANGE_EVENT") + " [" + this.ui.getAbsoluteName() + "]: " + e);
+				if(e.stack) { 
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.error("  Call stack: " + e.stack);
+					bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+				}
+			}
+		};
+
+		this.constructor.prototype.unload = function ()
+		{
+			bpmext.ui.unloadView(this);
+		};
+	}
+	 
+ }

@@ -1,0 +1,1122 @@
+/*
+ * #BEGIN COPYRIGHT
+ *
+ * Licensed Materials - Property of IBM
+ * 5725-C95
+ * (C) Copyright IBM Corporation 2017, 2021. All Rights Reserved.
+ * US Government Users Restricted Rights- Use, duplication or disclosure
+ * restricted by GSA ADP Schedule Contract with IBM Corp.
+ *
+ * #END COPYRIGHT
+ */
+
+/**
+ * @ignore
+ * @instance
+ * @memberof Link
+ * @method isValid
+ */ 
+
+/**
+ * @ignore
+ * @instance
+ * @memberof Link
+ * @method setValid
+ */ 
+
+/** 
+ *   <tr class=Prop>
+ *     <td class=SectionName colspan=3>Events</td>
+ *   </tr>
+ *   <tr class=Prop>
+ *     <td>On Load:</td>
+ *     <td colspan="2">
+ *       <table> 
+ *         <tr class=Prop>
+ *           <td>Description: </td>
+ *           <td>Triggers whenever the view is loaded.</td>
+ *         </tr>
+ *         <tr class=Prop>
+ *           <td>Example: </td>
+ *           <td><pre class="prettyprint"><code>me.setText("Link to google!")</code></pre></td>
+ *         </tr>
+ *       </table>
+ *     </td>
+ *   </tr>
+ *   <tr class=Prop>
+ *     <td>On Click:</td>
+ *     <td colspan="2">
+ *       <table> 
+ *         <tr class=Prop>
+ *           <td>Description: </td>
+ *           <td>Triggers when link is clicked, before navigating away from page. If evaluated expression returns false, the click will not fire a boundary event.</td>
+ *         </tr>
+ *         <tr class=Prop>
+ *           <td>Example: </td>
+ *           <td><pre class="prettyprint"><code>return me.getText() != ""</code></pre></td>
+ *         </tr>
+ *       </table>
+ *     </td>
+ *   </tr>
+ *   <tr class=Prop>
+ *     <td>On Boundary Event:</td>
+ *     <td colspan="2">
+ *       <table> 
+ *         <tr class=Prop>
+ *           <td>Description: </td>
+ *           <td>Triggers upon reaching a Stay On Page event after a boundary event is fired through this control.  For information on the status context variable see the context.trigger() method in the Knowledge Center.  </td>
+ *         </tr>
+ *         <tr class=Prop>
+ *           <table style="border: 1px solid black; border-collapse: collapse; ">
+ *             <tr style="border: 1px solid black; border-collapse: collapse;">
+ *             <th style="border: 1px solid black; border-collapse: collapse;padding: 5px;">Context Variables</th>
+ *             <th style="border: 1px solid black; border-collapse: collapse; padding: 5px;">status {string}</th>
+ *       </table>
+ *         </tr>
+ *         <tr class=Prop>
+ *           <td>Example: </td>
+ *           <td><pre class="prettyprint"><code>me.setColorStyle("G")</code></pre></td>
+ *         </tr>
+ *       </table>
+ *     </td>
+ *   </tr>
+ * </table>
+ */
+bpmext_control_InitLink = function (bpmext, utilities, domClass, domAttr, domConstruct)
+{
+	this._instance = {};
+
+	if (!this.constructor.prototype._proto)
+	{
+		this.constructor.prototype._proto =
+		{
+			EVT_ONCLICK : "eventON_CLICK",
+			EVT_ONBOUNDARYEVT : "eventON_BOUNDARYEVT",
+			OPTS_COL_STLZ :
+			{
+				"H" : "",
+				"D" : "text-default",
+				"M" : "text-muted",
+				"L" : "text-light-gray",
+				"P" : "text-primary",
+				"I" : "text-info",
+				"S" : "text-success",
+				"W" : "text-warning",
+				"G" : "text-danger",
+				"E" : "text-danger"
+			},
+			OPTS_TXT_ALGN :
+			{
+				"D" : "text-left",
+				"L" : "text-left",
+				"C" : "text-center",
+				"R" : "text-right"
+			},
+			OPTS_TXS_STLZ :
+			{
+				"D" : "",
+				"R" : "text-slg",
+				"X" : "text-xlg",
+				"G" : "text-lg",
+				"L" : "text-bg",
+				"S" : "text-sm",
+				"M" : "text-xs"
+			},
+			OPTS_TXW_STLZ :
+			{
+				"D" : "",
+				"N" : "text-normal",
+				"S" : "text-slim",
+				"M" : "text-semibold",
+				"B" : "text-bold"
+			},
+			_setText : function (view, text)
+			{
+				try
+				{
+					if(text == null)
+						text = "";
+
+					view._instance.txtNode.textContent = text;				
+				}
+				catch (e)
+				{
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.error("Link._setText() error: " + e);
+					bpmext.log.error("Link._setText() " + bpmext.localization.formatMsg("general", "ERROR") + ": " + e);
+					if(e.stack) { 
+						//{#feature: US-1330 Added RT localization}
+						//bpmext.log.error("  Call stack: " + e.stack);
+						bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+					}
+				}
+			},
+			_getLabelElt : function (view)
+			{
+				if(!view._instance.label)
+					this._createLabel(view);
+				
+				return view._instance.label;
+			},
+			_createLabel : function (view)
+			{
+				view._instance.label = document.createElement("span");
+				domClass.add(view._instance.label, "control-label");
+				domConstruct.place(view._instance.label, view._instance.group, "first");
+				domAttr.set(view._instance.label, "for", view._instance.outputText.id);
+			},
+			_setLabelVisibility : function (view, flag)
+			{
+				try
+				{
+					if(!view._instance.label)
+						this._createLabel(view);
+
+					view.context.setDisplay(flag == "SHOW", view._instance.label);
+				}
+				catch (e)
+				{
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.error("Link._setLabelVisibility() error: " + e);
+					bpmext.log.error("Link._setLabelVisibility() " + bpmext.localization.formatMsg("general", "ERROR") + ": " + e);
+					if(e.stack) { 
+						//{#feature: US-1330 Added RT localization}
+						//bpmext.log.error("  Call stack: " + e.stack);
+						bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+					}
+				}
+			},
+			_setLabel : function (view, label)
+			{
+				try
+				{
+					if(label)
+					{
+						if(!view._instance.label)
+							this._createLabel(view);
+
+						view._instance.label.innerHTML = view.context.htmlEscape(label);
+						utilities.BiDi.applyTextDir(
+							view._instance.label, 
+							view._instance.label.innerHTML, 
+							view._instance.baseTxtDir, 
+							view._instance.genPrefTextDir
+							);
+					}
+					else
+					{
+						if(view._instance.label)
+						{
+							view._instance.group.removeChild(view._instance.label);
+							delete view._instance.label;
+						}
+					}
+				}
+				catch (e)
+				{
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.error("Link._setLabel() error: " + e);
+					bpmext.log.error("Link._setLabel() " + bpmext.localization.formatMsg("general", "ERROR") + ": " + e);
+					if(e.stack) { 
+						//{#feature: US-1330 Added RT localization}
+						//bpmext.log.error("  Call stack: " + e.stack);
+						bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+					}
+				}
+			},
+			_setLabelPlacement : function (view, newVal, oldVal)
+			{
+				if(!oldVal)
+					oldVal = view._instance.oldLblPlc;
+				
+				newVal = bpmext.ui.util.normalizeLabelPlacement(newVal, bpmext.ui.util.OPTS_LBL_PLC_CLZ);
+				oldVal = bpmext.ui.util.normalizeLabelPlacement(oldVal, bpmext.ui.util.OPTS_LBL_PLC_CLZ);
+				
+				bpmext.ui.util.replaceCSSClass(view._instance.group, bpmext.ui.util.OPTS_LBL_PLC_CLZ, newVal, oldVal);
+				view._instance.oldLblPlc = newVal;
+			},
+			_setLabelWidth : function (view, labelWidth)
+			{
+				if(labelWidth != null && labelWidth != "")
+				{
+					if(!isNaN(labelWidth))
+						labelWidth += "px";
+					
+					view._instance.label.style.width = labelWidth;
+					domClass.add(view.context.element, "labelWidth");
+				}
+				else 
+				{
+					if (view._instance.label) {
+						view._instance.label.style.width = null;
+					}
+					
+					domClass.remove(view.context.element, "labelWidth");
+				}
+					
+			},
+			_setTextAlignment : function(view, newVal, oldVal)
+			{
+				bpmext.ui.util.replaceCSSClass(view._instance.outputText, this.OPTS_TXT_ALGN, newVal, oldVal);
+                // view._instance.input.style.width = "100%";  // BG 741
+			},
+			//{#Bug: 380 Implemented _setTabIndex to fix tab indices not working}
+			_setTabIndex : function (view, index)
+			{
+				if(index != null)
+					domAttr.set(view._instance.outputText, "tabindex", index);
+				else
+					domAttr.remove(view._instance.outputText, "tabindex");
+			},
+			_setWidth : function (view, width)
+			{
+				try
+				{
+					if (width != null && width != "")
+					{
+						if (!isNaN(width))
+							width += "px";
+
+						view.context.element.style.width = width;
+						
+						domClass.add(view.context.element, "widthSet");
+					}
+					else
+					{
+						view.context.element.style.width = null;
+
+						domClass.remove(view.context.element, "widthSet");
+					}
+				}
+				catch (e)
+				{
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.error("Link._setWidth() error: " + e);
+					bpmext.log.error("Link._setWidth() " + bpmext.localization.formatMsg("general", "ERROR") + ": " + e);
+					if(e.stack) { 
+						//{#feature: US-1330 Added RT localization}
+						//bpmext.log.error("  Call stack: " + e.stack);
+						bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+					}
+				}
+			},
+			_handleVisibility : function (view)
+			{
+				var visibility = bpmext.ui.getEffectiveVisibility(view);
+
+				if (visibility != "NONE")
+				{
+					if (visibility == "READONLY") {
+						domClass.remove(view._instance.disabler, "hidden");
+						view._instance.btn.setAttribute("aria-disabled", true);
+					}
+					else {
+						domClass.add(view._instance.disabler, "hidden");
+						view._instance.btn.removeAttribute("aria-disabled");
+					}
+				}
+				
+				// Updates for WAI
+				if (view._instance.btn.disabled) {										
+					domAttr.set(view._instance.btn, "aria-disabled", "true");
+				} else {					
+					domAttr.remove(view._instance.btn, "aria-disabled");
+				}
+
+				//{bug: BG-766 Link control doesn't respond to visibility changes}
+				var vis = utilities.handleVisibility(view.context);
+			},
+			_normalizeColorStyle: function(style)
+			{
+				// OPTS_COL_STLZ :
+				// {
+					// "H" : "",
+					// "D" : "text-default",
+					// "M" : "text-muted",
+					// "L" : "text-light-gray",
+					// "P" : "text-primary",
+					// "I" : "text-info",
+					// "S" : "text-success",
+					// "W" : "text-warning",
+					// "G" : "text-danger"
+				// },
+				if(!style)
+					style = "D";
+				
+				style = style.toUpperCase();
+				if(style.length > 1)
+				{
+					switch (style)
+					{
+						case "NORMAL":
+							style = "H";
+							break;
+						case "DEFAULT":
+						case "DEF":
+							style = "D";
+							break;
+						case "MUTED":
+							style = "M";
+							break;
+						case "LIGHT-GRAY":
+						case "GRAY":
+						case "LIGHTGRAY":
+						case "LIGHT GRAY":
+						case "LIGHT":
+							style = "L";
+							break;
+						case "SUCCESS":
+							style = "S";
+							break;
+						case "INFO":
+						case "INF":
+							style = "I";
+							break;
+						case "PRIMARY":
+						case "PRI":
+							style = "P";
+							break;
+						case "WARNING":
+						case "WARN":
+							style = "W";
+							break;
+						case "ERROR":
+						case "ERR":
+						case "DANGER":
+							style = "G";
+							break;
+						case "TRANSPARENT":
+							style = "T";
+							break;
+						default:
+							//{#feature: US-1330 Added RT localization}
+							//bpmext.log.warn("Unexpected color style: " + style);
+							bpmext.log.warn(bpmext.localization.formatMsg("general", "COLOR_STYLE_WARNING",style));
+					}
+				}
+
+				return style;
+			},
+			_normalizeSizeStyle: function(sizeStyle)
+			{
+				// OPTS_TXS_STLZ :
+				// {
+					// "D" : "",
+					// "R" : "text-slg",
+					// "X" : "text-xlg",
+					// "G" : "text-lg",
+					// "L" : "text-bg",
+					// "S" : "text-sm",
+					// "M" : "text-xs"
+				// },
+				if(!sizeStyle)
+					sizeStyle = "D";
+				
+				sizeStyle = sizeStyle.toUpperCase();
+				if(sizeStyle.length > 1)
+				{
+					switch (sizeStyle)
+					{
+						case "SUPER-LARGE":
+						case "SUPER LARGE":
+						case "SUPER":
+							sizeStyle = "R";
+							break;
+						case "EXTRA-LARGE":
+						case "EXTRA LARGE":
+						case "EXTRA":
+							sizeStyle = "X";
+							break;
+						case "LARGER":
+							sizeStyle = "G";
+							break;
+						case "LARGE":
+							sizeStyle = "L";
+							break;
+						case "SMALL":
+							sizeStyle = "S";
+							break;
+						case "SMALLER":
+							sizeStyle = "M";
+							break;
+						case "DEF":
+						case "DEFAULT":
+							sizeStyle = "D";
+							break;
+						default:
+							//{#feature: US-1330 Added RT localization}
+							//bpmext.log.warn("Unexpected size style: " + sizeStyle);
+							bpmext.log.warn(bpmext.localization.formatMsg("general", "SIZE_STYLE_WARNING",sizeStyle));
+					}
+				}
+				
+				return sizeStyle;
+			},
+			_setColorStyle : function (view, newVal, oldVal)
+			{
+				if(!oldVal)
+					oldVal = view._instance.oldColStyle;
+
+				newVal = this._normalizeColorStyle(newVal);
+				oldVal = this._normalizeColorStyle(oldVal);
+				
+				bpmext.ui.util.replaceCSSClass(view._instance.outputText, this.OPTS_COL_STLZ, newVal, oldVal);
+				view._instance.oldColStyle = newVal;
+			},
+			_setSizeStyle : function (view, newVal, oldVal)
+			{
+				if(!oldVal)
+					oldVal = view._instance.oldSzStyle;
+
+				newVal = this._normalizeSizeStyle(newVal);
+				oldVal = this._normalizeSizeStyle(oldVal);
+				
+				bpmext.ui.util.replaceCSSClass(view._instance.group, this.OPTS_TXS_STLZ, newVal, oldVal);
+				view._instance.oldSzStyle = newVal;
+			},
+			_setWeightStyle : function (view, newVal, oldVal)
+			{
+				bpmext.ui.util.replaceCSSClass(view._instance.group, this.OPTS_TXW_STLZ, newVal, oldVal);
+			},
+			_setLinkURL : function(view)
+			{
+				try
+				{
+					var sameWindow = view.context.options.sameWindow.get("value");
+					var anchor = view._instance.btn;
+					
+					if(view.context.options.linkType.get("value") == "B")
+					{
+						anchor.href = "javascript:void(0)";
+					}
+					else
+					{
+						anchor.href = view.context.options.linkURL.get("value");
+					}
+					
+					if(!sameWindow)
+						anchor.target = "_blank";
+					else
+						anchor.target = "_self";
+				}
+				catch (e)
+				{
+					bpmext.log.error("Link._setLinkURL() " + bpmext.localization.formatMsg("general", "ERROR") + ": " + e);
+					if(e.stack) { 
+						bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+					}
+				}
+			},
+			_setHelpText : function(view, text){
+				utilities.setHelpText(view, text);
+			}
+		};
+
+		/*
+		Public control methods *************************************************************
+		 */
+		 
+		/**
+		 * @instance
+		 * @memberof Link
+		 * @method setLabel
+		 * @param {string} text Label for control
+		 * @desc Set label for control
+		 */
+		this.constructor.prototype.setLabel = function (text)
+		{
+			this.context.options._metadata.label.set("value", text);
+		};
+
+		/**
+		 * @instance
+		 * @memberof Link
+		 * @method getLabel
+		 * @desc Get label associated with link controls
+		 * @returns {string}
+		 */
+		this.constructor.prototype.getLabel = function ()
+		{
+			return this.context.options._metadata.label.get("value");
+		};
+
+		/**
+		 * @instance
+		 * @memberof Link
+		 * @method setHelpText
+		 * @param {string} helptext Help text for the control
+		 * @desc Set help text for link control
+		 */
+		this.constructor.prototype.setHelpText = function (text)
+		{
+			this.context.options._metadata.helpText.set("value", text);
+		};
+
+		/**
+		 * @instance
+		 * @memberof Link
+		 * @method getHelpText
+		 * @desc Get help text associated with link control
+		 * @returns {string}
+		 */
+		this.constructor.prototype.getHelpText = function ()
+		{
+			return this.context.options._metadata.helpText.get("value");
+		};
+		
+		/**
+		 * @instance
+		 * @memberof Link
+		 * @method setLabelPlacement
+		 * @param {string} placement "T"|"TOP"=Top | "L"|"LEFT"=Left 
+		 * @desc Set label placement for control.  NOTE: to avoid ambiguity always set the label placement using "T"|"L"
+		 */
+		this.constructor.prototype.setLabelPlacement = function (plc)
+		{
+			this.context.options.labelPlacement.set("value", plc);
+		};
+
+		/**
+		 * @instance
+		 * @memberof Link
+		 * @method getLabelPlacementt
+		 * @desc Get label placement for control.  NOTE: This always returns the label placement as set, to avoid ambiguity always set the label placement using "T"|"L"
+		 * @returns {string}
+		 */
+		this.constructor.prototype.getLabelPlacement = function ()
+		{
+			return this.context.options.labelPlacement.get("value");
+		};
+
+		/**
+		 * @instance
+		 * @memberof Link
+		 * @method getLabelWidth
+		 * @desc Get label width of Link control (e.g. 50px, 20%, 2em - omitting the unit assumes px)
+		 * @returns {string}
+		 */
+		this.constructor.prototype.getLabelWidth = function ()
+		{
+			return this.context.options.labelWidth.get("value");
+		};
+		
+		/**
+		 * @instance
+		 * @memberof Link
+		 * @method setLabelWidth
+		 * @param {string} labelWidth Control's label width
+		 * @desc Set label width of Link control (e.g. 50px, 20%, 2em - omitting the unit assumes px)
+		 */
+		this.constructor.prototype.setLabelWidth = function (labelWidth)
+		{
+			this.context.options.labelWidth.set("value", labelWidth);
+		};
+
+		/**
+		 * @instance
+		 * @memberof Link
+		 * @method isLabelVisible
+		 * @desc Get label visibility for link control
+		 * @returns {boolean}
+		 */
+		this.constructor.prototype.isLabelVisible = function ()
+		{
+			return this.context.options._metadata.labelVisibility.get("value") == "SHOW";
+		};
+
+		/**
+		 * @instance
+		 * @memberof Link
+		 * @method setLabelVisible
+		 * @param {boolean} flag {true | false}
+		 * @desc Set label visibility for text control
+		 */
+		this.constructor.prototype.setLabelVisible = function (flag)
+		{
+			this.context.options._metadata.labelVisibility.set("value", flag ? "SHOW" : "HIDE");
+		};		
+		
+		/**
+		 * @instance
+		 * @memberof Link
+		 * @method getText
+		 * @desc Get text for link control
+		 * @returns {string}
+		 */
+		this.constructor.prototype.getText = function ()
+		{
+			var res = this.context.options.linkText.get("value");
+			return res == null ? "" : res;
+		};
+
+		/**
+		 * @instance
+		 * @memberof Link
+		 * @method setText
+		 * @param {string} text Output text of control
+		 * @desc Set text for link control
+		 */
+		this.constructor.prototype.setText = function (text)
+		{
+			this.context.options.linkText.set("value", text);
+		};
+
+		/**
+		 * @instance
+		 * @memberof Link
+		 * @method getLinkURL
+		 * @desc Get URL for link control
+		 * @returns {string}
+		 */
+		this.constructor.prototype.getLinkURL = function ()
+		{
+			var res = this.context.options.linkURL.get("value");
+			return res == null ? "" : res;
+		};
+
+		/**
+		 * @instance
+		 * @memberof Link
+		 * @method setLinkURL
+		 * @param {string} url Set URL of control
+		 * @desc Set URL for link control
+		 */
+		this.constructor.prototype.setLinkURL = function (url)
+		{
+			this.context.options.linkURL.set("value", url);
+		};
+		
+		/**
+		 * @instance
+		 * @memberof Link
+		 * @method setTabIndex
+		 * @param {integer} tabIndex tab indices start at 1 and may be set sparsely
+		 * @desc Sets tab index of text control
+		 */
+		this.constructor.prototype.setTabIndex = function (tabIndex)
+		{
+			this.context.options.tabIndex.set("value", tabIndex);
+		};
+
+		/**
+		 * @instance
+		 * @memberof Link
+		 * @method getTabIndex
+		 * @desc Get tab index for text control
+		 * @returns {integer}
+		 */
+		this.constructor.prototype.getTabIndex = function ()
+		{
+			return this.context.options.tabIndex.get("value");
+		};
+
+		/**
+		 * @instance
+		 * @memberof Link
+		 * @method setWidth
+		 * @param {string} width Width of control
+		 * @desc Set width of link control (e.g. 50px, 20%, 2em - omitting the unit assumes px)
+		 */
+		this.constructor.prototype.setWidth = function (width)
+		{
+			this.context.options.width.set("value", width);
+		};
+
+		/**
+		 * @instance
+		 * @memberof Link
+		 * @method getWidth
+		 * @desc Get configured width for link control (including unit)
+		 * @returns {string}
+		 */	
+		this.constructor.prototype.getWidth = function ()
+		{
+			return this.context.options.width.get("value");
+		};
+		
+		/**
+		 * @instance
+		 * @memberof Link
+		 * @method setColorStyle
+     	 * @param {string} style "NORMAL"|H"=Normal | "DEFAULT"|"DEF"|"D"=Default | "MUTED"|"M"=Muted | "LIGHT_GRAY"|"GRAY"|"LIGHTGRAY"|"LIGHT GRAY"|"LIGHT"|"L"=Light | "PRIMARY"|"P"=Primary | "INFO"|INF"|"I"=Info | "SUCCESS"|"S"=Success | "WARNING"|"WARN"|"W"=Warning | "ERROR"|"ERR"|"DANGER"|"G"=Danger | "TRANSPARENT"|"T"=Transparent 
+		 * @desc Sets color style of control.  NOTE: to avoid ambiguity always set the color using "H"|"D"|"M"|"L"|"P"|"I"|"S"|"W"|"G"|"T"
+		 */
+		this.constructor.prototype.setColorStyle = function (style)
+		{
+			this.context.options.colorStyle.set("value", style);
+		};
+
+		//{#feature: * Added getColorStyle() method}
+		/**
+		 * @instance
+		 * @memberof Link
+		 * @method getColorStyle
+		 * @desc Gets color style of control.  NOTE: This always returns the color as set, to avoid ambiguity always set the color using "H"|"D"|"M"|"L"|"P"|"I"|"S"|"W"|"G"|"T"
+		 * @returns {string} 
+		 */
+		this.constructor.prototype.getColorStyle = function ()
+		{
+			return this.context.options.colorStyle.get("value");
+		};
+
+		//{#feature: * Added get/setSizeStyle() methods}
+		/**
+		 * @instance
+		 * @memberof Link
+		 * @method setSizeStyle
+		 * @param {string} style "SUPER-LARGE"|"SUPER LARGE"|"SUPER"|"R"=Super large | "EXTRA-LARGE"|"EXTRA LARGE"|"EXTRA"|"X"=Extra large | "LARGER"|"G"=Larger | "LARGE"|"L"=Large | "SMALL"|"S"=Small | "SMALLER"|"M"=Smaller | "DEFAULT"|"DEF"|"D"=Default
+		 * @desc Sets size style of control.  NOTE: to avoid ambiguity always set the size using "R"|"X"|"G"|"L"|"S"|"M"|"D"
+		 */
+		this.constructor.prototype.setSizeStyle = function (style)
+		{
+			this.context.options.sizeStyle.set("value", style);
+		};
+
+		/**
+		 * @instance
+		 * @memberof Link
+		 * @method getSizeStyle
+		 * @desc Gets size style of control.  NOTE: This always returns the size as set, to avoid ambiguity always set the size using "R"|"X"|"G"|"L"|"S"|"M"|"D"
+		 * @returns {string} 
+		 */
+		this.constructor.prototype.getSizeStyle = function ()
+		{
+			return this.context.options.sizeStyle.get("value");
+		};
+		
+		/**
+		 * @instance
+		 * @memberof Link
+		 * @method getType
+		 * @desc Get descriptive string representing the type of control
+		 * @returns {string}
+		 */
+		this.constructor.prototype.getType = function ()
+		{
+			return "link.3";
+		};
+		
+		//{#feature: US-696 ARIA labeling}
+		this.constructor.prototype._getHTMLInputElement = function () 
+		{
+			return this._instance.btn;   //This is the element that will need its "aria-labelledby" attribute set
+		};
+		//End US-696
+		//{#feature: US-696 ARIA Accessibility}
+		this.constructor.prototype._getTriggerElement = function () 
+		{
+			return this._instance.btn; //This is the element which is referred in Popup Menu for adding WAI-ARIA Accessibility Roles
+		};
+		//End US-696
+
+		/*
+		Coach NG Lifecycle methods *************************************************************
+		 */
+		this.constructor.prototype.load = function ()
+		{
+			try
+			{
+				var opts = this.context.options;
+				var mdt = opts._metadata;
+
+				this._instance.baseTxtDir = mdt.baseTextDirection && mdt.baseTextDirection.get("value") ? mdt.baseTextDirection.get("value") : utilities.BiDi.BASE_TEXT_DIRECTION._default;
+				this._instance.genPrefTextDir = this.context.bpm.system.baseTextDirection;
+				
+				if (!this.context.binding)
+					this.context.binding = bpmext.ui.substituteObject(this);
+
+				if (!opts.tabIndex)
+					bpmext.ui.substituteConfigOption(this, "tabIndex", null);	
+
+				if (!opts.sameWindow)
+					bpmext.ui.substituteConfigOption(this, "sameWindow", false);
+				
+				if (!opts.linkURL)
+					bpmext.ui.substituteConfigOption(this, "linkURL", "javascript:void(0)");
+				
+				if (!opts.linkType)
+					bpmext.ui.substituteConfigOption(this, "linkType", "B");
+				
+				if (!opts.linkText)
+					bpmext.ui.substituteConfigOption(this, "linkText", "Link");
+				
+				if (!opts.colorStyle)
+					bpmext.ui.substituteConfigOption(this, "colorStyle", "H");
+
+				if (!opts.sizeStyle)
+					bpmext.ui.substituteConfigOption(this, "sizeStyle", "D");
+
+				if (!opts.weightStyle)
+					bpmext.ui.substituteConfigOption(this, "weightStyle", "D");
+
+				if (!opts.textAlignment)
+					bpmext.ui.substituteConfigOption(this, "textAlignment", "D");
+
+				if (!opts.width)
+					bpmext.ui.substituteConfigOption(this, "width", null);
+				
+				//if (!opts.showLabel)
+				//	bpmext.ui.substituteConfigOption(this, "showLabel", false);
+
+				if(!opts.labelPlacement)
+					bpmext.ui.substituteConfigOption(this, "labelPlacement", "T");
+				
+				if(!opts.labelWidth)
+					bpmext.ui.substituteConfigOption(this, "labelWidth", null);
+				
+				this._instance.group = document.createElement("div");
+				domClass.add(this._instance.group, "form-group");
+				this._instance.input = document.createElement("div");
+				domClass.add(this._instance.input, "input SPARKLink");
+				
+				this._instance.disabler = bpmext.ui.util.createDisabler(this, this._instance.input);
+				
+				this._instance.outputText = document.createElement("p");
+
+				this._instance.btn = document.createElement("a");
+                this._instance.btn.setAttribute("role", "link");
+                this._instance.btn.setAttribute("id", "link-link-"+this.context.controlidpath);
+				this._instance.txtNode = document.createTextNode("");
+				
+				this._instance.outputText.appendChild(this._instance.btn);
+				this._instance.btn.appendChild(this._instance.txtNode);
+				
+				//domClass.add(this._instance.outputText, "text-default");
+
+				this._instance.input.appendChild(this._instance.outputText);
+				this._instance.group.appendChild(this._instance.input);
+				this.context.element.appendChild(this._instance.group);
+
+				var view = this;
+				//Enabling a control with formula support
+				bpmext.ui.setupFormulaTriggeredUpdates(
+					this, 
+					function (expResult)
+					{
+						if (expResult == undefined)
+						{
+							expResult = "";
+						}
+
+						view.setText(expResult);
+					},
+					this.getText
+				);
+				
+				bpmext.ui.loadView(this);
+				 
+				//this._proto._setLabelVisibility(this, opts.showLabel.get("value") ? "SHOW" : "HIDE");
+				this._proto._setLabelVisibility(this, opts._metadata.labelVisibility.get("value"));
+				this._proto._setLabelPlacement(this, opts.labelPlacement.get("value"));
+				this._proto._setLabel(this, opts._metadata.label.get("value"));
+				this._proto._setLabelWidth(this, opts.labelWidth.get("value")); 				
+				this._proto._setWidth(this, opts.width.get("value"));
+				this._proto._setText(this, opts.linkText.get("value"))
+				this._proto._setTextAlignment(this, opts.textAlignment.get("value"));
+				this._proto._setColorStyle(this, opts.colorStyle.get("value"));
+				this._proto._setSizeStyle(this, opts.sizeStyle.get("value"));
+				this._proto._setWeightStyle(this, opts.weightStyle.get("value"));
+				this._proto._setLinkURL(this);
+				this._proto._setTabIndex(this, opts.tabIndex.get("value"));
+								
+				//Event support - for example, support the onclick event
+				bpmext.ui.registerEventHandlingFunction(this, this._proto.EVT_ONCLICK);
+				bpmext.ui.registerEventHandlingFunction(this, this._proto.EVT_ONBOUNDARYEVT, "status");
+				//Note: Later in the logic of this control, the event can be triggered through:
+				//  bpmext.ui.executeEventHandlingFunction(this, "eventON_CLICK");
+
+				var tmp = mdt.helpText ? mdt.helpText.get("value") : null;
+				if (tmp && tmp.length > 0)
+				{
+					this._proto._setHelpText(this, tmp);
+				}
+
+				this._instance.multiClicks = !(opts.preventMultipleClicks ? opts.preventMultipleClicks.get("value") : false);
+
+				var _this = this;
+				
+				this._instance.btn.onclick = function (event)
+				{
+					if (_this.isEnabled())
+					{
+						//Example of triggering the onClick event for Button:
+						var fireBE = bpmext.ui.executeEventHandlingFunction(_this, _this._proto.EVT_ONCLICK);
+						//Note: The above calls the logic specified on the control's on click event
+						//and captures the value returned by your code (assuming you return a value)
+						if (fireBE)
+						{
+							if (!_this._instance.multiClicks)
+							{
+							//	_this._instance.btn.disabled = true;
+								_this.setEnabled(false);
+							//	domClass.add(_this._instance.btn, "disabled");
+							}
+
+							if (_this.context.binding)
+							{
+								_this.context.binding.set("value", true);
+							}
+
+							if(_this.context.options.linkType.get("value") == "B")
+							{
+								/*BG-767 : Nividous added this to prevent IE from opening a Blank Page : STARTS*/
+								event.preventDefault(); 
+								/*BG-767 : ENDS*/
+								_this.context.trigger(function (st)
+								{
+									//_this._instance.btn.disabled = false;
+									//domClass.remove(_this._instance.btn, "disabled");
+									_this.setEnabled(true);
+									setTimeout(function(){
+										bpmext.ui.executeEventHandlingFunction(_this, _this._proto.EVT_ONBOUNDARYEVT, st.status);
+									});
+								}, {callBackForAll : true});
+							}
+						}
+					} else {
+						event.preventDefault();
+					}
+				};
+			}
+			catch (e)
+			{
+				//{#feature: US-1330 Added RT localization}
+				//bpmext.log.error("Error on load event [" + this.context.viewid + "]: " + e);
+				bpmext.log.error(bpmext.localization.formatMsg("general", "ERROR_ONLOAD_EVENT") + " [" + this.context.viewid + "]: " + e);
+				if(e.stack) { 
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.error("  Call stack: " + e.stack);
+					bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+				}
+			}
+		};
+
+		this.constructor.prototype.view = function ()
+		{
+			try
+			{
+				this._proto._handleVisibility(this);
+			}
+			catch (e)
+			{
+				//{#feature: US-1330 Added RT localization}
+				//bpmext.log.error("Error on view event [" + this.ui.getAbsoluteName() + "]: " + e);
+				bpmext.log.error(bpmext.localization.formatMsg("general", "ERROR_ONVIEW_EVENT") + " [" + this.ui.getAbsoluteName() + "]: " + e);
+				if(e.stack) { 
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.error("  Call stack: " + e.stack);
+					bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+				}
+			}
+		};
+
+		this.constructor.prototype.change = function (event)
+		{
+			try
+			{
+				if (event.type == "config")
+				{
+					switch (event.property)
+					{
+						case "_metadata.label":
+						{
+							this._proto._setLabel(this, event.newVal);
+							this._proto._setHelpText(this, this.context.options._metadata.helpText.get("value"));
+							break;
+						}
+						case "_metadata.visibility":
+						{
+							this._proto._handleVisibility(this);
+							break;
+						}
+						case "_metadata.labelVisibility":
+						{
+							this._proto._setLabelVisibility(this, event.newVal);
+							break;
+						}
+						case "_metadata.helpText":
+						{
+							this._proto._setHelpText(this, event.newVal);
+                            break;
+						}
+						case "width":
+						{
+							this._proto._setWidth(this, event.newVal);
+							break;
+						}
+						case "labelPlacement":
+						{
+							this._proto._setLabelPlacement(this, event.newVal);
+							break;
+						}
+						case "labelWidth":
+						{
+							this._proto._setLabelWidth(this, event.newVal);
+							break;
+						}
+						case "colorStyle":
+						{
+							this._proto._setColorStyle(this, event.newVal, event.oldVal);
+							break;
+						}
+						case "sizeStyle":
+						{
+							this._proto._setSizeStyle(this, event.newVal, event.oldVal);
+							break;
+						}
+						case "weightStyle":
+						{
+							this._proto._setWeightStyle(this, event.newVal, event.oldVal);
+							break;
+						}
+						case "textAlignment":
+						{
+							this._proto._setTextAlignment(this, event.newVal, event.oldVal);
+							break;
+						}
+						case "linkText":
+						{
+							this._proto._setText(this, event.newVal);
+							break;
+						}
+						case "linkURL":
+						case "linkType":
+						case "sameWindow":
+						{
+							this._proto._setLinkURL(this);
+							break;
+						}
+						case "tabIndex":
+						{
+							this._proto._setTabIndex(this, event.newVal);
+							break;
+						}
+                        /*
+						case "showLabel":
+                        {
+                            this._proto._setLabelVisibility(this, event.newVal ? "SHOW" : "HIDE");
+                            break;
+                        }
+						*/
+					}
+				}
+			}
+			catch (e)
+			{
+				//{#feature: US-1330 Added RT localization}
+				//bpmext.log.error("Error on change event [" + this.ui.getAbsoluteName() + "]: " + e);
+				bpmext.log.error(bpmext.localization.formatMsg("general", "ERROR_ONCHANGE_EVENT") + " [" + this.ui.getAbsoluteName() + "]: " + e);
+				if(e.stack) { 
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.error("  Call stack: " + e.stack);
+					bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+				}
+			}
+		};
+		
+		this.constructor.prototype.unload = function ()
+		{
+			bpmext.ui.unloadView(this);
+		};
+	}
+};

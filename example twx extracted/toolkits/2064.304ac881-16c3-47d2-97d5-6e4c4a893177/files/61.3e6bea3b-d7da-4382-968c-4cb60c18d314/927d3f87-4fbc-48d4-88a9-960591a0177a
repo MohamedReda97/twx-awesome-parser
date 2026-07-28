@@ -1,0 +1,309 @@
+/*
+ * #BEGIN COPYRIGHT
+ *
+ * Licensed Materials - Property of IBM
+ * 5725-C95
+ * (C) Copyright IBM Corporation 2017, 2019. All Rights Reserved.
+ * US Government Users Restricted Rights- Use, duplication or disclosure
+ * restricted by GSA ADP Schedule Contract with IBM Corp.
+ *
+ * #END COPYRIGHT
+ */
+
+ /**
+ * @ignore
+ * @instance
+ * @memberof DeferredSection
+ * @method setValid
+ */ 
+
+ /**
+ * @ignore
+ * @instance
+ * @memberof DeferredSection
+ * @method isValid
+ */ 
+
+ /**
+ * @ignore
+ * @instance
+ * @memberof DeferredSection
+ * @method setData
+ */ 
+
+ /**
+ * @ignore
+ * @instance
+ * @memberof DeferredSection
+ * @method getData
+ */ 
+ 
+ /**
+ * @ignore
+ * @instance
+ * @memberof DeferredSection
+ * @method recalculate
+ */ 
+
+/** 
+ *   <tr class=Prop>
+ *     <td class=SectionName colspan=3>Events</td>
+ *   </tr>
+ *   <tr class=Prop>
+ *     <td>OnLazyLoad:</td>
+ *	   <td colspan = "2">
+ *       <table> 
+ *         <tr class=Prop>
+ *           <td>Description: </td>
+ *           <td>This event is triggered when lazy load is done.</td>
+ *         </tr>
+ *         <tr class=Prop>
+ *           <td>Example: </td>
+ *           <td><pre class="prettyprint"><code>alert("Lazy load complete")<code></pre></td>
+ *         </tr>
+ *       </table>
+ *     </td>
+ *   </tr>
+ * </table>
+ */
+bpmext_control_DeferredSection = function(bpmext, utilities, ready)
+{
+	this._instance =
+	{
+		_lazyLoaded : false
+	};
+
+	if (!this.constructor.prototype._proto)
+	{
+		this.constructor.prototype.IS_ADDRESS_INVISIBLE = true;
+
+		this.constructor.prototype._proto =
+		{
+			EVT_ONSECLOAD : "eventON_SECLOAD",
+			_handleVisibility : function (view)
+			{
+				var visibility = bpmext.ui.getEffectiveVisibility(view);
+				var opts = view.context.options;
+				var autoLoad = opts.autoLoad ? opts.autoLoad.get("value") : false;
+
+				if (autoLoad && view._instance._lazyLoaded) {
+					view.context.setDisplay(visibility != "NONE");
+				} else {
+					var display = visibility != "NONE";
+					if (!view._instance._lazyLoaded) {
+						display = false;
+					}
+					view.context.setDisplay(display);
+				}
+				view.context.setVisibility(visibility != "HIDDEN");
+			}
+		};
+		
+
+		/*
+		Public control methods *************************************************************
+		 */
+
+		/**
+		 * @instance
+		 * @memberof DeferredSection
+		 * @method lazyLoad
+		 * @desc Start the lazy load of this section
+		 * @param {integer}	 delay value in milliseconds
+		 * @param {boolean}  trigger trigger the "On Lazy Loaded" event even if the section is already loaded
+		 * @returns {boolean} true if the load was successfully initiated, false if the section was already loaded
+		 * @example Deferred_Section1.lazyLoad(2000); // starts the lazy load in 2 seconds
+		 */
+		this.constructor.prototype.lazyLoad = function(delay, triggerEventIfAlreadyLoaded)
+		{
+			if(!this._instance._lazyLoaded)
+			{
+				if(delay == undefined || delay == null)
+				{
+					delay = 0;
+				}
+			
+				var _this = this;
+				setTimeout(
+					function()
+					{
+						if(!_this._instance._lazyLoaded)
+						{
+							var immediateContentBox = bpmext.ui.util.getContentBox(_this);
+
+							_this._instance._views = _this.context.createView(immediateContentBox);
+							_this._instance._lazyLoaded = true;
+							_this.view();
+
+							bpmext.ui.executeEventHandlingFunction(_this, _this._proto.EVT_ONSECLOAD);
+						}
+					},
+					delay
+				);
+
+				return true;
+			}
+			else
+			{
+				bpmext.log.debug("Section " + this.ui.getAbsoluteName() + " already loaded");
+
+				if(triggerEventIfAlreadyLoaded)
+					bpmext.ui.executeEventHandlingFunction(this, this._proto.EVT_ONSECLOAD);
+				
+				return false;
+			}
+		}
+		
+		/**
+		 * @instance
+		 * @memberof DeferredSection
+		 * @method getDeferredView
+		 * @param {integer}	 index of the child view in the deferred section (if ommitted, 0 is assumed)
+		 * @desc Provides a reference to a child view loaded asynchronously through this section
+		 * @returns {CoachView}
+		 */
+		this.constructor.prototype.getDeferredView = function(index)
+		{
+			if(this._instance._views)
+			{
+				if(index == null)
+					index = 0;
+				
+				return this._instance._views[index];
+			}
+		}
+		
+		/**
+		 * @instance
+		 * @memberof DeferredSection
+		 * @method isLoaded
+		 * @desc Tests whether this section is loaded or not
+		 * @returns {boolean}
+		 */
+		this.constructor.prototype.isLoaded = function()
+		{
+			return this._instance._lazyLoaded;
+		}
+	
+		/**
+		 * @instance
+		 * @memberof DeferredSection
+		 * @method getType
+		 * @desc Get descriptive string representing the type of control
+		 * @returns {string}
+		 */
+		this.constructor.prototype.getType = function ()
+		{
+			return "deferredSection.3";
+		}
+		
+		
+		/*
+		Coach NG Lifecycle methods *************************************************************
+		 */
+		this.constructor.prototype.load = function ()
+		{
+			try
+			{
+				var opts = this.context.options;
+
+				bpmext.ui.registerEventHandlingFunction(this, this._proto.EVT_ONSECLOAD);
+				bpmext.ui.loadContainer(this);
+
+				/*
+				var parent = this;
+
+				while((parent = parent.ui.getParent()) && parent.context)
+				{
+					if(!bpmext.ui.isViewExplicitlyLoaded(parent))
+					{
+						bpmext.log.debug("Implicitly loading ancestor view " + parent.context.viewid);
+						bpmext.ui.loadView(parent);
+					}
+				}
+				*/
+				
+				var autoLoad = opts.autoLoad ? opts.autoLoad.get("value") : false;
+				var autoLoadDelay = opts.autoLoadDelay ? opts.autoLoadDelay.get("value") : 10;
+				
+				if(autoLoad)
+				{
+					this.lazyLoad(autoLoadDelay);
+				}
+			}
+			catch (e)
+			{
+				//{#feature: US-1330 Added RT localization}
+				//bpmext.log.error("Error on load event [" + this.context.viewid + "]: " + e);
+				bpmext.log.error(bpmext.localization.formatMsg("general", "ERROR_ONLOAD_EVENT") + " [" + this.context.viewid + "]: " + e);
+				if(e.stack) { 
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.error("  Call stack: " + e.stack);
+					bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+				}
+			}
+		};
+
+		this.constructor.prototype.view = function ()
+		{
+			try
+			{
+				this._proto._handleVisibility(this);
+			}
+			catch (e)
+			{
+				//{#feature: US-1330 Added RT localization}
+				//bpmext.log.error("Error on view event [" + this.ui.getAbsoluteName() + "]: " + e);
+				bpmext.log.error(bpmext.localization.formatMsg("general", "ERROR_ONVIEW_EVENT") + " [" + this.ui.getAbsoluteName() + "]: " + e);
+				if(e.stack) { 
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.error("  Call stack: " + e.stack);
+					bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+				}
+			}
+		};
+
+		this.constructor.prototype.change = function (event)
+		{
+			try
+			{
+				if (event.type == "config")
+				{
+					switch (event.property)
+					{
+						case "_metadata.visibility":
+						{
+							this._proto._handleVisibility(this);
+							break;
+						}
+					}
+				}
+			}
+			catch (e)
+			{
+				//{#feature: US-1330 Added RT localization}
+				//bpmext.log.error("Error on change event [" + this.ui.getAbsoluteName() + "]: " + e);
+				bpmext.log.error(bpmext.localization.formatMsg("general", "ERROR_ONCHANGE_EVENT") + " [" + this.ui.getAbsoluteName() + "]: " + e);
+				if(e.stack) { 
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.error("  Call stack: " + e.stack);
+					bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+				}
+			}
+		};
+
+		/*
+		this.constructor.prototype.validate = function (event)
+		{};
+
+		this.constructor.prototype.collaboration = function (event)
+		{};
+		*/
+		
+		this.constructor.prototype.unload = function ()
+		{
+			bpmext.ui.unloadContainer(this);
+		};
+	}
+}
+

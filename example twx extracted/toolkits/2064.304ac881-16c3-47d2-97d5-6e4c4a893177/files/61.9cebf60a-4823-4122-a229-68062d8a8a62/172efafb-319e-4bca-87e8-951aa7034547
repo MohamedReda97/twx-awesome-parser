@@ -1,0 +1,173 @@
+/*
+ * #BEGIN COPYRIGHT
+ *
+ * Licensed Materials - Property of IBM
+ * 5725-C95
+ * (C) Copyright IBM Corporation 2017. All Rights Reserved.
+ * US Government Users Restricted Rights- Use, duplication or disclosure
+ * restricted by GSA ADP Schedule Contract with IBM Corp.
+ *
+ * #END COPYRIGHT
+ */
+
+/* NOTE: Contents moved to BPMExt-Core.js */
+
+
+/**
+ * @file SPARK - Functions for Formulas
+ * @tutorial Formulas
+ */
+
+/**
+ * @namespace formulas
+ * @desc Functions to be used in formulas
+ * @tutorial Formulas
+ */ 
+
+/**
+ * @function FOR_EACH
+ * @memberof formulas
+ * @param {expression} JSExpression Javascript expression containing #{ } data element references
+ * @desc FOR_EACH used in a formula denotes that the expression contained within { } will be 
+ * executed <i>for each</i> element in a list/array. 
+ *<p><b>Note:</b> FOR_EACH is more a keyword than a 
+ * function (see in the example below the need for {} instead of () when using <code>FOR_EACH</code> - The alias  
+ * <code>FOR EACH</code> can be used also.</p>
+ * @example SUM(${Table1}, FOR_EACH { #{quantity} * #{unitPrice} })
+ *  //This means: In Table1, which contains a <i>list</i> of data elements including quantity and unitPrice,...
+ *  //...compute the aggregate sum of each quantity * unitPrice
+ */
+
+/**
+ * @function SUM
+ * @memberof formulas
+ * @param {com.ibm.bpm.coach.CoachView} view
+ * @param {function} forEachIterator (Optional) Use with FOR_EACH function
+ * @desc Sum function. For use only in the Formula property of control types that support formulas
+ * @example SUM(${Table1/LineItemTotal*}) 
+ *  //Sum of ALL <i>LineItemTotal</i> field/control values in the table
+ * @example SUM(${Table1}, FOR_EACH {#{quantity}}) 
+ *  //Sum of ALL <i>quantity</i> data elements in the bound data of the table
+ */
+
+/**
+ * @function AVG
+ * @memberof formulas
+ * @param {com.ibm.bpm.coach.CoachView} view
+ * @param {function} forEachIterator (Optional) Use with FOR_EACH function
+ * @desc Average (mean) function. For use only in the Formula property of control types that support formulas
+ * @example AVG(${Table1/LineItemTotal*}) 
+ *  //Average of ALL <i>LineItemTotal</i> field/control values in the table
+ * @example AVG(${Table1}, FOR_EACH {#{unitPrice}}) 
+ *  //Average of ALL <i>unitPrice</i> data elements in the bound data of the table
+ */
+
+/**
+ * @function MIN
+ * @memberof formulas
+ * @param {com.ibm.bpm.coach.CoachView} view
+ * @param {function} forEachIterator (Optional) Use with FOR_EACH function
+ * @desc Minimum function. For use only in the Formula property of control types that support formulas
+ * @example MIN(${Table1/LineItemTotal*}) 
+ *  //Minimum of ALL <i>LineItemTotal</i> field/control values in the table
+ * @example MIN(${Table1}, FOR_EACH {#{unitPrice} * #{quantity}}) 
+ *  //Minimum of product of ALL <i>unitPrice</i> and <i>quantity</i> data elements 
+ *  //in the bound data of the table
+ */
+
+/**
+ * @function MAX
+ * @memberof formulas
+ * @param {com.ibm.bpm.coach.CoachView} view
+ * @param {function} forEachIterator (Optional) Use with FOR_EACH function
+ * @desc Maximum function. For use only in the Formula property of control types that support formulas
+ * @example MAX(${Table1/LineItemTotal*}) 
+ *  //Maximum of ALL <i>LineItemTotal</i> field/control values in the table
+ * @example MAX(${Table1}, FOR_EACH {#{unitPrice} * #{quantity}}) 
+ *  //Maximum of product of ALL <i>unitPrice</i> and <i>quantity</i> data elements 
+ *  //in the bound data of the table
+ */
+
+/**
+ * @function COUNT
+ * @memberof formulas
+ * @param {com.ibm.bpm.coach.CoachView} view
+ * @param {function} forEachIterator (Optional) Use with FOR_EACH function
+ * @desc Count function. For use only in the Formula property of control types that support formulas
+ * @example COUNT(${Table1/LineItemTotal*}) 
+ *  //Count of ALL <i>LineItemTotal</i> fields/controls in the table
+ * @example COUNT(${Table1}, FOR_EACH {#{unitPrice}}) 
+ *  //Count of ALL <i>unitPrice</i> data elements (not null or undefined)
+ *  //in the bound data of the table
+ */
+
+//Simple operations
+/**
+ * @function MULT
+ * @memberof formulas
+ * @param {com.ibm.bpm.coach.CoachView} view1
+ * @param {com.ibm.bpm.coach.CoachView} view2
+ * @desc Multiplication function. For use only in the Formula property of control types that support formulas
+ * @example MULT(@{UnitPrice=}, @{Quantity=}) 
+ *  //Multiply values of UnitPrice and Quantity controls in same row as field containing formula
+ * @example @{UnitPrice=} * @{Quantity=}
+ *  //Equivalent to above
+ * @example ${UnitPrice=}.getValue() * ${Quantity=}.getValue()
+ *  //Equivalent to above
+ */
+
+/**
+ * @function DIV
+ * @memberof formulas
+ * @param {com.ibm.bpm.coach.CoachView} view1
+ * @param {com.ibm.bpm.coach.CoachView} view2
+ * @desc Division function. For use only in the Formula property of control types that support formulas
+ * @example DIV(@{LineItemWeight=}, @{UnitWeight=}) 
+ *  //DIVIDE values of UnitPrice and Quantity controls in same row as field containing formula
+ * @example @{LineItemWeight=} / @{UnitWeight=}
+ *  //Equivalent to above
+ * @example ${LineItemWeight=}.getValue() / ${UnitWeight=}.getValue()
+ *  //Equivalent to above
+ */
+
+/**
+ * @function ADD
+ * @memberof formulas
+ * @param {com.ibm.bpm.coach.CoachView} view1
+ * @param {com.ibm.bpm.coach.CoachView} view2
+ * @desc Addition function. For use only in the Formula property of control types that support formulas
+ * @example ADD(@{PreTaxPrice}, @{TaxAmount}) 
+ *  //Add values of PreTaxPrice and TaxAmount controls
+ * @example @{PreTaxPrice} + @{TaxAmount}
+ *  //Equivalent to above
+ * @example ${PreTaxPrice}.getValue() + ${TaxAmount}.getValue()
+ *  //Equivalent to above
+ */
+
+/**
+ * @function SUB
+ * @memberof formulas
+ * @param {com.ibm.bpm.coach.CoachView} view1
+ * @param {com.ibm.bpm.coach.CoachView} view2
+ * @desc Subtraction function. For use only in the Formula property of control types that support formulas
+ * @example SUB(@{NetPrice}, @{TaxAmount}) 
+ *  //Subtract values of TaxAmount from NetPrice controls
+ * @example @{NetPrice} - @{TaxAmount}
+ *  //Equivalent to above
+ * @example ${NetPrice}.getValue() - ${TaxAmount}.getValue()
+ *  //Equivalent to above
+ */
+
+/**
+ * @function MOD
+ * @memberof formulas
+ * @param {com.ibm.bpm.coach.CoachView} view1
+ * @param {com.ibm.bpm.coach.CoachView} view2
+ * @desc Modulo/division remainder function. For use only in the Formula property of control types that support formulas
+ * @example MOD(@{TotalPeople}, @{TeamSize}) 
+ *  //Compute division remainder of values of TeamSize from TotalPeople controls
+ * @example @{TotalPeople} % @{TeamSize}
+ *  //Equivalent to above
+ * @example ${TotalPeople}.getValue() % ${TeamSize}.getValue()
+ *  //Equivalent to above
+ */

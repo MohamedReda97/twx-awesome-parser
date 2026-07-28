@@ -1,0 +1,214 @@
+/*
+ * #BEGIN COPYRIGHT
+ *
+ * Licensed Materials - Property of IBM
+ * 5725-C95
+ * (C) Copyright IBM Corporation 2017. All Rights Reserved.
+ * US Government Users Restricted Rights- Use, duplication or disclosure
+ * restricted by GSA ADP Schedule Contract with IBM Corp.
+ *
+ * #END COPYRIGHT
+ */
+
+/**
+ * @ignore
+ * @instance
+ * @memberof PanelHeader
+ * @method isValid
+ */  
+
+/**
+ * @ignore
+ * @instance
+ * @memberof PanelHeader
+ * @method setValid
+ */
+
+/**
+ * @ignore
+ * @instance
+ * @memberof PanelHeader
+ * @method recalculate
+ */
+
+/**
+ * @ignore
+ * @instance
+ * @memberof PanelHeader
+ * @method getData
+ */
+
+/**
+ * @ignore
+ * @instance
+ * @memberof PanelHeader
+ * @method setData
+ */ 
+
+/** 
+ *   <tr class=Prop>
+ *     <td class=SectionName colspan=3>Events</td>
+ *   </tr>
+ *   <tr class=Prop>
+ *     <td>On Load:</td>
+ *     <td colspan="2">
+ *       <table> 
+ *         <tr class=Prop>
+ *           <td>Description: </td>
+ *           <td>Triggers whenever the view is loaded.</td>
+ *         </tr>
+ *         <tr class=Prop>
+ *           <td>Example: </td>
+ *           <td><pre class="prettyprint"><code>console.log("Panel header loaded successfully")</code></pre></td>
+ *         </tr>
+ *       </table>
+ *     </td>
+ *   </tr>
+ * </table>
+ */
+bpmext_control_InitPanelHeader = function (utilities, bpmext, domClass, domAttr, domConstruct)
+{
+	this._instance =
+	{
+	};
+
+	if (!this.constructor.prototype._proto)
+	{
+		this.constructor.prototype.IS_ADDRESS_INVISIBLE = true;
+		this.constructor.prototype._proto =
+		{
+			_getContentBox : function(view, from)
+			{
+				if(!view._instance.contentBox)
+				{
+					var children = from.children;
+					for(var i = 0; i < children.length; i++)
+					{
+						var child = children[i];
+						if(child.className && /\bContentBox\b/.test(child.className))
+						{
+							view._instance.contentBox = child;
+							break;
+						}
+					}				
+				}
+					
+				return view._instance.contentBox;
+			},
+			_init : function(view)
+			{
+				var env = view.context.element.querySelector(".headerEnv");
+				var pv = view.context.parentView();
+				var phc = pv.context.element.querySelector(".panel-heading-controls");
+				
+				domConstruct.place(env, phc, "first");				
+				var cBox = this._getContentBox(view, env);
+				
+				view.context.createView(cBox, null, view);
+			}
+		};
+		
+
+		/*
+		Public control methods *************************************************************
+		 */
+		
+		/**
+		 * @instance
+		 * @memberof PanelHeader
+		 * @method getType
+		 * @desc Get descriptive string representing the type of control
+		 * @returns {string}
+		 */
+		this.constructor.prototype.getType = function ()
+		{
+			return "panelHeader.3";
+		}
+		
+		/*
+		Coach NG Lifecycle methods *************************************************************
+		 */
+		this.constructor.prototype.load = function ()
+		{
+			try
+			{
+				var pv = this.context.parentView();
+				pv._instance.headerView = this;
+				
+				bpmext.ui.loadContainer(this);
+			}
+			catch (e)
+			{
+				//{#feature: US-1330 Added RT localization}
+				//bpmext.log.error("Error on load event [" + this.context.viewid + "]: " + e);
+				bpmext.log.error(bpmext.localization.formatMsg("general", "ERROR_ONLOAD_EVENT") + " [" + this.context.viewid + "]: " + e);
+				if(e.stack) { 
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.error("  Call stack: " + e.stack);
+					bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+				}
+			}
+		};
+
+		this.constructor.prototype.view = function ()
+		{
+		    /*
+			try
+			{
+				
+			}
+			catch (e)
+			{
+				//{#feature: US-1330 Added RT localization}
+				//bpmext.log.error("Error on view event [" + this.ui.getAbsoluteName() + "]: " + e);
+				bpmext.log.error(bpmext.localization.formatMsg("general", "ERROR_ONVIEW_EVENT") + " [" + this.ui.getAbsoluteName() + "]: " + e);
+				if(e.stack) { 
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.error("  Call stack: " + e.stack);
+					bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+				}
+			}
+			*/
+		};
+
+		this.constructor.prototype.change = function (event)
+		{
+		    /*
+			try
+			{
+				if (event.type == "config")
+				{
+					switch (event.property)
+					{
+
+					}
+				}
+			}
+			catch (e)
+			{
+				//{#feature: US-1330 Added RT localization}
+				//bpmext.log.error("Error on change event [" + this.ui.getAbsoluteName() + "]: " + e);
+				bpmext.log.error(bpmext.localization.formatMsg("general", "ERROR_ONCHANGE_EVENT") + " [" + this.ui.getAbsoluteName() + "]: " + e);
+				if(e.stack) { 
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.error("  Call stack: " + e.stack);
+					bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+				}
+			}
+			*/
+		};
+
+		/*
+		this.constructor.prototype.validate = function (event)
+		{};
+
+		this.constructor.prototype.collaboration = function (event)
+		{};
+		*/
+		
+		this.constructor.prototype.unload = function ()
+		{
+			bpmext.ui.unloadContainer(this);
+		};
+	}
+}

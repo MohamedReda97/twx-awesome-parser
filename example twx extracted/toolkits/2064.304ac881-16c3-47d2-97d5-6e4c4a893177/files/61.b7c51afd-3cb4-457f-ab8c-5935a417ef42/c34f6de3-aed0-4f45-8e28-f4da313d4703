@@ -1,0 +1,213 @@
+/*
+ * #BEGIN COPYRIGHT
+ *
+ * Licensed Materials - Property of IBM
+ * 5725-C95
+ * (C) Copyright IBM Corporation 2017. All Rights Reserved.
+ * US Government Users Restricted Rights- Use, duplication or disclosure
+ * restricted by GSA ADP Schedule Contract with IBM Corp.
+ *
+ * #END COPYRIGHT
+ */
+
+var mixObject = {
+	createPreview:function(containingDiv, labelText, callback){
+		var bpmextUri = this.context.getManagedAssetUrl("BPMExt-Core-Designer.js", this.context.assetType_WEB, "SYSBPMUI");
+		//var wysiwygDatePickerUri = this.context.getManagedAssetUrl("dojo-bootstrap-datepicker-wysiwyg.js",this.context.assetType_WEB, "SYSBPMUI", null, );
+		var wysiwygDatePickerUri = this.context.getManagedAssetUrl("BPMExt-Lib-DatePicker.zip", this.context.assetType_WEB, "SYSBPMUI", null, "lib/preview.js");
+		require([ "dojo/dom-construct", "dojo/dom-class", bpmextUri, wysiwygDatePickerUri], this.lang.hitch(this, function(domConstruct, domClass, bpmext, wysiwygDatePicker){
+			bpmext.uidesign.css.ensureGlyphsLoaded(this);
+			bpmext.uidesign.css.ensureStyleLoaded(this, "DatePicker", ".datepicker.datepicker-dropdown.dropdown-menu.datepicker-orient-top {top:0 !important}");
+
+			this.context.coachViewData.containingDiv = containingDiv;
+			domClass.add(this.context.coachViewData.containingDiv, "spark-ui");			
+			this.context.coachViewData.formGroupDiv = domConstruct.create("div");
+        				
+			this.context.coachViewData.labelTextDom = document.createTextNode(labelText);
+			this.context.coachViewData.label = domConstruct.create("label");
+			domClass.add(this.context.coachViewData.label, "control-label");
+			this.context.coachViewData.label.appendChild(this.context.coachViewData.labelTextDom);
+			
+			this.context.coachViewData.textInputDiv = domConstruct.create("div");
+			domClass.add(this.context.coachViewData.textInputDiv, "input");
+			this.context.coachViewData.inlineDiv = domConstruct.create("div");
+			domClass.add(this.context.coachViewData.inlineDiv, "input");
+
+			this.context.coachViewData.textInputElement = domConstruct.create("input");
+			domClass.add(this.context.coachViewData.textInputElement, "form-control");
+			this.context.coachViewData.textInputDiv.appendChild(this.context.coachViewData.textInputElement);
+									
+			domConstruct.place(this.context.coachViewData.formGroupDiv, this.context.coachViewData.containingDiv);
+			domClass.add(this.context.coachViewData.formGroupDiv, "form-group");
+			this.context.coachViewData.formGroupDiv.appendChild(this.context.coachViewData.label);
+			this.context.coachViewData.formGroupDiv.appendChild(this.context.coachViewData.textInputDiv);
+			
+			this.context.coachViewData.inlineElement = domConstruct.create("div");
+			this.context.coachViewData.inlineDiv.appendChild(this.context.coachViewData.inlineElement);
+			this.context.coachViewData.formGroupDiv.appendChild(this.context.coachViewData.inlineDiv);			
+			this.context.coachViewData.inlineDiv.style.display = "none";
+			
+			this.context.coachViewData.textInputControl = new wysiwygDatePicker({}, this.context.coachViewData.textInputElement);			
+			this.context.coachViewData.inlineDPControl = new wysiwygDatePicker({}, this.context.coachViewData.inlineElement);
+
+			callback();
+		}));	
+	},
+	getLabelDomElement:function(){
+		return this.context.coachViewData.label;
+	},
+	propertyChanged:function(propertyName, propertyValue){
+		var configHelperUri = this.context.getManagedAssetUrl("BPMExt-Core-ConfigHelper.js",this.context.assetType_WEB, "SYSBPMUI");
+		require(["dojo/dom-style", "dojo/dom-class", "dojo/dom-construct", configHelperUri], this.lang.hitch(this, function(domStyle, domClass, domConstruct, configHelper){
+			//console.log("propertyName:", propertyName, " propertyValue:", propertyValue);			
+			if(propertyName == "@label") {
+				this.context.coachViewData.labelTextDom.data = propertyValue;
+			} else if(propertyName == "@style"){
+				var width = configHelper.getResponsiveConfigOptionValue(this, "@width");
+				var minWidth = configHelper.getResponsiveConfigOptionValue(this, "@minWidth");
+				
+				if(!!width || !!minWidth || this.context.coachViewData.width) {					
+					this.context.coachViewData.containingDiv.style.width =  minWidth || this.context.coachViewData.width || width;
+				} else {
+					this.context.coachViewData.containingDiv.style.width = "";										
+				}
+			} else if(propertyName ==  "@labelVisibility"){
+				if(propertyValue == "HIDE"){
+					this.context.coachViewData.label.style.display = "none";
+				} else {
+					this.context.coachViewData.label.style.display = "";
+				}
+			} else if(propertyName == "labelPlacement"){
+				var labelPlacement;
+				if(propertyValue == "L"){
+					labelPlacement = "label-left";
+				} else {
+					labelPlacement = "";
+				}
+				domClass.replace(this.context.coachViewData.formGroupDiv, labelPlacement, "label-left");
+			} else if(propertyName == "sizeStyle"){
+				var sizeStyle;
+				if(propertyValue == "L"){
+					sizeStyle = "input-lg";
+				} else if(propertyValue == "S"){
+					sizeStyle = "input-sm";
+				} else {
+					sizeStyle = "";
+				}
+				domClass.replace(this.context.coachViewData.textInputElement, sizeStyle, "input-sm input-lg");
+			} else if(propertyName == "width"){				
+				this.context.coachViewData.width = propertyValue;
+				if(!!propertyValue) {
+					this.context.coachViewData.containingDiv.style.width = isNaN(propertyValue) ? propertyValue : (propertyValue+"px");;
+				} else {
+					this.context.coachViewData.containingDiv.style.width = "";
+				}
+			} else if(propertyName == "placeHolder"){
+				this.context.coachViewData.placeHolderText = propertyValue;
+				this.context.coachViewData.textInputElement.value = propertyValue;
+				this.context.coachViewData.textInputElement.style.color = "#bdbdbd";
+			} else if(propertyName == "colorStyle"){
+				var formGroupStyle;
+				var datePickerStyle;
+				if(propertyValue == "P"){
+					formGroupStyle = "has-primary";
+					datePickerStyle = "dp-primary";
+				} else if(propertyValue == "I"){
+					formGroupStyle = "has-info";
+					datePickerStyle = "dp-info";
+				} else if(propertyValue == "S"){
+					formGroupStyle = "has-success";
+					datePickerStyle = "dp-success";
+				} else if(propertyValue == "W"){
+					formGroupStyle = "has-warning";
+					datePickerStyle = "dp-warning";
+				} else if(propertyValue == "E"){
+					formGroupStyle = "has-danger";
+					datePickerStyle = "dp-danger";
+				} else {
+					formGroupStyle = "";
+					datePickerStyle = "";
+				}
+				domClass.replace(this.context.coachViewData.formGroupDiv, formGroupStyle, "has-primary has-info has-success has-warning has-danger");	
+				domClass.replace(this.context.coachViewData.textInputControl.picker, datePickerStyle, "dp-primary dp-info dp-success dp-warning dp-danger");	
+				domClass.replace(this.context.coachViewData.inlineDPControl.picker, datePickerStyle, "dp-primary dp-info dp-success dp-warning dp-danger");	
+			} else if(propertyName == "type"){
+				if(propertyValue == "TI"){
+					this.context.coachViewData.inlineDiv.style.display = "none";
+					this.context.coachViewData.textInputDiv.style.display = "";
+				} else {
+					this.context.coachViewData.inlineDiv.style.display = "";
+					this.context.coachViewData.textInputDiv.style.display = "none";
+				}
+			} else if(propertyName == "enableTodayButton"){
+				this.context.coachViewData.textInputControl.set("todayBtn", propertyValue);
+				this.context.coachViewData.inlineDPControl.set("todayBtn", propertyValue);
+			} else if(propertyName == "enableClearButton"){
+				this.context.coachViewData.textInputControl.set("clearBtn", propertyValue);
+				this.context.coachViewData.inlineDPControl.set("clearBtn", propertyValue);
+			} else if(propertyName == "showWeeks"){
+				this.context.coachViewData.textInputControl.set("calendarWeeks", propertyValue);
+				this.context.coachViewData.inlineDPControl.set("calendarWeeks", propertyValue);
+			} else if(propertyName == "highlightToday"){
+				this.context.coachViewData.textInputControl.set("todayHighlight", propertyValue);
+				this.context.coachViewData.inlineDPControl.set("todayHighlight", propertyValue);
+			} else if(propertyName == "orientation"){
+				var orientations =
+					{
+						"A" : "auto",
+						"TA" : "top auto",
+						"BA" : "bottom auto",
+						"AL" : "auto left",
+						"TL" : "top left",
+						"BL" : "bottom left",
+						"AR" : "auto right",
+						"TR" : "top right",
+						"BR" : "bottom right",
+					};
+				this.context.coachViewData.textInputControl.set("orientation", orientations[propertyValue]);
+				this.context.coachViewData.inlineDPControl.set("orientation", orientations[propertyValue]);
+			} else if(propertyName == "weekStart"){
+				this.context.coachViewData.textInputControl.set("weekStart", propertyValue);
+				this.context.coachViewData.inlineDPControl.set("weekStart", propertyValue);
+			} else if(propertyName == "startView"){
+				this.context.coachViewData.textInputControl.set("startView", parseInt(propertyValue));
+				this.context.coachViewData.inlineDPControl.set("startView", parseInt(propertyValue));
+			} else if(propertyName == "minViewMode"){
+				this.context.coachViewData.textInputControl.set("minViewMode", parseInt(propertyValue));
+				this.context.coachViewData.inlineDPControl.set("minViewMode", parseInt(propertyValue));
+			} else if(propertyName == "disabledWeekDays"){
+				var OPTS_WEEK_DAYS_ARRAY =
+					[
+						"Sunday",
+						"Monday",
+						"Tuesday",
+						"Wednesday",
+						"Thursday",
+						"Friday",
+						"Saturday"
+					];
+				var toReturn = "";
+				var disabledWeekDaysArray = [];
+				var index;
+				
+				var inputStrAry = [];
+				inputStrAry = JSON.parse(propertyValue);
+				
+				for (index in OPTS_WEEK_DAYS_ARRAY)
+				{
+					if (inputStrAry[OPTS_WEEK_DAYS_ARRAY[index]])
+					{
+						disabledWeekDaysArray.push(index);
+					}
+				}
+				toReturn = disabledWeekDaysArray.join();
+				
+				this.context.coachViewData.textInputControl.set("daysOfWeekDisabled", toReturn);
+				this.context.coachViewData.inlineDPControl.set("daysOfWeekDisabled", toReturn);
+			}  
+		}));	
+    },
+	modelChanged: function(propertyName, propertyValue) {
+		
+	}
+};

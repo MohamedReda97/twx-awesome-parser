@@ -1,0 +1,1019 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<teamworks>
+    <process id="1.2d90a780-82bb-4941-b27e-d586607ce191" name="Audit Request History">
+        <lastModified>1756635127006</lastModified>
+        <lastModifiedBy>ammar</lastModifiedBy>
+        <processId>1.2d90a780-82bb-4941-b27e-d586607ce191</processId>
+        <image isNull="true" />
+        <tabGroup isNull="true" />
+        <startingProcessItemId>2025.4fc9255f-9a95-4e95-9df4-e22c4be89701</startingProcessItemId>
+        <isRootProcess>false</isRootProcess>
+        <processType>12</processType>
+        <isErrorHandlerEnabled>false</isErrorHandlerEnabled>
+        <errorHandlerItemId isNull="true" />
+        <isLoggingVariables>false</isLoggingVariables>
+        <isTransactional>false</isTransactional>
+        <processTimingLevel isNull="true" />
+        <participantRef isNull="true" />
+        <exposedType>0</exposedType>
+        <isTrackingEnabled>true</isTrackingEnabled>
+        <xmlData isNull="true" />
+        <cachingType>false</cachingType>
+        <itemLabel isNull="true" />
+        <cacheLength>0</cacheLength>
+        <mobileReady>false</mobileReady>
+        <sboSyncEnabled>true</sboSyncEnabled>
+        <externalId isNull="true" />
+        <isSecured>true</isSecured>
+        <isAjaxExposed>true</isAjaxExposed>
+        <description isNull="true" />
+        <guid>d10d1d60-86c0-4d74-ae86-b573eb8368a8</guid>
+        <versionId>4c78b08f-3522-4644-9b91-b7871e12aff2</versionId>
+        <dependencySummary>&lt;dependencySummary id="bpdid:bab50e8a835e8205:5d7dfcb1:198ff2aedbf:-7aa0" /&gt;</dependencySummary>
+        <jsonData>{"rootElement":[{"flowElement":[{"parallelMultiple":false,"outgoing":["2027.441e62d7-7978-4893-bfe8-02c6a519c686"],"isInterrupting":false,"extensionElements":{"nodeVisualInfo":[{"color":"#F8F8F8","width":24,"x":65,"y":80,"declaredType":"TNodeVisualInfo","height":24}]},"name":"Start","declaredType":"startEvent","id":"54b5227d-488e-4aec-9ee5-1ec7ddfb4c23"},{"incoming":["7200279f-f341-4473-80ba-9ad6a11a9b21"],"extensionElements":{"nodeVisualInfo":[{"color":"#F8F8F8","width":24,"x":608,"y":80,"declaredType":"TNodeVisualInfo","height":24}],"endStateId":["guid:ee1d8a182ba8b1ae:-f408c1e:18b855767df:-2d8a"],"preAssignmentScript":["\/\/log.info(\"ODC -- ProcessInstance : \"+tw.local.requestNo +\" - ServiceName : AUDIT COLLECTION DATA : END\");"],"saveExecutionContext":[true]},"name":"End","declaredType":"endEvent","id":"6b687c50-a559-426c-8f3a-9a1a8873bf72"},{"targetRef":"4fc9255f-9a95-4e95-9df4-e22c4be89701","extensionElements":{"linkVisualInfo":[{"sourcePortLocation":"rightCenter","showCoachControlLabel":false,"labelPosition":0.0,"targetPortLocation":"leftCenter","declaredType":"TLinkVisualInfo","saveExecutionContext":false,"showLabel":false}]},"name":"To Test Data","declaredType":"sequenceFlow","id":"2027.441e62d7-7978-4893-bfe8-02c6a519c686","sourceRef":"54b5227d-488e-4aec-9ee5-1ec7ddfb4c23"},{"startQuantity":1,"outgoing":["5231134d-c217-44ee-a0b3-100b1707803e"],"incoming":["2027.441e62d7-7978-4893-bfe8-02c6a519c686"],"extensionElements":{"postAssignmentScript":[],"nodeVisualInfo":[{"width":95,"x":319,"y":57,"declaredType":"TNodeVisualInfo","height":70}],"preAssignmentScript":["\/\/log.info(\"ODC -- ProcessInstance : \"+tw.local.instanceNo +\" - ServiceName : AUDIT COLLECTION DATA : START\");\r\n\r\n"]},"name":"Set SQL Statement","isForCompensation":false,"completionQuantity":1,"declaredType":"scriptTask","id":"4fc9255f-9a95-4e95-9df4-e22c4be89701","scriptFormat":"text\/x-javascript","script":{"content":["\/**-------------------------- Add SQL Parameters --------------------------**\/\r\nfunction addSQLParameter(value){\r\n\tif(value == null &amp;&amp; typeof value == \"string\"){\r\n\t\tvalue= \"\"; \r\n\t}\r\n\telse if(value == null &amp;&amp; typeof value == \"number\"){\r\n\t\tvalue= 0;\r\n\t}\r\n\telse if(value == null &amp;&amp; typeof value == \"boolean\"){\r\n\t\tvalue = \"0\";\r\n\t}\r\n var parameter = new tw.object.SQLParameter();  \r\n   parameter.value = value;\r\n   parameter.mode = \"IN\";\r\nreturn parameter;\r\n}\r\ntw.local.sql = \"INSERT INTO \"+ tw.env.LKP_DB_Schema + \".ODC_LOGHISTORY\"+\r\n               \"(STARTTIME, ENDTIME, USERNAME, ROLE, STEPNAME, ACTION, RETURNREASON, COMMENT, REQUESTNO, terminateReason)\"+\r\n \t\t   \" VALUES (?,?,?,?,?,?,?,?,?,?)\";\r\n\r\n\r\ntw.local.sqlParameters = new tw.object.listOf.SQLParameter();\r\n\r\ntw.local.sqlParameters.insertIntoList(tw.local.sqlParameters.listLength, addSQLParameter(tw.local.stepLog.startTime));\r\ntw.local.sqlParameters.insertIntoList(tw.local.sqlParameters.listLength, addSQLParameter(tw.local.stepLog.endTime));\r\ntw.local.sqlParameters.insertIntoList(tw.local.sqlParameters.listLength, addSQLParameter(tw.local.stepLog.userName));\r\ntw.local.sqlParameters.insertIntoList(tw.local.sqlParameters.listLength, addSQLParameter(tw.local.stepLog.role));\r\ntw.local.sqlParameters.insertIntoList(tw.local.sqlParameters.listLength, addSQLParameter(tw.local.stepLog.step));\r\ntw.local.sqlParameters.insertIntoList(tw.local.sqlParameters.listLength, addSQLParameter(tw.local.stepLog.action));\r\ntw.local.sqlParameters.insertIntoList(tw.local.sqlParameters.listLength, addSQLParameter(tw.local.stepLog.returnReason));\r\ntw.local.sqlParameters.insertIntoList(tw.local.sqlParameters.listLength, addSQLParameter(tw.local.stepLog.comment));\r\n \r\ntw.local.sqlParameters.insertIntoList(tw.local.sqlParameters.listLength, addSQLParameter(tw.local.requestNo));\r\ntw.local.sqlParameters.insertIntoList(tw.local.sqlParameters.listLength, addSQLParameter(tw.local.stepLog.terminateReason));  "]}},{"targetRef":"64f185c6-2bc7-4a7b-9af7-d8aa5f1b91f8","extensionElements":{"sequenceFlowImplementation":[{"fireValidation":"Never","sboSyncEnabled":true,"declaredType":"com.ibm.bpmsdk.model.bpmn20.ibmext.TSequenceFlowImplementation"}],"linkVisualInfo":[{"sourcePortLocation":"rightCenter","showCoachControlLabel":false,"labelPosition":0.0,"targetPortLocation":"leftCenter","declaredType":"TLinkVisualInfo","saveExecutionContext":true,"showLabel":false}]},"name":"To Execute SQL Statement","declaredType":"sequenceFlow","id":"5231134d-c217-44ee-a0b3-100b1707803e","sourceRef":"4fc9255f-9a95-4e95-9df4-e22c4be89701"},{"startQuantity":1,"outgoing":["7200279f-f341-4473-80ba-9ad6a11a9b21"],"incoming":["5231134d-c217-44ee-a0b3-100b1707803e"],"extensionElements":{"nodeVisualInfo":[{"width":95,"x":469,"y":57,"declaredType":"TNodeVisualInfo","height":70}],"activityType":["CalledProcess"]},"name":"Execute SQL Statement","dataInputAssociation":[{"targetRef":"2055.25f5990f-9abf-4cf6-9101-497d43dee141","assignment":[{"from":{"evaluatesToTypeRef":"itm.12.db884a3c-c533-44b7-bb2d-47bec8ad4022","declaredType":"TFormalExpression","content":["tw.local.sql"]}}]},{"targetRef":"2055.8b844f2a-0a1f-4f12-b34b-e9fd5191dc43","assignment":[{"from":{"evaluatesToTypeRef":"itm.12.f453f500-ca4e-4264-a371-72c1892e8b7c","declaredType":"TFormalExpression","content":["tw.local.sqlParameters"]}}]},{"targetRef":"2055.53ee0328-837f-427d-b0a1-0255f36f7e0c","assignment":[{"from":{"evaluatesToTypeRef":"itm.12.3fa0d7a0-828a-4d60-99cc-db5ed143fc2d","declaredType":"TFormalExpression","content":["1"]}}]},{"targetRef":"2055.81a41d09-a504-4a63-bdaa-a92bac26ad7e","assignment":[{"from":{"evaluatesToTypeRef":"itm.12.c09c9b6e-aabd-4897-bef2-ed61db106297","declaredType":"TFormalExpression","content":["tw.env.DATASOURCE_APP"]}}]}],"isForCompensation":false,"completionQuantity":1,"declaredType":"callActivity","id":"64f185c6-2bc7-4a7b-9af7-d8aa5f1b91f8","dataOutputAssociation":[{"assignment":[{"to":{"evaluatesToTypeRef":"itm.12.3b1e3757-a1f4-4c3f-bbb8-16fecd4d65c1","declaredType":"TFormalExpression","content":["tw.local.results"]}}],"sourceRef":["2055.976cdc78-9d8d-41d4-ae85-f6c9a50c6764"]}],"calledElement":"1.4e480adb-5741-4f5e-aead-27b3654e9cd2"},{"targetRef":"6b687c50-a559-426c-8f3a-9a1a8873bf72","extensionElements":{"sequenceFlowImplementation":[{"fireValidation":"Never","sboSyncEnabled":true,"declaredType":"com.ibm.bpmsdk.model.bpmn20.ibmext.TSequenceFlowImplementation"}],"endStateId":["guid:d7766b7587753602:16bdf27c:11586c10093:-7fe7"],"linkVisualInfo":[{"sourcePortLocation":"rightCenter","showCoachControlLabel":false,"labelPosition":0.0,"targetPortLocation":"leftCenter","declaredType":"TLinkVisualInfo","saveExecutionContext":true,"showLabel":false}]},"name":"To End","declaredType":"sequenceFlow","id":"7200279f-f341-4473-80ba-9ad6a11a9b21","sourceRef":"64f185c6-2bc7-4a7b-9af7-d8aa5f1b91f8"},{"itemSubjectRef":"itm.12.f453f500-ca4e-4264-a371-72c1892e8b7c","name":"sqlParameters","isCollection":true,"declaredType":"dataObject","id":"2056.59f5349e-ed3a-48ac-8d37-59d60eab80c6"},{"itemSubjectRef":"itm.12.db884a3c-c533-44b7-bb2d-47bec8ad4022","name":"sql","isCollection":false,"declaredType":"dataObject","id":"2056.e3fe14a6-6267-450b-bb5e-7d2aea4402b6"},{"itemSubjectRef":"itm.12.3b1e3757-a1f4-4c3f-bbb8-16fecd4d65c1","name":"results","isCollection":true,"declaredType":"dataObject","id":"2056.3aa92ff8-4196-4dc7-9f3d-a88f7df29104"},{"startQuantity":1,"outgoing":["500ea008-6821-4015-a2e0-6576fea62e3d"],"incoming":["5c7adc9e-4b14-45f5-8432-d08642559cba","f1fee511-d9ec-4fbf-8674-269cb13d381d"],"extensionElements":{"nodeVisualInfo":[{"color":"#FF7782","width":95,"x":473,"y":187,"declaredType":"TNodeVisualInfo","height":70}],"activityType":["CalledProcess"]},"name":"Exp Handling","dataInputAssociation":[{"targetRef":"2055.5ea77901-7a17-422a-8958-67bb0e9c991b","assignment":[{"from":{"evaluatesToTypeRef":"itm.12.db884a3c-c533-44b7-bb2d-47bec8ad4022","declaredType":"TFormalExpression","content":["\"Audit Request History\""]}}]},{"targetRef":"2055.55dcd590-97c2-48df-82c6-0f812ab7177f","assignment":[{"from":{"evaluatesToTypeRef":"itm.12.db884a3c-c533-44b7-bb2d-47bec8ad4022","declaredType":"TFormalExpression","content":["tw.local.errorMessage"]}}]}],"isForCompensation":false,"completionQuantity":1,"declaredType":"callActivity","id":"e82b3ec2-f262-4b64-b612-4e7f7425d4fa","dataOutputAssociation":[{"assignment":[{"to":{"evaluatesToTypeRef":"itm.12.db884a3c-c533-44b7-bb2d-47bec8ad4022","declaredType":"TFormalExpression","content":["tw.local.errorMessage"]}}],"sourceRef":["2055.81b82125-a5aa-45f7-8c0f-4870667eebbf"]}],"calledElement":"1.2b50ff68-f7d3-4895-88ad-a73a13fa91d0"},{"targetRef":"7442bb4e-15c0-4514-8d16-1a792743e8df","extensionElements":{"sequenceFlowImplementation":[{"fireValidation":"Never","sboSyncEnabled":true,"declaredType":"com.ibm.bpmsdk.model.bpmn20.ibmext.TSequenceFlowImplementation"}],"endStateId":["guid:f6ffc3b64be5dfa5:4157166b:18ab80e0606:-6f83"],"linkVisualInfo":[{"sourcePortLocation":"rightCenter","showCoachControlLabel":false,"labelPosition":0.0,"targetPortLocation":"leftCenter","declaredType":"TLinkVisualInfo","saveExecutionContext":true,"showLabel":false}]},"name":"To End Event1","declaredType":"sequenceFlow","id":"500ea008-6821-4015-a2e0-6576fea62e3d","sourceRef":"e82b3ec2-f262-4b64-b612-4e7f7425d4fa"},{"parallelMultiple":false,"outgoing":["5c7adc9e-4b14-45f5-8432-d08642559cba"],"dataOutput":[{"itemSubjectRef":"itm.19e8dc33-1100-46be-89a6-36c9040f7b3e","name":"error","isCollection":false,"id":"11d65e0d-c446-44b0-8153-6e693e2e0e36"}],"eventDefinition":[{"extensionElements":{"errorEventSettings":[{"catchAll":true,"declaredType":"com.ibm.bpmsdk.model.bpmn20.ibmwleext.TErrorEventSettings"}]},"declaredType":"errorEventDefinition","id":"1d769770-73c3-4ba0-8aeb-d2684ca9b0cb","otherAttributes":{"eventImplId":"d9b2ff9f-bd08-4a50-8e21-ba3547b0bf09"}}],"attachedToRef":"4fc9255f-9a95-4e95-9df4-e22c4be89701","extensionElements":{"nodeVisualInfo":[{"width":24,"x":354,"y":115,"declaredType":"TNodeVisualInfo","height":24}]},"cancelActivity":true,"name":"Error","declaredType":"boundaryEvent","id":"20e62432-e668-4902-8ada-90b88db27be2","outputSet":{}},{"targetRef":"e82b3ec2-f262-4b64-b612-4e7f7425d4fa","extensionElements":{"linkVisualInfo":[{"sourcePortLocation":"bottomCenter","showCoachControlLabel":false,"labelPosition":0.0,"targetPortLocation":"leftTop","declaredType":"TLinkVisualInfo","saveExecutionContext":false,"showLabel":false}]},"name":"To Exp Handling","declaredType":"sequenceFlow","id":"5c7adc9e-4b14-45f5-8432-d08642559cba","sourceRef":"20e62432-e668-4902-8ada-90b88db27be2"},{"parallelMultiple":false,"outgoing":["f1fee511-d9ec-4fbf-8674-269cb13d381d"],"dataOutput":[{"itemSubjectRef":"itm.19e8dc33-1100-46be-89a6-36c9040f7b3e","name":"error","isCollection":false,"id":"d4ef65e9-9b12-433e-8d2c-b345bedc7f91"}],"eventDefinition":[{"extensionElements":{"errorEventSettings":[{"catchAll":true,"declaredType":"com.ibm.bpmsdk.model.bpmn20.ibmwleext.TErrorEventSettings"}]},"declaredType":"errorEventDefinition","id":"27fcc6da-cb4f-40a6-82cd-083cdc4a91cb","otherAttributes":{"eventImplId":"c73a41d3-9981-4b05-8020-b05d10790ff3"}}],"attachedToRef":"64f185c6-2bc7-4a7b-9af7-d8aa5f1b91f8","extensionElements":{"nodeVisualInfo":[{"width":24,"x":504,"y":115,"declaredType":"TNodeVisualInfo","height":24}]},"cancelActivity":true,"name":"Error1","declaredType":"boundaryEvent","id":"5c439a78-de3e-4524-80ff-f0e5d0ce23fc","outputSet":{}},{"targetRef":"e82b3ec2-f262-4b64-b612-4e7f7425d4fa","extensionElements":{"linkVisualInfo":[{"sourcePortLocation":"bottomCenter","showCoachControlLabel":false,"labelPosition":0.0,"targetPortLocation":"topCenter","declaredType":"TLinkVisualInfo","saveExecutionContext":false,"showLabel":false}]},"name":"To Exp Handling","declaredType":"sequenceFlow","id":"f1fee511-d9ec-4fbf-8674-269cb13d381d","sourceRef":"5c439a78-de3e-4524-80ff-f0e5d0ce23fc"},{"incoming":["500ea008-6821-4015-a2e0-6576fea62e3d"],"eventDefinition":[{"extensionElements":{"errorEventSettings":[{"catchAll":true,"errorCode":"","declaredType":"com.ibm.bpmsdk.model.bpmn20.ibmwleext.TErrorEventSettings"}]},"declaredType":"errorEventDefinition","id":"8f2d46b0-f027-459c-82f0-b4fb145e21cd","otherAttributes":{"eventImplId":"782522dd-16b2-48f5-88ad-c6aceba1818b"}}],"extensionElements":{"nodeVisualInfo":[{"width":24,"x":676,"y":189,"declaredType":"TNodeVisualInfo","height":24}]},"name":"End Event","dataInputAssociation":[{"assignment":[{"from":{"evaluatesToTypeRef":"itm.12.db884a3c-c533-44b7-bb2d-47bec8ad4022","declaredType":"TFormalExpression","content":["tw.local.errorMessage"]}}]}],"declaredType":"endEvent","id":"7442bb4e-15c0-4514-8d16-1a792743e8df"}],"laneSet":[{"id":"c3ef90f8-a399-468b-850b-b0df7f0baa5b","lane":[{"flowNodeRef":["54b5227d-488e-4aec-9ee5-1ec7ddfb4c23","6b687c50-a559-426c-8f3a-9a1a8873bf72","4fc9255f-9a95-4e95-9df4-e22c4be89701","64f185c6-2bc7-4a7b-9af7-d8aa5f1b91f8","e82b3ec2-f262-4b64-b612-4e7f7425d4fa","20e62432-e668-4902-8ada-90b88db27be2","5c439a78-de3e-4524-80ff-f0e5d0ce23fc","7442bb4e-15c0-4514-8d16-1a792743e8df"],"extensionElements":{"nodeVisualInfo":[{"color":"#F8F8F8","width":3000,"x":0,"y":0,"declaredType":"TNodeVisualInfo","height":500}]},"name":"System","partitionElementRef":"24.6fd38d02-81cf-48ab-bd42-8ff4c0a1628b","declaredType":"lane","id":"326c32f7-1dda-48ed-9dc5-6d8e9020e156","otherAttributes":{"{http:\/\/www.ibm.com\/xmlns\/prod\/bpm\/bpmn\/ext\/process\/wle}isSystemLane":"true"}}]}],"isClosed":false,"extensionElements":{"isSecured":[true],"isAjaxExposed":[true],"sboSyncEnabled":[true]},"documentation":[{"textFormat":"text\/plain"}],"name":"Audit Request History","declaredType":"process","id":"1.2d90a780-82bb-4941-b27e-d586607ce191","processType":"None","otherAttributes":{"{http:\/\/www.ibm.com\/xmlns\/prod\/bpm\/bpmn\/ext\/process}executionMode":"microflow"},"ioSpecification":{"dataOutput":[{"itemSubjectRef":"itm.12.db884a3c-c533-44b7-bb2d-47bec8ad4022","name":"errorMessage","isCollection":false,"id":"2055.6252ef51-a5a1-41d4-a3d2-d8ff1b310731"}],"inputSet":[{"dataInputRefs":["2055.668205b9-1d85-4129-8851-98e6d8776f9b","2055.923d5229-24ce-44cd-8282-2a0fdcf33910"]}],"outputSet":[{"dataOutputRefs":["2055.6252ef51-a5a1-41d4-a3d2-d8ff1b310731"]}],"dataInput":[{"extensionElements":{"defaultValue":[{"declaredType":"com.ibm.bpmsdk.model.bpmn20.ibmext.TDefaultValue","useDefault":true,"value":"var autoObject = new tw.object.StepLog();\nautoObject.startTime =  new TWDate();\nautoObject.endTime = new TWDate() ;\nautoObject.userName = \"odchubcumkr10\";\nautoObject.role = \"Hub Maker\";\nautoObject.step = \"Create ODC Reversal Request \u2013 \u0627\u0646\u0634\u0627\u0621 \u0637\u0644\u0628 \u0627\u0639\u0627\u062f\u0629 \u0642\u064a\u062f \u062a\u062d\u0635\u064a\u0644 \u0645\u0633\u062a\u0646\u062f\u0649 \u062a\u0635\u062f\u064a\u0631\";\nautoObject.action = \"Submit Request\";\nautoObject.comment = \"No zft\";\nautoObject.terminateReason = \"\";\nautoObject.returnReason = \"L2a\";\nautoObject"}]},"itemSubjectRef":"itm.12.e4654440-58a7-47b2-8f98-3eaa9cccad49","name":"stepLog","isCollection":false,"id":"2055.668205b9-1d85-4129-8851-98e6d8776f9b"},{"extensionElements":{"defaultValue":[{"declaredType":"com.ibm.bpmsdk.model.bpmn20.ibmext.TDefaultValue","useDefault":true,"value":"\"12345678911111_02\""}]},"itemSubjectRef":"itm.12.db884a3c-c533-44b7-bb2d-47bec8ad4022","name":"requestNo","isCollection":false,"id":"2055.923d5229-24ce-44cd-8282-2a0fdcf33910"}]}}],"targetNamespace":"","typeLanguage":"http:\/\/www.w3.org\/2001\/XMLSchema","expressionLanguage":"http:\/\/www.ibm.com\/xmlns\/prod\/bpm\/expression-lang\/javascript"}</jsonData>
+        <field1 isNull="true" />
+        <field2 isNull="true" />
+        <field3>0</field3>
+        <field4 isNull="true" />
+        <field5>false</field5>
+        <clobField1 isNull="true" />
+        <blobField1 isNull="true" />
+        <processParameter name="stepLog">
+            <lastModified isNull="true" />
+            <lastModifiedBy isNull="true" />
+            <processParameterId>2055.668205b9-1d85-4129-8851-98e6d8776f9b</processParameterId>
+            <processId>1.2d90a780-82bb-4941-b27e-d586607ce191</processId>
+            <parameterType>1</parameterType>
+            <isArrayOf>false</isArrayOf>
+            <classId>/12.e4654440-58a7-47b2-8f98-3eaa9cccad49</classId>
+            <seq>1</seq>
+            <hasDefault>true</hasDefault>
+            <defaultValue>var autoObject = new tw.object.StepLog();
+autoObject.startTime =  new TWDate();
+autoObject.endTime = new TWDate() ;
+autoObject.userName = "odchubcumkr10";
+autoObject.role = "Hub Maker";
+autoObject.step = "Create ODC Reversal Request – انشاء طلب اعادة قيد تحصيل مستندى تصدير";
+autoObject.action = "Submit Request";
+autoObject.comment = "No zft";
+autoObject.terminateReason = "";
+autoObject.returnReason = "L2a";
+autoObject</defaultValue>
+            <isLocked>false</isLocked>
+            <description isNull="true" />
+            <guid>54857262-a6d9-4963-8de2-8370383497b8</guid>
+            <versionId>55e7c80e-6c4c-406c-959f-72a67040c41e</versionId>
+        </processParameter>
+        <processParameter name="requestNo">
+            <lastModified isNull="true" />
+            <lastModifiedBy isNull="true" />
+            <processParameterId>2055.923d5229-24ce-44cd-8282-2a0fdcf33910</processParameterId>
+            <processId>1.2d90a780-82bb-4941-b27e-d586607ce191</processId>
+            <parameterType>1</parameterType>
+            <isArrayOf>false</isArrayOf>
+            <classId>b5a7448c-61c1-4e1e-9933-3912eb5c29ad/12.db884a3c-c533-44b7-bb2d-47bec8ad4022</classId>
+            <seq>2</seq>
+            <hasDefault>true</hasDefault>
+            <defaultValue>"12345678911111_02"</defaultValue>
+            <isLocked>false</isLocked>
+            <description isNull="true" />
+            <guid>61b725ea-6dd3-4b2b-9758-2943223e5409</guid>
+            <versionId>ed9f1b69-c518-44a1-9791-a2266fadac18</versionId>
+        </processParameter>
+        <processParameter name="errorMessage">
+            <lastModified isNull="true" />
+            <lastModifiedBy isNull="true" />
+            <processParameterId>2055.6252ef51-a5a1-41d4-a3d2-d8ff1b310731</processParameterId>
+            <processId>1.2d90a780-82bb-4941-b27e-d586607ce191</processId>
+            <parameterType>2</parameterType>
+            <isArrayOf>false</isArrayOf>
+            <classId>b5a7448c-61c1-4e1e-9933-3912eb5c29ad/12.db884a3c-c533-44b7-bb2d-47bec8ad4022</classId>
+            <seq>3</seq>
+            <hasDefault>false</hasDefault>
+            <defaultValue isNull="true" />
+            <isLocked>false</isLocked>
+            <description isNull="true" />
+            <guid>a7f712e2-6864-4588-be8c-af717d8db59f</guid>
+            <versionId>33447216-1df3-4f51-b85f-82beed38306d</versionId>
+        </processParameter>
+        <processParameter name="">
+            <lastModified isNull="true" />
+            <lastModifiedBy isNull="true" />
+            <processParameterId>2055.acbe43b9-d0d9-434f-a659-32d581871544</processParameterId>
+            <processId>1.2d90a780-82bb-4941-b27e-d586607ce191</processId>
+            <parameterType>3</parameterType>
+            <isArrayOf>false</isArrayOf>
+            <classId>b5a7448c-61c1-4e1e-9933-3912eb5c29ad/12.db884a3c-c533-44b7-bb2d-47bec8ad4022</classId>
+            <seq>4</seq>
+            <hasDefault>false</hasDefault>
+            <defaultValue isNull="true" />
+            <isLocked>false</isLocked>
+            <description isNull="true" />
+            <guid>eb8928b1-0a58-40f3-951b-78f740d144d4</guid>
+            <versionId>a6cc46e0-0ce7-4ed0-b586-948806303b33</versionId>
+        </processParameter>
+        <processVariable name="sqlParameters">
+            <lastModified isNull="true" />
+            <lastModifiedBy isNull="true" />
+            <processVariableId>2056.59f5349e-ed3a-48ac-8d37-59d60eab80c6</processVariableId>
+            <description isNull="true" />
+            <processId>1.2d90a780-82bb-4941-b27e-d586607ce191</processId>
+            <namespace>2</namespace>
+            <seq>1</seq>
+            <isArrayOf>true</isArrayOf>
+            <isTransient>false</isTransient>
+            <classId>b5a7448c-61c1-4e1e-9933-3912eb5c29ad/12.f453f500-ca4e-4264-a371-72c1892e8b7c</classId>
+            <hasDefault>false</hasDefault>
+            <defaultValue isNull="true" />
+            <guid>3e40e6c5-b7df-4a7b-9a9e-9b290566cc06</guid>
+            <versionId>98a592f1-e808-449f-b82d-a8da805612b4</versionId>
+        </processVariable>
+        <processVariable name="sql">
+            <lastModified isNull="true" />
+            <lastModifiedBy isNull="true" />
+            <processVariableId>2056.e3fe14a6-6267-450b-bb5e-7d2aea4402b6</processVariableId>
+            <description isNull="true" />
+            <processId>1.2d90a780-82bb-4941-b27e-d586607ce191</processId>
+            <namespace>2</namespace>
+            <seq>2</seq>
+            <isArrayOf>false</isArrayOf>
+            <isTransient>false</isTransient>
+            <classId>b5a7448c-61c1-4e1e-9933-3912eb5c29ad/12.db884a3c-c533-44b7-bb2d-47bec8ad4022</classId>
+            <hasDefault>false</hasDefault>
+            <defaultValue isNull="true" />
+            <guid>fb592912-a35a-4cdc-906e-328bc6abc825</guid>
+            <versionId>1a1ba86f-47c0-4a30-8e89-e558c0ceb981</versionId>
+        </processVariable>
+        <processVariable name="results">
+            <lastModified isNull="true" />
+            <lastModifiedBy isNull="true" />
+            <processVariableId>2056.3aa92ff8-4196-4dc7-9f3d-a88f7df29104</processVariableId>
+            <description isNull="true" />
+            <processId>1.2d90a780-82bb-4941-b27e-d586607ce191</processId>
+            <namespace>2</namespace>
+            <seq>3</seq>
+            <isArrayOf>true</isArrayOf>
+            <isTransient>false</isTransient>
+            <classId>b5a7448c-61c1-4e1e-9933-3912eb5c29ad/12.3b1e3757-a1f4-4c3f-bbb8-16fecd4d65c1</classId>
+            <hasDefault>false</hasDefault>
+            <defaultValue isNull="true" />
+            <guid>3300badb-5239-4e55-9283-209078572aed</guid>
+            <versionId>998ae5e4-2960-4de0-ba5e-7106c9ed4a3d</versionId>
+        </processVariable>
+        <item>
+            <lastModified isNull="true" />
+            <lastModifiedBy isNull="true" />
+            <processItemId>2025.64f185c6-2bc7-4a7b-9af7-d8aa5f1b91f8</processItemId>
+            <processId>1.2d90a780-82bb-4941-b27e-d586607ce191</processId>
+            <name>Execute SQL Statement</name>
+            <tWComponentName>SubProcess</tWComponentName>
+            <tWComponentId>3012.bd3c1363-b26c-47e6-a360-613c6e44eca9</tWComponentId>
+            <isLogEnabled>false</isLogEnabled>
+            <isTraceEnabled>false</isTraceEnabled>
+            <traceCategory isNull="true" />
+            <traceLevel isNull="true" />
+            <traceMessage isNull="true" />
+            <traceSymbolTable isNull="true" />
+            <isExecutionContextTraced>false</isExecutionContextTraced>
+            <saveExecutionContext>false</saveExecutionContext>
+            <documentation isNull="true" />
+            <isErrorHandlerEnabled>true</isErrorHandlerEnabled>
+            <errorHandlerItemId>2025.e82b3ec2-f262-4b64-b612-4e7f7425d4fa</errorHandlerItemId>
+            <guid>guid:ee1d8a182ba8b1ae:-f408c1e:18b855767df:-2d8e</guid>
+            <versionId>0a14fccb-6dd0-48ca-bd3a-d74aae5306b5</versionId>
+            <externalServiceRef isNull="true" />
+            <externalServiceOp isNull="true" />
+            <nodeColor isNull="true" />
+            <layoutData x="469" y="57">
+                <errorLink>
+                    <controlPoints />
+                    <showEndState>false</showEndState>
+                    <showName>false</showName>
+                </errorLink>
+            </layoutData>
+            <errorHandler>
+                <name>Error1</name>
+                <locationId>bottomCenter</locationId>
+                <faultStyle>1</faultStyle>
+                <isCatchAll>true</isCatchAll>
+                <errorHandlerItem>guid:ee1d8a182ba8b1ae:-f408c1e:18b855767df:-2d8c</errorHandlerItem>
+                <errorHandlerItemId>2025.e82b3ec2-f262-4b64-b612-4e7f7425d4fa</errorHandlerItemId>
+                <errorHandlerLink>
+                    <fromPort locationId="bottomCenter" portType="1" />
+                    <toPort locationId="topCenter" portType="2" />
+                    <layoutData>
+                        <controlPoints />
+                        <showEndState>false</showEndState>
+                        <showName>false</showName>
+                    </layoutData>
+                </errorHandlerLink>
+            </errorHandler>
+            <TWComponent>
+                <lastModified isNull="true" />
+                <lastModifiedBy isNull="true" />
+                <subProcessId>3012.bd3c1363-b26c-47e6-a360-613c6e44eca9</subProcessId>
+                <attachedProcessRef>b5a7448c-61c1-4e1e-9933-3912eb5c29ad/1.4e480adb-5741-4f5e-aead-27b3654e9cd2</attachedProcessRef>
+                <guid>57218fd8-e45d-42cd-9911-aa99e0247474</guid>
+                <versionId>60bfe0c1-8185-4343-b82b-efd6ba4595e5</versionId>
+                <parameterMapping name="sql">
+                    <lastModified isNull="true" />
+                    <lastModifiedBy isNull="true" />
+                    <parameterMappingId>2054.f9bb8136-31a9-4fef-b017-be63e9a187fd</parameterMappingId>
+                    <processParameterId>2055.25f5990f-9abf-4cf6-9101-497d43dee141</processParameterId>
+                    <parameterMappingParentId>3012.bd3c1363-b26c-47e6-a360-613c6e44eca9</parameterMappingParentId>
+                    <useDefault>false</useDefault>
+                    <value>tw.local.sql</value>
+                    <classRef>/12.db884a3c-c533-44b7-bb2d-47bec8ad4022</classRef>
+                    <isList>false</isList>
+                    <isInput>true</isInput>
+                    <guid>de3ad393-d310-4ea1-9928-dedbe0a9eb93</guid>
+                    <versionId>66e7da67-6193-4697-a077-ad2ece9e1fb9</versionId>
+                    <description isNull="true" />
+                </parameterMapping>
+                <parameterMapping name="dataSourceName">
+                    <lastModified isNull="true" />
+                    <lastModifiedBy isNull="true" />
+                    <parameterMappingId>2054.afb67f0c-42bb-4943-9f16-47504bc77ba3</parameterMappingId>
+                    <processParameterId>2055.81a41d09-a504-4a63-bdaa-a92bac26ad7e</processParameterId>
+                    <parameterMappingParentId>3012.bd3c1363-b26c-47e6-a360-613c6e44eca9</parameterMappingParentId>
+                    <useDefault>false</useDefault>
+                    <value>tw.env.DATASOURCE_APP</value>
+                    <classRef>/12.db884a3c-c533-44b7-bb2d-47bec8ad4022</classRef>
+                    <isList>false</isList>
+                    <isInput>true</isInput>
+                    <guid>26d1dd4b-b4b4-4a10-be7a-11f6b93ceea3</guid>
+                    <versionId>6c6b3e38-0619-4a21-b2de-c6fb0088e4f3</versionId>
+                    <description isNull="true" />
+                </parameterMapping>
+                <parameterMapping name="maxRows">
+                    <lastModified isNull="true" />
+                    <lastModifiedBy isNull="true" />
+                    <parameterMappingId>2054.6a50cec6-4935-4f45-bcb5-352d97c3c664</parameterMappingId>
+                    <processParameterId>2055.53ee0328-837f-427d-b0a1-0255f36f7e0c</processParameterId>
+                    <parameterMappingParentId>3012.bd3c1363-b26c-47e6-a360-613c6e44eca9</parameterMappingParentId>
+                    <useDefault>false</useDefault>
+                    <value>1</value>
+                    <classRef>/12.3fa0d7a0-828a-4d60-99cc-db5ed143fc2d</classRef>
+                    <isList>false</isList>
+                    <isInput>true</isInput>
+                    <guid>31410a72-2d53-4318-bf11-c115034d2c1b</guid>
+                    <versionId>a324d971-17d1-4bb6-9165-cc87505c2b6f</versionId>
+                    <description isNull="true" />
+                </parameterMapping>
+                <parameterMapping name="parameters">
+                    <lastModified isNull="true" />
+                    <lastModifiedBy isNull="true" />
+                    <parameterMappingId>2054.4693d20b-2838-45bb-a954-6ab2dc112315</parameterMappingId>
+                    <processParameterId>2055.8b844f2a-0a1f-4f12-b34b-e9fd5191dc43</processParameterId>
+                    <parameterMappingParentId>3012.bd3c1363-b26c-47e6-a360-613c6e44eca9</parameterMappingParentId>
+                    <useDefault>false</useDefault>
+                    <value>tw.local.sqlParameters</value>
+                    <classRef>/12.f453f500-ca4e-4264-a371-72c1892e8b7c</classRef>
+                    <isList>true</isList>
+                    <isInput>true</isInput>
+                    <guid>8ad883f0-9416-48fb-989b-acaa5027d5f1</guid>
+                    <versionId>d3c092ce-2818-4344-93fb-6ee1f19d6b89</versionId>
+                    <description isNull="true" />
+                </parameterMapping>
+                <parameterMapping name="results">
+                    <lastModified isNull="true" />
+                    <lastModifiedBy isNull="true" />
+                    <parameterMappingId>2054.10e04d33-941e-4e7e-8fb9-c36fc54f9f5c</parameterMappingId>
+                    <processParameterId>2055.976cdc78-9d8d-41d4-ae85-f6c9a50c6764</processParameterId>
+                    <parameterMappingParentId>3012.bd3c1363-b26c-47e6-a360-613c6e44eca9</parameterMappingParentId>
+                    <useDefault>false</useDefault>
+                    <value>tw.local.results</value>
+                    <classRef>/12.3b1e3757-a1f4-4c3f-bbb8-16fecd4d65c1</classRef>
+                    <isList>true</isList>
+                    <isInput>false</isInput>
+                    <guid>36869c17-2a23-407c-a414-6767ffd0f9fd</guid>
+                    <versionId>ef1d50ce-be10-414b-ae6d-5c215d981c39</versionId>
+                    <description isNull="true" />
+                </parameterMapping>
+            </TWComponent>
+        </item>
+        <item>
+            <lastModified isNull="true" />
+            <lastModifiedBy isNull="true" />
+            <processItemId>2025.7442bb4e-15c0-4514-8d16-1a792743e8df</processItemId>
+            <processId>1.2d90a780-82bb-4941-b27e-d586607ce191</processId>
+            <name>End Event</name>
+            <tWComponentName>Exception</tWComponentName>
+            <tWComponentId>3007.ca48c8ca-2d0f-4cf9-9b42-c107b38e8fec</tWComponentId>
+            <isLogEnabled>false</isLogEnabled>
+            <isTraceEnabled>false</isTraceEnabled>
+            <traceCategory isNull="true" />
+            <traceLevel isNull="true" />
+            <traceMessage isNull="true" />
+            <traceSymbolTable isNull="true" />
+            <isExecutionContextTraced>false</isExecutionContextTraced>
+            <saveExecutionContext>false</saveExecutionContext>
+            <documentation isNull="true" />
+            <isErrorHandlerEnabled>false</isErrorHandlerEnabled>
+            <errorHandlerItemId isNull="true" />
+            <guid>guid:2542dce8e3ac49c7:3b9eab55:18bfd03a604:-1042</guid>
+            <versionId>508d68dc-517b-48b3-b4c1-d45183b992f1</versionId>
+            <externalServiceRef isNull="true" />
+            <externalServiceOp isNull="true" />
+            <nodeColor isNull="true" />
+            <layoutData x="676" y="189">
+                <errorLink>
+                    <controlPoints />
+                    <showEndState>false</showEndState>
+                    <showName>false</showName>
+                </errorLink>
+            </layoutData>
+            <TWComponent>
+                <lastModified isNull="true" />
+                <lastModifiedBy isNull="true" />
+                <exceptionId>3007.ca48c8ca-2d0f-4cf9-9b42-c107b38e8fec</exceptionId>
+                <message></message>
+                <faultStyle>1</faultStyle>
+                <guid>09849e36-8d2f-4259-9d56-5442d1b5cf4e</guid>
+                <versionId>4415481d-458e-4d7f-ba94-b9b98973dfcb</versionId>
+                <parameterMapping name="">
+                    <lastModified isNull="true" />
+                    <lastModifiedBy isNull="true" />
+                    <parameterMappingId>2054.28a4ceb5-3451-4b8b-bbde-86ce8f94be07</parameterMappingId>
+                    <processParameterId>2055.acbe43b9-d0d9-434f-a659-32d581871544</processParameterId>
+                    <parameterMappingParentId>3007.ca48c8ca-2d0f-4cf9-9b42-c107b38e8fec</parameterMappingParentId>
+                    <useDefault>false</useDefault>
+                    <value>tw.local.errorMessage</value>
+                    <classRef>b5a7448c-61c1-4e1e-9933-3912eb5c29ad/12.db884a3c-c533-44b7-bb2d-47bec8ad4022</classRef>
+                    <isList>false</isList>
+                    <isInput>false</isInput>
+                    <guid>1af6a576-3580-4b60-938c-48056ca8da7e</guid>
+                    <versionId>f7f056d1-9d3c-43a5-b57b-6cba164b6fc6</versionId>
+                    <description isNull="true" />
+                </parameterMapping>
+            </TWComponent>
+        </item>
+        <item>
+            <lastModified isNull="true" />
+            <lastModifiedBy isNull="true" />
+            <processItemId>2025.4fc9255f-9a95-4e95-9df4-e22c4be89701</processItemId>
+            <processId>1.2d90a780-82bb-4941-b27e-d586607ce191</processId>
+            <name>Set SQL Statement</name>
+            <tWComponentName>Script</tWComponentName>
+            <tWComponentId>3011.b92a5e86-97d7-444a-b0c1-b6b85c6aac51</tWComponentId>
+            <isLogEnabled>false</isLogEnabled>
+            <isTraceEnabled>false</isTraceEnabled>
+            <traceCategory isNull="true" />
+            <traceLevel isNull="true" />
+            <traceMessage isNull="true" />
+            <traceSymbolTable isNull="true" />
+            <isExecutionContextTraced>false</isExecutionContextTraced>
+            <saveExecutionContext>false</saveExecutionContext>
+            <documentation isNull="true" />
+            <isErrorHandlerEnabled>true</isErrorHandlerEnabled>
+            <errorHandlerItemId>2025.e82b3ec2-f262-4b64-b612-4e7f7425d4fa</errorHandlerItemId>
+            <guid>guid:ee1d8a182ba8b1ae:-f408c1e:18b855767df:-2d88</guid>
+            <versionId>c40a81fd-df5f-4959-bc56-71573ec7cfef</versionId>
+            <externalServiceRef isNull="true" />
+            <externalServiceOp isNull="true" />
+            <nodeColor isNull="true" />
+            <processPrePosts>
+                <lastModified isNull="true" />
+                <lastModifiedBy isNull="true" />
+                <processItemPrePostId>2029.e4d4694b-f48c-41a6-84ad-a977125cc3b4</processItemPrePostId>
+                <processItemId>2025.4fc9255f-9a95-4e95-9df4-e22c4be89701</processItemId>
+                <location>1</location>
+                <script>//log.info("ODC -- ProcessInstance : "+tw.local.instanceNo +" - ServiceName : AUDIT COLLECTION DATA : START");&#xD;
+&#xD;
+</script>
+                <guid>d621998d-e257-4dc8-bdad-5e8af5366e12</guid>
+                <versionId>8dfd341a-f4f5-4f52-8f50-435cc72ab449</versionId>
+            </processPrePosts>
+            <processPrePosts>
+                <lastModified isNull="true" />
+                <lastModifiedBy isNull="true" />
+                <processItemPrePostId>2029.9d1e12ea-673c-4aed-9c12-2ffd30069505</processItemPrePostId>
+                <processItemId>2025.4fc9255f-9a95-4e95-9df4-e22c4be89701</processItemId>
+                <location>2</location>
+                <script isNull="true" />
+                <guid>a70c3c20-8570-408e-a27e-7546a0908213</guid>
+                <versionId>a0e0b3a2-6a6b-40e7-b293-3e65c8598bfc</versionId>
+            </processPrePosts>
+            <layoutData x="319" y="57">
+                <errorLink>
+                    <controlPoints />
+                    <showEndState>false</showEndState>
+                    <showName>false</showName>
+                </errorLink>
+            </layoutData>
+            <errorHandler>
+                <name>Error</name>
+                <locationId>bottomCenter</locationId>
+                <faultStyle>1</faultStyle>
+                <isCatchAll>true</isCatchAll>
+                <errorHandlerItem>guid:ee1d8a182ba8b1ae:-f408c1e:18b855767df:-2d8c</errorHandlerItem>
+                <errorHandlerItemId>2025.e82b3ec2-f262-4b64-b612-4e7f7425d4fa</errorHandlerItemId>
+                <errorHandlerLink>
+                    <fromPort locationId="bottomCenter" portType="1" />
+                    <toPort locationId="leftTop" portType="2" />
+                    <layoutData>
+                        <controlPoints />
+                        <showEndState>false</showEndState>
+                        <showName>false</showName>
+                    </layoutData>
+                </errorHandlerLink>
+            </errorHandler>
+            <TWComponent>
+                <lastModified isNull="true" />
+                <lastModifiedBy isNull="true" />
+                <scriptId>3011.b92a5e86-97d7-444a-b0c1-b6b85c6aac51</scriptId>
+                <scriptTypeId>2</scriptTypeId>
+                <isActive>true</isActive>
+                <script>/**-------------------------- Add SQL Parameters --------------------------**/&#xD;
+function addSQLParameter(value){&#xD;
+	if(value == null &amp;&amp; typeof value == "string"){&#xD;
+		value= ""; &#xD;
+	}&#xD;
+	else if(value == null &amp;&amp; typeof value == "number"){&#xD;
+		value= 0;&#xD;
+	}&#xD;
+	else if(value == null &amp;&amp; typeof value == "boolean"){&#xD;
+		value = "0";&#xD;
+	}&#xD;
+ var parameter = new tw.object.SQLParameter();  &#xD;
+   parameter.value = value;&#xD;
+   parameter.mode = "IN";&#xD;
+return parameter;&#xD;
+}&#xD;
+tw.local.sql = "INSERT INTO "+ tw.env.LKP_DB_Schema + ".ODC_LOGHISTORY"+&#xD;
+               "(STARTTIME, ENDTIME, USERNAME, ROLE, STEPNAME, ACTION, RETURNREASON, COMMENT, REQUESTNO, terminateReason)"+&#xD;
+ 		   " VALUES (?,?,?,?,?,?,?,?,?,?)";&#xD;
+&#xD;
+&#xD;
+tw.local.sqlParameters = new tw.object.listOf.SQLParameter();&#xD;
+&#xD;
+tw.local.sqlParameters.insertIntoList(tw.local.sqlParameters.listLength, addSQLParameter(tw.local.stepLog.startTime));&#xD;
+tw.local.sqlParameters.insertIntoList(tw.local.sqlParameters.listLength, addSQLParameter(tw.local.stepLog.endTime));&#xD;
+tw.local.sqlParameters.insertIntoList(tw.local.sqlParameters.listLength, addSQLParameter(tw.local.stepLog.userName));&#xD;
+tw.local.sqlParameters.insertIntoList(tw.local.sqlParameters.listLength, addSQLParameter(tw.local.stepLog.role));&#xD;
+tw.local.sqlParameters.insertIntoList(tw.local.sqlParameters.listLength, addSQLParameter(tw.local.stepLog.step));&#xD;
+tw.local.sqlParameters.insertIntoList(tw.local.sqlParameters.listLength, addSQLParameter(tw.local.stepLog.action));&#xD;
+tw.local.sqlParameters.insertIntoList(tw.local.sqlParameters.listLength, addSQLParameter(tw.local.stepLog.returnReason));&#xD;
+tw.local.sqlParameters.insertIntoList(tw.local.sqlParameters.listLength, addSQLParameter(tw.local.stepLog.comment));&#xD;
+ &#xD;
+tw.local.sqlParameters.insertIntoList(tw.local.sqlParameters.listLength, addSQLParameter(tw.local.requestNo));&#xD;
+tw.local.sqlParameters.insertIntoList(tw.local.sqlParameters.listLength, addSQLParameter(tw.local.stepLog.terminateReason));  </script>
+                <isRule>false</isRule>
+                <guid>1f4a8fe7-9607-4267-bd0f-e0b829c50c28</guid>
+                <versionId>3aa6bd9e-126b-41c3-acd1-bc483b5d68c0</versionId>
+            </TWComponent>
+        </item>
+        <item>
+            <lastModified isNull="true" />
+            <lastModifiedBy isNull="true" />
+            <processItemId>2025.e82b3ec2-f262-4b64-b612-4e7f7425d4fa</processItemId>
+            <processId>1.2d90a780-82bb-4941-b27e-d586607ce191</processId>
+            <name>Exp Handling</name>
+            <tWComponentName>SubProcess</tWComponentName>
+            <tWComponentId>3012.edaaa118-ce7e-4b4e-9514-daba3c6f4edd</tWComponentId>
+            <isLogEnabled>false</isLogEnabled>
+            <isTraceEnabled>false</isTraceEnabled>
+            <traceCategory isNull="true" />
+            <traceLevel isNull="true" />
+            <traceMessage isNull="true" />
+            <traceSymbolTable isNull="true" />
+            <isExecutionContextTraced>false</isExecutionContextTraced>
+            <saveExecutionContext>false</saveExecutionContext>
+            <documentation isNull="true" />
+            <isErrorHandlerEnabled>false</isErrorHandlerEnabled>
+            <errorHandlerItemId isNull="true" />
+            <guid>guid:ee1d8a182ba8b1ae:-f408c1e:18b855767df:-2d8c</guid>
+            <versionId>cf016620-9f14-413a-9075-dfd0eb4de355</versionId>
+            <externalServiceRef isNull="true" />
+            <externalServiceOp isNull="true" />
+            <nodeColor>#FF7782</nodeColor>
+            <layoutData x="473" y="187">
+                <errorLink>
+                    <controlPoints />
+                    <showEndState>false</showEndState>
+                    <showName>false</showName>
+                </errorLink>
+            </layoutData>
+            <TWComponent>
+                <lastModified isNull="true" />
+                <lastModifiedBy isNull="true" />
+                <subProcessId>3012.edaaa118-ce7e-4b4e-9514-daba3c6f4edd</subProcessId>
+                <attachedProcessRef>/1.2b50ff68-f7d3-4895-88ad-a73a13fa91d0</attachedProcessRef>
+                <guid>5d3294f3-17cc-47e5-9249-047b85fe0716</guid>
+                <versionId>a42ba615-4cb7-459c-8e89-f6c775b51a14</versionId>
+                <parameterMapping name="serviceName">
+                    <lastModified isNull="true" />
+                    <lastModifiedBy isNull="true" />
+                    <parameterMappingId>2054.430e80a1-6eeb-4a51-b28d-45d68f3a3fd4</parameterMappingId>
+                    <processParameterId>2055.5ea77901-7a17-422a-8958-67bb0e9c991b</processParameterId>
+                    <parameterMappingParentId>3012.edaaa118-ce7e-4b4e-9514-daba3c6f4edd</parameterMappingParentId>
+                    <useDefault>false</useDefault>
+                    <value>"Audit Request History"</value>
+                    <classRef>b5a7448c-61c1-4e1e-9933-3912eb5c29ad/12.db884a3c-c533-44b7-bb2d-47bec8ad4022</classRef>
+                    <isList>false</isList>
+                    <isInput>true</isInput>
+                    <guid>61e55516-6cc8-49f4-b541-4194f6d55b2c</guid>
+                    <versionId>4b75b66b-68e2-4070-a276-12dc99a7be51</versionId>
+                    <description isNull="true" />
+                </parameterMapping>
+                <parameterMapping name="serviceErrorMsg">
+                    <lastModified isNull="true" />
+                    <lastModifiedBy isNull="true" />
+                    <parameterMappingId>2054.9b69848d-ff7d-434d-8fdb-58bc2bd5732d</parameterMappingId>
+                    <processParameterId>2055.55dcd590-97c2-48df-82c6-0f812ab7177f</processParameterId>
+                    <parameterMappingParentId>3012.edaaa118-ce7e-4b4e-9514-daba3c6f4edd</parameterMappingParentId>
+                    <useDefault>false</useDefault>
+                    <value>tw.local.errorMessage</value>
+                    <classRef>b5a7448c-61c1-4e1e-9933-3912eb5c29ad/12.db884a3c-c533-44b7-bb2d-47bec8ad4022</classRef>
+                    <isList>false</isList>
+                    <isInput>true</isInput>
+                    <guid>bad53d72-a4e2-4e74-8b9f-c5f03e6ab3ed</guid>
+                    <versionId>8202171d-ca8c-4bd5-80d2-c6150a6e5e84</versionId>
+                    <description isNull="true" />
+                </parameterMapping>
+                <parameterMapping name="isSuccessful">
+                    <lastModified isNull="true" />
+                    <lastModifiedBy isNull="true" />
+                    <parameterMappingId>2054.1a965ded-6b1b-4d5a-a76b-80f4ad7fde68</parameterMappingId>
+                    <processParameterId>2055.99eb514d-4b62-401e-8cdb-7edc096adffd</processParameterId>
+                    <parameterMappingParentId>3012.edaaa118-ce7e-4b4e-9514-daba3c6f4edd</parameterMappingParentId>
+                    <useDefault>false</useDefault>
+                    <value isNull="true" />
+                    <classRef>b5a7448c-61c1-4e1e-9933-3912eb5c29ad/12.83ff975e-8dbc-42e5-b738-fa8bc08274a2</classRef>
+                    <isList>false</isList>
+                    <isInput>false</isInput>
+                    <guid>f1852d70-14c2-41f5-af0c-ce2654e3fd98</guid>
+                    <versionId>b25c48a2-bbdc-4fdf-9653-1c486d6f5395</versionId>
+                    <description isNull="true" />
+                </parameterMapping>
+                <parameterMapping name="errorMSG">
+                    <lastModified isNull="true" />
+                    <lastModifiedBy isNull="true" />
+                    <parameterMappingId>2054.76774df4-e358-4d89-8efa-769c33f2b72c</parameterMappingId>
+                    <processParameterId>2055.81b82125-a5aa-45f7-8c0f-4870667eebbf</processParameterId>
+                    <parameterMappingParentId>3012.edaaa118-ce7e-4b4e-9514-daba3c6f4edd</parameterMappingParentId>
+                    <useDefault>false</useDefault>
+                    <value>tw.local.errorMessage</value>
+                    <classRef>b5a7448c-61c1-4e1e-9933-3912eb5c29ad/12.db884a3c-c533-44b7-bb2d-47bec8ad4022</classRef>
+                    <isList>false</isList>
+                    <isInput>false</isInput>
+                    <guid>444892c4-0c7e-4ca1-b378-b82417655a45</guid>
+                    <versionId>c8cb4f96-1e0f-475c-a698-a2fd81aa39ea</versionId>
+                    <description isNull="true" />
+                </parameterMapping>
+            </TWComponent>
+        </item>
+        <item>
+            <lastModified isNull="true" />
+            <lastModifiedBy isNull="true" />
+            <processItemId>2025.6b687c50-a559-426c-8f3a-9a1a8873bf72</processItemId>
+            <processId>1.2d90a780-82bb-4941-b27e-d586607ce191</processId>
+            <name>End</name>
+            <tWComponentName>ExitPoint</tWComponentName>
+            <tWComponentId>3008.5a68c084-2edd-4582-a727-2c4f08304046</tWComponentId>
+            <isLogEnabled>false</isLogEnabled>
+            <isTraceEnabled>false</isTraceEnabled>
+            <traceCategory isNull="true" />
+            <traceLevel isNull="true" />
+            <traceMessage isNull="true" />
+            <traceSymbolTable isNull="true" />
+            <isExecutionContextTraced>false</isExecutionContextTraced>
+            <saveExecutionContext>true</saveExecutionContext>
+            <documentation isNull="true" />
+            <isErrorHandlerEnabled>false</isErrorHandlerEnabled>
+            <errorHandlerItemId isNull="true" />
+            <guid>guid:ee1d8a182ba8b1ae:-f408c1e:18b855767df:-2d8a</guid>
+            <versionId>d7cc7ca5-0805-439f-8b55-8443a3b03cb8</versionId>
+            <externalServiceRef isNull="true" />
+            <externalServiceOp isNull="true" />
+            <nodeColor isNull="true" />
+            <processPrePosts>
+                <lastModified isNull="true" />
+                <lastModifiedBy isNull="true" />
+                <processItemPrePostId>2029.3c5c45d7-d194-477b-ad08-f783f672c4fc</processItemPrePostId>
+                <processItemId>2025.6b687c50-a559-426c-8f3a-9a1a8873bf72</processItemId>
+                <location>1</location>
+                <script>//log.info("ODC -- ProcessInstance : "+tw.local.requestNo +" - ServiceName : AUDIT COLLECTION DATA : END");</script>
+                <guid>b806e75d-1367-46d6-b74c-157cba08349a</guid>
+                <versionId>fe12eea3-3e2b-4885-8c4c-ec1ee256041b</versionId>
+            </processPrePosts>
+            <layoutData x="608" y="80">
+                <errorLink>
+                    <controlPoints />
+                    <showEndState>false</showEndState>
+                    <showName>false</showName>
+                </errorLink>
+            </layoutData>
+            <TWComponent>
+                <lastModified isNull="true" />
+                <lastModifiedBy isNull="true" />
+                <exitPointId>3008.5a68c084-2edd-4582-a727-2c4f08304046</exitPointId>
+                <haltProcess>false</haltProcess>
+                <guid>36decfe2-46c9-4c91-a7ba-3576d5d7ad5b</guid>
+                <versionId>b44cb01b-08a1-4b48-8edf-e3ab76e28f43</versionId>
+            </TWComponent>
+        </item>
+        <startingProcessItemId>2025.4fc9255f-9a95-4e95-9df4-e22c4be89701</startingProcessItemId>
+        <errorHandlerItemId isNull="true" />
+        <layoutData noConversion="true">
+            <errorLink>
+                <controlPoints />
+                <showEndState>false</showEndState>
+                <showName>false</showName>
+            </errorLink>
+        </layoutData>
+        <startPoint>
+            <layoutData x="65" y="80">
+                <errorLink>
+                    <controlPoints />
+                    <showEndState>false</showEndState>
+                    <showName>false</showName>
+                </errorLink>
+            </layoutData>
+        </startPoint>
+        <startLink>
+            <fromPort locationId="rightCenter" portType="1" />
+            <toPort locationId="leftCenter" portType="2" />
+            <layoutData>
+                <controlPoints />
+                <showEndState>false</showEndState>
+                <showName>false</showName>
+            </layoutData>
+        </startLink>
+        <bpmn2Model>
+            <ns16:definitions xmlns:ns16="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:ns2="http://www.ibm.com/xmlns/prod/bpm/bpmn/ext/process" xmlns:ns3="http://www.ibm.com/xmlns/prod/bpm/bpmn/ext/process/wle" xmlns:ns4="http://www.ibm.com/xmlns/prod/bpm/bpmn/ext/process/case" xmlns:ns5="http://www.ibm.com/bpm/Extensions" xmlns:ns6="http://www.ibm.com/xmlns/prod/bpm/uca" xmlns:ns7="http://www.ibm.com/xmlns/prod/bpm/bpmn/ext/team" xmlns:ns8="http://www.ibm.com/xmlns/prod/bpm/bpmn/ext/trackinggroup" xmlns:ns9="http://www.ibm.com/xmlns/bpmnx/20100524/v1/BusinessVocabulary" xmlns:ns10="http://www.omg.org/spec/DD/20100524/DI" xmlns:ns11="http://www.omg.org/spec/DD/20100524/DC" xmlns:ns12="http://www.omg.org/spec/BPMN/20100524/BPMNDI" xmlns:ns13="http://www.ibm.com/xmlns/prod/bpm/graph" xmlns:ns14="http://www.ibm.com/xmlns/prod/bpm/bpmn/ext/process/auth" xmlns:ns15="http://www.ibm.com/xmlns/prod/bpm/bpmn/ext/extservice" xmlns:ns17="http://www.ibm.com/bpm/processappsettings" xmlns:ns18="http://www.ibm.com/xmlns/links" xmlns:ns19="http://www.ibm.com/bpm/CoachDesignerNG" xmlns:ns20="http://www.ibm.com/xmlns/tagging" xmlns:ns21="http://www.ibm.com/bpm/uitheme" xmlns:ns22="http://www.ibm.com/bpm/coachview" targetNamespace="" expressionLanguage="http://www.ibm.com/xmlns/prod/bpm/expression-lang/javascript" typeLanguage="http://www.w3.org/2001/XMLSchema">
+                <ns16:process name="Audit Request History" id="1.2d90a780-82bb-4941-b27e-d586607ce191" ns2:executionMode="microflow">
+                    <ns16:documentation textFormat="text/plain" />
+                    <ns16:extensionElements>
+                        <ns2:isSecured>true</ns2:isSecured>
+                        <ns2:isAjaxExposed>true</ns2:isAjaxExposed>
+                        <ns2:sboSyncEnabled>true</ns2:sboSyncEnabled>
+                    </ns16:extensionElements>
+                    <ns16:ioSpecification>
+                        <ns16:dataInput name="stepLog" itemSubjectRef="itm.12.e4654440-58a7-47b2-8f98-3eaa9cccad49" isCollection="false" id="2055.668205b9-1d85-4129-8851-98e6d8776f9b">
+                            <ns16:extensionElements>
+                                <ns2:defaultValue useDefault="true">var autoObject = new tw.object.StepLog();
+autoObject.startTime =  new TWDate();
+autoObject.endTime = new TWDate() ;
+autoObject.userName = "odchubcumkr10";
+autoObject.role = "Hub Maker";
+autoObject.step = "Create ODC Reversal Request – انشاء طلب اعادة قيد تحصيل مستندى تصدير";
+autoObject.action = "Submit Request";
+autoObject.comment = "No zft";
+autoObject.terminateReason = "";
+autoObject.returnReason = "L2a";
+autoObject</ns2:defaultValue>
+                            </ns16:extensionElements>
+                        </ns16:dataInput>
+                        <ns16:dataInput name="requestNo" itemSubjectRef="itm.12.db884a3c-c533-44b7-bb2d-47bec8ad4022" isCollection="false" id="2055.923d5229-24ce-44cd-8282-2a0fdcf33910">
+                            <ns16:extensionElements>
+                                <ns2:defaultValue useDefault="true">"12345678911111_02"</ns2:defaultValue>
+                            </ns16:extensionElements>
+                        </ns16:dataInput>
+                        <ns16:dataOutput name="errorMessage" itemSubjectRef="itm.12.db884a3c-c533-44b7-bb2d-47bec8ad4022" isCollection="false" id="2055.6252ef51-a5a1-41d4-a3d2-d8ff1b310731" />
+                        <ns16:inputSet>
+                            <ns16:dataInputRefs>2055.668205b9-1d85-4129-8851-98e6d8776f9b</ns16:dataInputRefs>
+                            <ns16:dataInputRefs>2055.923d5229-24ce-44cd-8282-2a0fdcf33910</ns16:dataInputRefs>
+                        </ns16:inputSet>
+                        <ns16:outputSet>
+                            <ns16:dataOutputRefs>2055.6252ef51-a5a1-41d4-a3d2-d8ff1b310731</ns16:dataOutputRefs>
+                        </ns16:outputSet>
+                    </ns16:ioSpecification>
+                    <ns16:laneSet id="c3ef90f8-a399-468b-850b-b0df7f0baa5b">
+                        <ns16:lane name="System" partitionElementRef="24.6fd38d02-81cf-48ab-bd42-8ff4c0a1628b" id="326c32f7-1dda-48ed-9dc5-6d8e9020e156" ns3:isSystemLane="true">
+                            <ns16:extensionElements>
+                                <ns13:nodeVisualInfo x="0" y="0" width="3000" height="500" color="#F8F8F8" />
+                            </ns16:extensionElements>
+                            <ns16:flowNodeRef>54b5227d-488e-4aec-9ee5-1ec7ddfb4c23</ns16:flowNodeRef>
+                            <ns16:flowNodeRef>6b687c50-a559-426c-8f3a-9a1a8873bf72</ns16:flowNodeRef>
+                            <ns16:flowNodeRef>4fc9255f-9a95-4e95-9df4-e22c4be89701</ns16:flowNodeRef>
+                            <ns16:flowNodeRef>64f185c6-2bc7-4a7b-9af7-d8aa5f1b91f8</ns16:flowNodeRef>
+                            <ns16:flowNodeRef>e82b3ec2-f262-4b64-b612-4e7f7425d4fa</ns16:flowNodeRef>
+                            <ns16:flowNodeRef>20e62432-e668-4902-8ada-90b88db27be2</ns16:flowNodeRef>
+                            <ns16:flowNodeRef>5c439a78-de3e-4524-80ff-f0e5d0ce23fc</ns16:flowNodeRef>
+                            <ns16:flowNodeRef>7442bb4e-15c0-4514-8d16-1a792743e8df</ns16:flowNodeRef>
+                        </ns16:lane>
+                    </ns16:laneSet>
+                    <ns16:startEvent isInterrupting="false" parallelMultiple="false" name="Start" id="54b5227d-488e-4aec-9ee5-1ec7ddfb4c23">
+                        <ns16:extensionElements>
+                            <ns13:nodeVisualInfo x="65" y="80" width="24" height="24" color="#F8F8F8" />
+                        </ns16:extensionElements>
+                        <ns16:outgoing>2027.441e62d7-7978-4893-bfe8-02c6a519c686</ns16:outgoing>
+                    </ns16:startEvent>
+                    <ns16:endEvent name="End" id="6b687c50-a559-426c-8f3a-9a1a8873bf72">
+                        <ns16:extensionElements>
+                            <ns13:nodeVisualInfo x="608" y="80" width="24" height="24" color="#F8F8F8" />
+                            <ns3:saveExecutionContext>true</ns3:saveExecutionContext>
+                            <ns2:endStateId>guid:ee1d8a182ba8b1ae:-f408c1e:18b855767df:-2d8a</ns2:endStateId>
+                            <ns2:preAssignmentScript>//log.info("ODC -- ProcessInstance : "+tw.local.requestNo +" - ServiceName : AUDIT COLLECTION DATA : END");</ns2:preAssignmentScript>
+                        </ns16:extensionElements>
+                        <ns16:incoming>7200279f-f341-4473-80ba-9ad6a11a9b21</ns16:incoming>
+                    </ns16:endEvent>
+                    <ns16:sequenceFlow sourceRef="54b5227d-488e-4aec-9ee5-1ec7ddfb4c23" targetRef="4fc9255f-9a95-4e95-9df4-e22c4be89701" name="To Test Data" id="2027.441e62d7-7978-4893-bfe8-02c6a519c686">
+                        <ns16:extensionElements>
+                            <ns13:linkVisualInfo>
+                                <ns13:sourcePortLocation>rightCenter</ns13:sourcePortLocation>
+                                <ns13:targetPortLocation>leftCenter</ns13:targetPortLocation>
+                                <ns13:showLabel>false</ns13:showLabel>
+                                <ns13:showCoachControlLabel>false</ns13:showCoachControlLabel>
+                                <ns13:labelPosition>0.0</ns13:labelPosition>
+                                <ns13:saveExecutionContext>false</ns13:saveExecutionContext>
+                            </ns13:linkVisualInfo>
+                        </ns16:extensionElements>
+                    </ns16:sequenceFlow>
+                    <ns16:scriptTask scriptFormat="text/x-javascript" name="Set SQL Statement" id="4fc9255f-9a95-4e95-9df4-e22c4be89701">
+                        <ns16:extensionElements>
+                            <ns13:nodeVisualInfo x="319" y="57" width="95" height="70" />
+                            <ns2:postAssignmentScript />
+                            <ns2:preAssignmentScript>//log.info("ODC -- ProcessInstance : "+tw.local.instanceNo +" - ServiceName : AUDIT COLLECTION DATA : START");&#xD;
+&#xD;
+</ns2:preAssignmentScript>
+                        </ns16:extensionElements>
+                        <ns16:incoming>2027.441e62d7-7978-4893-bfe8-02c6a519c686</ns16:incoming>
+                        <ns16:outgoing>5231134d-c217-44ee-a0b3-100b1707803e</ns16:outgoing>
+                        <ns16:script>/**-------------------------- Add SQL Parameters --------------------------**/&#xD;
+function addSQLParameter(value){&#xD;
+	if(value == null &amp;&amp; typeof value == "string"){&#xD;
+		value= ""; &#xD;
+	}&#xD;
+	else if(value == null &amp;&amp; typeof value == "number"){&#xD;
+		value= 0;&#xD;
+	}&#xD;
+	else if(value == null &amp;&amp; typeof value == "boolean"){&#xD;
+		value = "0";&#xD;
+	}&#xD;
+ var parameter = new tw.object.SQLParameter();  &#xD;
+   parameter.value = value;&#xD;
+   parameter.mode = "IN";&#xD;
+return parameter;&#xD;
+}&#xD;
+tw.local.sql = "INSERT INTO "+ tw.env.LKP_DB_Schema + ".ODC_LOGHISTORY"+&#xD;
+               "(STARTTIME, ENDTIME, USERNAME, ROLE, STEPNAME, ACTION, RETURNREASON, COMMENT, REQUESTNO, terminateReason)"+&#xD;
+ 		   " VALUES (?,?,?,?,?,?,?,?,?,?)";&#xD;
+&#xD;
+&#xD;
+tw.local.sqlParameters = new tw.object.listOf.SQLParameter();&#xD;
+&#xD;
+tw.local.sqlParameters.insertIntoList(tw.local.sqlParameters.listLength, addSQLParameter(tw.local.stepLog.startTime));&#xD;
+tw.local.sqlParameters.insertIntoList(tw.local.sqlParameters.listLength, addSQLParameter(tw.local.stepLog.endTime));&#xD;
+tw.local.sqlParameters.insertIntoList(tw.local.sqlParameters.listLength, addSQLParameter(tw.local.stepLog.userName));&#xD;
+tw.local.sqlParameters.insertIntoList(tw.local.sqlParameters.listLength, addSQLParameter(tw.local.stepLog.role));&#xD;
+tw.local.sqlParameters.insertIntoList(tw.local.sqlParameters.listLength, addSQLParameter(tw.local.stepLog.step));&#xD;
+tw.local.sqlParameters.insertIntoList(tw.local.sqlParameters.listLength, addSQLParameter(tw.local.stepLog.action));&#xD;
+tw.local.sqlParameters.insertIntoList(tw.local.sqlParameters.listLength, addSQLParameter(tw.local.stepLog.returnReason));&#xD;
+tw.local.sqlParameters.insertIntoList(tw.local.sqlParameters.listLength, addSQLParameter(tw.local.stepLog.comment));&#xD;
+ &#xD;
+tw.local.sqlParameters.insertIntoList(tw.local.sqlParameters.listLength, addSQLParameter(tw.local.requestNo));&#xD;
+tw.local.sqlParameters.insertIntoList(tw.local.sqlParameters.listLength, addSQLParameter(tw.local.stepLog.terminateReason));  </ns16:script>
+                    </ns16:scriptTask>
+                    <ns16:sequenceFlow sourceRef="4fc9255f-9a95-4e95-9df4-e22c4be89701" targetRef="64f185c6-2bc7-4a7b-9af7-d8aa5f1b91f8" name="To Execute SQL Statement" id="5231134d-c217-44ee-a0b3-100b1707803e">
+                        <ns16:extensionElements>
+                            <ns2:sequenceFlowImplementation sboSyncEnabled="true" />
+                            <ns13:linkVisualInfo>
+                                <ns13:sourcePortLocation>rightCenter</ns13:sourcePortLocation>
+                                <ns13:targetPortLocation>leftCenter</ns13:targetPortLocation>
+                                <ns13:showLabel>false</ns13:showLabel>
+                                <ns13:showCoachControlLabel>false</ns13:showCoachControlLabel>
+                                <ns13:labelPosition>0.0</ns13:labelPosition>
+                                <ns13:saveExecutionContext>true</ns13:saveExecutionContext>
+                            </ns13:linkVisualInfo>
+                        </ns16:extensionElements>
+                    </ns16:sequenceFlow>
+                    <ns16:callActivity calledElement="1.4e480adb-5741-4f5e-aead-27b3654e9cd2" name="Execute SQL Statement" id="64f185c6-2bc7-4a7b-9af7-d8aa5f1b91f8">
+                        <ns16:extensionElements>
+                            <ns13:nodeVisualInfo x="469" y="57" width="95" height="70" />
+                            <ns3:activityType>CalledProcess</ns3:activityType>
+                        </ns16:extensionElements>
+                        <ns16:incoming>5231134d-c217-44ee-a0b3-100b1707803e</ns16:incoming>
+                        <ns16:outgoing>7200279f-f341-4473-80ba-9ad6a11a9b21</ns16:outgoing>
+                        <ns16:dataInputAssociation>
+                            <ns16:targetRef>2055.25f5990f-9abf-4cf6-9101-497d43dee141</ns16:targetRef>
+                            <ns16:assignment>
+                                <ns16:from xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="ns16:tFormalExpression" evaluatesToTypeRef="itm.12.db884a3c-c533-44b7-bb2d-47bec8ad4022">tw.local.sql</ns16:from>
+                            </ns16:assignment>
+                        </ns16:dataInputAssociation>
+                        <ns16:dataInputAssociation>
+                            <ns16:targetRef>2055.8b844f2a-0a1f-4f12-b34b-e9fd5191dc43</ns16:targetRef>
+                            <ns16:assignment>
+                                <ns16:from xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="ns16:tFormalExpression" evaluatesToTypeRef="itm.12.f453f500-ca4e-4264-a371-72c1892e8b7c">tw.local.sqlParameters</ns16:from>
+                            </ns16:assignment>
+                        </ns16:dataInputAssociation>
+                        <ns16:dataInputAssociation>
+                            <ns16:targetRef>2055.53ee0328-837f-427d-b0a1-0255f36f7e0c</ns16:targetRef>
+                            <ns16:assignment>
+                                <ns16:from xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="ns16:tFormalExpression" evaluatesToTypeRef="itm.12.3fa0d7a0-828a-4d60-99cc-db5ed143fc2d">1</ns16:from>
+                            </ns16:assignment>
+                        </ns16:dataInputAssociation>
+                        <ns16:dataInputAssociation>
+                            <ns16:targetRef>2055.81a41d09-a504-4a63-bdaa-a92bac26ad7e</ns16:targetRef>
+                            <ns16:assignment>
+                                <ns16:from xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="ns16:tFormalExpression" evaluatesToTypeRef="itm.12.c09c9b6e-aabd-4897-bef2-ed61db106297">tw.env.DATASOURCE_APP</ns16:from>
+                            </ns16:assignment>
+                        </ns16:dataInputAssociation>
+                        <ns16:dataOutputAssociation>
+                            <ns16:sourceRef>2055.976cdc78-9d8d-41d4-ae85-f6c9a50c6764</ns16:sourceRef>
+                            <ns16:assignment>
+                                <ns16:to xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="ns16:tFormalExpression" evaluatesToTypeRef="itm.12.3b1e3757-a1f4-4c3f-bbb8-16fecd4d65c1">tw.local.results</ns16:to>
+                            </ns16:assignment>
+                        </ns16:dataOutputAssociation>
+                    </ns16:callActivity>
+                    <ns16:sequenceFlow sourceRef="64f185c6-2bc7-4a7b-9af7-d8aa5f1b91f8" targetRef="6b687c50-a559-426c-8f3a-9a1a8873bf72" name="To End" id="7200279f-f341-4473-80ba-9ad6a11a9b21">
+                        <ns16:extensionElements>
+                            <ns2:sequenceFlowImplementation sboSyncEnabled="true" />
+                            <ns13:linkVisualInfo>
+                                <ns13:sourcePortLocation>rightCenter</ns13:sourcePortLocation>
+                                <ns13:targetPortLocation>leftCenter</ns13:targetPortLocation>
+                                <ns13:showLabel>false</ns13:showLabel>
+                                <ns13:showCoachControlLabel>false</ns13:showCoachControlLabel>
+                                <ns13:labelPosition>0.0</ns13:labelPosition>
+                                <ns13:saveExecutionContext>true</ns13:saveExecutionContext>
+                            </ns13:linkVisualInfo>
+                            <ns2:endStateId>guid:d7766b7587753602:16bdf27c:11586c10093:-7fe7</ns2:endStateId>
+                        </ns16:extensionElements>
+                    </ns16:sequenceFlow>
+                    <ns16:dataObject itemSubjectRef="itm.12.f453f500-ca4e-4264-a371-72c1892e8b7c" isCollection="true" name="sqlParameters" id="2056.59f5349e-ed3a-48ac-8d37-59d60eab80c6" />
+                    <ns16:dataObject itemSubjectRef="itm.12.db884a3c-c533-44b7-bb2d-47bec8ad4022" isCollection="false" name="sql" id="2056.e3fe14a6-6267-450b-bb5e-7d2aea4402b6" />
+                    <ns16:dataObject itemSubjectRef="itm.12.3b1e3757-a1f4-4c3f-bbb8-16fecd4d65c1" isCollection="true" name="results" id="2056.3aa92ff8-4196-4dc7-9f3d-a88f7df29104" />
+                    <ns16:callActivity calledElement="1.2b50ff68-f7d3-4895-88ad-a73a13fa91d0" isForCompensation="false" startQuantity="1" completionQuantity="1" name="Exp Handling" id="e82b3ec2-f262-4b64-b612-4e7f7425d4fa">
+                        <ns16:extensionElements>
+                            <ns13:nodeVisualInfo x="473" y="187" width="95" height="70" color="#FF7782" />
+                            <ns3:activityType>CalledProcess</ns3:activityType>
+                        </ns16:extensionElements>
+                        <ns16:incoming>5c7adc9e-4b14-45f5-8432-d08642559cba</ns16:incoming>
+                        <ns16:incoming>f1fee511-d9ec-4fbf-8674-269cb13d381d</ns16:incoming>
+                        <ns16:outgoing>500ea008-6821-4015-a2e0-6576fea62e3d</ns16:outgoing>
+                        <ns16:dataInputAssociation>
+                            <ns16:targetRef>2055.5ea77901-7a17-422a-8958-67bb0e9c991b</ns16:targetRef>
+                            <ns16:assignment>
+                                <ns16:from xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="ns16:tFormalExpression" evaluatesToTypeRef="itm.12.db884a3c-c533-44b7-bb2d-47bec8ad4022">"Audit Request History"</ns16:from>
+                            </ns16:assignment>
+                        </ns16:dataInputAssociation>
+                        <ns16:dataInputAssociation>
+                            <ns16:targetRef>2055.55dcd590-97c2-48df-82c6-0f812ab7177f</ns16:targetRef>
+                            <ns16:assignment>
+                                <ns16:from xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="ns16:tFormalExpression" evaluatesToTypeRef="itm.12.db884a3c-c533-44b7-bb2d-47bec8ad4022">tw.local.errorMessage</ns16:from>
+                            </ns16:assignment>
+                        </ns16:dataInputAssociation>
+                        <ns16:dataOutputAssociation>
+                            <ns16:sourceRef>2055.81b82125-a5aa-45f7-8c0f-4870667eebbf</ns16:sourceRef>
+                            <ns16:assignment>
+                                <ns16:to xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="ns16:tFormalExpression" evaluatesToTypeRef="itm.12.db884a3c-c533-44b7-bb2d-47bec8ad4022">tw.local.errorMessage</ns16:to>
+                            </ns16:assignment>
+                        </ns16:dataOutputAssociation>
+                    </ns16:callActivity>
+                    <ns16:sequenceFlow sourceRef="e82b3ec2-f262-4b64-b612-4e7f7425d4fa" targetRef="7442bb4e-15c0-4514-8d16-1a792743e8df" name="To End Event1" id="500ea008-6821-4015-a2e0-6576fea62e3d">
+                        <ns16:extensionElements>
+                            <ns2:sequenceFlowImplementation sboSyncEnabled="true" />
+                            <ns2:endStateId>guid:f6ffc3b64be5dfa5:4157166b:18ab80e0606:-6f83</ns2:endStateId>
+                            <ns13:linkVisualInfo>
+                                <ns13:sourcePortLocation>rightCenter</ns13:sourcePortLocation>
+                                <ns13:targetPortLocation>leftCenter</ns13:targetPortLocation>
+                                <ns13:showLabel>false</ns13:showLabel>
+                                <ns13:showCoachControlLabel>false</ns13:showCoachControlLabel>
+                                <ns13:labelPosition>0.0</ns13:labelPosition>
+                                <ns13:saveExecutionContext>true</ns13:saveExecutionContext>
+                            </ns13:linkVisualInfo>
+                        </ns16:extensionElements>
+                    </ns16:sequenceFlow>
+                    <ns16:boundaryEvent cancelActivity="true" attachedToRef="4fc9255f-9a95-4e95-9df4-e22c4be89701" parallelMultiple="false" name="Error" id="20e62432-e668-4902-8ada-90b88db27be2">
+                        <ns16:extensionElements>
+                            <ns13:nodeVisualInfo x="354" y="115" width="24" height="24" />
+                        </ns16:extensionElements>
+                        <ns16:outgoing>5c7adc9e-4b14-45f5-8432-d08642559cba</ns16:outgoing>
+                        <ns16:dataOutput name="error" itemSubjectRef="itm.19e8dc33-1100-46be-89a6-36c9040f7b3e" isCollection="false" id="11d65e0d-c446-44b0-8153-6e693e2e0e36" />
+                        <ns16:outputSet />
+                        <ns16:errorEventDefinition id="1d769770-73c3-4ba0-8aeb-d2684ca9b0cb" eventImplId="d9b2ff9f-bd08-4a50-8e21-ba3547b0bf09">
+                            <ns16:extensionElements>
+                                <ns3:errorEventSettings>
+                                    <ns3:catchAll>true</ns3:catchAll>
+                                </ns3:errorEventSettings>
+                            </ns16:extensionElements>
+                        </ns16:errorEventDefinition>
+                    </ns16:boundaryEvent>
+                    <ns16:sequenceFlow sourceRef="20e62432-e668-4902-8ada-90b88db27be2" targetRef="e82b3ec2-f262-4b64-b612-4e7f7425d4fa" name="To Exp Handling" id="5c7adc9e-4b14-45f5-8432-d08642559cba">
+                        <ns16:extensionElements>
+                            <ns13:linkVisualInfo>
+                                <ns13:sourcePortLocation>bottomCenter</ns13:sourcePortLocation>
+                                <ns13:targetPortLocation>leftTop</ns13:targetPortLocation>
+                                <ns13:showLabel>false</ns13:showLabel>
+                                <ns13:showCoachControlLabel>false</ns13:showCoachControlLabel>
+                                <ns13:labelPosition>0.0</ns13:labelPosition>
+                                <ns13:saveExecutionContext>false</ns13:saveExecutionContext>
+                            </ns13:linkVisualInfo>
+                        </ns16:extensionElements>
+                    </ns16:sequenceFlow>
+                    <ns16:boundaryEvent cancelActivity="true" attachedToRef="64f185c6-2bc7-4a7b-9af7-d8aa5f1b91f8" parallelMultiple="false" name="Error1" id="5c439a78-de3e-4524-80ff-f0e5d0ce23fc">
+                        <ns16:extensionElements>
+                            <ns13:nodeVisualInfo x="504" y="115" width="24" height="24" />
+                        </ns16:extensionElements>
+                        <ns16:outgoing>f1fee511-d9ec-4fbf-8674-269cb13d381d</ns16:outgoing>
+                        <ns16:dataOutput name="error" itemSubjectRef="itm.19e8dc33-1100-46be-89a6-36c9040f7b3e" isCollection="false" id="d4ef65e9-9b12-433e-8d2c-b345bedc7f91" />
+                        <ns16:outputSet />
+                        <ns16:errorEventDefinition id="27fcc6da-cb4f-40a6-82cd-083cdc4a91cb" eventImplId="c73a41d3-9981-4b05-8020-b05d10790ff3">
+                            <ns16:extensionElements>
+                                <ns3:errorEventSettings>
+                                    <ns3:catchAll>true</ns3:catchAll>
+                                </ns3:errorEventSettings>
+                            </ns16:extensionElements>
+                        </ns16:errorEventDefinition>
+                    </ns16:boundaryEvent>
+                    <ns16:sequenceFlow sourceRef="5c439a78-de3e-4524-80ff-f0e5d0ce23fc" targetRef="e82b3ec2-f262-4b64-b612-4e7f7425d4fa" name="To Exp Handling" id="f1fee511-d9ec-4fbf-8674-269cb13d381d">
+                        <ns16:extensionElements>
+                            <ns13:linkVisualInfo>
+                                <ns13:sourcePortLocation>bottomCenter</ns13:sourcePortLocation>
+                                <ns13:targetPortLocation>topCenter</ns13:targetPortLocation>
+                                <ns13:showLabel>false</ns13:showLabel>
+                                <ns13:showCoachControlLabel>false</ns13:showCoachControlLabel>
+                                <ns13:labelPosition>0.0</ns13:labelPosition>
+                                <ns13:saveExecutionContext>false</ns13:saveExecutionContext>
+                            </ns13:linkVisualInfo>
+                        </ns16:extensionElements>
+                    </ns16:sequenceFlow>
+                    <ns16:endEvent name="End Event" id="7442bb4e-15c0-4514-8d16-1a792743e8df">
+                        <ns16:extensionElements>
+                            <ns13:nodeVisualInfo x="676" y="189" width="24" height="24" />
+                        </ns16:extensionElements>
+                        <ns16:incoming>500ea008-6821-4015-a2e0-6576fea62e3d</ns16:incoming>
+                        <ns16:dataInputAssociation>
+                            <ns16:assignment>
+                                <ns16:from xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="ns16:tFormalExpression" evaluatesToTypeRef="itm.12.db884a3c-c533-44b7-bb2d-47bec8ad4022">tw.local.errorMessage</ns16:from>
+                            </ns16:assignment>
+                        </ns16:dataInputAssociation>
+                        <ns16:errorEventDefinition id="8f2d46b0-f027-459c-82f0-b4fb145e21cd" eventImplId="782522dd-16b2-48f5-88ad-c6aceba1818b">
+                            <ns16:extensionElements>
+                                <ns3:errorEventSettings>
+                                    <ns3:catchAll>true</ns3:catchAll>
+                                    <ns3:errorCode />
+                                </ns3:errorEventSettings>
+                            </ns16:extensionElements>
+                        </ns16:errorEventDefinition>
+                    </ns16:endEvent>
+                </ns16:process>
+            </ns16:definitions>
+        </bpmn2Model>
+        <link name="To End Event1">
+            <lastModified isNull="true" />
+            <lastModifiedBy isNull="true" />
+            <processLinkId>2027.500ea008-6821-4015-a2e0-6576fea62e3d</processLinkId>
+            <processId>1.2d90a780-82bb-4941-b27e-d586607ce191</processId>
+            <description isNull="true" />
+            <fromProcessItemId>2025.e82b3ec2-f262-4b64-b612-4e7f7425d4fa</fromProcessItemId>
+            <endStateId>guid:f6ffc3b64be5dfa5:4157166b:18ab80e0606:-6f83</endStateId>
+            <toProcessItemId>2025.7442bb4e-15c0-4514-8d16-1a792743e8df</toProcessItemId>
+            <guid>75670424-3083-473b-9311-f5dcd85ee190</guid>
+            <versionId>30318896-47f0-41f4-88fe-c4bd9b7dc2e2</versionId>
+            <layoutData>
+                <controlPoints />
+                <showEndState>false</showEndState>
+                <showName>false</showName>
+            </layoutData>
+            <fromItemPort locationId="rightCenter" portType="1" />
+            <toItemPort locationId="leftCenter" portType="2" />
+            <fromProcessItemId>2025.e82b3ec2-f262-4b64-b612-4e7f7425d4fa</fromProcessItemId>
+            <toProcessItemId>2025.7442bb4e-15c0-4514-8d16-1a792743e8df</toProcessItemId>
+        </link>
+        <link name="To Execute SQL Statement">
+            <lastModified isNull="true" />
+            <lastModifiedBy isNull="true" />
+            <processLinkId>2027.5231134d-c217-44ee-a0b3-100b1707803e</processLinkId>
+            <processId>1.2d90a780-82bb-4941-b27e-d586607ce191</processId>
+            <description isNull="true" />
+            <fromProcessItemId>2025.4fc9255f-9a95-4e95-9df4-e22c4be89701</fromProcessItemId>
+            <endStateId>Out</endStateId>
+            <toProcessItemId>2025.64f185c6-2bc7-4a7b-9af7-d8aa5f1b91f8</toProcessItemId>
+            <guid>e8d9f216-aca8-40de-9d84-04a0f2c9ff6c</guid>
+            <versionId>7e1f347e-341b-4b73-8f75-0b321cab74a0</versionId>
+            <layoutData>
+                <controlPoints />
+                <showEndState>false</showEndState>
+                <showName>false</showName>
+            </layoutData>
+            <fromItemPort locationId="rightCenter" portType="1" />
+            <toItemPort locationId="leftCenter" portType="2" />
+            <fromProcessItemId>2025.4fc9255f-9a95-4e95-9df4-e22c4be89701</fromProcessItemId>
+            <toProcessItemId>2025.64f185c6-2bc7-4a7b-9af7-d8aa5f1b91f8</toProcessItemId>
+        </link>
+        <link name="To End">
+            <lastModified isNull="true" />
+            <lastModifiedBy isNull="true" />
+            <processLinkId>2027.7200279f-f341-4473-80ba-9ad6a11a9b21</processLinkId>
+            <processId>1.2d90a780-82bb-4941-b27e-d586607ce191</processId>
+            <description isNull="true" />
+            <fromProcessItemId>2025.64f185c6-2bc7-4a7b-9af7-d8aa5f1b91f8</fromProcessItemId>
+            <endStateId>guid:d7766b7587753602:16bdf27c:11586c10093:-7fe7</endStateId>
+            <toProcessItemId>2025.6b687c50-a559-426c-8f3a-9a1a8873bf72</toProcessItemId>
+            <guid>e5651fa1-2e1a-4ec1-8dfa-cc3e3ba404d1</guid>
+            <versionId>bb3b0f29-734a-49f8-be80-4ceccab5b39f</versionId>
+            <layoutData>
+                <controlPoints />
+                <showEndState>false</showEndState>
+                <showName>false</showName>
+            </layoutData>
+            <fromItemPort locationId="rightCenter" portType="1" />
+            <toItemPort locationId="leftCenter" portType="2" />
+            <fromProcessItemId>2025.64f185c6-2bc7-4a7b-9af7-d8aa5f1b91f8</fromProcessItemId>
+            <toProcessItemId>2025.6b687c50-a559-426c-8f3a-9a1a8873bf72</toProcessItemId>
+        </link>
+    </process>
+</teamworks>
+

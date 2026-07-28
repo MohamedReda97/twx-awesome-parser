@@ -1,0 +1,192 @@
+/*
+ * #BEGIN COPYRIGHT
+ *
+ * Licensed Materials - Property of IBM
+ * 5725-C95
+ * (C) Copyright IBM Corporation 2017, 2020. All Rights Reserved.
+ * US Government Users Restricted Rights- Use, duplication or disclosure
+ * restricted by GSA ADP Schedule Contract with IBM Corp.
+ *
+ * #END COPYRIGHT
+ */
+
+var mixObject = {
+	createPreview:function(containingDiv, labelText, callback){
+		var bpmextUri = this.context.getManagedAssetUrl("BPMExt-Core-Designer.js", this.context.assetType_WEB, "SYSBPMUI");
+		require([ "dojo/dom-construct", "dojo/dom-class", "dojo/dom-attr", "dojo/dom-style", bpmextUri], this.lang.hitch(this, function(domConstruct, domClass, domAttr, domStyle, bpmext){			
+			bpmext.uidesign.css.ensureGlyphsLoaded(this);
+			bpmext.uidesign.css.ensureSparkUIClass(containingDiv);
+			
+			this.context.coachViewData.containingDiv = containingDiv;
+			
+			this.context.coachViewData.modalAlertWrapper = domConstruct.create("div");
+			domClass.add(this.context.coachViewData.modalAlertWrapper, "modal modal-alert fade in modal-primary");
+			domStyle.set(this.context.coachViewData.modalAlertWrapper, "display", "inline");
+			domStyle.set(this.context.coachViewData.modalAlertWrapper, "position", "relative");
+			
+			this.context.coachViewData.modalDialogDiv = domConstruct.create("div");
+			domClass.add(this.context.coachViewData.modalDialogDiv, "modal-dialog");
+			
+			this.context.coachViewData.alertContentDiv = domConstruct.create("div");
+			domClass.add(this.context.coachViewData.alertContentDiv, "modal-content");
+			
+			this.context.coachViewData.alertHeaderDiv = domConstruct.create("div");
+			domClass.add(this.context.coachViewData.alertHeaderDiv, "modal-header");
+			
+			//this.context.coachViewData.alertHeaderImg = domConstruct.create("i");
+			//domClass.add(this.context.coachViewData.alertHeaderImg, "fa fa-comment");
+			
+			this.context.coachViewData.alertTitleDiv = domConstruct.create("div");
+			domClass.add(this.context.coachViewData.alertTitleDiv, "modal-title");
+			
+			this.context.coachViewData.alertBodyDiv = domConstruct.create("div");
+			this.context.coachViewData.alertBodyDiv.innerHTML = "&nbsp;";
+			domClass.add(this.context.coachViewData.alertBodyDiv, "modal-body");
+			
+			this.context.coachViewData.alertFooterDiv = domConstruct.create("div");
+			domClass.add(this.context.coachViewData.alertFooterDiv, "modal-footer");
+			
+			this.context.coachViewData.modalBtn = domConstruct.create("button");
+			domClass.add(this.context.coachViewData.modalBtn, "btn btn-primary");
+			this.context.coachViewData.defaultButtonLabel = "OK";
+			this.context.coachViewData.modalBtn.innerHTML = this.context.coachViewData.defaultButtonLabel;
+			
+			//this.context.coachViewData.alertHeaderDiv.appendChild(this.context.coachViewData.alertHeaderImg);
+			this.context.coachViewData.alertContentDiv.appendChild(this.context.coachViewData.alertHeaderDiv);
+			this.context.coachViewData.alertContentDiv.appendChild(this.context.coachViewData.alertTitleDiv);
+			this.context.coachViewData.alertContentDiv.appendChild(this.context.coachViewData.alertBodyDiv);
+			this.context.coachViewData.alertFooterDiv.appendChild(this.context.coachViewData.modalBtn);
+			this.context.coachViewData.alertContentDiv.appendChild(this.context.coachViewData.alertFooterDiv);
+									
+			this.context.coachViewData.modalDialogDiv.appendChild(this.context.coachViewData.alertContentDiv);
+			this.context.coachViewData.modalAlertWrapper.appendChild(this.context.coachViewData.modalDialogDiv);
+			
+			this.context.coachViewData.containingDiv.appendChild(this.context.coachViewData.modalAlertWrapper);
+			
+			//override CSS from BPM UI
+			domStyle.set(this.context.coachViewData.containingDiv, "position", "relative");
+
+			// The following needs to be in a timeout so the theme's font family has time to take effect otherwise getActiveTheme always returns CLASSIC
+			setTimeout(this.lang.hitch(this, function(){
+				try {
+					if(this.getActiveTheme() === '"CLASSIC"') {
+						this.context.coachViewData.icon = document.createElement("i");
+						domClass.add(this.context.coachViewData.icon, "fa");
+						this.context.coachViewData.alertHeaderDiv.appendChild(this.context.coachViewData.icon);
+						this.context.coachViewData.alertHeaderDiv.style.textAlign = "center";
+						this.context.coachViewData.alertFooterDiv.style.textAlign = "center";
+						this.context.coachViewData.alertTitleDiv.style.textAlign = "center";
+						this.context.coachViewData.modalBtn.style.width = "auto";
+
+						// Set the defaults, if the color style option is set these will be updated later by calls to propertyChanged
+						var colorStyle = "modal-primary";
+						var headerImgStyle ="fa-comment";
+						domClass.replace(this.context.coachViewData.icon, headerImgStyle, "fa-comment fa-info-circle fa-check-circle fa-warning fa-times-circle");
+						domClass.replace(this.context.coachViewData.alertHeaderDiv, colorStyle, "modal-primary modal-info modal-success modal-warning modal-danger");
+					}
+				} catch(e) {
+					console.log("Error getting active theme", e);
+				}
+			}), 200);
+
+			callback();
+		}));
+	},
+	getLabelDomElement:function(){
+		return this.context.coachViewData.alertTitleDiv;
+	},
+	propertyChanged:function(propertyName, propertyValue){
+		var configHelperUri = this.context.getManagedAssetUrl("BPMExt-Core-ConfigHelper.js",this.context.assetType_WEB, "SYSBPMUI");
+		require(["dojo/dom-style", "dojo/dom-class", "dojo/dom-construct", configHelperUri], this.lang.hitch(this, function(domStyle, domClass, domConstruct, configHelper){
+			
+			if(propertyName ==  "@labelVisibility"){
+			
+			} else if(propertyName == "colorStyle"){
+				var colorStyle;
+				var headerImgStyle;
+				var btnStyle;
+				if(propertyValue == "I"){
+					colorStyle = "modal-info";
+					headerImgStyle ="fa-info-circle";
+					btnStyle ="btn btn-info";
+				} else if(propertyValue == "S"){
+					colorStyle = "modal-success";
+					headerImgStyle ="fa-check-circle";
+					btnStyle ="btn btn-success";
+				} else if(propertyValue == "W"){
+					colorStyle = "modal-warning";
+					headerImgStyle ="fa-warning";
+					btnStyle ="btn btn-warning";
+				} else if(propertyValue == "G"){
+					colorStyle = "modal-danger";
+					headerImgStyle ="fa-times-circle";
+					btnStyle ="btn btn-danger";
+				} else {//includes "P"
+					colorStyle = "modal-primary";
+					headerImgStyle ="fa-comment";
+					btnStyle ="btn btn-primary";
+				}
+				domClass.replace(this.context.coachViewData.modalAlertWrapper, colorStyle, "modal-primary modal-info modal-success modal-warning modal-danger");
+				//domClass.replace(this.context.coachViewData.alertHeaderImg, headerImgStyle, "fa-comment fa-info-circle fa-check-circle fa-warning fa-times-circle");
+				domClass.replace(this.context.coachViewData.modalBtn, btnStyle, "btn btn-primary btn btn-info btn btn-success btn btn-warning btn btn-danger");
+
+				// The following needs to be in a timeout so the theme's font family has time to take effect otherwise getActiveTheme always returns CLASSIC
+				setTimeout(this.lang.hitch(this, function(){
+					try {
+						if(this.getActiveTheme() === '"CLASSIC"') {
+							if (this.context.coachViewData.icon) {
+								domClass.replace(this.context.coachViewData.icon, headerImgStyle, "fa-comment fa-info-circle fa-check-circle fa-warning fa-times-circle");
+							}
+							if (this.context.coachViewData.alertHeaderDiv) {
+								domClass.replace(this.context.coachViewData.alertHeaderDiv, colorStyle, "modal-primary modal-info modal-success modal-warning modal-danger");
+							}
+						}
+					} catch(e) {
+						console.log("Error getting active theme", e);
+					}
+				}), 200);
+			}
+		}));	
+	},
+	
+	modelChanged: function(propertyName, propertyValue) {
+		if(propertyName == "@label") {
+			this.context.coachViewData.alertTitleDiv.innerHTML = propertyValue;
+			dojo.attr(this.context.coachViewData.modalAlertWrapper, "aria-label", propertyValue);
+		} else if(propertyName == "buttonLabel"){
+			this.context.coachViewData.modalBtn.innerHTML = (propertyValue!=null && propertyValue != "") ? propertyValue : this.context.coachViewData.defaultButtonLabel;
+		}
+	},
+
+	/*
+	 * Could not reuse com.ibm.bpm.coach.utils/utilities getActiveTheme as it
+	 * has a dependency on com.ibm.bpm.coach/dataBindingHelper which is only
+	 * available at coach runtime. Also need to create div within scope of
+	 * the coach layout.
+	 */
+	getActiveTheme : function(forceUpdate) {
+		var result = null;
+		require(["dojo/dom-class"], this.lang.hitch(this, function(domClass) {
+			if (!forceUpdate && this.activeTheme) {
+				// console.log("***** - getActiveTheme", this.activeTheme);
+				result = this.activeTheme;
+			} else {
+				var div = document.createElement("div");
+				domClass.add(div, "active_theme");
+				this.context.coachViewData.containingDiv.appendChild(div);
+
+				var themeStyle = window.getComputedStyle(div);
+				var activeTheme = themeStyle.fontFamily;
+
+				// unify output theme string
+				this.activeTheme = activeTheme.indexOf("CARBON") > -1 ? '"CARBON"':'"CLASSIC"';
+
+				div.parentNode.removeChild(div);
+
+				// console.log("***** - getActiveTheme", this.activeTheme, "fontFamily", activeTheme);
+				result = this.activeTheme;
+			}
+		}));
+		return result;
+	}
+};

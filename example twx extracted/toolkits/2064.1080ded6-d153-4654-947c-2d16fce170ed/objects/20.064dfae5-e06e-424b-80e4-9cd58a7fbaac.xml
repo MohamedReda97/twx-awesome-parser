@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<teamworks>
+    <layout id="20.064dfae5-e06e-424b-80e4-9cd58a7fbaac" name="SQL Standard - Series In Columns">
+        <lastModified>1361369073512</lastModified>
+        <lastModifiedBy>Internal TW Admin user</lastModifiedBy>
+        <layoutId>20.064dfae5-e06e-424b-80e4-9cd58a7fbaac</layoutId>
+        <metaDataLabel isNull="true" />
+        <metaDataUI isNull="true" />
+        <type>SCRIPT</type>
+        <url isNull="true" />
+        <documentType>datasource</documentType>
+        <imageUrl>datasource_images/datasource_twsql.jpg</imageUrl>
+        <layoutData>log.debug("settings --&gt; " + settings.describe() + ", " + settings.seriesNames);
+
+// Setting up series names from the datasource parameter settings
+var seriesNames = new Array();
+if (settings.seriesNames != null)
+  seriesNames = settings.seriesNames.split(",");
+
+// Keeping an index of what the start index of the IC is according
+// to this datasource. Used if seriesNames are entered manually on
+// the datasource transformation.
+var seriesIndex = 0;
+// at first processing integration connections
+for (var icidx = 0; icidx &lt; settings.ics.arrayLength; icidx++)
+{
+  log.debug("ic name is " + settings.ics[icidx]);
+
+  // Find and execute the IntegrationComponent
+  var ic = IntegrationComponent.getByName(settings.ics[icidx]);
+  ic.execute();
+  // log.debug("resultArray is " + ic.resultArray.describe());
+  if (typeof icresults != 'undefined')
+    icresults[icresults.arrayLength] = ic.resultArray;
+
+  var records = ic.resultArray[0].record;
+  // log.debug("records is " + records);
+  if (records) {
+    addDataFromRecords(records);
+  }
+}
+
+// processing integration services
+for (var idx = 0; idx &lt; settings.services.arrayLength; idx++) {
+  log.debug("Service name is " + settings.services[idx].name);
+  var resultMap = settings.services[idx].execute();
+  var result = resultMap.get("results");
+  var records = result.record;
+  log.debug("records is " + records);
+  if (records) {
+    addDataFromRecords(records);
+  }
+}
+
+function addDataFromRecords(records) {
+  for (var i = 0; i &lt; records.length; i++) {
+    var record = records[i];
+    var columns = record.column;
+    var labelValue = columns[0].getText();
+    log.debug("columns is " + columns);
+    // For each column besides the first one,
+    for (var col = 1; col &lt; columns.length; col++) {
+      var seriesName = seriesNames[col - 1];
+      log.debug("seriesNames -- " + seriesNames + "," + seriesName);
+      if (seriesName == null) {
+        seriesName = columns[col].getAttribute("name");
+        seriesNames[col - 1] = seriesName;
+      }
+      log.debug("seriesNames -- after -- " + seriesNames + "," + seriesName);
+      var displayValue = columns[col].getText();
+      if (isNaN(displayValue))
+        throw "display value for service '" + settings.services[idx].name + "', row #" + i + "[" + labelValue + "], column #" + (col - 1) +
+              "[" + seriesName + "] is not a number (was: '" + displayValue + "')";
+
+      log.debug("adding " + seriesName + ", " + labelValue + ", " + displayValue);
+      addDataToSeries(seriesName, findLabelId(labelValue), displayValue);
+    }
+  }
+}
+</layoutData>
+        <description>This transformation can be used to transform sql results where labels are in the first column and series are defined in the following columns. The parameter, seriesNames, is optional. If not provided the name of the series is retrieved using the name of the columns.</description>
+        <guid>prePebbles:1986:11-25-2003 12:13:46</guid>
+        <versionId>4ebfa844-8b40-48cd-a98b-8a7c2f202950</versionId>
+        <layoutParam name="seriesNames">
+            <lastModified isNull="true" />
+            <lastModifiedBy isNull="true" />
+            <layoutParamId>2023.6b6e0f8b-e71e-40a5-be5f-bc6586f05785</layoutParamId>
+            <layoutId>20.064dfae5-e06e-424b-80e4-9cd58a7fbaac</layoutId>
+            <value isNull="true" />
+            <type isNull="true" />
+            <seq isNull="true" />
+            <guid>guid:197d4ddc90fc5427:-1c619ffe:11def1582ed:-7ff1</guid>
+            <versionId>4c1e53cd-eb24-4318-ba15-3e19ea1872c8</versionId>
+        </layoutParam>
+    </layout>
+</teamworks>
+

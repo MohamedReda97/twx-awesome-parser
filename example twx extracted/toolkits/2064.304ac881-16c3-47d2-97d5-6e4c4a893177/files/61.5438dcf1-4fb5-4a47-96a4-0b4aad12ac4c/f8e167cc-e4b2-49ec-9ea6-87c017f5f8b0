@@ -1,0 +1,392 @@
+/*
+ * #BEGIN COPYRIGHT
+ *
+ * Licensed Materials - Property of IBM
+ * 5725-C95
+ * (C) Copyright IBM Corporation 2017. All Rights Reserved.
+ * US Government Users Restricted Rights- Use, duplication or disclosure
+ * restricted by GSA ADP Schedule Contract with IBM Corp.
+ *
+ * #END COPYRIGHT
+ */
+
+/**
+ * @ignore
+ * @instance
+ * @memberof Places
+ * @method isValid
+ */  
+
+/**
+ * @ignore
+ * @instance
+ * @memberof Places
+ * @method setValid
+ */
+
+/**
+ * @ignore
+ * @instance
+ * @memberof Places
+ * @method recalculate
+ */
+
+/**
+ * @ignore
+ * @instance
+ * @memberof Places
+ * @method getData
+ */
+
+/**
+ * @ignore
+ * @instance
+ * @memberof Places
+ * @method setData
+ */ 
+
+/** 
+ *   <tr class=Prop>
+ *     <td class=SectionName colspan=3>Events</td>
+ *   </tr>
+ *   <tr class=Prop>
+ *     <td>On Load:</td>
+ *	   <td colspan = "2">
+ *       <table> 
+ *         <tr class=Prop>
+ *           <td>Description: </td>
+ *           <td>This event is triggered when the Places control is loaded on the page</td>
+ *         </tr>
+ *         <tr class=Prop>
+ *           <td>Example: </td>
+ *           <td><pre class="prettyprint"><code>me.requestNearbySearch(${Geo}.getData().latitude, ${Geo}.getData().longitude, ["bank"], true);<code></pre></td>
+ *         </tr>
+ *       </table>
+ *     </td>
+ *   </tr>
+ *   <tr class=Prop>
+ *     <td>On Place Requested:</td>
+ *	   <td colspan = "2">
+ *       <table> 
+ *         <tr class=Prop>
+ *           <td>Description: </td>
+ *           <td>This event is triggered when a place is requested</td>
+ *         </tr>
+ *         <tr class=Prop>
+ *           <td>Example: </td>
+ *           <td><pre class="prettyprint"><code>${Map}.addMarker(location, "Searched location", true)<code></pre></td>
+ *         </tr>
+ *       </table>
+ *     </td>
+ *   </tr>
+ *   <tr class=Prop>
+ *     <td>On Place Resolved:</td>
+ *	   <td colspan = "2">
+ *       <table> 
+ *         <tr class=Prop>
+ *           <td>Description: </td>
+ *           <td>This event is triggered when the Geo Location control has a location</td>
+ *         </tr>
+ *         <tr class=Prop>
+ *           <td>Example: </td>
+ *           <td><pre class="prettyprint"><code>for(var i = 0; i < places.length; i++){console.log("Place: " + places[i].name + " -- " + places[i].vicinity);}</code></pre></td>
+ *         </tr>
+ *       </table>
+ *       <table style= "border: 1px solid black; border-collapse: collapse; ">
+ *         <tr  style= "border: 1px solid black; border-collapse: collapse;">
+ *           <th   style= "border: 1px solid black; border-collapse: collapse;padding: 5px;">Context Variables</th>
+ *           <th   style="border: 1px solid black; border-collapse: collapse; padding: 5px;">places</th>
+ *         </tr>
+ *         <tr  style= "border: 1px solid black; border-collapse: collapse;">
+ *           <td  rowspan="13" style= "border: 1px solid black; border-collapse: collapse;padding: 5px;">Properties</td>
+ *           <td style="color: black; font-weight: normal; border: 1px solid black; border-collapse: collapse;padding: 5px;">geometry</td>
+ *         </tr>
+ *         <tr  style= "border: 1px solid black; border-collapse: collapse;">
+ *           <td style="color: black; font-weight: normal; border: 1px solid black; border-collapse: collapse;padding: 5px;">html_attributions</td>
+ *         </tr>
+ *         <tr  style= "border: 1px solid black; border-collapse: collapse;">
+ *           <td style="color: black; font-weight: normal; border: 1px solid black; border-collapse: collapse;padding: 5px;">icon</td>
+ *         </tr>
+ *         <tr  style= "border: 1px solid black; border-collapse: collapse;">
+ *           <td style="color: black; font-weight: normal; border: 1px solid black; border-collapse: collapse;padding: 5px;">id</td>
+ *         </tr>
+ *         <tr  style= "border: 1px solid black; border-collapse: collapse;">
+ *           <td style="color: black; font-weight: normal; border: 1px solid black; border-collapse: collapse;padding: 5px;">name</td>
+ *         </tr>
+ *         <tr  style= "border: 1px solid black; border-collapse: collapse;">
+ *           <td style="color: black; font-weight: normal; border: 1px solid black; border-collapse: collapse;padding: 5px;">opening_hours</td>
+ *         </tr>
+ *         <tr  style= "border: 1px solid black; border-collapse: collapse;">
+ *           <td style="color: black; font-weight: normal; border: 1px solid black; border-collapse: collapse;padding: 5px;">photos</td>
+ *         </tr>
+ *         <tr  style= "border: 1px solid black; border-collapse: collapse;">
+ *           <td style="color: black; font-weight: normal; border: 1px solid black; border-collapse: collapse;padding: 5px;">place_id</td>
+ *         </tr>
+ *         <tr  style= "border: 1px solid black; border-collapse: collapse;">
+ *           <td style="color: black; font-weight: normal; border: 1px solid black; border-collapse: collapse;padding: 5px;">rating</td>
+ *         </tr>
+ *         <tr  style= "border: 1px solid black; border-collapse: collapse;">
+ *           <td style="color: black; font-weight: normal; border: 1px solid black; border-collapse: collapse;padding: 5px;">reference</td>
+ *         </tr>
+ *         <tr  style= "border: 1px solid black; border-collapse: collapse;">
+ *           <td style="color: black; font-weight: normal; border: 1px solid black; border-collapse: collapse;padding: 5px;">scope</td>
+ *         </tr>
+ *         <tr  style= "border: 1px solid black; border-collapse: collapse;">
+ *           <td style="color: black; font-weight: normal; border: 1px solid black; border-collapse: collapse;padding: 5px;">types</td>
+ *         </tr>
+ *         <tr  style= "border: 1px solid black; border-collapse: collapse;">
+ *           <td style="color: black; font-weight: normal; border: 1px solid black; border-collapse: collapse;padding: 5px;">vicinity</td>
+ *         </tr>
+ *       </table>
+ *     </td>
+ *   </tr>
+ *   <tr class=Prop>
+ *     <td>On Place Error:</td>
+ *	   <td colspan = "2">
+ *       <table> 
+ *         <tr class=Prop>
+ *           <td>Description: </td>
+ *           <td>This event is triggered when a place cannot resolve a location, error.</td>
+ *         </tr>
+ *         <tr class=Prop>
+ *           <td>Example: </td>
+ *           <td><pre class="prettyprint"><code>${Map}.setCenter(${Geo}.getData().latitude, ${Geo}.getData().longitude); console.log("Google Maps cannot be reached at this time.")</code></pre></td>
+ *         </tr>
+ *       </table>
+ *     </td>
+ *   </tr>
+ *   <tr class=Prop>
+ *     <td>Google Places API:</td>
+ *     <td><a href="https://developers.google.com/places/">General Google Places API</a></td>
+ *   </tr>
+ *   <tr class=Prop>
+ *     <td>Place Types:</td>
+ *     <td><a href="https://developers.google.com/places/supported_types">Place Types</a></td>
+ *   </tr>
+ * </table>
+ */
+bpmext_control_InitPlaces = function (utilities, bpmext, domClass, domAttr, domConstruct)
+{
+	this._instance =
+	{
+	};
+
+	if (!this.constructor.prototype._proto)
+	{
+		this.constructor.prototype._proto =
+		{
+			EVT_ONPLACES : "eventON_PLACES",
+			_resolvePlace : function(view, latitude, longitude, search, rankByDistance) 
+			{
+				if(!view._instance.service)
+					view._instance.service = new google.maps.places.PlacesService(view._instance.output);
+
+				view._instance.service.nearbySearch(
+					{
+						location: new google.maps.LatLng(latitude, longitude),
+						radius: search.radius,
+						types: search.types,
+						rankBy: (rankByDistance ? google.maps.places.RankBy.DISTANCE : google.maps.places.RankBy.PROMINENCE),
+						openNow: search.openNow,
+						keyword: search.keyword,
+						minPriceLevel: search.minPriceLevel,
+						maxPriceLevel: search.maxPriceLevel
+					}, 
+					function(results, status){
+						if (status == google.maps.places.PlacesServiceStatus.OK) 
+						{
+							/*
+							for (var i = 0; i < results.length; i++) 
+							{
+								var place = results[i];
+								//createMarker(results[i]);
+								console.log("Place: " + place);
+								
+							}
+							*/
+							view._instance.curPlaces = results;
+							bpmext.ui.executeEventHandlingFunction(view, view._proto.EVT_ONPLACES, results);							
+						}
+						else if(status == google.maps.places.PlacesServiceStatus.ZERO_RESULTS)
+						{
+							view._instance.curPlaces = [];
+						}
+						else //Some type of error
+						{
+							delete view._instance.curPlaces;
+						}
+					});
+			}			
+		};
+
+		/*
+		Public control methods *************************************************************
+		 */
+
+		/**
+		 * @instance
+		 * @memberof Places
+		 * @method getType
+		 * @desc Get descriptive string representing the type of control
+		 * @returns {string}
+		 */
+		this.constructor.prototype.getType = function ()
+		{
+			return "places.3";
+		}
+				/**
+		 * @instance
+		 * @memberof Places
+		 * @method setLatitude
+		 * @param {decimal} lat the latitude 
+		 * @descSets the latitude for the map
+		 */
+		this.constructor.prototype.setLatitude = function(lat)
+		{
+			this.context.options.centerLat.set("value", lat);
+		}
+		/**
+		 * @instance
+		 * @memberof Places
+		 * @method setLongitude
+		 * @param {decimal} lng the longitude
+		 * @desc Sets the longitude for the map
+		 */
+		this.constructor.prototype.setLongitude = function(lng)
+		{
+			this.context.options.centerLong.set("value", lng);
+		}
+		/**
+		 * @instance
+		 * @memberof Places
+		 * @method getLastPlacesInfo
+		 * @desc Get the different location that was previously requested.  See <a href="https://developers.google.com/places/webservice/details">Place Details Request</a> for more details.
+		 * @returns {Object[]} returns a list of Objects that contains the different location that was previously requested.
+		 * <table class=Config>
+		 *   <tr class=Prop>
+		 *     <td class=SectionName colspan=3>JSON Structure of the Object</td>
+         *   </tr>
+		 *   <tr>
+		 * <td> 
+		  { </br>
+		  "geometry": {},</br>
+		   &nbsp	 &nbsp	 &nbsp  "location" : {</br>
+			   &nbsp	 &nbsp	 &nbsp &nbsp	 &nbsp	 &nbsp "A": -- , </br>
+			   &nbsp	 &nbsp	 &nbsp &nbsp	 &nbsp	 &nbsp "F":-- </br>
+		   &nbsp	 &nbsp	 &nbsp }
+			 &nbsp	 &nbsp </br>},
+			</br>	
+			  "html_attributes": {</br>
+			&nbsp	 &nbsp	 &nbsp	     "icon": --, </br>
+			&nbsp	 &nbsp	 &nbsp		 "id": --, </br>
+			&nbsp	 &nbsp	 &nbsp		 "name": --
+			</br>		
+			  }, </br>
+			  "opening_hours":{ </br>
+			&nbsp	 &nbsp	 &nbsp	      "open_now": --, </br>
+			&nbsp	 &nbsp	 &nbsp		  "weekday_text": { } </br>
+			  }, </br>
+		&nbsp	 &nbsp	 &nbsp  "photos":{}, </br>
+		&nbsp	 &nbsp	 &nbsp	  "place_id": --,</br>
+	    &nbsp	 &nbsp	 &nbsp  "rating": --, </br>
+		&nbsp	 &nbsp	 &nbsp	  "reference": --, </br>
+		&nbsp	 &nbsp	 &nbsp	  "scope": --, </br>
+		&nbsp	 &nbsp	 &nbsp	  "types": {} ,</br>
+		&nbsp	 &nbsp	 &nbsp	  "vicinity" : --</br> 
+		  }</td>
+		  *</tr>
+          * </table>
+	    */
+
+		this.constructor.prototype.getLastPlacesInfo = function()
+		{
+			return this._instance.curPlaces;
+		}
+		
+	    /**
+		 * @instance
+		 * @memberof Places
+		 * @method requestNearbySearch
+		 * @desc Get the different location that was previously requested
+	     * @param {decimal} latitude the latitude of the location
+		 * @param {decimal} longitude the longitude of the location
+		 * @param {object} search this object contains the items radius and types of businesses that you are searching for.  For acceptable types, see <a href="https://developers.google.com/places/supported_types">Place Types</a>
+		 * @param {boolean}  rankByDistance whether you want the locations to be ranked. If true, those closest to the specified location will be located on the top of the list.
+		 * @example var aPlace = page.ui.get("Places1");  aPlace.requestNearbySearch(38.577523, -121.463390, {radius: 10000, types:["bank"]}, true);  //Places Types are located at: https://developers.google.com/places/supported_types
+		 */
+		this.constructor.prototype.requestNearbySearch = function(latitude, longitude, search, rankByDistance)
+		{
+			this._proto._resolvePlace(this, latitude, longitude, search);
+		}
+		
+		/*
+		Coach NG Lifecycle methods *************************************************************
+		 */
+		this.constructor.prototype.load = function ()
+		{
+			try
+			{
+				var opts = this.context.options;
+				var mdt = opts._metadata;
+
+				if (!opts.centerLat)
+					opts.centerLat = bpmext.ui.substituteConfigOption(this, "centerLat", null);
+
+				if (!opts.centerLong)
+					opts.centerLong = bpmext.ui.substituteConfigOption(this, "centerLong", null);
+
+				bpmext.ui.registerEventHandlingFunction(this, this._proto.EVT_ONPLACES, "places");
+				this._instance.output = document.createElement("div");
+				this.context.element.appendChild(this._instance.output);
+				
+				bpmext.ui.loadView(this);
+				var view = this;
+				bpmext.ui.addEventSubscription("GOOGLE_APIS_LOADED", function(evtName, event) {
+					view._instance.apiKey = event.apiInfo.key;
+				},
+				this, 
+				true
+				);
+			}
+			catch (e)
+			{
+				bpmext.log.error("Error on load event [" + this.context.viewid + "]: " + e);
+				if(e.stack)
+					bpmext.log.error("  Call stack: " + e.stack);
+			}
+		};
+
+		this.constructor.prototype.view = function ()
+		{
+			
+		};
+
+		this.constructor.prototype.change = function (event)
+		{
+			try
+			{
+				if (event.type == "config")
+				{
+					switch (event.property)
+					{
+						case "_metadata.visibility":
+						{
+							break;
+						}
+					}
+				}
+			}
+			catch (e)
+			{
+				bpmext.log.error("Error on change event [" + this.ui.getAbsoluteName() + "]: " + e);
+				if(e.stack)
+					bpmext.log.error("  Call stack: " + e.stack);
+			}
+		};
+
+		this.constructor.prototype.unload = function ()
+		{
+			bpmext.ui.unloadView(this);
+		};
+	}
+}

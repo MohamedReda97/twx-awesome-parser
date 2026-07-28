@@ -1,0 +1,70 @@
+/*
+ * #BEGIN COPYRIGHT
+ *
+ * Licensed Materials - Property of IBM
+ * 5725-C95
+ * (C) Copyright IBM Corporation 2017. All Rights Reserved.
+ * US Government Users Restricted Rights- Use, duplication or disclosure
+ * restricted by GSA ADP Schedule Contract with IBM Corp.
+ *
+ * #END COPYRIGHT
+ */
+
+var mixObject = {
+    createPreview:function(containingDiv, labelText, callback){
+		var bpmextUri = this.context.getManagedAssetUrl("BPMExt-Core-Designer.js", this.context.assetType_WEB, "SYSBPMUI");
+		require([ "dojo/dom-construct", "dojo/dom-class", "dojo/dom-style", bpmextUri], this.lang.hitch(this, function(domConstruct, domClass, domStyle, bpmext){
+			bpmext.uidesign.css.ensureGlyphsLoaded(this);			
+						
+			this.context.coachViewData.containingDiv = containingDiv;
+			domClass.add(this.context.coachViewData.containingDiv, "spark-ui");
+									
+			this.context.coachViewData.mapWrapperDiv = domConstruct.create("div");
+			domClass.add(this.context.coachViewData.mapWrapperDiv, "SPARKGMap");			
+			domStyle.set(this.context.coachViewData.mapWrapperDiv,{"width":"100%","height":"100%"});
+			
+			this.context.coachViewData.disablerDiv = domConstruct.create("div");
+			domClass.add(this.context.coachViewData.disablerDiv, "disabler hidden");
+
+			this.context.mapPreviewImageUrl = this.context.getManagedAssetUrl("BPMExt-Control-Map-Preview.png", this.context.assetType_WEB, "SYSBPMUI");			
+			this.context.coachViewData.imageEl = domConstruct.create("img",{src: this.context.mapPreviewImageUrl});			
+						
+			this.context.coachViewData.mapWrapperDiv.appendChild(this.context.coachViewData.disablerDiv);	
+			this.context.coachViewData.mapWrapperDiv.appendChild(this.context.coachViewData.imageEl);
+			this.context.coachViewData.containingDiv.appendChild(this.context.coachViewData.mapWrapperDiv);
+			
+			callback();
+		}));	
+    },
+	
+    propertyChanged:function(propertyName, propertyValue){
+		var configHelperUri = this.context.getManagedAssetUrl("BPMExt-Core-ConfigHelper.js",this.context.assetType_WEB, "SYSBPMUI");
+		require(["dojo/dom-style", "dojo/dom-class", "dojo/dom-attr", "dojo/dom-construct", configHelperUri], this.lang.hitch(this, function(domStyle, domClass, domAttr, domConstruct, configHelper){
+			
+			if(propertyName == "@label") {				
+				dojo.attr(this.context.coachViewData.mapWrapperDiv, "aria-label", propertyValue);
+			} else if(propertyName ==  "@labelVisibility"){
+			
+			} else if(propertyName == "width"){				
+				if(!!propertyValue) {										
+					this.context.coachViewData.containingDiv.style.width = isNaN(propertyValue) ? propertyValue : (propertyValue+"px");
+					domAttr.set(this.context.coachViewData.imageEl, "width", isNaN(propertyValue) ? propertyValue : (propertyValue+"px"));
+				} else {										
+					this.context.coachViewData.containingDiv.style.width = "";
+					domAttr.set(this.context.coachViewData.imageEl, "width", "100%");
+				}				
+			} else if(propertyName == "height"){				
+				if(!!propertyValue) {										
+					this.context.coachViewData.containingDiv.style.height = isNaN(propertyValue) ? propertyValue : (propertyValue+"px");
+					domAttr.set(this.context.coachViewData.imageEl, "height", isNaN(propertyValue) ? propertyValue : (propertyValue+"px"));
+				} else {										
+					this.context.coachViewData.containingDiv.style.height = "";
+					domAttr.set(this.context.coachViewData.imageEl, "height", "100%");
+				}				
+			} 			
+		}));	
+    },	
+	modelChanged: function(propertyName, propertyValue) {
+			
+	}
+};

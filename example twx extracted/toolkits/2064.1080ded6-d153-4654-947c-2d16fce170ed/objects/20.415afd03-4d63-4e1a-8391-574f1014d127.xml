@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<teamworks>
+    <layout id="20.415afd03-4d63-4e1a-8391-574f1014d127" name="Time Grouping Range">
+        <lastModified>1361369073512</lastModified>
+        <lastModifiedBy>Internal TW Admin user</lastModifiedBy>
+        <layoutId>20.415afd03-4d63-4e1a-8391-574f1014d127</layoutId>
+        <metaDataLabel isNull="true" />
+        <metaDataUI isNull="true" />
+        <type>HTML</type>
+        <url isNull="true" />
+        <documentType>filter</documentType>
+        <imageUrl isNull="true" />
+        <layoutData>&lt;report-filter&gt;
+  &lt;display&gt;&amp;lt;#
+   // (C) 2003 Lombardi Software, All Rights Reserved. For use with the TeamWorks platform only.
+   //
+   // This is a generic layout filter for any Drop-Down Selection model. Just copy this layout
+   // and change the 'values' and 'labels' variables under to match your selection.
+   //
+   // The values are the actual text being replaced in the twql, while the labels is the text
+   // the end user will see in his dropdown combo.
+   //
+   // NOTE: Always have the same number of values as labels. There are no checks anywhere for
+   // this, but it is required in order for the combobox to work.
+   //
+
+   // &amp;gt;&amp;gt;&amp;gt;&amp;gt; START CONFIGURATION
+   var values = "time_stamp_day,time_stamp_week,time_stamp_month,time_stamp_year".split(",");
+   var labels = "Days,Weeks,Months,Years".split(",");
+   // &amp;gt;&amp;gt;&amp;gt;&amp;gt; END CONFIGURATION
+
+
+
+
+#&amp;gt;
+&amp;lt;select name="&amp;lt;#= filter.formName #&amp;gt;"&amp;gt;
+&amp;lt;#
+   var selectedValue = filter.value;
+
+   for (var i = 0 ; i &amp;lt; values.length ; i++) {
+       isSelected = (selectedValue == values[i])  // Replace with real filter settings
+#&amp;gt;
+      &amp;lt;option value="&amp;lt;#= values[i] #&amp;gt;" &amp;lt;# if (isSelected) { #&amp;gt;SELECTED&amp;lt;# } #&amp;gt;&amp;gt; &amp;lt;#= labels[i] #&amp;gt;&amp;lt;/option&amp;gt;
+&amp;lt;#
+   }
+#&amp;gt;
+&amp;lt;/select&amp;gt;
+
+&lt;/display&gt;
+  &lt;script&gt;return filter.value;
+&lt;/script&gt;
+&lt;/report-filter&gt;</layoutData>
+        <description>Switches between which field to use between the time_stamp_xxx fields provided by TWQL.</description>
+        <guid>prePebbles:1362:11-25-2003 12:13:46</guid>
+        <versionId>cbbb2c1a-5969-48ae-92a2-0e271605e19b</versionId>
+        <layoutParam name="filter-values">
+            <lastModified isNull="true" />
+            <lastModifiedBy isNull="true" />
+            <layoutParamId>2023.a0dca377-6ca5-4196-8002-4cf73b34411a</layoutParamId>
+            <layoutId>20.415afd03-4d63-4e1a-8391-574f1014d127</layoutId>
+            <value isNull="true" />
+            <type>1</type>
+            <seq isNull="true" />
+            <guid>guid:197d4ddc90fc5427:-1c619ffe:11def1582ed:-7e95</guid>
+            <versionId>13b627d0-73e1-4d8a-af80-8d027e7f14a9</versionId>
+        </layoutParam>
+        <layoutParam name="filter-category">
+            <lastModified isNull="true" />
+            <lastModifiedBy isNull="true" />
+            <layoutParamId>2023.17debde6-0985-4dad-a812-6a5ad39cd2fb</layoutParamId>
+            <layoutId>20.415afd03-4d63-4e1a-8391-574f1014d127</layoutId>
+            <value isNull="true" />
+            <type>1</type>
+            <seq isNull="true" />
+            <guid>guid:197d4ddc90fc5427:-1c619ffe:11def1582ed:-7e97</guid>
+            <versionId>475060ef-28da-4d65-9f83-66350e29af88</versionId>
+        </layoutParam>
+        <layoutParam name="filter-type">
+            <lastModified isNull="true" />
+            <lastModifiedBy isNull="true" />
+            <layoutParamId>2023.e71b16f7-97c0-4836-be92-4c44d51f6f00</layoutParamId>
+            <layoutId>20.415afd03-4d63-4e1a-8391-574f1014d127</layoutId>
+            <value isNull="true" />
+            <type>1</type>
+            <seq isNull="true" />
+            <guid>guid:197d4ddc90fc5427:-1c619ffe:11def1582ed:-7e99</guid>
+            <versionId>9e2dd0d3-08e6-45d3-9ce3-6577438b7ba5</versionId>
+        </layoutParam>
+    </layout>
+</teamworks>
+

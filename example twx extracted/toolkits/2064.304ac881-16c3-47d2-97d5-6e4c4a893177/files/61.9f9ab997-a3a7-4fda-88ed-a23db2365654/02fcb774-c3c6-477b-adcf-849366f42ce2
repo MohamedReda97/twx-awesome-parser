@@ -1,0 +1,193 @@
+/*
+ * #BEGIN COPYRIGHT
+ *
+ * Licensed Materials - Property of IBM
+ * 5725-C95
+ * (C) Copyright IBM Corporation 2017, 2020. All Rights Reserved.
+ * US Government Users Restricted Rights- Use, duplication or disclosure
+ * restricted by GSA ADP Schedule Contract with IBM Corp.
+ *
+ * #END COPYRIGHT
+ */
+
+var mixObject = {
+	createPreview: function (containingDiv, labelText, callback) {
+		var bpmextUri = this.context.getManagedAssetUrl("BPMExt-Core-Designer.js", this.context.assetType_WEB, "SYSBPMUI");
+		var configHelperUri = this.context.getManagedAssetUrl("BPMExt-Core-ConfigHelper.js", this.context.assetType_WEB, "SYSBPMUI");
+		require(["dojo/dom-construct", "dojo/dom-class", "dojo/dom-attr", bpmextUri, configHelperUri], this.lang.hitch(this, function (domConstruct, domClass, domAttr, bpmext, configHelper) {
+			bpmext.uidesign.css.ensureSparkUIClass(containingDiv);
+			this.context.coachViewData.containingDiv = containingDiv;
+
+			var tempID;
+
+			while (true) {
+				tempID = dojox.uuid.generateRandomUuid();
+				if (this.context.coachViewData.containingDiv.querySelector("div[data-temp-id='" + tempID + "']") == null)
+					break;
+			}
+			this.context.coachViewData.containingDiv.setAttribute("data-temp-id", tempID);
+			domClass.add(this.context.coachViewData.containingDiv, "WYSIWYGSPARKTable_Layout ");
+			domClass.add(this.context.coachViewData.containingDiv, "spark-ui");
+
+			this.context.coachViewData.tableWrapper = domConstruct.create("div");
+			domClass.add(this.context.coachViewData.tableWrapper, "SPARKTable");
+
+			this.context.coachViewData.disablerDiv = domConstruct.create("div");
+			domClass.add(this.context.coachViewData.disablerDiv, "disabler hidden");
+
+			this.context.coachViewData.tableHeaderDiv = domConstruct.create("div");
+			domClass.add(this.context.coachViewData.tableHeaderDiv, "clearfix table-header");
+
+			this.context.coachViewData.tblHdrSpan = domConstruct.create("SPAN");
+			this.context.coachViewData.labelTextDom = document.createTextNode(labelText);
+			this.context.coachViewData.tblHdrSpan.appendChild(this.context.coachViewData.labelTextDom);
+			domClass.add(this.context.coachViewData.tblHdrSpan, "table-caption");
+
+			this.context.coachViewData.tableOuterDiv = domConstruct.create("div");
+			domClass.add(this.context.coachViewData.tableOuterDiv, "outerTable");
+			this.context.coachViewData.tableInnerDiv = domConstruct.create("div");
+
+			this.context.coachViewData.contentBoxDiv = this.context.coachViewData.containingDiv.querySelector("div[data-temp-id='" + tempID + "']  .DesignContentBox");
+			this.context.coachViewData.contentBoxExpRowDiv = this.context.coachViewData.containingDiv.querySelectorAll(".DesignContentBox")[1];
+
+			this.context.coachViewData.tableInnerDiv.appendChild(this.context.coachViewData.contentBoxDiv);
+			this.context.coachViewData.tableInnerDiv.appendChild(this.context.coachViewData.contentBoxExpRowDiv);
+
+			domClass.add(this.context.coachViewData.contentBoxExpRowDiv, "hide");
+
+			this.context.coachViewData.tableWrapper.appendChild(this.context.coachViewData.disablerDiv);
+			this.context.coachViewData.tableHeaderDiv.appendChild(this.context.coachViewData.tblHdrSpan);
+			this.context.coachViewData.tableWrapper.appendChild(this.context.coachViewData.tableHeaderDiv);
+			this.context.coachViewData.tableOuterDiv.appendChild(this.context.coachViewData.tableInnerDiv);
+			this.context.coachViewData.tableWrapper.appendChild(this.context.coachViewData.tableOuterDiv);
+			this.context.coachViewData.containingDiv.appendChild(this.context.coachViewData.tableWrapper);
+
+			this.context.coachViewData.labelHandler = bpmext.uidesign.createLabelHandler(this.context.coachViewData.labelTextDom, this.context.coachViewData.tableHeaderDiv, undefined, false, false, true);
+			//Init the config section to hide any options that are not relevant to the current selections
+			this.configurationOptionVisiblity = null;
+			this.initializeConfigurationOptionVisibility(configHelper);
+
+			callback();
+		}));
+	},
+	getLabelDomElement: function () {
+		return this.context.coachViewData.tblHdrSpan;
+	},
+	propertyChanged: function (propertyName, propertyValue) {
+		var configHelperUri = this.context.getManagedAssetUrl("BPMExt-Core-ConfigHelper.js", this.context.assetType_WEB, "SYSBPMUI");
+		require(["dojo/dom-style", "dojo/dom-class", "dojo/dom-construct", configHelperUri], this.lang.hitch(this, function (domStyle, domClass, domConstruct, configHelper) {
+			this.context.coachViewData.labelHandler.propertyChanged(propertyName, propertyValue);
+			if (propertyName == "@style") {
+
+			} else if (propertyName == "width") {
+				this.context.coachViewData.width = propertyValue;
+				if (!!propertyValue) {
+					this.context.coachViewData.containingDiv.style.width = isNaN(propertyValue) ? propertyValue : (propertyValue + "px");
+				} else {
+					this.context.coachViewData.containingDiv.style.width = "";
+				}
+			} else if (propertyName == "height") {
+				this.context.coachViewData.height = propertyValue;
+				if (!!propertyValue) {
+					this.context.coachViewData.containingDiv.style.height = isNaN(propertyValue) ? propertyValue : (propertyValue + "px");
+				} else {
+					this.context.coachViewData.containingDiv.style.height = "";
+				}
+			} else if (propertyName == "colorStyle") {
+				var colorStyle;
+				if (propertyValue == "P") {
+					colorStyle = "table-primary";
+				} else if (propertyValue == "I") {
+					colorStyle = "table-info";
+				} else if (propertyValue == "S") {
+					colorStyle = "table-success";
+				} else if (propertyValue == "W") {
+					colorStyle = "table-warning";
+				} else if (propertyValue == "G") {
+					colorStyle = "table-danger";
+				} else {
+					colorStyle = "";
+				}
+				domClass.replace(this.context.coachViewData.tableWrapper, colorStyle, "table-primary table-info table-success table-warning table-danger");
+			} else if (propertyName == "tableStyle") {
+				var tableStyle;
+				var innerTableStyle;
+				if (propertyValue == "D") {
+					tableStyle = "ts-default";
+					innerTableStyle = "table-bordered";
+				} else if (propertyValue == "E") {
+					tableStyle = "ts-elegant";
+					innerTableStyle = "";
+				} else if (propertyValue == "B") {
+					tableStyle = "ts-bordered";
+					innerTableStyle = "table-bordered";
+				} else if (propertyValue == "S") {
+					tableStyle = "ts-striped";
+					innerTableStyle = "table-striped";
+				} else if (propertyValue == "H") {
+					tableStyle = "ts-hover";
+					innerTableStyle = "table-hover";
+				} else if (propertyValue == "C") {
+					tableStyle = "ts-condensed";
+					innerTableStyle = "table-condensed";
+				} else {
+					tableStyle = "";
+					innerTableStyle = "";
+				}
+				domClass.replace(this.context.coachViewData.tableWrapper, tableStyle, "ts-default ts-elegant ts-bordered ts-striped ts-hover ts-condensed");
+			} else if (propertyName == "deferLoad") {
+				//update the config tab to hide any options that should not be shown
+				this.setConfigurationOptionVisibility(this.getOptionVisibility(propertyValue));
+				if (this.updateConfigurationOptionVisibility) {
+					this.updateConfigurationOptionVisibility()
+				};
+			} else if (propertyName == "expandableRows") {
+				if (propertyValue === true) {
+					domClass.remove(this.context.coachViewData.contentBoxExpRowDiv, "hide");
+				} else {
+					domClass.add(this.context.coachViewData.contentBoxExpRowDiv, "hide");
+				}
+
+			}
+		}));
+	},
+	modelChanged: function (propertyName, propertyValue) {
+		this.context.coachViewData.labelHandler.modelChanged(propertyName, propertyValue);
+	},
+
+	//Init the config section to hide any options that are not relevant to the current selections
+	initializeConfigurationOptionVisibility: function (configHelper) {
+		var visibility, value = false;
+		var configOptionValue = configHelper.getConfigOptionValue(this, "deferLoad");
+		if (configOptionValue != undefined) {
+			value = configOptionValue;
+		}
+		visibility = this.getOptionVisibility(value);
+
+		this.setConfigurationOptionVisibility(visibility);
+	},
+	setConfigurationOptionVisibility: function (visibility) {
+		this.configurationOptionVisibility = visibility;
+	},
+	getConfigurationOptionVisibility: function () {
+		return this.configurationOptionVisibility;
+	},
+	getOptionVisibility: function (value) {
+		var visibility;
+
+		if (value == true || value == "true") {
+			visibility = {
+				"loadBatchSize": {
+					visible: true
+				}
+			};
+		} else {
+			visibility = {
+				"loadBatchSize": {
+					visible: false
+				}
+			};
+		}
+		return visibility;
+	}
+};

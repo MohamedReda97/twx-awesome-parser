@@ -1,0 +1,615 @@
+/*
+ * #BEGIN COPYRIGHT
+ *
+ * Licensed Materials - Property of IBM
+ * 5725-C95
+ * (C) Copyright IBM Corporation 2019. All Rights Reserved.
+ * US Government Users Restricted Rights- Use, duplication or disclosure
+ * restricted by GSA ADP Schedule Contract with IBM Corp.
+ *
+ * #END COPYRIGHT
+ */
+
+/**
+ * @ignore
+ * @instance
+ * @memberof Image
+ * @method isValid
+ */  
+
+/**
+ * @ignore
+ * @instance
+ * @memberof Image
+ * @method setValid
+ */
+
+/**
+ * @ignore
+ * @instance
+ * @memberof Image
+ * @method recalculate
+ */
+
+/**
+ * @ignore
+ * @instance
+ * @memberof Image
+ * @method getData
+ */
+
+/**
+ * @ignore
+ * @instance
+ * @memberof Image
+ * @method setData
+ */ 
+ 
+/**
+ * @ignore
+ * @instance
+ * @memberof Image
+ * @method setLabelVisible
+ */
+ 
+/**
+ * @ignore
+ * @instance
+ * @memberof Image
+ * @method isLabelVisible
+ */ 
+
+/** 
+ *   <tr class=Prop>
+ *     <td class=SectionName colspan=3>Events</td>
+ *   </tr>
+ *   <tr class=Prop>
+ *     <td>On Load:</td>
+ *     <td colspan="2">
+ *       <table> 
+ *         <tr class=Prop>
+ *           <td>Description: </td>
+ *           <td>Triggers whenever the view is loaded.</td>
+ *         </tr>
+ *         <tr class=Prop>
+ *           <td>Example: </td>
+ *           <td><pre class="prettyprint"><code>console.log("Img1 successfully loaded")</code></pre></td>
+ *         </tr>
+ *       </table>
+ *     </td>
+ *   </tr>>
+ *   <tr class=Prop>
+ *     <td>On Click:</td>
+ *     <td colspan="2">
+ *       <table> 
+ *         <tr class=Prop>
+ *           <td>Description: </td>
+ *           <td>Triggers when image is clicked, before navigating away from page. If evaluated expression returns false, the click will not fire a boundary event.</td>
+ *         </tr>
+ *         <tr class=Prop>
+ *           <td>Example: </td>
+ *           <td><pre class="prettyprint"><code>return ${Text1}.isValid();</code></pre></td>
+ *         </tr>
+ *       </table>
+ *     </td>
+ *   </tr>
+ * </table>
+ */
+bpmext_control_InitImage = function (utilities, bpmext, domClass, domAttr, domConstruct)
+{
+	/*
+	Instance-specific "PRIVATE" data
+	We use _instance so as to keep the number of attributes and functions visible at the main
+	object level to a minimum. If we don't do that, people will see all kinds of extra
+	functions and attributes at the main object level and assume it is ok to use them.
+
+	We'll need to tell users/developers that anything under _instance is private and should
+	not be accessed/called outide of the control.
+	 */
+	this._instance =
+	{
+		multiClicks : true
+	};
+
+	if (!this.constructor.prototype._proto)
+	{
+		this.constructor.prototype._proto =
+		{
+			EVT_ONCLICK : "eventON_CLICK",
+			_getImageURL : function(view, img, imgType)
+			{
+				var res;
+				var _urlType;
+				var _url;
+				
+				if(!img)
+				{
+					if(!_url && view.context.binding)
+					{
+						_url = view.context.binding.get("value");
+						if(!_url || _url.length == 0)
+							_url = null;
+						else
+						{
+							_urlType = view.context.options.urlType.get("value");
+							if(view.context.options.appAcronym)
+							{
+								var _appAcronym = view.context.options.appAcronym.get("value");
+							}
+						}
+					}
+					
+					if(!_url && view.context.options.defaultURL)
+					{
+						_url = view.context.options.defaultURL.get("value");
+
+						if(_url && view.context.options.defaultURLType)
+						{
+							_urlType = view.context.options.defaultURLType.get("value");
+							if(view.context.options.defaultAppAcronym)
+							{
+								var _appAcronym = view.context.options.defaultAppAcronym.get("value");
+							}
+						}
+					}
+
+					if(!_url) //Last chance - default to blank
+					{
+						_url = "spacer.png";
+						_urlType = "Web";
+						
+						var _appAcronym = "SYSBPMUI";
+					}		
+				}
+				else
+				{
+					_url = img;
+					
+					if(imgType)
+					{
+						_urlType = imgType;
+					}
+					
+					if(!_urlType)
+					{
+						_urlType = view.context.options.urlType.get("value");
+					}
+
+					if(view.context.options.appAcronym)
+					{
+						var _appAcronym = view.context.options.appAcronym.get("value");
+					}
+				}
+				
+				if (_url.indexOf("/teamworks/webasset/") !== -1) {
+					res = _url;
+				} else {
+					switch(_urlType)
+					{
+						case "External":
+							res = _url;
+						break;
+						case "Web":
+							res = com_ibm_bpm_coach.getManagedAssetUrl(_url, com_ibm_bpm_coach.assetType_WEB, _appAcronym);
+						break;
+						case "Server":
+							res = com_ibm_bpm_coach.getManagedAssetUrl(_url, com_ibm_bpm_coach.assetType_SERVER, _appAcronym);
+						break;
+						case "Design":
+							res = com_ibm_bpm_coach.getManagedAssetUrl(_url, com_ibm_bpm_coach.assetType_DESIGN, _appAcronym);
+						break;
+						default:
+					}
+				}
+
+				return res;
+			},
+			_setWidth : function (view)
+			{
+				var size = view.context.options.width.get("value");
+				
+				try
+				{
+					if(size != null && size != "")
+					{
+						if (!isNaN(size))
+							size += "px";
+
+						view._instance.img.style.width = size;
+					}
+					else 
+					{
+						view._instance.img.style.width = null;
+					}
+				}
+				catch (e)
+				{
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.error("Image._setWidth() error: " + e);
+					bpmext.log.error("Image._setWidth() " + bpmext.localization.formatMsg("general", "ERROR") + ": " + e);
+					if(e.stack) { 
+						//{#feature: US-1330 Added RT localization}
+						//bpmext.log.error("  Call stack: " + e.stack);
+						bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+					}
+				}
+			},
+			_setHeight : function (view)
+			{
+				var size = view.context.options.height.get("value");
+				
+				try
+				{
+					if(size != null && size != "")
+					{
+						if (!isNaN(size))
+							size += "px";
+
+						view._instance.img.style.height = size;
+					}
+					else 
+					{
+						view._instance.img.style.height = null;
+					}
+				}
+				catch (e)
+				{
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.error("Image._setHeight() error: " + e);
+					bpmext.log.error("Image._setHeight() " + bpmext.localization.formatMsg("general", "ERROR") + ": " + e);
+					if(e.stack) { 
+						//{#feature: US-1330 Added RT localization}
+						//bpmext.log.error("  Call stack: " + e.stack);
+						bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+					}
+				}
+			},
+			_setImage : function(view, img)
+			{
+				view._instance.img.src = this._getImageURL(view, img);			
+			},
+			_replaceClass : function (view, elt, valueMap, newVal, oldVal)
+			{
+				if(newVal != null)
+					newVal = newVal.toUpperCase();
+				
+				if(oldVal != null)
+					oldVal = oldVal.toUpperCase();
+
+				var oldClass = valueMap[oldVal];
+				if(oldClass == null)
+					oldClass = "";
+
+				var newClass = valueMap[newVal];
+				if(newClass == null)
+					newClass = "";
+
+				domClass.replace(elt, newClass, oldClass);
+			},
+			_setRadius : function (view, newVal)
+			{
+				if (newVal != null && newVal.length > 0)
+				{
+					if (!isNaN(newVal))
+						newVal += "px";
+				}
+				else
+					newVal = 0;
+					
+				view._instance.img.style.borderRadius = newVal;
+			},
+			_handleVisibility : function (view)
+			{
+				var visibility = utilities.handleVisibility(view.context);
+
+				if (visibility != "NONE")
+				{
+					if (visibility == "READONLY")
+						domClass.remove(view._instance.disabler, "hidden");
+					else
+						domClass.add(view._instance.disabler, "hidden");
+				}
+			}
+		};
+		
+
+		/*
+		Public control methods *************************************************************
+		 */
+
+		/**
+		 * @instance
+		 * @memberof Image
+		 * @method setImage
+		 * @param {string} img Image url
+		 * @param {string} type "External" | "Web" | "Server" | "Design"
+		 * @desc Set the image to be displayed
+		 * @example ${Image1}.setImage("Image1.png", "Web");
+		 */
+		this.constructor.prototype.setImage = function (img, type)
+		{
+			this._instance.img.src = this._proto._getImageURL(this, img, type);
+		};
+		 
+		/**
+		 * @instance
+		 * @memberof Image
+		 * @method setWidth
+		 * @param {string} width the width of the image
+		 * @desc Set size of image (e.g. 50px, 20%, 2em - omitting the unit assumes px)
+		 */
+		this.constructor.prototype.setWidth = function (size)
+		{
+			this.context.options.width.set("value", size);
+		};
+
+		/**
+		 * @instance
+		 * @memberof Image
+		 * @method getWidth
+		 * @desc Get configured size for image (including unit)
+		 * @returns {string}
+		 */	
+		this.constructor.prototype.getWidth = function ()
+		{
+			return this.context.options.width.get("value");
+		};
+
+		/**
+		 * @instance
+		 * @memberof Image
+		 * @method setHeight
+		 * @param {string} height the height of the image
+		 * @desc Set size of image (e.g. 50px, 20%, 2em - omitting the unit assumes px)
+		 */
+		this.constructor.prototype.setHeight = function (size)
+		{
+			this.context.options.height.set("value", size);
+		};
+
+		/**
+		 * @instance
+		 * @memberof Image
+		 * @method getHeight
+		 * @desc Get configured size for image (including unit)
+		 * @returns {string}
+		 */	
+		this.constructor.prototype.getHeight = function ()
+		{
+			return this.context.options.height.get("value");
+		};
+
+		/**
+		 * @instance
+		 * @memberof Image
+		 * @method setRadius
+		 * @param {string} radius Border radius
+		 * @desc Sets radius (roundness) of image
+		 */
+		this.constructor.prototype.setRadius = function (radius)
+		{
+			return this.context.options.radius.set("value", radius);
+		}
+
+		/**
+		 * @instance
+		 * @memberof Image
+		 * @method click
+		 * @desc Programmatically click this image
+		 */
+		this.constructor.prototype.click = function ()
+		{
+			this._instance.img.click();
+		}
+
+		/**
+		 * @instance
+		 * @memberof Image
+		 * @method getType
+		 * @desc Get descriptive string representing the type of control
+		 * @returns {string}
+		 */
+		this.constructor.prototype.getType = function ()
+		{
+			return "image.3";
+		}
+		
+		
+		/*
+		Coach NG Lifecycle methods *************************************************************
+		 */
+		this.constructor.prototype.load = function ()
+		{
+			try
+			{
+				var opts = this.context.options;
+				var mdt = opts._metadata;
+
+				if (!this.context.binding)
+					this.context.binding = bpmext.ui.substituteObject(this);
+				
+				if (!opts.preventMultipleClicks)
+					opts.preventMultipleClicks = bpmext.ui.substituteConfigOption(this, "preventMultipleClicks", false);
+                
+                if (!opts.urlType)
+                    opts.urlType = bpmext.ui.substituteConfigOption(this, "urlType", "Web");
+
+				if (!opts.appAcronym)
+					opts.appAcronym = bpmext.ui.substituteConfigOption(this, "appAcronym", null);
+					
+				if (!opts.defaultURL)
+					opts.defaultURL = bpmext.ui.substituteConfigOption(this, "defaultURL", null);
+
+				//{#bug: BUG-832 typo on default value, was null changed to Web} 
+				if (!opts.defaultURLType)
+					opts.defaultURLType = bpmext.ui.substituteConfigOption(this, "defaultURLType", "Web");
+
+				if (!opts.defaultAppAcronym)
+					opts.defaultAppAcronym = bpmext.ui.substituteConfigOption(this, "defaultAppAcronym", null);
+					
+				if (!opts.radius)
+					opts.radius = bpmext.ui.substituteConfigOption(this, "radius", "5px");
+
+				if (!opts.width)
+					opts.width = bpmext.ui.substituteConfigOption(this, "width", null);
+
+				if (!opts.height)
+					opts.height = bpmext.ui.substituteConfigOption(this, "height", null);
+
+				if (!opts.image)
+					opts.image = bpmext.ui.substituteConfigOption(this, "image", null);				
+
+				this._instance.envelope = document.createElement("div");
+				domClass.add(this._instance.envelope, "SPARKImage");
+				this._instance.disabler = bpmext.ui.util.createDisabler(this, this._instance.envelope);
+				
+				this._instance.img = document.createElement("img");
+                this._instance.img.setAttribute("role", "img");
+                domAttr.set(this._instance.img, "tabindex", 0);
+				
+				this._proto._setWidth(this);
+				this._proto._setHeight(this);
+				this._proto._setRadius(this, opts.radius.get("value"));
+				this._proto._setImage(this, this.context.binding.get("value"));
+				
+				/* {#bug: 433 Enabled help text for images (rollover text is set through the Help field under the General section for the control)} */
+				this._instance.img.title = opts._metadata.helpText.get("value");
+                //alt attribute required for accessibility. setting this to the help text offers a compromise between helpful alt text and not having to create a new config option
+                //{#feature: US-1330 Added RT localization}
+				//this._instance.img.alt = opts._metadata.helpText.get("value") ? opts._metadata.helpText.get("value") : "Default image text";
+				this._instance.img.alt = opts._metadata.helpText.get("value") ? opts._metadata.helpText.get("value") : bpmext.localization.formatMsg("controlImage", "IMAGE_ALT_TEXT");
+				
+				this._instance.envelope.appendChild(this._instance.img);
+				this.context.element.appendChild(this._instance.envelope);
+
+				bpmext.ui.registerEventHandlingFunction(this, this._proto.EVT_ONCLICK);
+
+				this._instance.multiClicks = !(opts.preventMultipleClicks ? opts.preventMultipleClicks.get("value") : false);
+
+				var _this = this;
+				
+				this._instance.img.onclick = function (event)
+				{
+					if (!_this._instance.img.disabled)
+					{
+						//Example of triggering the onClick event for Image:
+						var fireBE = bpmext.ui.executeEventHandlingFunction(_this, _this._proto.EVT_ONCLICK);
+						//Note: The above calls the logic specified on the control's on click event
+						//and captures the value returned by your code (assuming you return a value)
+						if (fireBE)
+						{
+							if (!_this._instance.multiClicks)
+							{
+								_this._instance.img.disabled = true;
+								domClass.add(_this._instance.img, "disabled");
+							}
+
+							_this.context.trigger(function ()
+							{
+								_this._instance.img.disabled = false;
+								domClass.remove(_this._instance.img, "disabled");
+							});
+						}
+					}
+				}
+
+				bpmext.ui.loadView(this);
+			}
+			catch (e)
+			{
+				//{#feature: US-1330 Added RT localization}
+				//bpmext.log.error("Error on load event [" + this.context.viewid + "]: " + e);
+				bpmext.log.error(bpmext.localization.formatMsg("general", "ERROR_ONLOAD_EVENT") + " [" + this.context.viewid + "]: " + e);
+				if(e.stack) { 
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.error("  Call stack: " + e.stack);
+					bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+				}
+			}
+		};
+
+		this.constructor.prototype.view = function ()
+		{
+			try
+			{
+				this._proto._handleVisibility(this);
+			}
+			catch (e)
+			{
+				//{#feature: US-1330 Added RT localization}
+				//bpmext.log.error("Error on view event [" + this.ui.getAbsoluteName() + "]: " + e);
+				bpmext.log.error(bpmext.localization.formatMsg("general", "ERROR_ONVIEW_EVENT") + " [" + this.ui.getAbsoluteName() + "]: " + e);
+				if(e.stack) { 
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.error("  Call stack: " + e.stack);
+					bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+				}
+			}
+		};
+
+		this.constructor.prototype.change = function (event)
+		{
+			try
+			{
+				if (event.type == "config")
+				{
+					switch (event.property)
+					{
+						case "_metadata.visibility":
+						{
+							this._proto._handleVisibility(this);
+							break;
+						}
+						case "_metadata.helpText":
+						{
+							this._proto._setAltText(this, event.newVal);
+							break;
+						}
+						case "width":
+						{
+							this._proto._setWidth(this, event.newVal);
+							break;
+						}
+						case "height":
+						{
+							this._proto._setHeight(this, event.newVal);
+							break;
+						}
+						case "radius":
+						{
+							this._proto._setRadius(this, event.newVal);
+							break;
+						}
+                        case "defaultURL":
+                        case "defaultURLType":
+                        case "defaultAppAcronym":
+                        {
+                            this._proto._setImage(this, this.context.binding.get("value"));
+                            break;
+                        }
+					}
+				}
+				else if(event.insertedInto == event.removedFrom)
+				{
+					this._proto._setImage(this, event.newVal);
+				}
+			}
+			catch (e)
+			{
+				//{#feature: US-1330 Added RT localization}
+				//bpmext.log.error("Error on change event [" + this.ui.getAbsoluteName() + "]: " + e);
+				bpmext.log.error(bpmext.localization.formatMsg("general", "ERROR_ONCHANGE_EVENT") + " [" + this.ui.getAbsoluteName() + "]: " + e);
+				if(e.stack) { 
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.error("  Call stack: " + e.stack);
+					bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+				}
+			}
+		};
+
+		this.constructor.prototype.unload = function ()
+		{
+			bpmext.ui.unloadView(this);
+		};
+	}
+}

@@ -1,0 +1,1471 @@
+/*
+ * #BEGIN COPYRIGHT
+ *
+ * Licensed Materials - Property of IBM
+ * 5725-C95
+ * (C) Copyright IBM Corporation 2017, 2021. All Rights Reserved.
+ * US Government Users Restricted Rights- Use, duplication or disclosure
+ * restricted by GSA ADP Schedule Contract with IBM Corp.
+ *
+ * #END COPYRIGHT
+ */
+
+/**
+ * @ignore
+ * @instance
+ * @memberof DataExport
+ * @method isValid
+ */
+
+/**
+ * @ignore
+ * @instance
+ * @memberof DataExport
+ * @method setValid
+ */
+
+/**
+ * @ignore
+ * @instance
+ * @memberof DataExport
+ * @method recalculate
+ */
+
+/**
+ * @ignore
+ * @instance
+ * @memberof DataExport
+ * @method getData
+ */
+
+/**
+ * @ignore
+ * @instance
+ * @memberof DataExport
+ * @method setData
+ */
+
+/**
+ *   <tr class=Prop>
+ *     <td class=SectionName colspan=3>Events</td>
+ *   </tr>
+ *   <tr class=Prop>
+ *     <td>On Load:</td>
+ *     <td colspan="2">
+ *       <table>
+ *         <tr class=Prop>
+ *           <td>Description: </td>
+ *           <td>Triggers whenever the view is loaded.</td>
+ *         </tr>
+ *         <tr class=Prop>
+ *           <td>Example: </td>
+ *           <td><pre class="prettyprint"><code>console.log("DataExport loaded")</code></pre></td>
+ *         </tr>
+ *       </table>
+ *     </td>
+ *   </tr>
+ *   <tr class=Prop>
+ *     <td>On Click:</td>
+ *     <td colspan="2">
+ *       <table>
+ *         <tr class=Prop>
+ *           <td>Description: </td>
+ *           <td>Triggers when button is clicked, before generating output file. If evaluated expression returns false, the click will not genearate a file to save.</td>
+ *         </tr>
+ *         <tr class=Prop>
+ *           <td>Example: </td>
+ *           <td><pre class="prettyprint"><code>return ${Text1}.isValid();</code></pre></td>
+ *         </tr>
+ *       </table>
+ *     </td>
+ *   </tr>
+ *   <tr class=Prop>
+ *     <td>On Cell Export:</td>
+ *     <td colspan="2">
+ *       <table>
+ *         <tr class=Prop>
+ *           <td>Description: </td>
+ *           <td>Triggers whenever a cell is exported. Can return a <code>string</code>, <code>number</code>, or <code>boolean</code> to replace cell value, <code>null</code> to cause the exported cell to be blank, or an object containing a <code>format</code> property to override the cells formatting, with an optional <code>value</code> property in the same object to override the exported value of the cell.</td>
+ *         </tr>
+ *         <tr class=Prop>
+ *           <td>Example: </td>
+ *           <td><pre class="prettyprint"><code>me.setVisible("READONLY")</code></pre></td>
+ *         </tr>
+ *       </table>
+ *       <table style="border: 1px solid black; border-collapse: collapse; ">
+ *         <tr style="border: 1px solid black; border-collapse: collapse;">
+ *           <th style="border: 1px solid black; border-collapse: collapse;padding: 5px;">Context Variables</th>
+ *           <th style="border: 1px solid black; border-collapse: collapse; padding: 5px;">cell</th>
+ *         </tr>
+ *         <tr style= "border: 1px solid black; border-collapse: collapse;">
+ *           <td rowspan="5" style= "border: 1px solid black; border-collapse: collapse;padding: 5px;">Properties</td>
+ *           <td style="color: black; font-weight: normal; border: 1px solid black; border-collapse: collapse;padding: 5px;">view</td>
+ *         </tr>
+ *         <tr style= "border: 1px solid black; border-collapse: collapse;">
+ *           <td style="color: black; font-weight: normal; border: 1px solid black; border-collapse: collapse;padding: 5px;">table</td>
+ *         </tr>
+ *         <tr style= "border: 1px solid black; border-collapse: collapse;">
+ *           <td style="color: black; font-weight: normal; border: 1px solid black; border-collapse: collapse;padding: 5px;">value</td>
+ *         </tr>
+ *         <tr style= "border: 1px solid black; border-collapse: collapse;">
+ *           <td style="color: black; font-weight: normal; border: 1px solid black; border-collapse: collapse;padding: 5px;">rowIndex</td>
+ *         </tr>
+ *         <tr style= "border: 1px solid black; border-collapse: collapse;">
+ *           <td style="color: black; font-weight: normal; border: 1px solid black; border-collapse: collapse;padding: 5px;">colIndex</td>
+ *         </tr>
+ *       </table>
+ *     </td>
+ *   </tr>
+ * </table>
+ */
+bpmext_control_InitDataExport = function (utilities, bpmext, domClass, domAttr, domConstruct, fastclick, XLSX, JSZip) {
+    this._instance = {
+        btn : null,
+        txtNode : null,
+        iconSpan : null,
+        multiClicks : true,
+        colorStyle : null,
+        shapeStyle : null,
+        sizeStyle : null
+    };
+
+    if (!this.constructor.prototype._proto) {
+        this.constructor.prototype._proto = {
+            OPTS_COL_STLZ : {
+                "D" : "",
+                "P" : "btn-primary",
+                "I" : "btn-info",
+                "S" : "btn-success",
+                "W" : "btn-warning",
+                "G" : "btn-danger",
+                "E" : "btn-danger",
+                "B" : "btn-dark"
+            },
+            OPTS_SHP_STLZ : {
+                "D" : "",
+                "R" : "btn-rounded",
+                "F" : "btn-flat"
+            },
+            OPTS_SZ_STLZ : {
+                "D" : "",
+                "L" : "btn-lg",
+                "S" : "btn-sm",
+                "X" : "btn-xs"
+            },
+            EVT_ONCLICK : "eventON_CLICK",
+            EVT_ONCELLEXPT : "eventON_CELLEXPT",
+
+            // Number of milliseconds in a day, i.e. 24 * 60 * 60 * 1000
+            DAY_MILLISECONDS : 86400000,
+            // Number of minutes in a day, i.e. 60 * 24
+            DAY_MINUTES : 1440,
+            // Number of days from Microsoft Excel's epoch, i.e new Date(1899, 11, 30) and Javascript's epoch, i.e. new Date(1970, 0, 1)
+            // (new Date(1970, 0, 1).getTime() - new Date(1899, 11, 30).getTime()) / (24 * 60 * 60 * 1000)
+            MS_DAY_OFFSET : 25569,
+            _toMSExcelDate : function(date) {
+                var timezoneOffset = date.getTimezoneOffset() / this.DAY_MINUTES;
+                var msExcelDate = (date.getTime() / this.DAY_MILLISECONDS) + (this.MS_DAY_OFFSET - timezoneOffset);
+                if (msExcelDate < 0) {
+                    var frac = msExcelDate - Math.trunc(msExcelDate);
+                    if (frac !== 0) {
+                        msExcelDate = Math.ceil(msExcelDate) - frac - 2;
+                    }
+                }
+                return msExcelDate;
+            },
+            _setText : function (view, text) {
+
+                try {
+                    var mdt = view.context.options._metadata;
+                    var baseTxtDir = mdt.baseTextDirection && mdt.baseTextDirection.get("value") ? mdt.baseTextDirection.get("value") : utilities.BiDi.BASE_TEXT_DIRECTION._default;
+                    var genPrefTextDir = view.context.bpm.system.baseTextDirection;
+                    var txtNode = view._instance.txtNode;
+
+                    if (text != null && text.length != "") {
+                        txtNode.textContent = text; //view.context.htmlEscape(text);
+                        utilities.BiDi.applyTextDir(txtNode, txtNode.textContent, baseTxtDir, genPrefTextDir);
+                    } else {
+                        txtNode.textContent = "\u00a0"; //Non-breaking space to prevent button height collapse
+                    }
+                } catch (e) {
+                    //{#feature: US-1330 Added RT localization}
+                    //bpmext.log.error("DataExport._setText() error: " + e);
+                    bpmext.log.error("DataExport._setText() " + bpmext.localization.formatMsg("general", "ERROR") + ": " + e);
+                    if(e.stack) {
+                        //{#feature: US-1330 Added RT localization}
+                        //bpmext.log.error("  Call stack: " + e.stack);
+                        bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+                    }
+                }
+            },
+            _setHelpText : function (view, text) {
+                try {
+                    var mdt = view.context.options._metadata;
+                    var btn = view._instance.btn;
+
+                    if (text != null && text.length != "") {
+                        btn.title = text;
+                    } else {
+                        btn.title = null;
+                    }
+                } catch (e) {
+                    //{#feature: US-1330 Added RT localization}
+                    //bpmext.log.error("DataExport._setHelpText() error: " + e);
+                    bpmext.log.error("DataExport._setHelpText() " + bpmext.localization.formatMsg("general", "ERROR") + ": " + e);
+                    if(e.stack) {
+                        //{#feature: US-1330 Added RT localization}
+                        //bpmext.log.error("  Call stack: " + e.stack);
+                        bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+                    }
+                }
+            },
+            _setWidth : function (view, width) {
+                try {
+                    if (width != null && width != "") {
+                        if (!isNaN(width))
+                            width += "px";
+
+                        view._instance.btn.style.width = width;
+
+                        domClass.add(view.context.element, "widthSet");
+                    } else {
+                        view._instance.btn.style.width = null;
+
+                        domClass.remove(view.context.element, "widthSet");
+                    }
+                } catch (e) {
+                    //{#feature: US-1330 Added RT localization}
+                    //bpmext.log.error("DataExport._setWidth() error: " + e);
+                    bpmext.log.error("DataExport._setWidth() " + bpmext.localization.formatMsg("general", "ERROR") + ": " + e);
+                    if(e.stack) {
+                        //{#feature: US-1330 Added RT localization}
+                        //bpmext.log.error("  Call stack: " + e.stack);
+                        bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+                    }
+                }
+            },
+            _replaceClass : function (view, valueMap, newVal, oldVal) {
+                if (newVal != null)
+                    newVal = newVal.toUpperCase();
+
+                if (oldVal != null)
+                    oldVal = oldVal.toUpperCase();
+
+                var oldClass = valueMap[oldVal];
+                if (oldClass == null)
+                    oldClass = "";
+
+                var newClass = valueMap[newVal];
+                if (newClass == null)
+                    newClass = "";
+
+                domClass.replace(view._instance.btn, newClass, oldClass);
+            },
+            _setColorStyle : function (view, newVal, oldVal) {
+                oldVal = bpmext.ui.util.normalizeColorStyle(oldVal, this.OPTS_COL_STLZ);
+                newVal = bpmext.ui.util.normalizeColorStyle(newVal, this.OPTS_COL_STLZ);
+                newVal = bpmext.ui.util.normalizeColorStyle(newVal, this.OPTS_COL_STLZ);
+                this._replaceClass(view, this.OPTS_COL_STLZ, newVal, oldVal);
+            },
+            _normalizeShapeStyle : function (val) {
+                if (!val)
+                    val = "D";
+
+                val = val.toUpperCase();
+                if (val.length > 1) {
+                    switch (val) {
+                    case "DEFAULT":
+                    case "DEF":
+                    case "D":
+                        val = "D";
+                        break;
+                    case "ROUND":
+                    case "ROUNDED":
+                        val = "R";
+                        break;
+                    case "FLAT":
+                        val = "F";
+                        break;
+                    default:
+                        //{#feature: US-1330 Added RT localization}
+                        //bpmext.log.warn("Unexpected shape style value: " + val);
+                        bpmext.log.warn(bpmext.localization.formatMsg("controlDataExport", "DE_SHAPE_STYLE_WARNING",val));
+                    }
+                }
+
+                return val;
+            },
+            _setShapeStyle : function (view, newVal, oldVal) {
+                newVal = this._normalizeShapeStyle(newVal);
+                oldVal = this._normalizeShapeStyle(oldVal);
+
+                this._replaceClass(view, this.OPTS_SHP_STLZ, newVal, oldVal);
+            },
+            _setSizeStyle : function (view, newVal, oldVal) {
+                newVal = bpmext.ui.util.normalizeSizeStyle(newVal, this.OPTS_SZ_STLZ);
+                oldVal = bpmext.ui.util.normalizeSizeStyle(oldVal, this.OPTS_SZ_STLZ);
+
+                this._replaceClass(view, this.OPTS_SZ_STLZ, newVal, oldVal);
+            },
+            _setOutline : function (view, outline) {
+                var fn = outline ? domClass.add : domClass.remove;
+                fn(view._instance.btn, "btn-outline");
+            },
+            _setIcon : function (view, icon) {
+                if (view._instance.iconSpan) {
+                    view._instance.btn.removeChild(view._instance.iconSpan);
+                    view._instance.iconSpan = null;
+                }
+
+                if (icon != null && icon != "") {
+                    var span = document.createElement("span");
+                    var iconClasses = "";
+                    icon = icon.trim().toLowerCase();
+
+                    if(bpmext.text.startsWith(icon, "ci-")) {
+                        var svgElement = utilities.getCarbonIcon(icon);
+                        if (svgElement) {
+                            span.appendChild(svgElement);
+                            iconClasses = " ci ";
+                        }
+                    } else {
+                        if (!bpmext.text.startsWith(icon, "fa-")){
+                            icon = "fa-" + icon;
+                        }
+                        iconClasses = "fa " + icon;
+                    }
+
+                    domClass.add(span, "btn-label icon " + iconClasses);
+                    domClass.add(view._instance.btn, "btn-labeled");
+                    domConstruct.place(span, view._instance.btn, "first");
+                    view._instance.iconSpan = span;
+                } else {
+                    domClass.remove(view._instance.btn, "btn-labeled");
+                }
+            },
+            _handleVisibility : function (view) {
+                var btn = view._instance.btn;
+                var visibility = bpmext.ui.getEffectiveVisibility(view);
+
+                view.context.setDisplay(visibility != "NONE");
+                view.context.setVisibility(visibility != "HIDDEN");
+
+                if (visibility != "NONE") {
+                    if (visibility == "READONLY") {
+                        btn.disabled = true;
+                        domClass.add(btn, "disabled");
+                    } else {
+                        btn.disabled = false;
+                        domClass.remove(btn, "disabled");
+                    }
+                }
+            },
+            _setTabIndex : function (view, index) {
+                if (index != null)
+                    domAttr.set(view._instance.btn, "tabindex", index);
+                else
+                    domAttr.remove(view._instance.btn, "tabindex");
+            },
+            _setFileType : function (view, type) {
+                ft = type.toLowerCase();
+                if (ft.charAt(0) == '.')
+                    ft = ft.substring(1);
+
+                if (ft == 'xlsx' || ft == 'csv') {
+                    view._instance.fileType = ft;
+                } else {
+                    //{#feature: US-1330 Added RT localization}
+                    //bpmext.log.warn("File type '" + type + "' unknown. Output will be .csv");
+                    bpmext.log.warn(bpmext.localization.formatMsg("controlDataExport", "DE_FILE_TYPE") +" '" + type + "' " + bpmext.localization.formatMsg("controlDataExport", "DE_FILETYPE_WARNING"));
+                }
+            },
+            _setFileName : function (view, name) {
+                var ext = "." + view._instance.fileType;
+                if (name.length >= ext.length && name.toLowerCase().substring(name.length - ext.length) === ext)
+                    name = name.substring(0, name.lastIndexOf('.'));
+
+                view._instance.fileName = name;
+            },
+            _setColNameFlag : function (view, flag) {
+                view._instance.colNames = flag;
+            },
+            _setColumnSpecs : function (view, formats) {
+                view._instance.cspecs = [];
+
+                var items = formats.items;
+                for (var i = 0; i < items.length; i++) {
+                    view._instance.cspecs[i] = {
+                        fmt : items[i].columnFormatString
+                    };
+                }
+            },
+            _setColumnHeaders : function (view, headers) {
+                view._instance.cheaders = [];
+
+                var items = headers.items;
+                for (var i = 0; i < items.length; i++) {
+                    view._instance.cheaders[i] = items[i];
+                }
+            },
+            _setColumnOrder : function (view, order) {
+                view._instance.cOrder = [];
+
+                var items = order.items;
+                for (var i = 0; i < items.length; i++) {
+                    view._instance.cOrder[i] = items[i];
+                }
+            },
+            _setTableRef : function (view, tableName) {
+                if (bpmext.text.startsWith(tableName, "${")) {
+                    tableName = tableName.substring(2, tableName.length - 1);
+                }
+
+                if (tableName) {
+                    //{bug# BG-843 Data Export associated table reference doesn't always work}
+                    view._instance.table = view.ui.getParent().ui.get(tableName);
+
+                    if (view._instance.table)
+                        return;
+                }
+
+                view._instance.table = null;
+                //{#feature: US-1330 Added RT localization}
+                //bpmext.log.warn("Could not find " + (tableName ? tableName : "suitable table/layout to populate control"));
+                bpmext.log.warn(bpmext.localization.formatMsg("controlDataExport", "DE_NOT_FIND") + " " + (tableName ? tableName : bpmext.localization.formatMsg("controlDataExport", "DE_LAYOUT_WARNING")));
+            },
+            _getData : function (view) {
+                var res = [];
+
+                if (view.context.binding.get("value") && view.context.binding.get("value").items) {
+                    var items = view.context.binding.get("value").items;
+
+                    if (items && items.length > 0) {
+                        var keys = Object.keys(items[0]);
+                        var keyNum = keys.length;
+                        var length = (view._instance.cOrder.length > 0) ? view._instance.cOrder.length : keyNum;
+
+                        for (var i = 0; i < items.length; i++) {
+                            res[i] = [];
+                            var j = 0;
+                            var k;
+                            for (k = 0; k < length; k++) {
+                                var prop =  view._instance.cOrder[k] || keys[k];
+                                //if (items[i].hasOwnProperty(prop) && typeof items[i][prop] !== 'function') {
+                                if (items[i].hasOwnProperty(prop) && typeof items[i][prop] !== 'function' && (typeof items[i][prop] !== 'object' || items[i][prop] instanceof Date || items[i][prop] === null)){
+                                    //BG-1182 allowing items with null value as null is typeof object
+                                    //BG-846 Skipping over nested complex objects, except for date
+                                    res[i][j] = {
+                                        value : items[i][prop]
+                                    };
+
+                                    if (view._instance.cspecs && view._instance.cspecs[j])
+                                        res[i][j].fmt = view._instance.cspecs[j].fmt;
+
+                                    if (view._instance._onCellExptFn && view._instance._onCellExptFn.execute) {
+
+                                        var cellCtx = {
+                                            view : items[i][prop],
+                                            table : null,
+                                            value : items[i][prop],
+                                            rowIndex : i,
+                                            colIndex : j
+                                        };
+
+                                        var r;
+
+                                        try {
+                                            r = view._instance._onCellExptFn.execute(cellCtx);
+                                        } catch (e) {
+                                            //{#feature: US-1330 Added RT localization}
+                                            //bpmext.log.error("Error on cell export event [" + view.ui.getAbsoluteName() + "]: " + e);
+                                            bpmext.log.error(bpmext.localization.formatMsg("controlDataExport", "ERROR_ONCELLEXPORT_EVENT") +" [" + view.ui.getAbsoluteName() + "]: " + e);
+                                            //bpmext.log.error("  Cell at row " + i + ", column: " + j);
+                                            bpmext.log.error(" " + bpmext.localization.formatMsg("controlDataExport", "DE_CELL_AT_ERROR", i, j));
+
+                                            if(e.stack) {
+                                                //{#feature: US-1330 Added RT localization}
+                                                //bpmext.log.error("  Call stack: " + e.stack);
+                                                bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+                                            }
+                                        }
+
+                                        if (r === null || typeof r === 'boolean' || typeof r === 'string' || typeof r === 'number') {
+                                                res[i][j].value = r;
+                                            } else if (typeof r === 'object' && r.format !== undefined && typeof r.format === 'string') {
+                                                if (r.value !== undefined)
+                                                    res[i][j].value = r.value;
+                                                res[i][j].fmt = r.format;
+                                            }
+
+                                    }
+
+                                    j++;
+                                }
+                            }
+                        }
+                    }
+
+                    if (view._instance.colNames) {
+                         var colNames = [];
+
+                        if (view._instance.cheaders.length > 0) {
+                            for (var header=0; header<view._instance.cheaders.length; header++) {
+                                colNames.push({
+                                    value : view._instance.cheaders[header]
+                                });
+
+                            }
+                            res.unshift(colNames);
+                        }
+                    }
+                } else if (view._instance.table) {
+                    res = view._proto._getTableData(view);
+                } else {
+                    bpmext.log.warn(bpmext.localization.formatMsg("controlDataExport", "DE_DATASOURCE_WARNING") + " " + view.ui.getAbsoluteName());
+                }
+
+                return res;
+            },
+            _getTableData : function (view) {
+                var res = [];
+
+                if (view._instance.table) {
+                    if (view._instance.table.getType() == "layout.3" || view._instance.table.getType() == "table.3") {
+                        var children = view._instance.table.context.subview;
+                        var j = 0;
+                        var cspecIdx = 0;
+                        var skipped = false;
+                        for (var child in children) {
+                            if (children.hasOwnProperty(child) && typeof children[child] !== "function") {
+                                var i = 0;
+                                for (var row in children[child]) {
+                                    if (children[child].hasOwnProperty(row) && typeof children[child][row] !== "function") {
+                                        if (!view.context.options.inclInvis.get("value") && (!children[child][row].isVisible() || (view._instance.table._instance.cspecs && view._instance.table._instance.cspecs[cspecIdx].visibility == "N"))) {
+                                            skipped = true;
+                                            continue;
+                                        }
+
+                                        if (!res[i])
+                                            res[i] = [];
+
+                                        res[i][j] = {
+                                            value : children[child][row].getData()
+                                        };
+
+                                        if (view._instance.cspecs && view._instance.cspecs[cspecIdx])
+                                            res[i][j].fmt = view._instance.cspecs[cspecIdx].fmt;
+
+                                        if (view._instance._onCellExptFn && view._instance._onCellExptFn.execute) {
+
+                                            var cellCtx = {
+                                                view : children[child][row],
+                                                table : view._instance.table,
+                                                value : children[child][row].getData(),
+                                                rowIndex : i,
+                                                colIndex : j
+                                            };
+
+                                            var r;
+
+                                            try {
+                                                r = view._instance._onCellExptFn.execute(cellCtx);
+                                            } catch (e) {
+                                                //{#feature: US-1330 Added RT localization}
+                                                //bpmext.log.error("Error on cell export event [" + view.ui.getAbsoluteName() + "]: " + e);
+                                                bpmext.log.error(bpmext.localization.formatMsg("controlDataExport", "ERROR_ONCELLEXPORT_EVENT") +" [" + view.ui.getAbsoluteName() + "]: " + e);
+                                                //bpmext.log.error("  Cell at row " + i + ", column: " + j);
+                                                bpmext.log.error(" " + bpmext.localization.formatMsg("controlDataExport", "DE_CELL_AT_ERROR", i, j));
+
+                                                if(e.stack) {
+                                                    //{#feature: US-1330 Added RT localization}
+                                                    //bpmext.log.error("  Call stack: " + e.stack);
+                                                    bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+                                                }
+                                            }
+
+                                            if (r === null || typeof r === 'boolean' || typeof r === 'string' || typeof r === 'number') {
+                                                res[i][j].value = r;
+                                            } else if (typeof r === 'object' && r.format !== undefined && typeof r.format === 'string') {
+                                                if (r.value !== undefined)
+                                                    res[i][j].value = r.value;
+                                                res[i][j].fmt = r.format;
+                                            }
+                                        }
+
+                                        i++;
+                                    }
+                                }
+                                cspecIdx++;
+                                if (!skipped)
+                                    j++;
+
+                                skipped = false;
+                            }
+                        }
+                    }
+
+                    if (view._instance.colNames) {
+                        if (!children)
+                            var children = view._instance.table.context.subview;
+
+                        var colNames = [];
+
+                        var j = 0;
+                        for (var child in children) {
+                            if (children.hasOwnProperty(child) && typeof children[child] !== "function") {
+                                for (var row in children[child]) {
+                                    if (children[child].hasOwnProperty(row) && typeof children[child][row] !== "function") {
+                                        if (!view.context.options.inclInvis.get("value") && (!children[child][row].isVisible() || (view._instance.table._instance.cspecs && view._instance.table._instance.cspecs[j].visibility == "N")))
+                                            continue;
+
+                                        var value;
+                                        if (!!view._instance.cheaders[j]) {
+                                            value = view._instance.cheaders[j];
+                                        } else {
+                                            value = children[child][row].context.options._metadata.label.get("value");
+                                        }
+                                        colNames.push({
+                                            value : value
+                                        });
+
+                                        break;
+                                    }
+                                }
+                                j++;
+                            }
+                        }
+                        res.unshift(colNames);
+                    }
+                } else {
+                    //{#feature: US-1330 Added RT localization}
+                    //bpmext.log.warn("Warning: no data source associated with " + view.ui.getAbsoluteName());
+                    bpmext.log.warn(bpmext.localization.formatMsg("controlDataExport", "DE_DATASOURCE_WARNING") + " " + view.ui.getAbsoluteName());
+                }
+
+                return res;
+            },
+            _generateWorksheet : function (view) {
+                var data = view._proto._getData(view);
+                var ws = {};
+                var range = {
+                    s : {
+                        c : 0,
+                        r : 0
+                    },
+                    e : {
+                        c : 0,
+                        r : 0
+                    }
+                };
+
+                var fmtIdx = 0;
+
+                for (var row = 0; row < data.length; row++) {
+                    for (var col = 0; col < data[row].length; col++) {
+                        if (range.e.r < row)
+                            range.e.r = row;
+                        if (range.e.c < col)
+                            range.e.c = col;
+
+                        var cell = {
+                            v : data[row][col].value
+                        };
+                        if (cell.v === null)
+                            continue;
+
+                        if (data[row][col].fmt) {
+                            XLSX.SSF.load(data[row][col].fmt, 166 + fmtIdx);
+                            cell.z = data[row][col].fmt;
+                            fmtIdx++;
+                        }
+
+                        var cell_ref = XLSX.utils.encode_cell({
+                                c : col,
+                                r : row
+                            });
+
+                        if (typeof cell.v === 'number') {
+                            cell.t = 'n';
+                        } else if (typeof cell.v === 'boolean')
+                            cell.t = 'b';
+                        else if (cell.v instanceof Date) {
+                            cell.t = 'n';
+
+                            if (!cell.z)
+                                cell.z = XLSX.SSF._table[14];
+
+                            cell.v = view._proto._toMSExcelDate(cell.v);
+                        } else {
+                            cell.t = 's';
+                        }
+                        ws[cell_ref] = cell;
+                    }
+                }
+
+                if (range.s.c < 99999999)
+                    ws['!ref'] = XLSX.utils.encode_range(range);
+                return ws;
+            },
+            _addToWorkbook : function (view, ws, newWb) {
+                if (!view._instance.wb || newWb)
+                    view._instance.wb = {
+                        SheetNames : [],
+                        Sheets : {}
+                    };
+
+                if (view.context.binding.get("value") && view.context.binding.get("value")._objectPath) {
+                    var wsName = view.context.binding.get("value")._objectPath;
+
+                    if (wsName.indexOf('.') > -1)
+                        wsName = wsName.substring(wsName.indexOf('.') + 1);
+                } else {
+                    var wsName = view._instance.table.context.options._metadata.label.get("value");
+                }
+
+                view._instance.wb.SheetNames.push(wsName);
+                view._instance.wb.Sheets[wsName] = ws;
+            },
+            _exportFile : function (view, ws) {
+                view._proto._addToWorkbook(view, ws, true);
+
+                var out,
+                theBlob;
+
+                if (view._instance.fileType === 'xlsx') {
+                    out = XLSX.write(view._instance.wb, {
+                            bookType : 'xlsx',
+                            bookSST : true,
+                            type : 'binary'
+                        });
+
+                    var b = new ArrayBuffer(out.length);
+                    var v = new Uint8Array(b);
+                    for (var i = 0; i < out.length; i++) {
+                        v[i] = out.charCodeAt(i) & 0xFF;
+                    }
+
+                    theBlob = new Blob([b], {type : ""});
+                } else {
+                    out = XLSX.utils.sheet_to_csv(ws);
+                    theBlob = new Blob([out], {type : "text/plain;charset=UTF-8"});
+                }
+
+                if ((/iPad|iPhone/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' 
+                && navigator.maxTouchPoints > 1)) && !window.MSStream) {
+                    //ios does not support blob saving, use alternate method - file name not accepted
+                    var reader = new FileReader();
+                    reader.onload = function(e) {
+                           var dataUrl = reader.result;
+                           var open = window.open(dataUrl);
+                           if (open === null || typeof (open) === 'undefined') {
+                                  var blobUrl = URL.createObjectURL(theBlob)
+                                  window.location.href = blobUrl;
+                           }
+                           if (!!this.setState) {
+                               this.setState({ disabled: false });
+                           }
+                    };
+                    reader.readAsDataURL(theBlob);
+                } else {
+                    //not ios, use FileSaver
+                    saveAs(theBlob, view._instance.fileName + "." + view._instance.fileType);
+                }
+
+            }
+        };
+
+        /*
+        Public control methods *************************************************************
+         */
+
+        /**
+         * @instance
+         * @memberof DataExport
+         * @method setText
+         * @param {string} text Text to be set on the export button
+         * @desc Set text of export button
+         */
+        this.constructor.prototype.setText = function (text) {
+            this.context.options._metadata.label.set("value", text);
+        };
+
+        /**
+         * @instance
+         * @memberof DataExport
+         * @method getText
+         * @desc Get text of export button
+         * @returns {string}
+         */
+        this.constructor.prototype.getText = function () {
+            return this.context.options._metadata.label.get("value");
+        };
+
+        /**
+         * @instance
+         * @memberof DataExport
+         * @method setHelpText
+         * @param {string} text Rollover text to be set
+         * @desc Set help text for export button
+         */
+        this.constructor.prototype.setHelpText = function (text) {
+            this.context.options._metadata.helpText.set("value", text);
+        };
+
+        /**
+         * @instance
+         * @memberof DataExport
+         * @method getHelpText
+         * @desc Get help text for export button
+         * @returns {string}
+         */
+        this.constructor.prototype.getHelpText = function () {
+            return this.context.options._metadata.helpText.get("value");
+        };
+
+        /**
+         * @instance
+         * @memberof DataExport
+         * @method setWidth
+         * @param {string} width DataExport width
+         * @desc Set width of export button (e.g. 50px, 20%, 2em - omitting the unit assumes px)
+         */
+        this.constructor.prototype.setWidth = function (width) {
+            this.context.options.width.set("value", width);
+        };
+
+        /**
+         * @instance
+         * @memberof DataExport
+         * @method getWidth
+         * @desc Get configured width for export button (including unit)
+         * @returns {string}
+         */
+        this.constructor.prototype.getWidth = function () {
+            return this.context.options.width.get("value");
+        };
+
+        /**
+         * @instance
+         * @memberof DataExport
+         * @method setIcon
+         * @param {string} icon See {@link http://fontawesome.io/icons Font Awesome} for a comprehensive list of icons. Refer to the knowledge center for the latest Font Awesome version.
+         * @desc Sets icon to display on the export button
+         */
+        this.constructor.prototype.setIcon = function (icon) {
+            return this.context.options.icon.set("value", icon);
+        };
+
+        /**
+         * @instance
+         * @memberof DataExport
+         * @method setColorStyle
+         * @param {string} style "DEFAULT"|"DEF"|"D"=Default | "PRIMARY"|"PRI"|"P"=Primary | "INFO"|INF"|"I"=Info | "SUCCESS"|"S"=Success | "WARNING"|"WARN"|"W"=Warning | "DANGER"|ERROR|ERR"|"E"|"G"=Danger
+         * @desc Sets color style of export button.  NOTE: to avoid ambiguity always set the color using "D"|"P"|"I"|"S"|"W"|"E"
+         */
+        this.constructor.prototype.setColorStyle = function (style) {
+            this.context.options.colorStyle.set("value", style);
+        };
+
+        /**
+         * @instance
+         * @memberof DataExport
+         * @method getColorStyle
+         * @desc Gets color style of export button.  NOTE: This always returns the color as set, to avoid ambiguity always set the color using "D"|"P"|"I"|"S"|"W"|"E"
+         * @returns {string}
+         */
+        this.constructor.prototype.getColorStyle = function () {
+            return this.context.options.colorStyle.get("value");
+        };
+
+        /**
+         * @instance
+         * @memberof DataExport
+         * @method setShapeStyle
+         * @param {string} style "Default"|"D"=Default | "ROUNDED"|ROUND"|"R"=Rounded | "FLAT"|"F"=Flat
+         * @desc Sets shape style of export button.  NOTE: to avoid ambiguity always set the shape style using "D"|"R"|"F"
+         */
+        this.constructor.prototype.setShapeStyle = function (style) {
+            return this.context.options.shapeStyle.set("value", style);
+        };
+
+        /**
+         * @instance
+         * @memberof DataExport
+         * @method getShapeStyle
+         * @desc Gets shape style of export button.  NOTE: This always returns the shape style as set, to avoid ambiguity always set the shape style using "D"|"R"|"F"
+         * @returns {string}
+         */
+        this.constructor.prototype.getShapeStyle = function () {
+            return this.context.options.shapeStyle.get("value");
+        };
+
+        /**
+         * @instance
+         * @memberof DataExport
+         * @method setSizeStyle
+         * @param {string} style "DEFAULT"|"DEF"|"NORMAL"|"D"=Default | "SMALL"|"S"=Small | "LARGE"|"L"=Large | "EXTRA-SMALL"|"X-SMALL"|"XS"|"X"=X-small
+         * @desc Sets size style of export button.  NOTE: to avoid ambiguity always set the size style using "D"|"S"|"L"|"X"
+         */
+        this.constructor.prototype.setSizeStyle = function (style) {
+            return this.context.options.sizeStyle.set("value", style);
+        };
+
+        /**
+         * @instance
+         * @memberof DataExport
+         * @method getSizeStyle
+         * @desc Gets size style of export button.  NOTE: This always returns the size style as set, to avoid ambiguity always set the size style using "D"|"S"|"L"|"X"
+         * @returns {string}
+         */
+        this.constructor.prototype.getSizeStyle = function () {
+            return this.context.options.sizeStyle.get("value");
+        };
+
+        /**
+         * @instance
+         * @memberof DataExport
+         * @method setOutline
+         * @param {boolean} outline {true | false}
+         * @desc Sets outline style of export button
+         */
+        this.constructor.prototype.setOutline = function (outline) {
+            return this.context.options.outline.set("value", outline);
+        };
+
+        /**
+         * @instance
+         * @memberof DataExport
+         * @method click
+         * @desc Programmatically click the export button
+         */
+        this.constructor.prototype.click = function () {
+            this._instance.btn.click();
+        };
+
+        /**
+         * @instance
+         * @memberof DataExport
+         * @method setTabIndex
+         * @param {integer} tabIndex Tab indices start at 1 and may be set sparsely
+         * @desc Sets tab index of DataExport control
+         */
+        this.constructor.prototype.setTabIndex = function (tabIndex) {
+            this.context.options.tabIndex.set("value", tabIndex);
+        };
+
+        /**
+         * @instance
+         * @memberof DataExport
+         * @method getTabIndex
+         * @desc Get tab index for DataExport control
+         * @returns {integer}
+         */
+        this.constructor.prototype.getTabIndex = function () {
+            return this.context.options.tabIndex.get("value");
+        };
+
+        /**
+         * @instance
+         * @memberof DataExport
+         * @method focus
+         * @desc Set focus on this control
+         */
+        this.constructor.prototype.focus = function () {
+            this._instance.btn.focus();
+        };
+
+        /**
+         * @instance
+         * @memberof DataExport
+         * @method exportFile
+         * @param {?(string|object)} [targetPath] Either path to target control or control view reference. If null or missing, will default to control returned by {@link DataExport#getTargetControl}.
+         * @param {?string} [format] File format to output to. Acceptable values incluse 'xlsx' and 'csv'. If null or missing, will default to format returned by {@link DataExport#getFileType}.
+         * @desc Exports a spreadsheet file
+         * @example ${DataExport1}.exportFile() // exports a spreadsheet using currently set parameters for target control and file format
+         * @example ${DataExport1}.exportFile(${Table3}) // exports spreadsheet using data from Table3
+         * @example ${DataExport1}.exportFile(${Table3}, 'csv') // exports spreadsheet using data from Table3 in csv format, regardless of any other settings
+         */
+        this.constructor.prototype.exportFile = function (targetPath, format) {
+            if (targetPath) {
+                if (typeof targetPath === 'object') {
+                    this._proto._setTableRef(this, targetPath.ui.getAbsoluteName());
+                } else {
+                    this._proto._setTableRef(this, targetPath);
+                }
+            } else if (!this.context.binding.get("value") && (!this._instance.table || (this._instance.table.ui.getAbsoluteName() != this.context.options.tableName.get("value") && this._instance.table.ui.getAbsoluteName().substring(1) != this.context.options.tableName.get("value")))) {
+                this._proto._setTableRef(this, this.context.options.tableName.get("value"));
+            }
+
+            if (format) {
+                this._proto._setFileType(this, format);
+            } else if (!this._instance.fileType || this._instance.fileType != this.context.options.fileType.get("value")) {
+                this._proto._setFileType(this, this.context.options.fileType.get("value"));
+            }
+
+            var ws = this._proto._generateWorksheet(this);
+            this._proto._exportFile(this, ws);
+        };
+
+        /**
+         * @instance
+         * @memberof DataExport
+         * @method getTargetControl
+         * @desc Gets the name of the control that is being used to populate spreadsheets
+         * @returns {string}
+         */
+        this.constructor.prototype.getTargetControl = function () {
+            return this.context.options.tableName.get("value");
+        };
+
+        /**
+         * @instance
+         * @memberof DataExport
+         * @method setTargetControl
+         * @param {(string|object)} control Either the name of the control to use, or a view reference to the control to use
+         * @desc Set the control to use for populating spreadsheets
+         * @example ${DataExport1}.setTargetControl("Table3") // sets the target control to Table3
+         * @example ${DataExport1}.setTargetControl(${Table3}) // another way to set the target to Table3, this time passing Table3 itself
+         */
+        this.constructor.prototype.setTargetControl = function (name) {
+            if (typeof name === 'object') {
+                this.context.options.tableName.set("value", name.ui.getAbsoluteName());
+            } else if (typeof name === 'string') {
+                this.context.options.tableName.set("value", name);
+            } else {
+                //{#feature: US-1330 Added RT localization}
+                //bpmext.log.error("Not a valid input. setTargetControl takes either a string or a control reference.");
+                bpmext.log.error(bpmext.localization.formatMsg("controlDataExport", "DE_TARGET_CONTROL_ERROR"));
+            }
+        };
+
+        /**
+         * @instance
+         * @memberof DataExport
+         * @method getFileType
+         * @desc Gets the currently set output format
+         * @returns {string}
+         */
+        this.constructor.prototype.getFileType = function () {
+            return this.context.options.fileType.get("value");
+        };
+
+        /**
+         * @instance
+         * @memberof DataExport
+         * @method setFileType
+         * @param {string} type File format to output. Acceptable values include 'xlsx' and 'csv'.
+         * @desc Set the file format to output to
+         */
+        this.constructor.prototype.setFileType = function (type) {
+            this.context.options.fileType.set("value", type);
+        };
+
+        /**
+         * @instance
+         * @memberof DataExport
+         * @method getFileName
+         * @desc Get the default output file name. Users will be able to change file name when saving.
+         * @returns {string}
+         */
+        this.constructor.prototype.getFileName = function () {
+            return this.context.options.defName.get("value");
+        };
+
+        /**
+         * @instance
+         * @memberof DataExport
+         * @method setFileName
+         * @param {string} name Default name output file should have. Users will be able to change file name at save time.
+         * @desc Set the default file name output file should have. Users will be able to change file name when saving.
+         */
+        this.constructor.prototype.setFileName = function (name) {
+            this.context.options.defName.set("value", name);
+        };
+
+        /**
+         * @instance
+         * @memberof DataExport
+         * @method getColumnFormats
+         * @desc Gets current column formats. See {@link https://support.office.com/en-us/article/Create-or-delete-a-custom-number-format-78f2a361-936b-4c03-8772-09fab54be7f4|Create or delete a custom number format} for more information on creating formatting srings.
+         * @returns {string[]}
+         */
+        this.constructor.prototype.getColumnFormats = function () {
+            var res = [];
+            for (var i = 0; i < this._instance.cspecs.length; i++) {
+                res.push(this._instance.cspecs[i].fmt);
+            }
+
+            return res;
+        };
+
+        /**
+         * @instance
+         * @memberof DataExport
+         * @method setColumnFormats
+         * @param {(string|string[])} value Value to set format to. If value is a string, idx is required. If value is an array of strings, then a matching array of indexes may or may not be specified. If an array is specified, then each string in value will be mapped to the corresponding index in index. Otherwise, string array will replace current column formats
+         * @param {(integer|integer[])}} index Index to set format at. If value is an array of strings, an array of indexes may be specified, which will map each format to the corresponding index.
+         * @desc Set column formatting for one or more columns. Formatting strings must conform to Microsoft Excel standards. See {@link https://support.office.com/en-us/article/Create-or-delete-a-custom-number-format-78f2a361-936b-4c03-8772-09fab54be7f4|Create or delete a custom number format} for more information on creating formatting srings.
+         * @example ${DataExport1}.setColumnFormats("$#", 1) // sets the 2nd column (index 1) to use "$#" as it's formatting string
+         * @example ${DataExport1}.setColumnFormats(["$#","#,##0.00","#%"], [1,3,5]) // sets the 2nd, 4th, and 6th columns (indices 1, 3, and 5) to use "$#", "#,##0.00", and "#%" as their formatting strings, respectively
+         * @example ${DataExport1}.setColumnFormats(["$#","#,##0.00","#%"]) // sets the formatting for the 1st, 2nd, and 3rd columns to use "$#", "#,##0.00", and "#%" as their formatting strings, respectively
+         */
+        this.constructor.prototype.setColumnFormats = function (value, idx) {
+            if (value.constructor === Array) {
+                if (idx.constructor === Array) {
+                    for (var i = 0; i < idx.length; i++) {
+                        this._instance.cspecs[idx[i]].fmt = value[i];
+                    }
+                } else {
+                    this._instance.cspecs = [];
+
+                    for (var i = 0; i < value.length; i++) {
+                        this._instance.cspecs[i].fmt = value[i];
+                    }
+                }
+            } else {
+                if (typeof value === 'string')
+                    this._instance.cspecs[idx].fmt = value;
+            }
+        };
+
+        /**
+         * @instance
+         * @memberof DataExport
+         * @method getColumnHeaders
+         * @desc Gets the column headers.
+         * @returns {string[]}
+         */
+        this.constructor.prototype.getColumnHeaders = function () {
+            var res = [];
+            for (var i = 0; i < this._instance.cheaders.length; i++) {
+                res.push(this._instance.cheaders[i]);
+            }
+
+            return res;
+        };
+
+        /**
+         * @instance
+         * @memberof DataExport
+         * @method setColumnHeaders
+         * @param {string[]} headers List of column headers
+         * @desc Set column headers.
+         * @example ${DataExport1}.setColumnHeaders(["ID","Name","Role","DOB"]) // sets the labels for the column headers to "ID", "Name", "Role", and "DOB"
+         */
+        this.constructor.prototype.setColumnHeaders = function (headers) {
+            this._instance.cheaders = [];
+            for (var i = 0; i < headers.length; i++) {
+                this._instance.cheaders[i] = headers[i];
+            }
+        };
+
+        /**
+         * @instance
+         * @memberof DataExport
+         * @method isColumnNamesIncluded
+         * @desc Returns whether or not column names are included in output file
+         * @returns {boolean}
+         */
+        this.constructor.prototype.isColumnNamesIncluded = function () {
+            return this.context.options.colNames.get("value");
+        };
+
+        /**
+         * @instance
+         * @memberof DataExport
+         * @method setColumnNamesIncluded
+         * @param {boolean} flag Set to <code>true</code> to include column headers in output file, <code>false</code> to leave them out
+         * @desc Set whether or not column names should be included in output file. Note: This has no effect when the control is bound to data.
+         */
+        this.constructor.prototype.setColumnNamesIncluded = function (flag) {
+            this.context.options.colNames.set("value", flag);
+        };
+
+        /**
+         * @instance
+         * @memberof DataExport
+         * @method isInvisibleColumnsIncluded
+         * @desc Returns whether or not output file will contain hidden columns/fields
+         * @returns {boolean}
+         */
+        this.constructor.prototype.isInvisibleColumnsIncluded = function () {
+            return this.context.options.inclInvis.get("value");
+        };
+
+        /**
+         * @instance
+         * @memberof DataExport
+         * @method setInvisibleColumnsIncluded
+         * @param {boolean} flag Set to <code>true</code> to include hidden columns/fields in output file, <code>false</code> to leave them out
+         * @desc Set whether or not hidden columns/fields should be included in output file
+         */
+        this.constructor.prototype.setInvisibleColumnsIncluded = function (flag) {
+            this.context.options.inclInvis.set("value", flag);
+        };
+
+        /**
+         * @instance
+         * @memberof DataExport
+         * @method getType
+         * @desc Get descriptive string representing the type of control
+         * @returns {string}
+         */
+        this.constructor.prototype.getType = function () {
+            return "dataexport.3";
+        };
+
+        /*
+        Coach NG Lifecycle methods *************************************************************
+         */
+        this.constructor.prototype.load = function () {
+            try {
+                bpmext.ui.registerEventHandlingFunction(this, this._proto.EVT_ONCLICK);
+                bpmext.ui.registerEventHandlingFunction(this, this._proto.EVT_ONCELLEXPT, "cell");
+
+                var opts = this.context.options;
+                var mdt = opts._metadata;
+
+                if (!this.context.binding) {
+                    this.context.binding = bpmext.ui.substituteObject(this, null);
+                }
+
+                if (!opts.colorStyle) {
+                    opts.colorStyle = bpmext.ui.substituteConfigOption(this, "colorStyle", "DEF");
+                }
+
+                if (!opts.shapeStyle)
+                    opts.shapeStyle = bpmext.ui.substituteConfigOption(this, "shapeStyle", "DEF");
+
+                if (!opts.sizeStyle)
+                    opts.sizeStyle = bpmext.ui.substituteConfigOption(this, "sizeStyle", "DEF");
+
+                if (!opts.outline)
+                    opts.outline = bpmext.ui.substituteConfigOption(this, "outline", false);
+
+                if (!opts.width)
+                    opts.width = bpmext.ui.substituteConfigOption(this, "width", null);
+
+                if (!opts.icon)
+                    opts.icon = bpmext.ui.substituteConfigOption(this, "icon", null);
+
+                if (!opts.tabIndex)
+                    bpmext.ui.substituteConfigOption(this, "tabIndex", null);
+
+                if (!opts.tableName)
+                    bpmext.ui.substituteConfigOption(this, "tableName", null);
+
+                if (!opts.fileType)
+                    bpmext.ui.substituteConfigOption(this, "fileType", 'xlsx');
+
+                if (!opts.defName)
+                    bpmext.ui.substituteConfigOption(this, "defName", "out");
+
+                if (!opts.colNames)
+                    bpmext.ui.substituteConfigOption(this, "colNames", false);
+
+                if (!opts.dateFmt)
+                    bpmext.ui.substituteConfigOption(this, "dateFmt", null);
+
+                if (!opts.colSpecs)
+                    bpmext.ui.substituteConfigOption(this, "colSpecs", []);
+
+                if (!opts.colHeaders)
+                    bpmext.ui.substituteConfigOption(this, "colHeaders", []);
+
+                if (!opts.colOrder)
+                    bpmext.ui.substituteConfigOption(this, "colOrder", []);
+
+                if (!opts.inclInvis)
+                    bpmext.ui.substituteConfigOption(this, "inclInvis", false);
+
+                this._instance.btn = document.createElement("button");
+                this._instance.btn.setAttribute("role", "button");
+                this._instance.btn.setAttribute("id", "dataexport-button-"+this.context.controlidpath);
+                this._instance.txtNode = document.createTextNode("");
+
+                fastclick.attach(this._instance.btn);
+
+                domClass.add(this._instance.btn, "btn");
+
+                this._instance._bindColHeadersUpdHandle = opts.colHeaders.get("value").bindAll(function(event) {
+					this._proto._setColumnHeaders(this, opts.colHeaders.get("value"));
+                }, this);
+
+                this._instance._bindColOrderUpdHandle = opts.colOrder.get("value").bindAll(function(event) {
+					this._proto._setColumnOrder(this, opts.colOrder.get("value"));
+				}, this);
+
+                this._proto._setText(this, mdt.label.get("value"));
+                this._proto._setWidth(this, opts.width.get("value"));
+                this._proto._setColorStyle(this, opts.colorStyle.get("value"));
+                this._proto._setShapeStyle(this, opts.shapeStyle.get("value"));
+                this._proto._setSizeStyle(this, opts.sizeStyle.get("value"));
+                this._proto._setOutline(this, opts.outline.get("value"));
+                this._proto._setIcon(this, opts.icon.get("value"));
+                this._proto._setTabIndex(this, opts.tabIndex.get("value"));
+                this._proto._setFileType(this, opts.fileType.get("value"));
+                this._proto._setFileName(this, opts.defName.get("value"));
+                this._proto._setColNameFlag(this, opts.colNames.get("value"));
+                this._proto._setColumnSpecs(this, opts.colSpecs.get("value"));
+                this._proto._setColumnHeaders(this, opts.colHeaders.get("value"));
+                this._proto._setColumnOrder(this, opts.colOrder.get("value"));
+
+                var tmp = mdt.helpText ? mdt.helpText.get("value") : null;
+                if (tmp && tmp.length > 0) {
+                    this._proto._setHelpText(this, tmp);
+                }
+
+                this._instance.btn.appendChild(this._instance.txtNode);
+                this.context.element.appendChild(this._instance.btn);
+
+                var _this = this;
+
+                this._instance.btn.onclick = function (event) {
+                    if (!_this._instance.btn.disabled) {
+                        _this._instance.btn.disabled = true;
+                        domClass.add(_this._instance.btn, "disabled");
+
+                        var expt = bpmext.ui.executeEventHandlingFunction(_this, _this._proto.EVT_ONCLICK);
+
+                        if (expt)
+                            _this.exportFile();
+
+                        //Trigger boundary event
+                        _this.context.trigger(function (st)
+                        {
+                            _this._instance.btn.disabled = false;
+                            domClass.remove(_this._instance.btn, "disabled");
+
+                        }, {callBackForAll : true});
+                    }
+                }
+
+                bpmext.ui.loadView(this);
+
+                this._instance._onCellExptFn = bpmext.ui.getEventHandlingFunction(this, this._proto.EVT_ONCELLEXPT);
+
+            } catch (e) {
+                //{#feature: US-1330 Added RT localization}
+                //bpmext.log.error("Error on load event [" + this.context.viewid + "]: " + e);
+                bpmext.log.error(bpmext.localization.formatMsg("general", "ERROR_ONLOAD_EVENT") + " [" + this.context.viewid + "]: " + e);
+                if(e.stack) {
+                    //{#feature: US-1330 Added RT localization}
+                    //bpmext.log.error("  Call stack: " + e.stack);
+                    bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+                }
+            }
+        };
+
+        this.constructor.prototype.view = function () {
+            try {
+                this._proto._handleVisibility(this);
+            } catch (e) {
+                //{#feature: US-1330 Added RT localization}
+                //bpmext.log.error("Error on view event [" + this.ui.getAbsoluteName() + "]: " + e);
+                bpmext.log.error(bpmext.localization.formatMsg("general", "ERROR_ONVIEW_EVENT") + " [" + this.ui.getAbsoluteName() + "]: " + e);
+                if(e.stack) {
+                    //{#feature: US-1330 Added RT localization}
+                    //bpmext.log.error("  Call stack: " + e.stack);
+                    bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+                }
+            }
+        };
+
+        this.constructor.prototype.change = function (event) {
+            try {
+                if (event.type == "config") {
+                    switch (event.property) {
+                    case "_metadata.label": {
+                            this._proto._setText(this, event.newVal);
+
+                            bpmext.ui.broadcastExpressionTrigger(this);
+                        }
+                    case "_metadata.visibility": {
+                            this._proto._handleVisibility(this);
+                            break;
+                        }
+                    case "_metadata.helpText": {
+                            this._proto._setHelpText(this, event.newVal);
+                            break;
+                        }
+                    case "width": {
+                            this._proto._setWidth(this, event.newVal);
+                            break;
+                        }
+                    case "colorStyle": {
+                            this._proto._setColorStyle(this, event.newVal, event.oldVal);
+                            break;
+                        }
+                    case "shapeStyle": {
+                            this._proto._setShapeStyle(this, event.newVal, event.oldVal);
+                            break;
+                        }
+                    case "sizeStyle": {
+                            this._proto._setSizeStyle(this, event.newVal, event.oldVal);
+                            break;
+                        }
+                    case "outline": {
+                            this._proto._setOutline(this, event.newVal);
+                            break;
+                        }
+                    case "icon": {
+                            this._proto._setIcon(this, event.newVal);
+                            break;
+                        }
+                    case "tableName": {
+                            this._proto._setTableRef(this, event.newVal);
+                            break;
+                        }
+                    case "fileType": {
+                            this._proto._setFileType(this, event.newVal);
+                            break;
+                        }
+                    case "defName": {
+                            this._proto._setFileName(this, event.newVal);
+                            break;
+                        }
+                    case "colNames": {
+                            this._proto._setColNameFlag(this, event.newVal);
+                            break;
+                        }
+                    case "dateFmt": {
+                        this._proto._setDateFormat(this, event.newVal);
+                        break;
+                        }
+                    case "colHeaders": {
+                        this._proto._setColumnHeaders(this, event.newVal);
+                        break;
+                        }
+                    case "colOrder": {
+                        this._proto._setColumnOrder(this, event.newVal);
+                        break;
+                        }
+                    }
+                }
+            } catch (e) {
+                //{#feature: US-1330 Added RT localization}
+                //bpmext.log.error("Error on change event [" + this.ui.getAbsoluteName() + "]: " + e);
+                bpmext.log.error(bpmext.localization.formatMsg("general", "ERROR_ONCHANGE_EVENT") + " [" + this.ui.getAbsoluteName() + "]: " + e);
+                if(e.stack) {
+                    //{#feature: US-1330 Added RT localization}
+                    //bpmext.log.error("  Call stack: " + e.stack);
+                    bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+                }
+            }
+        };
+
+        this.constructor.prototype.validate = function (event) {};
+
+        this.constructor.prototype.collaboration = function (event) {};
+
+        this.constructor.prototype.unload = function () {
+            if(this._instance._bindColHeadersUpdHandle)
+                this._instance._bindColHeadersUpdHandle.unbind();
+
+            if(this._instance._bindColOrderUpdHandle)
+                this._instance._bindColOrderUpdHandle.unbind();
+
+            bpmext.ui.unloadView(this);
+        };
+    }
+};

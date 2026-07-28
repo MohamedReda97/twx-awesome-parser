@@ -1,0 +1,571 @@
+/*
+ * #BEGIN COPYRIGHT
+ *
+ * Licensed Materials - Property of IBM
+ * 5725-C95
+ * (C) Copyright IBM Corporation 2017, 2021. All Rights Reserved.
+ * US Government Users Restricted Rights- Use, duplication or disclosure
+ * restricted by GSA ADP Schedule Contract with IBM Corp.
+ *
+ * #END COPYRIGHT
+ */
+
+
+/**
+ * @ignore
+ * @instance
+ * @memberof Breadcrumbs
+ * @method isValid
+ */ 
+
+/**
+ * @ignore
+ * @instance
+ * @memberof Breadcrumbs
+ * @method setValid
+ */ 
+
+
+
+/** 
+ *   <tr class=Prop>
+ *     <td class=SectionName colspan=3>Events</td>
+ *   </tr>
+ *   <tr class=Prop>
+ *     <td>On Load:</td>
+ *     <td colspan="2">
+ *       <table> 
+ *         <tr class=Prop>
+ *           <td>Description: </td>
+ *           <td>Triggers whenever the view is loaded.</td>
+ *         </tr>
+ *         <tr class=Prop>
+ *           <td>Example: </td>
+ *           <td><pre class="prettyprint"><code>console.log("BreadCrumbs loaded")</code></pre></td>
+ *         </tr>
+ *       </table>
+ *     </td>
+ *   </tr>
+ *   <tr class=Prop>
+ *     <td>On Click:</td>
+ *     <td colspan="2">
+ *       <table> 
+ *         <tr class=Prop>
+ *           <td>Description: </td>
+ *           <td>Triggers when a breadcrumb is clicked.</td>
+ *         </tr>
+ *         <tr class=Prop>
+ *           <td>Example: </td>
+ *           <td><pre class="prettyprint"><code>alert("BreadCrumb with label [" + label + "] on level " + item.level + " has data (if any) " +item.data);</code></pre></td>
+ *         </tr>
+ *       </table>
+  *       <table style="border: 1px solid black; border-collapse: collapse; ">
+ *         <tr style="border: 1px solid black; border-collapse: collapse;">
+ *           <th style="border: 1px solid black; border-collapse: collapse;padding: 5px;">Context Variables</th>
+ *           <th style="border: 1px solid black; border-collapse: collapse; padding: 5px;">label {String} </th>
+ *           <th style="border: 1px solid black; border-collapse: collapse; padding: 5px;">item {object} </th>
+ *         </tr>
+ *         <tr  style= "border: 1px solid black; border-collapse: collapse;">
+ *           <td  rowspan="7" style= "border: 1px solid black; border-collapse: collapse;padding: 5px;">Properties</td>
+ *           <td style="color: black; font-weight: normal; border-collapse: collapse;padding: 5px;"/td>
+ *           <td style="color: black; font-weight: normal; border: 1px solid black; border-collapse: collapse;padding: 5px;">label</td>
+ *         </tr>
+ *         <tr  style= "border: 1px solid black; border-collapse: collapse;">
+ *           <td style="color: black; font-weight: normal; border-collapse: collapse;padding: 5px;"/td>
+ *           <td style="color: black; font-weight: normal; border: 1px solid black; border-collapse: collapse;padding: 5px;">level</td>
+ *         </tr>
+ *         <tr  style= "border: 1px solid black; border-collapse: collapse;">
+ *           <td style="color: black; font-weight: normal; border-collapse: collapse;padding: 5px;"/td>
+ *           <td style="color: black; font-weight: normal; border: 1px solid black; border-collapse: collapse;padding: 5px;">data</td>
+ *         </tr>
+ *     </td>
+ *   </tr>
+ * </table>
+ */
+bpmext_control_InitBreadcrumbs = function (bpmext, utilities, ItemList, domClass, domAttr)
+{
+	this._instance = {};
+
+	if (!this.constructor.prototype._proto)
+	{
+		this.constructor.prototype._proto =
+		{
+			EVT_ONITEMCLICK : "eventON_ITEM_CLICK",
+			_handleVisibility : function (view)
+			{
+				var visibility = bpmext.ui.getEffectiveVisibility(view);
+
+				if (visibility != "NONE")
+				{
+					if (visibility == "READONLY")
+						domClass.remove(view._instance.disabler, "hidden");
+					else
+						domClass.add(view._instance.disabler, "hidden");
+				}
+				
+				var vis = utilities.handleVisibility(view.context);
+			},
+			_setEltText : function(view, elt, text)
+			{
+				elt.innerHTML = view.context.htmlEscape(text);
+				utilities.BiDi.applyTextDir(
+					elt, 
+					elt.innerHTML, 
+					view._instance.baseTxtDir, 
+					view._instance.genPrefTextDir
+					);
+			},
+			_setLabelVisibility : function (view, flag)
+			{
+				try
+				{
+					view.context.setDisplay(flag == "SHOW", view._instance.label);
+				}
+				catch (e)
+				{
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.error("Breadcrumbs._setLabelVisibility() error: " + e);
+					bpmext.log.error("Breadcrumbs._setLabelVisibility() " + bpmext.localization.formatMsg("general", "ERROR") + ": " + e);
+					if(e.stack) { 
+						//{#feature: US-1330 Added RT localization}
+						//bpmext.log.error("  Call stack: " + e.stack);
+						bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+					}
+				}
+			},
+			_setLabel : function(view)
+			{
+				var label = view.context.options._metadata.label.get("value");
+				
+				try
+				{
+					if(label)
+					{
+						domClass.remove(view._instance.label, "hide");
+						this._setEltText(view, view._instance.label, label);
+					}
+					else
+					{
+						domClass.add(view._instance.label, "hide");
+						view._instance.label.innerHTML = "";
+					}
+				}
+				catch (e)
+				{
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.error("Breadcrumbs._setLabel() error: " + e);
+					bpmext.log.error("Breadcrumbs._setLabel() " + bpmext.localization.formatMsg("general", "ERROR") + ": " + e);
+					if(e.stack) { 
+						//{#feature: US-1330 Added RT localization}
+						//bpmext.log.error("  Call stack: " + e.stack);
+						bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+					}
+				}
+			},
+			_onListUpdated : function(view, event)
+			{
+				this._rebindAllUpdates(view);
+				this._reloadList(view);
+			},
+			_rebindAllUpdates : function(view)
+			{
+				if(view._instance.bindValueUpdHandle)
+					view._instance.bindValueUpdHandle.unbind();
+
+				if(view.context.binding)
+				{
+					var _this = this;
+					var binding = view.context.binding.get("value");
+					
+					view._instance.bindValueUpdHandle = 
+						binding.bindAll(function(event){_this._onListUpdated(view, event)}, view);
+
+					view._instance.list.invalidate();
+				}
+			},
+			_addBreadcrumb : function(view, bc, level)
+			{
+                var a = level < view._instance.list.length() - 1 ? document.createElement("a") : document.createElement("span");
+                domAttr.set(a, "id", "breadcrumb-item-"+view.context.controlidpath+"["+level+"]");
+				this._setEltText(view, a, bc.name);
+				
+                if(level < view._instance.list.length() - 1) //Don't trigger onclick for last item in the trail
+				{
+                    a.onclick = function(event) {
+                        var label = bc.name;
+                        var lvl = level;
+                        var node = a;
+	
+					/*while ((node = node.previousSibling)) 
+					{
+						if (node.nodeType != 3 || !/^\s*$/.test(node.data))
+							level++;
+					}*/
+
+					
+						var item = {
+							label: label,
+							level: lvl,
+							data: bc.value
+						};
+						
+						var trimBCs = bpmext.ui.executeEventHandlingFunction(view, view._proto.EVT_ONITEMCLICK, label, item);
+						if(trimBCs)
+						{
+							view.trim(level + 1);
+						}
+					}
+				}
+
+                a.href = "javascript:void(0)";
+                
+				view._instance.bcUL.appendChild(a);
+			},
+			_reloadList : function(view)
+			{
+				this._renderBreadcrumbs(view);
+			},
+			_renderBreadcrumbs : function(view)
+			{
+				view._instance.bcUL.innerHTML = "";
+				//view._instance.bcUL.appendChild(view._instance.label);
+				
+				this._setLabel(view); //Added for IE
+				
+				var bcs = view._instance.list;
+				if(bcs)
+				{
+					for(var i = 0; i < bcs.length(); i++)
+					{
+						this._addBreadcrumb(view, bcs.get(i), i);
+					}
+				}
+			}
+		};
+
+		/*
+		Public control methods *************************************************************
+		 */		
+		
+		/**
+		 * @instance
+		 * @memberof Breadcrumbs
+		 * @method setLabel
+		 * @param {string} label Label for the control
+		 * @desc Set label for breadcrumbs control
+		 */
+		this.constructor.prototype.setLabel = function (text)
+		{
+			this.context.options._metadata.label.set("value", text);
+		};
+
+		/**
+		 * @instance
+		 * @memberof Breadcrumbs
+		 * @method getLabel
+		 * @desc Get label associated with breadcrumbs control
+		 * @returns {string}
+		 */
+		this.constructor.prototype.getLabel = function ()
+		{
+			return this.context.options._metadata.label.get("value");
+		}
+		
+		/**
+		 * @instance
+		 * @memberof Breadcrumbs
+		 * @method isLabelVisible
+		 * @desc Get label visibility for breadcrumbs control
+		 * @returns {boolean}
+		 */
+		this.constructor.prototype.isLabelVisible = function ()
+		{
+			return this.context.options._metadata.labelVisibility.get("value") == "SHOW";
+		}
+
+		/**
+		 * @instance
+		 * @memberof Breadcrumbs
+		 * @method setLabelVisible
+		 * @param {boolean} flag {true | false} Set to false to hide label
+		 * @desc Set label visibility for breadcrumbs control
+		 */
+		this.constructor.prototype.setLabelVisible = function (flag)
+		{
+			this.context.options._metadata.labelVisibility.set("value", flag ? "SHOW" : "HIDE");
+		};
+		
+		/**
+		 * @instance
+		 * @memberof Breadcrumbs
+		 * @method getItemCount
+		 * @desc Get number of items in the breadcrumb trail
+		 * @returns {integer}
+		 */
+		this.constructor.prototype.getItemCount = function ()
+		{
+			return this._instance.list.length();
+		}		
+		
+		/**
+		 * @instance
+		 * @memberof Breadcrumbs
+		 * @method setItemAt
+		 * @param {integer} level the index of an item 
+		 * @param {string} text the name of the item 
+		 * @param {any} data the value of the item
+		 * @desc Set the name and value of an item in the breadcrumbs control
+		 * @example var breadcrumb = page.ui.get("breadcrumbs1"); breadcrumb.setItemAt (0, "Level 1", 1); // sets name and value for the first item to "Level 1" and 1 
+		 */
+		this.constructor.prototype.setItemAt = function(level, text, data)
+		{
+			var item = this._instance.list.get(level);
+			
+			if(item != null)
+			{
+				item.name = text;
+				item.value = data;
+
+				this.context.binding.set("value", this._instance.list.list.items);
+			}
+		}
+		/**
+		 * @instance
+		 * @memberof Breadcrumbs
+		 * @method getItemAt
+		 * @desc Get item at the index from the breadcrumbs control
+		 * @returns {any} 
+		 * @example var breadcrumb = page.ui.get("breadcrumbs1"); var name = breadcrumb.getItemAt(0).name; //returns the name of the first item in the breadcrumbs control
+		 */
+		this.constructor.prototype.getItemAt = function(level)
+		{
+			return this._instance.list.get(level);
+		}
+		
+		/**
+		 * @instance
+		 * @memberof Breadcrumbs
+		 * @method appendItem
+		 * @param {string} elt The name of the item, 
+		 * @param {any} data the value of the item
+		 * @desc appends a new item in the last index of the breadcrumbs control
+		 */
+		this.constructor.prototype.appendItem = function(elt, data)
+		{
+			if(typeof elt != "object")
+			{
+				elt = {
+					name: "" + elt,
+					value: data
+				};
+			}
+			
+			this._instance.list.add(elt);
+			this.context.binding.set("value", this._instance.list.list.items);
+		}
+
+		/**
+		 * @instance
+		 * @memberof Breadcrumbs
+		 * @method removeItem
+		 * @param {integer} index the index of the item
+		 * @desc removes an item at the index of the breadcrumbs control
+		 */
+		this.constructor.prototype.removeItem = function(elt)
+		{
+			var res;
+			
+			if(typeof elt == "object")
+			{
+				elt = this._instance.list.getIndex(elt);
+				res = this._instance.list.remove(elt);
+			}
+			else //elt = index
+			{
+				res = this._instance.list.remove(elt);
+			}
+			
+			return res;
+		}
+
+		/**
+		 * @instance
+		 * @memberof Breadcrumbs
+		 * @method trim
+		 * @param {integer} index the index of the item
+		 * @desc removes the item and all following items
+		 */
+		this.constructor.prototype.trim = function(level)
+		{
+			this._instance.list.truncate(level);
+		}
+		
+		/**
+		 * @instance
+		 * @memberof Breadcrumbs
+		 * @method removeLastItem
+		 * @desc removes the last item in the breadcrumbs controls
+		 */
+		this.constructor.prototype.removeLastItem = function()
+		{
+			this.removeItem(this._instance.list.length() - 1);
+		}
+				
+		/**
+		 * @instance
+		 * @memberof Breadcrumbs
+		 * @method getType
+		 * @desc returns the descriptive identifier for this control
+		 * @returns {string}
+		 */
+		this.constructor.prototype.getType = function ()
+		{
+			return "breadcrumbs.3";
+		}
+
+		/*
+		Coach NG Lifecycle methods *************************************************************
+		 */
+		this.constructor.prototype.load = function ()
+		{
+			try
+			{
+				var opts = this.context.options;
+				var mdt = opts._metadata;
+
+				this._instance.baseTxtDir = mdt.baseTextDirection && mdt.baseTextDirection.get("value") ? mdt.baseTextDirection.get("value") : utilities.BiDi.BASE_TEXT_DIRECTION._default;
+				this._instance.genPrefMaskedTextDir = this.context.bpm.system.baseTextDirection;
+				
+				if (!opts.width)
+					bpmext.ui.substituteConfigOption(this, "width", null);
+
+				this._instance.env = document.createElement("div");
+				domClass.add(this._instance.env, "envelope");
+				
+				this._instance.bcUL = document.createElement("nav");
+				domClass.add(this._instance.bcUL, "breadcrumb");
+                this._instance.bcUL.setAttribute("role", "navigation");
+				
+				this._instance.label = document.createElement("div");
+				domClass.add(this._instance.label, "breadcrumb-label");
+				
+				this._instance.env.appendChild(this._instance.label);
+				this._instance.env.appendChild(this._instance.bcUL);
+				this.context.element.appendChild(this._instance.env);
+
+				this._instance.disabler = bpmext.ui.util.createDisabler(this, this._instance.env);
+				
+				this._proto._setLabelVisibility(this, opts._metadata.labelVisibility.get("value"));
+				this._proto._setLabel(this);
+
+				var view = this;
+				var val = this.context.binding ? this.context.binding.get("value") : null;
+				if(val && val instanceof com.ibm.bpm.coach.List)
+				{
+					this._instance.list = new ItemList(this, function(){return view.context.binding.get("value")});
+					this._proto._rebindAllUpdates(this);
+					this._proto._reloadList(this);
+				}
+				else
+				{
+					var list = new com.ibm.bpm.coach.List([], "breadcrumbs.items");
+					this.context.binding = bpmext.ui.substituteObject(this, "binding", "list", list);
+					this._instance.list = new ItemList(this, function(){return view.context.binding.get("value")}, true);				
+				}
+				
+				bpmext.ui.loadView(this);
+
+				var view = this;				
+				if(opts[this._proto.EVT_ONITEMCLICK])
+				{
+					bpmext.ui.registerEventHandlingFunction(this, this._proto.EVT_ONITEMCLICK, "label", "item");
+				}
+			}
+			catch (e)
+			{
+				//{#feature: US-1330 Added RT localization}
+				//bpmext.log.error("Error on load event [" + this.context.viewid + "]: " + e);
+				bpmext.log.error(bpmext.localization.formatMsg("general", "ERROR_ONLOAD_EVENT") + " [" + this.context.viewid + "]: " + e);
+				if(e.stack) { 
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.error("  Call stack: " + e.stack);
+					bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+				}
+			}
+		};
+
+		this.constructor.prototype.view = function ()
+		{
+			try
+			{
+				this._proto._handleVisibility(this);
+			}
+			catch (e)
+			{
+				//{#feature: US-1330 Added RT localization}
+				//bpmext.log.error("Error on view event [" + this.ui.getAbsoluteName() + "]: " + e);
+				bpmext.log.error(bpmext.localization.formatMsg("general", "ERROR_ONVIEW_EVENT") + " [" + this.ui.getAbsoluteName() + "]: " + e);
+				if(e.stack) { 
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.error("  Call stack: " + e.stack);
+					bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+				}
+			}
+		};
+
+		this.constructor.prototype.change = function (event)
+		{
+			try
+			{
+				if (event.type == "config")
+				{
+					switch (event.property)
+					{
+						case "_metadata.label":
+						{
+							this._proto._setLabel(this);
+							break;
+						}
+						case "_metadata.labelVisibility":
+						{
+							this._proto._setLabelVisibility(this, event.newVal);
+							break;
+						}
+						case "_metadata.visibility":
+						{
+							this._proto._handleVisibility(this);
+							break;
+						}
+					}
+				}
+				else if(event.insertedInto == event.removedFrom)
+				{
+					this._proto._rebindAllUpdates(this);
+					this._proto._reloadList(this);
+				}
+			}
+			catch (e)
+			{
+				//{#feature: US-1330 Added RT localization}
+				//bpmext.log.error("Error on change event [" + this.ui.getAbsoluteName() + "]: " + e);
+				bpmext.log.error(bpmext.localization.formatMsg("general", "ERROR_ONCHANGE_EVENT") + " [" + this.ui.getAbsoluteName() + "]: " + e);
+				if(e.stack) { 
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.error("  Call stack: " + e.stack);
+					bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+				}
+			}
+		};
+		
+		this.constructor.prototype.unload = function ()
+		{
+			if(this._instance._bindSelUpdHandle)
+				this._instance._bindSelUpdHandle.unbind();
+
+			if(this._instance._bindValueUpdHandle)
+				this._instance._bindValueUpdHandle.unbind();
+
+			bpmext.ui.unloadView(this);
+		};
+	}
+}

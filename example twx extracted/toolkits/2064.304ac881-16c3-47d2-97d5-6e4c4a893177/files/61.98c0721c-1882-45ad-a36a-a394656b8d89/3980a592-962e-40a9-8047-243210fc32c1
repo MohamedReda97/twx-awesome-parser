@@ -1,0 +1,913 @@
+/*
+ * #BEGIN COPYRIGHT
+ *
+ * Licensed Materials - Property of IBM
+ * 5725-C95
+ * (C) Copyright IBM Corporation 2017. All Rights Reserved.
+ * US Government Users Restricted Rights- Use, duplication or disclosure
+ * restricted by GSA ADP Schedule Contract with IBM Corp.
+ *
+ * #END COPYRIGHT
+ */
+
+/**
+ * @ignore
+ * @instance
+ * @memberof OpenLayersMap
+ * @method isValid
+ */  
+
+/**
+ * @ignore
+ * @instance
+ * @memberof OpenLayersMap
+ * @method setValid
+ */
+
+/**
+ * @ignore
+ * @instance
+ * @memberof OpenLayersMap
+ * @method recalculate
+ */
+
+/**
+ * @ignore
+ * @instance
+ * @memberof OpenLayersMap
+ * @method getData
+ */
+
+/**
+ * @ignore
+ * @instance
+ * @memberof OpenLayersMap
+ * @method setData
+ */ 
+
+/** 
+ *   <tr class=Prop>
+ *     <td class=SectionName colspan=3>Events</td>
+ *   </tr>
+ *   <tr class=Prop>
+ *     <td>On Load:</td>
+ *	   <td colspan = "2">
+ *       <table> 
+ *         <tr class=Prop>
+ *           <td>Description: </td>
+ *           <td>This event is fired when the map is loaded.</td>
+ *         </tr>
+ *         <tr class=Prop>
+ *           <td>Example: </td>
+ *           <td><pre class="prettyprint"><code>me.setWidth("100%")<code><code></pre></td>
+ *         </tr>
+ *       </table>
+ *     </td>
+ *   </tr>
+ *   <tr class=Prop>
+ *     <td>On Click:</td>
+ *	   <td colspan = "2">
+ *       <table> 
+ *         <tr class=Prop>
+ *           <td>Description: </td>
+ *           <td>This event is fired when the user clicks anywhere on the map.</td>
+ *         </tr>
+ *         <tr class=Prop>
+ *           <td>Example: </td>
+ *           <td><pre class="prettyprint"><code>${Map}.addMarker(latLng)<code></pre></td>
+ *       <table style= "border: 1px solid black; border-collapse: collapse; ">
+ *         <tr  style= "border: 1px solid black; border-collapse: collapse;">
+ *           <th   style= "border: 1px solid black; border-collapse: collapse;padding: 5px;">Context Variables</th>
+ *           <th   style="border: 1px solid black; border-collapse: collapse; padding: 5px;">latLng {object}</th>
+ *         </tr>
+ *         <tr  style= "border: 1px solid black; border-collapse: collapse;">
+ *           <td  rowspan="3" style= "border: 1px solid black; border-collapse: collapse;padding: 5px;">Properties</td>
+ *           <td style="color: black; font-weight: normal; border: 1px solid black; border-collapse: collapse;padding: 5px;">lng</td>
+ *         </tr>
+ *         <tr  style= "border: 1px solid black; border-collapse: collapse;">
+ *           <td style="color: black; font-weight: normal; border: 1px solid black; border-collapse: collapse;padding: 5px;">lat</td>
+ *         </tr>
+ *       </table>
+ *         </tr>
+ *       </table>
+ *     </td>
+ *   </tr>
+ *   <tr class=Prop>
+ *     <td>On Marker Click:</td>
+ *	   <td colspan = "2">
+ *       <table> 
+ *         <tr class=Prop>
+ *           <td>Description: </td>
+ *           <td>This event is fired when the user clicks the marker on the map.</td>
+ *         </tr>
+ *         <tr class=Prop>
+ *           <td>Example: </td>
+ *			 <td><pre class="prettyprint"><code>console.log(marker.lng, marker.lat)<code></pre></td>
+ *       <table style= "border: 1px solid black; border-collapse: collapse; ">
+ *         <tr  style= "border: 1px solid black; border-collapse: collapse;">
+ *           <th   style= "border: 1px solid black; border-collapse: collapse;padding: 5px;">Context Variables</th>
+ *           <th   style="border: 1px solid black; border-collapse: collapse; padding: 5px;">marker {object}</th>
+ *         </tr>
+ *         <tr  style= "border: 1px solid black; border-collapse: collapse;">
+ *           <td  rowspan="3" style= "border: 1px solid black; border-collapse: collapse;padding: 5px;">Properties</td>
+ *           <td style="color: black; font-weight: normal; border: 1px solid black; border-collapse: collapse;padding: 5px;">lng</td>
+ *         </tr>
+ *         <tr  style= "border: 1px solid black; border-collapse: collapse;">
+ *           <td style="color: black; font-weight: normal; border: 1px solid black; border-collapse: collapse;padding: 5px;">lat</td>
+ *         </tr>
+ *       </table>
+ *         </tr>
+ *       </table>
+ *     </td>
+ *   </tr>
+ * </table>
+ */
+
+bpmext_control_InitOpenLayersMap = function (utilities, bpmext, domClass, domAttr, domConstruct, ol, ResizeSensor)
+{
+	this._instance =
+	{
+	};
+	
+	if(!this.constructor.prototype._proto)
+	{
+		this.constructor.prototype._proto = 
+		{
+			ResizeSensor:ResizeSensor,
+			EVT_ONCLICK : "eventON_CLICK",
+			EVT_ONMARKERCLICK : "eventON_MARKERCLICK",
+			_getScript : function (src)
+			{
+				document.write('<' + 'script src="' + src + '"><' + '/script>');
+				document.write('<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">');
+			},
+			_setWidth : function (view)
+			{
+				var size = view.context.options.width.get("value");
+				
+				try
+				{
+					if(size != null && size != "")
+					{
+						if (!isNaN(size))
+							size += "px";
+
+						view._instance.mapDiv.style.width = size;
+					}
+					else 
+					{
+						view._instance.mapDiv.style.width = null;
+					}
+				}
+				catch (e)
+				{
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.error("Map._setWidth() error: " + e);
+					bpmext.log.error("Map._setWidth() " + bpmext.localization.formatMsg("general", "ERROR") + ": " + e);
+					if(e.stack) { 
+						//{#feature: US-1330 Added RT localization}
+						//bpmext.log.error("  Call stack: " + e.stack);
+						bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+					}
+				}
+			},
+			_setHeight : function (view)
+			{
+				var size = view.context.options.height.get("value");
+				
+				try
+				{
+					if(size != null && size != "")
+					{
+						if (!isNaN(size))
+							size += "px";
+
+						view._instance.mapDiv.style.height = size;
+					}
+					else 
+					{
+						view._instance.mapDiv.style.height = null;
+					}
+				}
+				catch (e)
+				{
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.error("Map._setHeight() error: " + e);
+					bpmext.log.error("Map._setHeight() " + bpmext.localization.formatMsg("general", "ERROR") + ": " + e);
+					if(e.stack) { 
+						//{#feature: US-1330 Added RT localization}
+						//bpmext.log.error("  Call stack: " + e.stack);
+						bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+					}
+				}
+			},
+			_replaceClass : function (view, elt, valueMap, newVal, oldVal)
+			{
+				if(newVal != null)
+					newVal = newVal.toUpperCase();
+				
+				if(oldVal != null)
+					oldVal = oldVal.toUpperCase();
+
+				var oldClass = valueMap[oldVal];
+				if(oldClass == null)
+					oldClass = "";
+
+				var newClass = valueMap[newVal];
+				if(newClass == null)
+					newClass = "";
+
+				domClass.replace(elt, newClass, oldClass);
+			},
+			_handleVisibility : function (view)
+			{
+				var visibility = bpmext.ui.getEffectiveVisibility(view);
+
+				if (visibility != "NONE")
+				{
+					if (visibility == "READONLY")
+						domClass.remove(view._instance.disabler, "hidden");
+					else
+						domClass.add(view._instance.disabler, "hidden");
+				}
+				
+				setTimeout(function(){
+					if(view._instance.map)
+					{
+						view._instance.map.updateSize();
+						//console.debug("Map resize triggered");
+					}
+				});
+			},
+			_setCenter : function(view, latitude, longitude)
+			{
+				var center = ol.proj.fromLonLat([longitude, latitude]);
+				view._instance.mapView.setCenter(center);		
+			},
+			_setMapType : function(view, mapString)
+			{	
+				var mayType;
+				if(mapString == "osm"){
+					mapType = 0;
+				}else if(mapString == "sat"){
+					mapType = 1;
+				}else if(mapString == "hyb"){
+					mapType = 2;
+				}
+				
+				var styles = [
+					'Road',
+					'Aerial',
+					'AerialWithLabels',
+				];
+				
+				var mqLayers = [
+					'osm',
+					'sat',
+					'hyb'
+				];
+				
+				view.context.options.mapType.set("value", mapType);
+				var source = view.context.options.mapSource.get("value");
+				
+				if(source == "osm"){
+					view._instance.layerOSM = new ol.layer.Group({
+						layers: [
+							new ol.layer.Tile({
+								source: new ol.source.OSM()
+							})
+						]
+					});
+					view._instance.map.setLayerGroup(view._instance.layerOSM);
+				}else{
+					view._instance.layerBing = new ol.layer.Group({
+						layers:[
+							new ol.layer.Tile({
+								preload: Infinity,
+								source: new ol.source.BingMaps({
+									key: view._instance.apiKey,
+									imagerySet: styles[mapType]
+								})
+							})
+						]
+					});
+					view._instance.map.setLayerGroup(view._instance.layerBing);
+				}
+				
+			},
+			_drawScale : function(view)
+			{
+				var hideScaleControl = view.context.options.hideScaleControl.get("value");
+				
+				if(!hideScaleControl)
+				{
+					var scale = new ol.control.ScaleLine({
+						units: 'us',
+						minWidth: 100
+					});
+					view._instance.map.addControl(scale);
+				}
+							
+			},
+			_drawMapTypeButton : function(view)
+			{
+				view._instance.terrainButton = document.createElement("button");
+				//{#feature: US-1330 Added RT localization}
+				//view._instance.terrainButton.innerHTML = 'T';
+				view._instance.terrainButton.innerHTML = bpmext.localization.formatMsg("controlMap", "MAP_TYPE_T");
+				//Accessibility TK-1694 Start
+				view._instance.terrainButton.setAttribute('type', 'button');
+				//{#feature: US-1330 Added RT localization}
+				//view._instance.terrainButton.setAttribute('title', 'Terrain');
+				//view._instance.terrainButton.setAttribute('aria-label', 'Terrain');
+				view._instance.terrainButton.setAttribute('title', bpmext.localization.formatMsg("controlMap", "MAP_TERRAIN"));
+				view._instance.terrainButton.setAttribute('aria-label', bpmext.localization.formatMsg("controlMap", "MAP_TERRAIN"));
+				//Accessibility TK-1694 END
+				view._instance.terrainElement = document.createElement("div");
+				view._instance.terrainElement.className = 'terrain ol-unselectable ol-control';
+				view._instance.terrainElement.appendChild(view._instance.terrainButton)
+				
+				view._instance.roadButton = document.createElement("button");
+				//{#feature: US-1330 Added RT localization}
+				//view._instance.roadButton.innerHTML = 'R';
+				view._instance.roadButton.innerHTML = bpmext.localization.formatMsg("controlMap", "MAP_TYPE_R");
+				//Accessibility TK-1694 Start
+				view._instance.roadButton.setAttribute('type', 'button');
+				//{#feature: US-1330 Added RT localization}
+				//view._instance.roadButton.setAttribute('title', 'Road');
+				//view._instance.roadButton.setAttribute('aria-label', 'Road');
+				view._instance.roadButton.setAttribute('title', bpmext.localization.formatMsg("controlMap", "MAP_ROAD"));
+				view._instance.roadButton.setAttribute('aria-label', bpmext.localization.formatMsg("controlMap", "MAP_ROAD"));
+				//Accessibility TK-1694 END
+				view._instance.roadElement = document.createElement("div");
+				view._instance.roadElement.className = 'road ol-unselectable ol-control';
+				view._instance.roadElement.appendChild(view._instance.roadButton)
+				
+				view._instance.hybridButton = document.createElement("button");
+				//{#feature: US-1330 Added RT localization}
+				//view._instance.hybridButton.innerHTML = 'H';
+				view._instance.hybridButton.innerHTML = bpmext.localization.formatMsg("controlMap", "MAP_TYPE_H");
+				//Accessibility TK-1694 Start
+				view._instance.hybridButton.setAttribute('type', 'button');
+				//{#feature: US-1330 Added RT localization}
+				//view._instance.hybridButton.setAttribute('title', 'Hybrid');
+				//view._instance.hybridButton.setAttribute('aria-label', 'Hybrid');
+				view._instance.hybridButton.setAttribute('title', bpmext.localization.formatMsg("controlMap", "MAP_HYBRID"));
+				view._instance.hybridButton.setAttribute('aria-label', bpmext.localization.formatMsg("controlMap", "MAP_HYBRID"));
+				//Accessibility TK-1694 END
+				view._instance.hybridElement = document.createElement("div");
+				view._instance.hybridElement.className = 'hybrid ol-unselectable ol-control';
+				view._instance.hybridElement.appendChild(view._instance.hybridButton)
+				
+				view._instance.envelope.appendChild(view._instance.terrainElement);
+				view._instance.envelope.appendChild(view._instance.roadElement);
+				view._instance.envelope.appendChild(view._instance.hybridElement);
+				
+				view._instance.terrainButton.addEventListener('click', function(){
+					view._proto._setMapType(view, "sat");
+				});
+				
+				view._instance.roadButton.addEventListener('click', function(){
+					view._proto._setMapType(view, "osm");
+				});
+				
+				view._instance.hybridButton.addEventListener('click', function(){
+					view._proto._setMapType(view, "hyb");
+				});	
+			},
+			_drawZoomControl : function(view)
+			{
+				var hideZoomControl = view.context.options.hideZoomControl.get("value");
+				
+				if(!hideZoomControl)
+				{
+					var zoom = new ol.control.Zoom();
+					view._instance.map.addControl(zoom);
+				}
+			},
+			_drawRotateControl : function(view)
+			{
+				view._instance.rotationButton = document.createElement("button");
+				//Accessibility TK-1694 Start
+				view._instance.rotationButton.setAttribute('type', 'button');
+				//{#feature: US-1330 Added RT localization}
+				//view._instance.rotationButton.setAttribute('title', 'Rotate Map');
+				//view._instance.rotationButton.setAttribute('aria-label', 'Rotate Map');
+				view._instance.rotationButton.setAttribute('title', bpmext.localization.formatMsg("controlMap", "ROTATE_MAP"));
+				view._instance.rotationButton.setAttribute('aria-label', bpmext.localization.formatMsg("controlMap", "ROTATE_MAP"));
+				//Accessibility TK-1694 END
+				view._instance.rotationButton.innerHTML = '<i class="fa fa-rotate-right"></i>';
+				view._instance.rotationElement = document.createElement("div");
+				view._instance.rotationElement.className = 'rotation-button ol-unselectable ol-control';
+				view._instance.rotationElement.appendChild(view._instance.rotationButton)
+				
+				view._instance.envelope.appendChild(view._instance.rotationElement)
+				
+				view._instance.rotationButton.addEventListener('click', function(){
+					view._proto._rotateMap(view);
+				});
+			},
+			_rotateMap: function(view)
+			{
+				var source = view.context.options.mapSource.get("value");
+				var currentRadians = view._instance.mapRotation;     
+				
+				view._instance.mapRotation = (currentRadians + 1.5);
+				
+				var mapDiv = view._instance.mapDiv;
+				mapDiv.parentNode.removeChild(mapDiv);
+				view._proto._setZoomLevel(view, view._instance.mapView.getZoom());
+				view._proto._drawMap(view, source, view._instance.apiKey);
+			},
+			_drawMap : function(view, source, apiKey)
+			{
+				view._instance.mapDiv = document.createElement("div");				
+				view._instance.envelope.appendChild(view._instance.mapDiv);
+				
+				view._proto._setWidth(view);
+				view._proto._setHeight(view);
+				
+				var latitude = view._instance.centerLat;
+				var longitude = view._instance.centerLong;
+				var zoomLevel = view.context.options.zoom.get("value");
+				
+				var mapType = view.context.options.mapType.get("value");
+				var hideZoomControl = view.context.options.hideZoomControl.get("value");
+				var hideScaleControl = view.context.options.hideScaleControl.get("value");
+				var hideMapTypeControl = view.context.options.hideMapTypeControl.get("value");
+				var hideRotateControl = view.context.options.hideRotateControl.get("value");
+				var hidePanControl = view.context.options.hidePanControl.get("value");
+				
+				// view
+				view._instance.mapView = new ol.View({
+					center: ol.proj.fromLonLat(
+						[longitude, latitude], 'EPSG:3857', 'EPSG:4326'),
+					maxZoom: 20,
+					zoom: zoomLevel,
+					rotation: view._instance.mapRotation
+				});	
+				
+				// map
+				view._instance.map = new ol.Map({
+					renderer: 'dom',
+					view: view._instance.mapView,
+					//layers: mapLayer,
+					target: view._instance.mapDiv,
+					controls: ol.control.defaults({
+						zoom: !hideZoomControl
+					}),
+					interactions: ol.interaction.defaults({
+						dragPan: !hidePanControl
+					})
+					
+				});
+				
+				var mapLayer = [];
+				
+				var styles = [
+					'Road',
+					'Aerial',
+					'AerialWithLabels',
+				];
+				
+				var mqLayers = [
+					'osm',
+					'sat',
+					'hyb'
+				];
+				
+				// layers
+				view._instance.layerOSM = new ol.layer.Group({
+					layers: [
+						new ol.layer.Tile({
+							source: new ol.source.OSM()
+						})
+					]
+				});
+				
+				view._instance.layerBing = new ol.layer.Group({
+					layers:[
+						new ol.layer.Tile({
+							preload: Infinity,
+							source: new ol.source.BingMaps({
+								key: apiKey,
+								imagerySet: styles[mapType]
+							})
+						})
+					]
+				});
+				
+				if(source == "osm"){
+					view._instance.map.setLayerGroup(view._instance.layerOSM);
+				}else{
+					view._instance.map.setLayerGroup(view._instance.layerBing);
+				}
+
+				// update map center on move
+				view._instance.map.on('moveend', function(){
+					var coordinates = ol.proj.transform(view._instance.mapView.getCenter(), 'EPSG:3857', 'EPSG:4326');
+
+					view._instance.centerLong = coordinates[0];
+					view._instance.centerLat =coordinates[1];
+
+				})
+				
+				// enable config options				
+				if(!hideMapTypeControl){
+				view._proto._drawMapTypeButton(view);}
+				
+				if(!hideScaleControl){
+				view._proto._drawScale(view);}
+				
+				if(!hideRotateControl){
+					view._proto._drawRotateControl(view);}
+				
+			},
+			_setZoomLevel : function(view, zoom)
+			{
+				view.context.options.zoom.set("value", zoom);
+			},
+			_addMarker : function(view, location)
+			{	
+			//{#bug:867 - during "Always find the center if null, otherwise take the provided location and convert the array to long and latitude values"}
+
+				if(location == null) //No location provided, get center of map and convert type
+				{
+					var center = view._instance.mapView.getCenter();
+					location = ol.proj.toLonLat(center);
+				} else {
+					if(location && location.lat && location.lng){ //if user selected position on map, convert LatLng object to array
+						var location = [location.lng, location.lat];
+					} else {
+						location = ol.proj.toLonLat(location); //if location array is in geo coordinate values, convert to latitude and longitude coordinate values
+					}	
+				}
+				
+				view._instance.markerElement = document.createElement("div");
+				view._instance.markerElement.style.color = "#d9534f";
+				
+				view._instance.markerElement.className = 'fa fa-map-marker ol-marker';
+				view._instance.markerElement.style.borderRadius = '20px';
+
+				var marker = new ol.Overlay({
+					//BG-867 position: center,
+					position: ol.proj.fromLonLat(location),
+					positioning: 'bottom-center',
+					element: view._instance.markerElement
+				})
+				
+				view._instance.map.addOverlay(marker);			
+				
+				view._instance.markerElement.addEventListener('click', function(){
+					//BG-867 var markerInfo = {"lng": location.lng, "lat": location.lat};
+					var markerInfo = {"lng": location[0], "lat": location[1]};
+					var x = ol.proj.transform(marker.getPosition(), 'EPSG:3857', 'EPSG:4326');
+						
+					// add addition variable in the future
+					markerInfo.lng = x[0];
+					markerInfo.lat = x[1];
+					
+					bpmext.ui.executeEventHandlingFunction(view, view._proto.EVT_ONMARKERCLICK, markerInfo);
+				});
+
+			}
+		}
+		
+		/*
+		Public control methods *************************************************************
+		 */
+
+		/**
+		 * @instance
+		 * @memberof OpenLayersMap
+		 * @method setWidth
+		 * @param {string} width the width of the map
+		 * @desc Set size of map (e.g. 50px, 20%, 2em - omitting the unit assumes px)
+		 */
+		this.constructor.prototype.setWidth = function (size)
+		{
+			this.context.options.width.set("value", size);
+		}
+		
+		/**
+		 * @instance
+		 * @memberof OpenLayersMap
+		 * @method setCenter
+		 * @param {decimal} latitude the latitude
+		 * @param {decimal} longitude the longitude
+		 * @desc Set the center of the map
+		 */
+		this.constructor.prototype.setCenter = function (latitude, longitude)
+		{
+			
+			this.context.options.centerLat.set("value", latitude);
+			this.context.options.centerLong.set("value", longitude);
+			
+			this._instance.centerLat = latitude;
+			this._instance.centerLon = longitude;
+			
+			this._proto._setCenter(this, latitude, longitude);
+		}
+		
+		/**
+		 * @instance
+		 * @memberof OpenLayersMap
+		 * @method redraw
+		 * @desc Redraws the map
+		 */
+		 this.constructor.prototype.redraw = function()
+		 {
+			 if(this._instance.map)
+			 {
+				 this._instance.map.updateSize();
+			 }
+		 }
+		
+		/**
+		 * @instance
+		 * @memberof OpenLayersMap
+		 * @method getType
+		 * @desc Get descriptive string representing the type of control
+		 * @returns {string}
+		 */
+		this.constructor.prototype.getType = function ()
+		{
+			return "map.3";
+		}
+		/**
+		 * @instance
+		 * @memberof OpenLayersMap
+		 * @method setMapSource
+		 * @param {string} 
+		 * @desc Sets the map source to one of {osm | mapquest | bing} 
+		 */
+		this.constructor.prototype.setMapSource = function (source)
+		{
+			this.context.options.mapSource.set("value", source);
+			var mapType = this.context.options.mapType.get("value");
+
+			if(source == "osm"){
+				this._instance.map.setLayerGroup(this._instance.layerOSM);
+			}else{
+				this._instance.map.setLayerGroup(this._instance.layerBing);
+			}
+		}
+		/**
+		 * @instance
+		 * @memberof OpenLayersMap
+		 * @method getMapSource
+		 * @desc returns the map provider {osm | mapquest | bing} 
+		 * @return {string}
+		 */
+		this.constructor.prototype.getMapSource = function ()
+		{
+			return this.context.options.mapSource.get("value");
+		}
+		/**
+		 * @instance
+		 * @memberof OpenLayersMapMap
+		 * @method addMarker
+		 * @param {object} location the object that includes the latitude and longitude
+		 * @desc adds a marker to the map
+		 * @example var latLng = {"lat": 38.5, "lng": -121.5}; var map = page.ui.get("Map"); map.addMarker(latLng); //note lat and lng variables are in decimal formatting.
+		 */
+		this.constructor.prototype.addMarker = function(location)
+		{
+			this._proto._addMarker(this, location)
+		}
+		 
+		/*
+		Coach NG Lifecycle methods *************************************************************
+		*/
+		this.constructor.prototype.load = function ()
+		{
+			try
+			{
+				var opts = this.context.options;
+				
+				/*if (!opts.useSensor)
+					opts.useSensor = bpmext.ui.substituteConfigOption(this, "useSensor", false);*/
+				
+				if (!opts.hidePanControl)
+					opts.hidePanControl = bpmext.ui.substituteConfigOption(this, "hidePanControl", false);
+				
+				if (!opts.hideZoomControl)
+					opts.hideZoomControl = bpmext.ui.substituteConfigOption(this, "hideZoomControl", false);
+				
+				if (!opts.hideMapTypeControl)
+					opts.hideMapTypeControl = bpmext.ui.substituteConfigOption(this, "hideMapTypeControl", false);
+
+				if (!opts.hideScaleControl)
+					opts.hideScaleControl = bpmext.ui.substituteConfigOption(this, "hideScaleControl", false);
+				
+				if (!opts.hideRotateControl)
+					opts.hideRotateControl = bpmext.ui.substituteConfigOption(this, "hideRotateControl", false);
+				
+				if (!opts.centerLat)
+					opts.centerLat = bpmext.ui.substituteConfigOption(this, "centerLat", null);
+
+				if (!opts.centerLong)
+					opts.centerLong = bpmext.ui.substituteConfigOption(this, "centerLong", null);
+				
+				if (!opts.zoom)
+					opts.zoom = bpmext.ui.substituteConfigOption(this, "zoom", 12);
+				
+				if (!opts.width)
+					opts.width = bpmext.ui.substituteConfigOption(this, "width", "100%");
+
+				if (!opts.height)
+					opts.height = bpmext.ui.substituteConfigOption(this, "height", "300px");
+				
+				if(!opts.mapSource)
+					opts.mapSource = bpmext.ui.substituteConfigOption(this, "mapSource", "osm");
+				
+				if(!opts.mapType)
+					opts.mapType = bpmext.ui.substituteConfigOption(this, "mapType", "0");
+				
+				if (!opts.marker)
+					opts.marker = bpmext.ui.substituteConfigOption(this, "marker", false);
+
+				//>>> {#bug: * Added SPARK-based config retrieval for more reliable behavior (ED)}
+				if (!opts.zoomLevel)
+					opts.zoomLevel = bpmext.ui.substituteConfigOption(this, "zoomLevel", null);
+
+				if (!opts.hideScaleControl)
+					opts.hideScaleControl = bpmext.ui.substituteConfigOption(this, "hideScaleControl", false);
+				//<<<
+				
+				this._instance.envelope = document.createElement("div");
+
+				domClass.add(this._instance.envelope, "SPARKGMap");
+				this._instance.disabler = bpmext.ui.util.createDisabler(this, this._instance.envelope);	
+				this.context.element.appendChild(this._instance.envelope);
+			
+				bpmext.ui.registerEventHandlingFunction(this, this._proto.EVT_ONCLICK, "event", "latLng");
+				bpmext.ui.registerEventHandlingFunction(this, this._proto.EVT_ONMARKERCLICK, "marker");
+				bpmext.ui.loadView(this);
+				
+				var view = this;
+			
+				view._instance.centerLat = view.context.options.centerLat.get("value");
+				view._instance.centerLong = view.context.options.centerLong.get("value");
+				view._instance.mapSource =  view.context.options.mapSource.get("value");
+				
+				if(view._instance.map == null)
+				{
+
+					bpmext.ui.addEventSubscription("OPENLAYERS_APIS_LOADED", function(evtName, payLoad)
+					{
+						try{					
+							if(payLoad){
+								view._instance.apiKey = payLoad;
+							}else{
+								view._instance.apiKey = null;
+							}
+						
+							view._instance.mapRotation = 0;
+							
+							this._proto._drawMap(this, view.context.options.mapSource.get("value"), view._instance.apiKey);
+							
+							if(view.context.options.marker.get("value")){
+							view._proto._addMarker(view, view._instance.mapView.getCenter());}
+							
+							/*if(view.context.options.useSensor.get("value")){
+								var geolocation = new ol.Geolocation({
+									projection: view._instance.mapView.getProjection()
+								});
+								geolocation.setTracking(true);
+							};*/
+
+							view._instance.map.addEventListener('click', function(evt){
+						
+								var lng = ol.proj.transform(evt.coordinate, 'EPSG:3857', 'EPSG:4326')[0];
+								var lat = ol.proj.transform(evt.coordinate, 'EPSG:3857', 'EPSG:4326')[1];
+								var latLng = {"lat": lat, "lng": lng};
+								
+								bpmext.ui.executeEventHandlingFunction(view, view._proto.EVT_ONCLICK, evt, latLng);
+							});
+							
+						}
+						catch(e)
+						{
+							//{#feature: US-1330 Added RT localization}
+							//bpmext.log.error("Error on API loaded event [" + view.context.viewid + "]: " + e);
+							bpmext.log.error(bpmext.localization.formatMsg("controlMap", "ERROR_ON_API_LOADED_EVENT") + " [" + view.context.viewid + "]: " + e);
+							if(e.stack) { 
+								//{#feature: US-1330 Added RT localization}
+								//bpmext.log.error("  Call stack: " + e.stack);
+								bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+							}						
+						}
+					},
+					this,
+					true
+					);
+				}
+				
+				this._instance.rs = new ResizeSensor(view._instance.envelope, function(){
+					setTimeout(function(){
+						if(view._instance.map)
+						{
+							view._instance.map.updateSize();
+							//console.debug("Map resize triggered");
+						}
+					});
+				});
+				
+			}
+			
+			catch (e)
+			{
+				//{#feature: US-1330 Added RT localization}
+				//bpmext.log.error("Error on load event [" + this.context.viewid + "]: " + e);
+				bpmext.log.error(bpmext.localization.formatMsg("general", "ERROR_ONLOAD_EVENT") + " [" + this.context.viewid + "]: " + e);
+				if(e.stack) { 
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.error("  Call stack: " + e.stack);
+					bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+				}
+			}
+		};
+		this.constructor.prototype.view = function ()
+		{
+		
+			try
+			{
+				this._proto._handleVisibility(this);
+			}
+			catch (e)
+			{
+				//{#feature: US-1330 Added RT localization}
+				//bpmext.log.error("Error on view event [" + this.ui.getAbsoluteName() + "]: " + e);
+				bpmext.log.error(bpmext.localization.formatMsg("general", "ERROR_ONVIEW_EVENT") + " [" + this.ui.getAbsoluteName() + "]: " + e);
+				if(e.stack) { 
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.error("  Call stack: " + e.stack);
+					bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+				}
+			}
+		};
+		this.constructor.prototype.change = function (event)
+		{
+			
+			try
+			{
+				
+				if (event.type == "config")
+				{
+					switch (event.property)
+					{
+						case "_metadata.visibility":
+						{
+							this._proto._handleVisibility(this);
+							break;
+						}
+						case "width":
+						{
+							this._proto._setWidth(this, event.newVal);
+							break;
+						}
+						case "height":
+						{
+							this._proto._setHeight(this, event.newVal);
+							break;
+						}
+					}
+				}
+				
+				var view = this;
+				setTimeout(function(){
+					if(view._instance.map)
+					{
+						view._instance.map.updateSize();
+						//console.debug("Map resize triggered");
+					}
+				});
+				
+			}
+			catch (e)
+			{
+				//{#feature: US-1330 Added RT localization}
+				//bpmext.log.error("Error on change event [" + this.ui.getAbsoluteName() + "]: " + e);
+				bpmext.log.error(bpmext.localization.formatMsg("general", "ERROR_ONCHANGE_EVENT") + " [" + this.ui.getAbsoluteName() + "]: " + e);
+				if(e.stack) { 
+					//{#feature: US-1330 Added RT localization}
+					//bpmext.log.error("  Call stack: " + e.stack);
+					bpmext.log.error("  " + bpmext.localization.formatMsg("general", "CALL_STACK", e.stack));
+				}
+			}
+			
+		};
+		this.constructor.prototype.unload = function ()
+		{
+			bpmext.ui.unloadView(this);
+			
+			if(this._instance.rs!=null){
+				this._instance.rs.detach(this.context.element.querySelector("div.SPARKGMap"));
+			}
+			
+		};
+		
+	}
+	
+}
