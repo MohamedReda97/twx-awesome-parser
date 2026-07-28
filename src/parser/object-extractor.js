@@ -275,7 +275,7 @@ class ObjectExtractor {
 
 	parseCoachflowElements(coachflow, details) {
 		try {
-			const userTaskImpl = coachflow["ns16:definitions"]?.["ns16:globalUserTask"]?.["ns16:extensionElements"]?.["ns3:userTaskImplementation"];
+			const userTaskImpl = coachflow["ns16:definitions"]?.["ns16:globalUserTask"]?.["ns16:extensionElements"]?.["ns2:userTaskImplementation"];
 
 			if (!userTaskImpl) {
 				console.warn("No userTaskImplementation found in coachflow");
@@ -313,8 +313,8 @@ class ObjectExtractor {
 				}
 			}
 
-			if (userTaskImpl["ns3:formTask"]) {
-				const formTasks = Array.isArray(userTaskImpl["ns3:formTask"]) ? userTaskImpl["ns3:formTask"] : [userTaskImpl["ns3:formTask"]];
+			if (userTaskImpl["ns2:formTask"]) {
+				const formTasks = Array.isArray(userTaskImpl["ns2:formTask"]) ? userTaskImpl["ns2:formTask"] : [userTaskImpl["ns2:formTask"]];
 
 				for (const formTask of formTasks) {
 					details.elements.formTasks.push({
