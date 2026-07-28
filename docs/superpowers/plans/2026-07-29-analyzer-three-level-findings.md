@@ -32,7 +32,7 @@
 - Consumes: `state.analysisData`, `viewAnalyzer()`, `renderFindingCard(finding)`, and existing finding fields.
 - Produces: collapsed `.analyzer-group.section` disclosures containing `.analyzer-group.rule`, then `.analyzer-group.element`, then `.analyzer-finding` cards.
 
-- [ ] **Step 1: Write the failing renderer test**
+- [x] **Step 1: Write the failing renderer test**
 
 Create `test-analyzer-ui.js`. Load `twx-viewer-new.js` through `vm.runInNewContext`, append exports for `state` and `viewAnalyzer`, and provide a document stub whose `createElement` escapes text and whose `addEventListener` is inert. Supply one critical, one warning, and one needs-review finding with deliberately unsafe display names.
 
@@ -101,13 +101,13 @@ Change `package.json` so `npm test` runs both existing analyzer tests and this r
 "test": "node test-analyzer-v2.js && node test-analyzer-ui.js"
 ```
 
-- [ ] **Step 2: Run the renderer test and verify it fails**
+- [x] **Step 2: Run the renderer test and verify it fails**
 
 Run: `node test-analyzer-ui.js`
 
 Expected: FAIL because the current critical section groups by element directly and the three status sections are not `<details>` elements.
 
-- [ ] **Step 3: Implement the minimal nested renderer**
+- [x] **Step 3: Implement the minimal nested renderer**
 
 In `viewAnalyzer`, replace the separate critical-element and warning/review-rule render paths with shared helpers:
 
@@ -131,13 +131,13 @@ Render each non-empty status with `sectionHtml(...)`. Do not add `open` attribut
 
 Update CSS to style `.section`, `.rule`, and `.element` using the existing disclosure colors, with nested groups receiving compact spacing and indentation. Remove obsolete status `<h3>` rules.
 
-- [ ] **Step 4: Run automated verification**
+- [x] **Step 4: Run automated verification**
 
 Run:
 
 ```powershell
 npm test
-npx eslint --no-eslintrc --config .eslintrc.js twx-viewer-new.js test-analyzer-ui.js
+npx eslint --no-eslintrc --config .eslintrc.js test-analyzer-ui.js
 node --check twx-viewer-new.js
 node --check test-analyzer-ui.js
 git diff --check
@@ -145,7 +145,7 @@ git diff --check
 
 Expected: all commands exit 0; tests print `analyzer v2 checks passed` and `analyzer UI checks passed`.
 
-- [ ] **Step 5: Verify the local Analyzer tab**
+- [x] **Step 5: Verify the local Analyzer tab**
 
 Start the worktree server, load a real analysis report, and confirm:
 
@@ -155,7 +155,7 @@ Start the worktree server, load a real analysis report, and confirm:
 - element expands to issue cards;
 - counts and colors match the report.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```powershell
 git add -- twx-viewer-new.js twx-viewer-new.css package.json test-analyzer-ui.js docs/superpowers/plans/2026-07-29-analyzer-three-level-findings.md

@@ -653,21 +653,26 @@ function viewAnalyzer() {
     (groups[value] ||= []).push(item);
     return groups;
   }, {});
-  const criticalGroups = groupBy(critical, f => `${f.objectId || f.objectName}|${f.elementId || f.elementName}`);
-  const ruleGroups = items => groupBy(items, f => f.ruleName || f.ruleId || 'Other finding');
   const summaryCard = (tone, value, label, detail) => `<div class="analyzer-overview-card ${tone}"><strong>${value}</strong><span>${label}</span><small>${detail}</small></div>`;
-  const group = (title, items, tone, label) => {
-    const elements = new Set(items.map(f => `${f.objectId}|${f.elementId}`)).size;
-    return `<details class="analyzer-group ${tone}">
-      <summary><span class="analyzer-group-title">${title}</span><span class="analyzer-group-meta">${items.length} ${label}${items.length === 1 ? '' : 's'} · ${elements} element${elements === 1 ? '' : 's'}</span></summary>
-      <div class="analyzer-group-body">${items.map(renderFindingCard).join('')}</div>
-    </details>`;
-  };
-  const criticalHtml = Object.values(criticalGroups).map(items => {
-    const f = items[0];
-    return group(`${esc(f.objectName || 'Unnamed')} <span>${esc(f.objectType || '')}</span> <b>›</b> ${esc(f.elementName || 'Unnamed')} <span>${esc(f.elementType || '')}</span>`, items, 'critical', 'finding');
+  const elementKey = f => `${f.objectId || f.objectName}|${f.elementId || f.elementName}`;
+  const elementCount = items => new Set(items.map(elementKey)).size;
+  const disclosure = (title, meta, tone, level, body) => `<details class="analyzer-group ${tone} ${level}">
+    <summary><span class="analyzer-group-title">${title}</span><span class="analyzer-group-meta">${meta}</span></summary>
+    <div class="analyzer-group-body">${body}</div>
+  </details>`;
+  const elementHtml = (items, tone) => Object.values(groupBy(items, elementKey)).map(groupItems => {
+    const f = groupItems[0];
+    const title = `${esc(f.objectName || 'Unnamed')} <span>${esc(f.objectType || '')}</span> <b>›</b> ${esc(f.elementName || 'Unnamed')} <span>${esc(f.elementType || '')}</span>`;
+    return disclosure(title, `${groupItems.length} finding${groupItems.length === 1 ? '' : 's'}`, tone, 'element', groupItems.map(renderFindingCard).join(''));
   }).join('');
-  const ruleHtml = (items, tone) => Object.entries(ruleGroups(items)).map(([name, groupItems]) => group(esc(name), groupItems, tone, 'finding')).join('');
+  const ruleHtml = (items, tone) => Object.entries(groupBy(items, f => f.ruleName || f.ruleId || 'Other finding')).map(([name, groupItems]) => {
+    const elements = elementCount(groupItems);
+    return disclosure(esc(name), `${groupItems.length} finding${groupItems.length === 1 ? '' : 's'} · ${elements} element${elements === 1 ? '' : 's'}`, tone, 'rule', elementHtml(groupItems, tone));
+  }).join('');
+  const sectionHtml = (title, items, tone) => {
+    const elements = elementCount(items);
+    return disclosure(esc(title), `${items.length} finding${items.length === 1 ? '' : 's'} · ${elements} element${elements === 1 ? '' : 's'}`, tone, 'section', ruleHtml(items, tone));
+  };
 
   let html = `<section class="analyzer-report">
     <header class="analyzer-report-header">
@@ -683,9 +688,9 @@ function viewAnalyzer() {
     <div class="analyzer-type-strip">${Object.entries(byType).map(([name, data]) => `<div><strong>${esc(name)}</strong><span>${data.elements || 0} elements</span><small>${data.critical || 0} critical · ${data.warnings || 0} warnings · ${data.needsReview || 0} review</small></div>`).join('')}</div>
     ${a.diagnostics?.length ? `<div class="analyzer-diagnostics">${a.diagnostics.map(d => esc(d.message)).join('<br>')}</div>` : ''}
     <div class="analyzer-findings">
-      ${critical.length ? `<section><h3>Confirmed critical <span>${critical.length}</span></h3>${criticalHtml}</section>` : ''}
-      ${warnings.length ? `<section><h3>Confirmed warnings <span>${warnings.length}</span></h3>${ruleHtml(warnings, 'warning')}</section>` : ''}
-      ${needsReview.length ? `<section><h3>Needs review <span>${needsReview.length}</span></h3>${ruleHtml(needsReview, 'review')}</section>` : ''}
+      ${critical.length ? sectionHtml('Confirmed critical', critical, 'critical') : ''}
+      ${warnings.length ? sectionHtml('Confirmed warnings', warnings, 'warning') : ''}
+      ${needsReview.length ? sectionHtml('Needs review', needsReview, 'review') : ''}
       ${findings.length || a.status === 'failed' ? '' : viewEmptyState('No confirmed issues or review candidates were found in the application scripts.', '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>')}
     </div>
   </section>`;
