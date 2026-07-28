@@ -11,6 +11,9 @@ const state = {
   selectedType: null,
   selectedTypeData: null,
   toolkitToggle: false,
+  byTypeExpanded: null,
+  byTypeSelectedItem: null,
+  byTypeSection3SubTab: 'info',
   searchResults: [],
   searchTerm: '',
   searchLoading: false,
@@ -21,6 +24,12 @@ const state = {
   isParsing: false,
   quickFilter: '',
   searchSearched: false,
+  // Toolkits tab breadcrumb state
+  toolkitsLevel: 0,
+  toolkitsSelectedToolkit: null,
+  toolkitsExpandedType: null,
+  toolkitsSection3Object: null,
+  toolkitsSection3SubTab: 'info',
 };
 
 // ── Icons (inline SVG 16px line) ──────────────────────────────
@@ -35,6 +44,8 @@ const I = {
   empty: '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>',
   box: '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/></svg>',
   chevron: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>',
+  chevronDown: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>',
+  chevronRight14: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>',
 };
 
 // ── Utils ──────────────────────────────────────────────────────
@@ -322,26 +333,54 @@ function viewByType() {
   const types = TYPES.filter(t => state.currentObjects[t]);
   return `
     <div class="by-type-layout">
-      <div class="type-list-pane">
-        <div class="type-list-header">
-          <span class="type-list-header-title">Types</span>
+      <div class="by-type-section-2">
+        <div class="section-2-header">
+          <span class="section-2-header-title">TYPES</span>
           <label class="toolkit-toggle-label" id="toolkit-toggle">
             <span class="toggle-switch${state.toolkitToggle?' on':''}"></span>
             Include toolkits
           </label>
         </div>
-        ${types.map(t => {
-          const counts = getTypeCounts(state.currentObjects[t]);
-          return `<div class="type-row${state.selectedType===t?' active':''}" data-type="${t}">
-            <span class="type-row-name">${getDisplayName(t)}</span>
-            <span class="type-row-count">${state.toolkitToggle && counts.app > 0 && counts.toolkit > 0
-              ? `${counts.app} <span class="badge-sm badge-app">APP</span> <span class="badge-sm badge-tk">+${counts.toolkit}</span>`
-              : counts.total}</span>
-          </div>`;
-        }).join('')}
+        <div class="type-accordion">
+          ${types.map(t => {
+            const data = state.currentObjects[t];
+            const counts = getTypeCounts(data);
+            const isExpanded = state.byTypeExpanded === t;
+            const chevron = isExpanded ? '▾' : '▸';
+            let childrenHtml = '';
+            if (isExpanded) {
+              const objects = getFilteredObjects(data.objects);
+              if (objects.length === 0) {
+                childrenHtml = `<div class="type-accordion-children"><div class="accordion-item-row empty" style="color:var(--text-secondary);cursor:default;font-style:italic">No objects in this type</div></div>`;
+              } else {
+                childrenHtml = `<div class="type-accordion-children">
+                  ${objects.map(o => `<div class="accordion-item-row${state.byTypeSelectedItem && state.byTypeSelectedItem.object.id === o.id ? ' selected' : ''}" data-obj-id="${esc(o.id)}" data-obj-type="${t}">
+                    <span class="accordion-item-name">${esc(o.name||'Unnamed')}</span>
+                    ${sourceBadge(o)}
+                    <span class="accordion-item-id">${esc((o.id||'').substring(0,30))}</span>
+                  </div>`).join('')}
+                </div>`;
+              }
+            }
+            return `<div class="type-accordion-item">
+              <div class="type-accordion-header" data-type="${t}">
+                <span class="type-accordion-chevron${isExpanded?' open':''}">${chevron}</span>
+                <span class="type-accordion-name">${getDisplayName(t)}</span>
+                <span class="type-accordion-count">${state.toolkitToggle && counts.app > 0 && counts.toolkit > 0
+                  ? `${counts.app} <span class="badge-sm badge-app">APP</span> <span class="badge-sm badge-tk">+${counts.toolkit}</span>`
+                  : counts.total}</span>
+              </div>
+              ${childrenHtml}
+            </div>`;
+          }).join('')}
+        </div>
       </div>
-      <div class="object-list-pane" id="object-list-pane">
-        ${state.selectedType ? viewObjectList(state.selectedType) : viewEmptyState('Select a type to view objects.')}
+      <div class="by-type-section-3" id="by-type-section-3">
+        ${state.byTypeSelectedItem ? renderSection3(state.byTypeSelectedItem.object, state.byTypeSelectedItem.type) : `
+        <div class="section-3-empty">
+          ${I.box}
+          <p class="empty-state-caption">Select an item to view its details</p>
+        </div>`}
       </div>
     </div>`;
 }
@@ -368,8 +407,7 @@ function setupByTypeListeners() {
 }
 
 // ── Toolkits Tab ──────────────────────────────────────────────
-function viewToolkits() {
-  if (!hasData()) return viewEmptyState('No data available. Parse a .twx file to see toolkits.');
+function getToolkitList() {
   const tkMap = {};
   for (const d of Object.values(state.currentObjects)) {
     if (!d || !d.objects) continue;
@@ -381,18 +419,126 @@ function viewToolkits() {
       }
     });
   }
-  const toolkits = Object.values(tkMap);
+  return Object.values(tkMap);
+}
+
+function getToolkitObjects(shortName) {
+  const result = {};
+  for (const [type, data] of Object.entries(state.currentObjects)) {
+    if (!data || !data.objects) continue;
+    const matches = data.objects.filter(o => o.source === 'toolkit' && o.toolkitInfo && o.toolkitInfo.shortName === shortName);
+    if (matches.length > 0) result[type] = matches;
+  }
+  return result;
+}
+
+function viewToolkits() {
+  if (!hasData()) return viewEmptyState('No data available. Parse a .twx file to see toolkits.');
+  const toolkits = getToolkitList();
   if (toolkits.length === 0) return viewEmptyState('This TWX file has no embedded toolkits. Toolkits are separate TWX packages that this app depends on. Upload a toolkit TWX to see it here.', I.box);
-  return `<div class="card">
-    <div class="card-header"><span class="card-title">Toolkits</span><span style="color:var(--text-secondary);font-size:12px">${toolkits.length} found</span></div>
-    <table><thead><tr><th>Toolkit</th><th style="width:100px">Version</th><th class="num" style="width:80px">Objects</th><th style="width:60px"></th></tr></thead>
-    <tbody>${toolkits.map(t => `<tr>
-      <td class="col-name" title="${esc(t.name||'')}">${esc(t.shortName||t.name||'Unknown')}</td>
-      <td class="col-id">${esc(t.version||'')}</td>
-      <td class="col-num">${t.count}</td>
-      <td><a class="link" data-filter-toolkit="${esc(t.shortName)}">Open →</a></td>
-    </tr>`).join('')}</tbody></table>
-  </div>`;
+  return `
+    <div class="toolkits-layout">
+      <div class="toolkits-section-2">
+        ${renderToolkitsSection2(toolkits)}
+      </div>
+      <div class="toolkits-section-3" id="toolkits-section-3">
+        ${renderToolkitsSection3()}
+      </div>
+    </div>`;
+}
+
+function renderToolkitsSection2(toolkits) {
+  // Level 0: toolkit list (all expanded by default)
+  if (state.toolkitsLevel === 0 || !state.toolkitsSelectedToolkit) {
+    return `<div class="toolkits-section-header">TOOLKITS</div>
+      ${toolkits.map(t => `<div class="toolkit-row" data-toolkit="${esc(t.shortName||'')}">
+        <span class="toolkit-row-chevron">${I.chevronDown}</span>
+        <span class="toolkit-row-name" title="${esc(t.name||'')}">${esc(t.shortName||t.name||'Unknown')}</span>
+        <span class="toolkit-row-version">${esc(t.version||'')}</span>
+        <span class="toolkit-row-count">${t.count} objects</span>
+      </div>`).join('')}`;
+  }
+
+  // Level 1 / 2: types in selected toolkit
+  const tkObjects = getToolkitObjects(state.toolkitsSelectedToolkit);
+  const types = Object.keys(tkObjects).sort();
+  if (types.length === 0) return `<a class="toolkit-back-link" data-toolkit-back="true">\u25C0 Back to toolkits</a><div class="toolkits-section-header">TYPES in ${esc(state.toolkitsSelectedToolkit)}</div><div class="empty-state" style="padding:40px 12px"><p class="empty-state-caption">No objects found in this toolkit.</p></div>`;
+
+  let html = `<a class="toolkit-back-link" data-toolkit-back="true">\u25C0 Back to toolkits</a>
+    <div class="toolkits-section-header">TYPES in ${esc(state.toolkitsSelectedToolkit)}</div>`;
+
+  types.forEach(type => {
+    const items = tkObjects[type];
+    const isExpanded = state.toolkitsExpandedType === type;
+    html += `<div class="toolkit-type-row${isExpanded ? ' expanded' : ''}" data-toolkit-type="${esc(type)}">
+      <span class="toolkit-type-chevron${isExpanded ? ' expanded' : ''}">${isExpanded ? I.chevronDown : I.chevronRight14}</span>
+      <span class="toolkit-type-name">${getDisplayName(type)}</span>
+      <span class="toolkit-type-count">${items.length}</span>
+    </div>`;
+    if (isExpanded) {
+      html += `<div class="toolkit-items">
+        ${items.map(obj => `<div class="toolkit-item-row" data-toolkit-item-json="${esc(JSON.stringify({id: obj.id, type: type}))}">
+          <span class="toolkit-item-name">${esc(obj.name || 'Unnamed')}</span>
+          <span class="toolkit-item-id">${esc((obj.id || '').substring(0, 35))}</span>
+        </div>`).join('')}
+      </div>`;
+    }
+  });
+  return html;
+}
+
+function renderToolkitsSection3() {
+  if (!state.toolkitsSection3Object) {
+    return `<div class="empty-state" style="padding:80px 24px">
+      <p class="empty-state-caption">Select a toolkit, then a type to view objects</p>
+    </div>`;
+  }
+  const ref = state.toolkitsSection3Object;
+  const data = state.currentObjects[ref.type];
+  const obj = data && data.objects ? data.objects.find(o => o.id === ref.id) : null;
+  if (!obj) return viewEmptyMsg('Object not found.');
+  return renderSection3Details(obj);
+}
+
+function renderSection3Details(obj) {
+  const subTab = state.toolkitsSection3SubTab || 'info';
+  return `
+    <div class="section-3-header">
+      <div class="section-3-header-name">${esc(obj.name || 'Unnamed Object')}</div>
+      <div class="section-3-header-meta">
+        <span class="badge-sm badge-app">${esc(obj.typeName || getDisplayName(obj.type))}</span> ·
+        <span class="col-id">${esc((obj.id || '').substring(0, 45))}</span> ·
+        ${esc(obj.versionId || '')}
+      </div>
+    </div>
+    <div class="section-3-subnav">
+      ${renderSection3SubNav(obj)}
+    </div>
+    <div class="section-3-body">
+      ${renderSection3Body(obj)}
+    </div>`;
+}
+
+function renderSection3SubNav(obj) {
+  const tabs = [{ id: 'info', label: 'Info' }];
+  if (obj.details) {
+    if (obj.details.variables) tabs.push({ id: 'variables', label: 'Variables' });
+    if ((obj.details.scripts && obj.details.scripts.length > 0) || (obj.details.inlineScripts && obj.details.inlineScripts.length > 0) || obj.details.loadJsFunction) tabs.push({ id: 'scripts', label: 'Scripts' });
+    if (obj.details.elements) tabs.push({ id: 'elements', label: 'Elements' });
+    if (obj.details.schema) tabs.push({ id: 'schema', label: 'Schema' });
+  }
+  return tabs.map(t => `<button class="section-3-subnav-btn${state.toolkitsSection3SubTab === t.id ? ' active' : ''}" data-toolkits-subtab="${t.id}">${t.label}</button>`).join('');
+}
+
+function renderSection3Body(obj) {
+  switch (state.toolkitsSection3SubTab) {
+    case 'info': return drawInfo(obj);
+    case 'variables': return drawVariables(obj);
+    case 'scripts': return drawScripts(obj);
+    case 'elements': return drawElements(obj);
+    case 'schema': return drawSchema(obj);
+    default: return '';
+  }
 }
 
 // ── Search Tab ─────────────────────────────────────────────────
@@ -664,7 +810,19 @@ function setupGlobalListeners() {
   // Sidebar clicks
   $('sidebar-nav').addEventListener('click', e => {
     const btn = e.target.closest('.nav-item');
-    if (btn) { state.activeTab = btn.dataset.tab; state.selectedType = null; state.drawerOpen = false; closeDrawerSilent(); renderAll(); }
+    if (btn) {
+      state.activeTab = btn.dataset.tab;
+      state.selectedType = null;
+      state.drawerOpen = false;
+      closeDrawerSilent();
+      // ponytail: reset toolkits breadcrumb state on tab switch
+      state.toolkitsLevel = 0;
+      state.toolkitsSelectedToolkit = null;
+      state.toolkitsExpandedType = null;
+      state.toolkitsSection3Object = null;
+      state.toolkitsSection3SubTab = 'info';
+      renderAll();
+    }
   });
 
   // Topbar upload (click title area)
@@ -726,6 +884,57 @@ function setupGlobalListeners() {
 
     // Enable toolkits link
     if (e.target.closest('#enable-toolkits-link')) { $('toolkit-toggle').click(); return; }
+
+    // ── Toolkits tab: 3-level breadcrumb drilldown ────────────
+    // Toolkit row click (Level 0 → Level 1)
+    const tkRow = e.target.closest('[data-toolkit]');
+    if (tkRow) {
+      state.toolkitsLevel = 1;
+      state.toolkitsSelectedToolkit = tkRow.dataset.toolkit;
+      state.toolkitsExpandedType = null;
+      renderAll();
+      return;
+    }
+
+    // Toolkit back link (Level 1/2 → Level 0)
+    const tkBack = e.target.closest('[data-toolkit-back]');
+    if (tkBack) {
+      state.toolkitsLevel = 0;
+      state.toolkitsSelectedToolkit = null;
+      state.toolkitsExpandedType = null;
+      renderAll();
+      return;
+    }
+
+    // Toolkit type row click (Level 1 → Level 2, toggle expand)
+    const tkType = e.target.closest('[data-toolkit-type]');
+    if (tkType) {
+      const type = tkType.dataset.toolkitType;
+      state.toolkitsExpandedType = state.toolkitsExpandedType === type ? null : type;
+      state.toolkitsLevel = state.toolkitsExpandedType ? 2 : 1;
+      renderAll();
+      return;
+    }
+
+    // Toolkit item click (populate Section 3)
+    const tkItem = e.target.closest('[data-toolkit-item-json]');
+    if (tkItem) {
+      try {
+        state.toolkitsSection3Object = JSON.parse(tkItem.dataset.toolkitItemJson);
+        state.toolkitsSection3SubTab = 'info';
+        renderAll();
+      } catch (_) {}
+      return;
+    }
+
+    // Toolkit Section 3 sub-tab click (targeted update)
+    const tkSubTab = e.target.closest('[data-toolkits-subtab]');
+    if (tkSubTab) {
+      state.toolkitsSection3SubTab = tkSubTab.dataset.toolkitsSubtab;
+      const s3 = $('toolkits-section-3');
+      if (s3) { s3.innerHTML = renderToolkitsSection3(); s3.scrollTop = 0; }
+      return;
+    }
   });
 
   // Search tab events
