@@ -1,6 +1,6 @@
 const fs = require("fs");
 const path = require("path");
-const xml2js = require("xml2js");
+const { Parser: Xml2jsParser, processors: { stripPrefix } } = require("xml2js");
 const BusinessObjectSchemaParser = require("./business-object-schema-parser");
 
 /**
@@ -8,10 +8,11 @@ const BusinessObjectSchemaParser = require("./business-object-schema-parser");
  */
 class ObjectExtractor {
 	constructor() {
-		this.parser = new xml2js.Parser({
+		this.parser = new Xml2jsParser({
 			explicitArray: false,
 			ignoreAttrs: false,
 			mergeAttrs: true,
+			tagNameProcessors: [stripPrefix],
 		});
 		this.businessObjectParser = new BusinessObjectSchemaParser();
 	}
@@ -297,7 +298,7 @@ class ObjectExtractor {
 
 	parseCoachflowElements(coachflow, details) {
 		try {
-			const userTaskImpl = coachflow["ns16:definitions"]?.["ns16:globalUserTask"]?.["ns16:extensionElements"]?.["ns3:userTaskImplementation"];
+			const userTaskImpl = coachflow.definitions?.globalUserTask?.extensionElements?.userTaskImplementation;
 
 			if (!userTaskImpl) {
 				console.warn("No userTaskImplementation found in coachflow");
@@ -305,29 +306,29 @@ class ObjectExtractor {
 			}
 
 			// Global pre/post assignment scripts at userTaskImplementation level (fallback for elements without their own)
-			const globalExt = userTaskImpl["ns16:extensionElements"];
-			const globalPre = globalExt?.["ns3:preAssignmentScript"] ? this.cleanJavaScript(globalExt["ns3:preAssignmentScript"]) : null;
-			const globalPost = globalExt?.["ns3:postAssignmentScript"] ? this.cleanJavaScript(globalExt["ns3:postAssignmentScript"]) : null;
+			const globalExt = userTaskImpl.extensionElements;
+			const globalPre = globalExt?.preAssignmentScript ? this.cleanJavaScript(globalExt.preAssignmentScript) : null;
+			const globalPost = globalExt?.postAssignmentScript ? this.cleanJavaScript(globalExt.postAssignmentScript) : null;
 
-			if (userTaskImpl["ns16:scriptTask"]) {
-				const scriptTasks = Array.isArray(userTaskImpl["ns16:scriptTask"]) ? userTaskImpl["ns16:scriptTask"] : [userTaskImpl["ns16:scriptTask"]];
+			if (userTaskImpl.scriptTask) {
+				const scriptTasks = Array.isArray(userTaskImpl.scriptTask) ? userTaskImpl.scriptTask : [userTaskImpl.scriptTask];
 
 				for (const scriptTask of scriptTasks) {
-					const ext = scriptTask["ns16:extensionElements"];
-					const pre = ext?.["ns3:preAssignmentScript"] ? this.cleanJavaScript(ext["ns3:preAssignmentScript"]) : globalPre;
-					const post = ext?.["ns3:postAssignmentScript"] ? this.cleanJavaScript(ext["ns3:postAssignmentScript"]) : globalPost;
+					const ext = scriptTask.extensionElements;
+					const pre = ext?.preAssignmentScript ? this.cleanJavaScript(ext.preAssignmentScript) : globalPre;
+					const post = ext?.postAssignmentScript ? this.cleanJavaScript(ext.postAssignmentScript) : globalPost;
 					details.elements.scriptTasks.push({
 						name: scriptTask.name || "Unnamed",
 						id: scriptTask.id,
-						script: scriptTask["ns16:script"] ? this.cleanJavaScript(scriptTask["ns16:script"]) : "",
+						script: scriptTask.script ? this.cleanJavaScript(scriptTask.script) : "",
 						preAssignment: pre,
 						postAssignment: post,
 					});
 				}
 			}
 
-			if (userTaskImpl["ns16:exclusiveGateway"]) {
-				const gateways = Array.isArray(userTaskImpl["ns16:exclusiveGateway"]) ? userTaskImpl["ns16:exclusiveGateway"] : [userTaskImpl["ns16:exclusiveGateway"]];
+			if (userTaskImpl.exclusiveGateway) {
+				const gateways = Array.isArray(userTaskImpl.exclusiveGateway) ? userTaskImpl.exclusiveGateway : [userTaskImpl.exclusiveGateway];
 
 				for (const gateway of gateways) {
 					details.elements.exclusiveGateways.push({
@@ -337,13 +338,13 @@ class ObjectExtractor {
 				}
 			}
 
-			if (userTaskImpl["ns3:formTask"]) {
-				const formTasks = Array.isArray(userTaskImpl["ns3:formTask"]) ? userTaskImpl["ns3:formTask"] : [userTaskImpl["ns3:formTask"]];
+			if (userTaskImpl.formTask) {
+				const formTasks = Array.isArray(userTaskImpl.formTask) ? userTaskImpl.formTask : [userTaskImpl.formTask];
 
 				for (const formTask of formTasks) {
-					const ext = formTask["ns16:extensionElements"];
-					const pre = ext?.["ns3:preAssignmentScript"] ? this.cleanJavaScript(ext["ns3:preAssignmentScript"]) : null;
-					const post = ext?.["ns3:postAssignmentScript"] ? this.cleanJavaScript(ext["ns3:postAssignmentScript"]) : null;
+					const ext = formTask.extensionElements;
+					const pre = ext?.preAssignmentScript ? this.cleanJavaScript(ext.preAssignmentScript) : null;
+					const post = ext?.postAssignmentScript ? this.cleanJavaScript(ext.postAssignmentScript) : null;
 					details.elements.formTasks.push({
 						name: formTask.name || "Unnamed",
 						id: formTask.id,
@@ -353,13 +354,13 @@ class ObjectExtractor {
 				}
 			}
 
-			if (userTaskImpl["ns16:callActivity"]) {
-				const callActivities = Array.isArray(userTaskImpl["ns16:callActivity"]) ? userTaskImpl["ns16:callActivity"] : [userTaskImpl["ns16:callActivity"]];
+			if (userTaskImpl.callActivity) {
+				const callActivities = Array.isArray(userTaskImpl.callActivity) ? userTaskImpl.callActivity : [userTaskImpl.callActivity];
 
 				for (const callActivity of callActivities) {
-					const ext = callActivity["ns16:extensionElements"];
-					const pre = ext?.["ns3:preAssignmentScript"] ? this.cleanJavaScript(ext["ns3:preAssignmentScript"]) : null;
-					const post = ext?.["ns3:postAssignmentScript"] ? this.cleanJavaScript(ext["ns3:postAssignmentScript"]) : null;
+					const ext = callActivity.extensionElements;
+					const pre = ext?.preAssignmentScript ? this.cleanJavaScript(ext.preAssignmentScript) : null;
+					const post = ext?.postAssignmentScript ? this.cleanJavaScript(ext.postAssignmentScript) : null;
 					details.elements.callActivities.push({
 						name: callActivity.name || "Unnamed",
 						id: callActivity.id,
@@ -486,18 +487,18 @@ class ObjectExtractor {
 		try {
 			const bpmn = processElement.bpmn2Model || processElement.bpmn2Data;
 			if (bpmn) {
-				const process = bpmn["ns16:definitions"]?.["ns16:process"];
+				const process = bpmn.definitions?.process;
 				if (process) {
-					const scriptTasks = toArray(process["ns16:scriptTask"]);
+					const scriptTasks = toArray(process.scriptTask);
 					for (const st of scriptTasks) {
-						const script = st["ns16:script"] || "";
-						const ext = st["ns16:extensionElements"];
+						const script = st.script || "";
+						const ext = st.extensionElements;
 						details.elements.scriptTasks.push({
 							name: st.name || "Unnamed",
 							id: st.id || "",
 							script: script ? this.cleanJavaScript(script) : "",
-							preAssignment: ext?.["ns3:preAssignmentScript"] || null,
-							postAssignment: ext?.["ns3:postAssignmentScript"] || null,
+							preAssignment: ext?.preAssignmentScript || null,
+							postAssignment: ext?.postAssignmentScript || null,
 						});
 					}
 				}
