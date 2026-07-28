@@ -225,7 +225,7 @@ function renderTopbar() {
   $('topbar-subtitle').textContent = parsed
     ? `${parsed.count} objects parsed`
     : 'Upload a .twx file to begin';
-  $('quick-search').disabled = !parsed;
+
 }
 
 // ── Render: Content ───────────────────────────────────────────
