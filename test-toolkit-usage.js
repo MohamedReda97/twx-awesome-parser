@@ -270,6 +270,229 @@ assert.equal(versionWinner.locations[0].confidence, 'confirmed')
 assert.equal(versionWinner.locations[0].evidence, 'version-id')
 assert.equal(structuralEdgeObjects.some(object => object.name === 'Stable Loser'), false)
 
+const scriptSource = [
+  'new tw.object.CustomerData();',
+  'services["Run Service"]();',
+  'AccountNumber();',
+  'customerdata();',
+  'SharedHelper();'
+].join('\n')
+const scriptToolkit = {
+  fileName: '06-script-usage.zip',
+  metadata: {
+    project: { id: 'script-project', name: 'Script Toolkit', shortName: 'JSK' },
+    snapshot: { id: 'script-snapshot', name: '6.0.0' }
+  },
+  objectCount: 4,
+  objects: [
+    {
+      id: '12.aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+      versionId: '2064.aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+      name: 'CustomerData',
+      type: 'twClass',
+      typeName: 'Business Object',
+      details: { scripts: [{ name: 'Toolkit code', script: 'Account();' }] }
+    },
+    {
+      id: '12.bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
+      versionId: '2064.bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
+      name: 'Run Service',
+      type: 'process',
+      typeName: 'Service'
+    },
+    {
+      id: '12.cccccccc-cccc-4ccc-8ccc-cccccccccccc',
+      versionId: '2064.cccccccc-cccc-4ccc-8ccc-cccccccccccc',
+      name: 'Account',
+      type: 'twClass',
+      typeName: 'Business Object'
+    },
+    {
+      id: '12.dddddddd-dddd-4ddd-8ddd-dddddddddddd',
+      versionId: '2064.dddddddd-dddd-4ddd-8ddd-dddddddddddd',
+      name: 'SharedHelper',
+      type: 'process',
+      typeName: 'Service'
+    }
+  ]
+}
+const sharedNameToolkit = {
+  fileName: '07-shared-name.zip',
+  metadata: {
+    project: { id: 'shared-name-project', name: 'Shared Name Toolkit', shortName: 'SNT' },
+    snapshot: { id: 'shared-name-snapshot', name: '7.0.0' }
+  },
+  objectCount: 1,
+  objects: [{
+    id: '12.eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee',
+    versionId: '2064.eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee',
+    name: 'SharedHelper',
+    type: 'process',
+    typeName: 'Service'
+  }]
+}
+const scriptAppObject = {
+  ...appObject,
+  source: 'application',
+  details: {
+    elements: {
+      scriptTasks: [{
+        id: 'usage-script-task',
+        name: 'Detect toolkit usage',
+        script: scriptSource,
+        scriptFormat: 'text/javascript',
+        preAssignment: 'SharedHelper();',
+        postAssignment: ''
+      }],
+      formTasks: [],
+      callActivities: []
+    },
+    scripts: [
+      { name: 'Detect toolkit usage', script: scriptSource, scriptFormat: 'text/javascript' },
+      { name: 'Run service implementation', script: 'services["Run Service"]();' },
+      {
+        name: 'JavaScript property keys',
+        script: [
+          'const refs = { CustomerData: 1, "Run Service": 2 };',
+          'class Keyed { CustomerData () {} "Run Service" () {} }'
+        ].join('\n')
+      },
+      { name: 'Repeated source name', script: 'CustomerData(); // first' },
+      { name: 'Repeated source name', script: 'CustomerData(); // second' },
+      { name: 'Plain template', script: 'Account();', scriptFormat: 'text/plain' },
+      { name: 'HTML template', script: 'Account();', scriptFormat: 'text/html' },
+      { name: 'Empty script', script: ' ' }
+    ]
+  }
+}
+const coachAppObject = {
+  id: '64.aaaaaaaa-1111-4111-8111-111111111111',
+  versionId: '2064.aaaaaaaa-1111-4111-8111-111111111111',
+  name: 'Customer Coach',
+  type: 'coachView',
+  source: 'application',
+  details: {
+    scripts: {
+      loadJsFunction: 'new tw.object.CustomerData();',
+      unloadJsFunction: '',
+      viewJsFunction: null,
+      changeJsFunction: null,
+      collaborationJsFunction: null,
+      validateJsFunction: null,
+      inlineScripts: [
+        { context: 'Shared helper inline', script: 'SharedHelper();' },
+        { context: 'Shared helper inline', script: 'SharedHelper();' },
+        { context: 'Shared helper inline', script: 'SharedHelper(); // distinct unit' }
+      ],
+      html: '<script>Account();</script>'
+    },
+    layout: '<div>Account</div>'
+  }
+}
+const malformedAppObject = {
+  id: '25.aaaaaaaa-2222-4222-8222-222222222222',
+  versionId: '2064.aaaaaaaa-2222-4222-8222-222222222222',
+  name: 'Malformed Script Source',
+  type: 'process',
+  source: 'application',
+  details: {
+    elements: {
+      scriptTasks: [{
+        id: 'malformed-script-task',
+        name: 'Malformed script',
+        script: 'var = ;'
+      }]
+    },
+    scripts: [{ name: 'Malformed script', script: 'var = ;' }]
+  }
+}
+const scriptXml = new Map([
+  [`objects/${scriptAppObject.versionId}.xml`, xml],
+  [`objects/${coachAppObject.versionId}.xml`, '<coachView />'],
+  [`objects/${malformedAppObject.versionId}.xml`, '<process />']
+])
+const scriptReport = new ToolkitDependencyMapper().mapApplicationUsage({
+  zip: {
+    getEntry: entryName => scriptXml.has(entryName)
+      ? { getData: () => Buffer.from(scriptXml.get(entryName)) }
+      : null
+  },
+  appObjectList: [appObject, coachAppObject, malformedAppObject],
+  appObjects: [scriptAppObject, coachAppObject, malformedAppObject],
+  toolkits: [toolkits[0], scriptToolkit, sharedNameToolkit],
+  toolkitDiagnostics: []
+})
+const scriptObjects = scriptReport.toolkits.flatMap(toolkit => toolkit.objects)
+const customerData = scriptObjects.find(object => object.name === 'CustomerData')
+const runService = scriptObjects.find(object => object.name === 'Run Service')
+const sharedHelpers = scriptObjects.filter(object => object.name === 'SharedHelper')
+const structuralAfterScriptError = scriptObjects.find(object => object.name === 'Version Target')
+
+assert.ok(customerData, 'CustomerData should be inferred from exact JavaScript tokens')
+assert.ok(runService, 'Run Service should be inferred from exact JavaScript strings')
+assert.equal(sharedHelpers.length, 2)
+assert.equal(scriptReport.status, 'partial')
+assert.equal(scriptReport.diagnostics.length, 1)
+assert.equal(scriptReport.diagnostics[0].code, 'javascript-syntax-error')
+assert.equal(scriptReport.diagnostics[0].appObjectId, malformedAppObject.id)
+assert.equal(scriptReport.diagnostics[0].elementId, 'malformed-script-task')
+assert.equal(structuralAfterScriptError.locations[0].confidence, 'confirmed')
+assert.equal(structuralAfterScriptError.locations[0].evidence, 'version-id')
+assert.equal(customerData.locations.length, 6)
+assert.ok(customerData.locations.every(location => location.confidence === 'inferred'))
+assert.ok(customerData.locations.some(location => location.evidence === 'script-member'))
+assert.ok(customerData.locations.some(location => location.evidence === 'script-identifier'))
+assert.equal(runService.locations.length, 4)
+assert.ok(runService.locations.every(location => location.evidence === 'script-string'))
+assert.equal(scriptObjects.some(object => object.name === 'Account'), false)
+for (const sharedHelper of sharedHelpers) {
+  assert.equal(sharedHelper.locations.length, 4)
+  assert.ok(sharedHelper.locations.every(location => location.confidence === 'ambiguous'))
+  assert.ok(sharedHelper.locations.every(location => location.evidence === 'ambiguous-name'))
+  assert.equal(new Set(sharedHelper.locations.map(location => `${location.elementId}\0${location.scriptRole}`)).size, 4)
+}
+const repeatedServiceLocations = customerData.locations.filter(location => location.elementName === 'Repeated source name')
+const repeatedInlineLocations = sharedHelpers[0].locations.filter(location => location.elementName === 'Shared helper inline')
+
+assert.equal(repeatedServiceLocations.length, 2)
+assert.equal(new Set(repeatedServiceLocations.map(location => location.elementId)).size, 2)
+assert.equal(repeatedInlineLocations.length, 2)
+assert.equal(new Set(repeatedInlineLocations.map(location => location.elementId)).size, 2)
+const serverMemberLocation = customerData.locations.find(location => location.elementId === 'usage-script-task')
+
+assert.equal(serverMemberLocation.elementName, 'Detect toolkit usage')
+assert.equal(serverMemberLocation.elementType, 'scriptTask')
+assert.equal(serverMemberLocation.scriptRole, 'script-task')
+assert.equal(serverMemberLocation.lineBasis, 'script')
+assert.equal(serverMemberLocation.line, 1)
+assert.ok(serverMemberLocation.column > 0)
+assert.equal(serverMemberLocation.snippet, 'new tw.object.CustomerData();')
+
+const precedenceTarget = { locations: [] }
+const confirmedScriptLocation = {
+  appObjectId: appObject.id,
+  appObjectVersionId: appObject.versionId,
+  elementId: 'precedence-script',
+  elementName: 'Precedence script',
+  scriptRole: 'script-task',
+  lineBasis: 'script',
+  line: 1,
+  column: 1,
+  confidence: 'confirmed',
+  evidence: 'version-id'
+}
+const precedenceMapper = new ToolkitDependencyMapper()
+
+precedenceMapper._appendLocation(precedenceTarget, {
+  ...confirmedScriptLocation,
+  confidence: 'inferred',
+  evidence: 'script-identifier'
+})
+precedenceMapper._appendLocation(precedenceTarget, confirmedScriptLocation)
+assert.equal(precedenceTarget.locations.length, 1)
+assert.equal(precedenceTarget.locations[0].confidence, 'confirmed')
+assert.equal(precedenceTarget.locations[0].evidence, 'version-id')
+
 const failedReport = ToolkitDependencyMapper.failedReport(new Error('synthetic mapping failure'))
 assert.equal(failedReport.schemaVersion, 1)
 assert.equal(failedReport.status, 'partial')
@@ -278,4 +501,4 @@ assert.equal(failedReport.diagnostics.length, 1)
 assert.equal(failedReport.diagnostics[0].code, 'toolkit-usage-failed')
 assert.equal(failedReport.diagnostics[0].message, 'synthetic mapping failure')
 
-console.log('Toolkit structural usage tests passed')
+console.log('Toolkit usage tests passed')

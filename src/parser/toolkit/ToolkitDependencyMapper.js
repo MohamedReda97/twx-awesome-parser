@@ -1,3 +1,6 @@
+const acorn = require('acorn')
+const walk = require('acorn-walk')
+
 class ToolkitDependencyMapper {
   mapApplicationUsage ({ zip, appObjectList, appObjects, toolkits, toolkitDiagnostics = [] }) {
     const report = ToolkitDependencyMapper.emptyReport({
@@ -33,6 +36,8 @@ class ToolkitDependencyMapper {
       const xml = entry.getData().toString('utf8')
       this._scanXml(xml, appObject, indexes)
     }
+
+    for (const unit of this._collectScripts(appObjects)) this._scanScript(unit, indexes, report)
 
     return this._finalize(report)
   }
@@ -100,17 +105,159 @@ class ToolkitDependencyMapper {
   _buildIndexes (reportToolkits) {
     const versionIds = new Map()
     const stableIds = new Map()
+    const names = new Map()
 
     for (const toolkit of reportToolkits) {
       for (const object of toolkit.objects) {
         if (object.versionId) versionIds.set(object.versionId, object)
-        if (!object.id) continue
-        if (!stableIds.has(object.id)) stableIds.set(object.id, [])
-        stableIds.get(object.id).push(object)
+        if (object.id) {
+          if (!stableIds.has(object.id)) stableIds.set(object.id, [])
+          stableIds.get(object.id).push(object)
+        }
+        if (object.name) {
+          if (!names.has(object.name)) names.set(object.name, [])
+          names.get(object.name).push(object)
+        }
       }
     }
 
-    return { versionIds, stableIds }
+    return { versionIds, stableIds, names }
+  }
+
+  _collectScripts (appObjects) {
+    const units = []
+    const seen = new Set()
+    const asArray = value => Array.isArray(value) ? value : value ? [value] : []
+    const add = (appObject, elementType, elementName, elementId, scriptRole, source, scriptFormat = '', dedupeId = elementId || elementName || 'script') => {
+      if (!source || !String(source).trim()) return
+      const format = String(scriptFormat).toLowerCase()
+      if (format.startsWith('text/plain') || format.startsWith('text/html') || format.includes('template')) return
+      const key = `${appObject.versionId || appObject.id || appObject.name}\u0000${dedupeId}\u0000${scriptRole}\u0000${source}`
+      if (seen.has(key)) return
+      seen.add(key)
+      units.push({
+        appObject,
+        elementType,
+        elementName: elementName || 'Unnamed',
+        elementId: elementId || elementName || 'script',
+        scriptRole,
+        source: String(source)
+      })
+    }
+
+    for (const appObject of appObjects) {
+      if (appObject.source === 'toolkit') continue
+      const elements = appObject.details?.elements || {}
+      const scriptTasks = asArray(elements.scriptTasks)
+      for (const item of scriptTasks) {
+        add(appObject, 'scriptTask', item.name, item.id, 'script-task', item.script, item.scriptFormat)
+        add(appObject, 'scriptTask', item.name, `${item.id || item.name}-pre`, 'pre-assignment', item.preAssignment)
+        add(appObject, 'scriptTask', item.name, `${item.id || item.name}-post`, 'post-assignment', item.postAssignment)
+      }
+      for (const type of ['formTasks', 'callActivities']) {
+        for (const item of asArray(elements[type])) {
+          add(appObject, type.slice(0, -1), item.name, `${item.id || item.name}-pre`, 'pre-assignment', item.preAssignment)
+          add(appObject, type.slice(0, -1), item.name, `${item.id || item.name}-post`, 'post-assignment', item.postAssignment)
+        }
+      }
+
+      const scripts = appObject.details?.scripts
+      if (Array.isArray(scripts)) {
+        const represented = new Set(scriptTasks.map(item => `${item.name || 'Unnamed'}\u0000${String(item.script || '')}`))
+        for (const [index, item] of scripts.entries()) {
+          if (represented.has(`${item.name || 'Unnamed'}\u0000${String(item.script || '')}`)) continue
+          const identity = item.id || `${item.name || 'script'}-${index + 1}`
+          add(appObject, 'serviceScript', item.name, `service-${identity}`, 'implementation', item.script, item.scriptFormat, item.id || item.name || 'script')
+        }
+        continue
+      }
+
+      if (appObject.type !== 'coachView' || !scripts) continue
+      for (const field of [
+        'loadJsFunction',
+        'unloadJsFunction',
+        'viewJsFunction',
+        'changeJsFunction',
+        'collaborationJsFunction',
+        'validateJsFunction'
+      ]) {
+        add(appObject, 'coachView', field, field, 'lifecycle', scripts[field])
+      }
+      for (const [index, item] of asArray(scripts.inlineScripts).entries()) {
+        const identity = item.id || `${item.context || 'script'}-${index + 1}`
+        add(appObject, 'coachView', item.context, `inline-${identity}`, 'inline', item.script, item.scriptFormat, item.id || item.context || 'script')
+      }
+    }
+
+    return units
+  }
+
+  _scanScript (unit, indexes, report) {
+    let ast
+    try {
+      ast = acorn.parse(unit.source, { ecmaVersion: 2020, sourceType: 'script', locations: true })
+    } catch (error) {
+      report.status = 'partial'
+      report.diagnostics.push({
+        code: 'javascript-syntax-error',
+        appObjectId: unit.appObject.id,
+        appObjectVersionId: unit.appObject.versionId,
+        elementId: unit.elementId,
+        elementName: unit.elementName,
+        scriptRole: unit.scriptRole,
+        message: `JavaScript cannot be parsed: ${error.message}`
+      })
+      return
+    }
+
+    const add = (node, name, evidence) => {
+      const targets = indexes.names.get(name) || []
+      if (!targets.length) return
+      const sourceLine = unit.source.split(/\r?\n/)[node.loc.start.line - 1] || ''
+      const snippetStart = Math.max(0, Math.min(
+        node.loc.start.column - Math.floor((240 - (node.end - node.start)) / 2),
+        Math.max(0, sourceLine.length - 240)
+      ))
+      const location = {
+        appObjectId: unit.appObject.id,
+        appObjectVersionId: unit.appObject.versionId,
+        appObjectName: unit.appObject.name,
+        appObjectType: unit.appObject.type,
+        elementId: unit.elementId,
+        elementName: unit.elementName,
+        elementType: unit.elementType,
+        scriptRole: unit.scriptRole,
+        lineBasis: 'script',
+        line: node.loc.start.line,
+        column: node.loc.start.column + 1,
+        snippet: sourceLine.slice(snippetStart, snippetStart + 240).replace(/\s+/g, ' ').trim(),
+        confidence: targets.length === 1 ? 'inferred' : 'ambiguous',
+        evidence: targets.length === 1 ? evidence : 'ambiguous-name'
+      }
+      for (const target of targets) this._appendLocation(target, location)
+    }
+    const addKey = node => {
+      if (node.computed) return
+      if (node.key.type === 'Identifier') add(node.key, node.key.name, 'script-identifier')
+      if (node.key.type === 'Literal' && typeof node.key.value === 'string') add(node.key, node.key.value, 'script-string')
+    }
+
+    walk.ancestor(ast, {
+      Identifier: (node, ancestors) => {
+        const parent = ancestors[ancestors.length - 2]
+        add(node, node.name, parent?.type === 'MemberExpression' && parent.property === node
+          ? 'script-member'
+          : 'script-identifier')
+      },
+      MemberExpression: node => {
+        if (!node.computed && node.property.type === 'Identifier') add(node.property, node.property.name, 'script-member')
+      },
+      Property: addKey,
+      MethodDefinition: addKey,
+      Literal: node => {
+        if (typeof node.value === 'string') add(node, node.value, 'script-string')
+      }
+    })
   }
 
   _scanXml (xml, appObject, indexes) {
