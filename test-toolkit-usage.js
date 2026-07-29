@@ -347,12 +347,14 @@ const scriptAppObject = {
       formTasks: [{
         id: 'usage-form',
         name: 'Prepare form',
-        preAssignment: 'SharedHelper();'
+        preAssignment: 'SharedHelper();',
+        postAssignment: 'SharedHelper();'
       }],
       callActivities: [{
         id: 'usage-call',
         name: 'Call activity',
-        preAssignment: 'SharedHelper();'
+        preAssignment: 'SharedHelper();',
+        postAssignment: 'SharedHelper();'
       }]
     },
     scripts: [
@@ -455,10 +457,10 @@ assert.equal(runService.locations.length, 4)
 assert.ok(runService.locations.every(location => location.evidence === 'script-string'))
 assert.equal(scriptObjects.some(object => object.name === 'Account'), false)
 for (const sharedHelper of sharedHelpers) {
-  assert.equal(sharedHelper.locations.length, 7)
+  assert.equal(sharedHelper.locations.length, 9)
   assert.ok(sharedHelper.locations.every(location => location.confidence === 'ambiguous'))
   assert.ok(sharedHelper.locations.every(location => location.evidence === 'ambiguous-name'))
-  assert.equal(new Set(sharedHelper.locations.map(location => `${location.elementId}\0${location.scriptRole}`)).size, 7)
+  assert.equal(new Set(sharedHelper.locations.map(location => `${location.elementId}\0${location.scriptRole}`)).size, 9)
 }
 const repeatedServiceLocations = customerData.locations.filter(location => location.elementName === 'Repeated source name')
 const repeatedInlineLocations = sharedHelpers[0].locations.filter(location => location.elementName === 'Shared helper inline')
@@ -476,7 +478,9 @@ assert.equal(new Set(repeatedServiceLocations.map(location => location.elementId
 assert.equal(repeatedInlineLocations.length, 2)
 assert.equal(new Set(repeatedInlineLocations.map(location => location.elementId)).size, 2)
 assert.deepEqual(assignmentLocationIds, [
+  'usage-call-post',
   'usage-call-pre',
+  'usage-form-post',
   'usage-form-pre',
   'usage-script-task-post',
   'usage-script-task-pre'
