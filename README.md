@@ -15,7 +15,7 @@ The project can run from Node.js or as a standalone Windows x64 executable. Pars
 - Analyze selected application-owned CSHS, Service, and BPD scripts.
 - Build a standalone Windows x64 executable.
 
-The browser UI provides Summary, By Type, Toolkits, Search, Dependencies, Analyzer, and Settings views.
+The browser UI provides Summary, By Type, Toolkits, Toolkit Usage, Search, Dependencies, Analyzer, and Settings views.
 
 ## How object types are identified
 
@@ -86,6 +86,12 @@ The analyzer recognizes BAW versions 19, 20, 21, 23, and 24 from metadata or an 
 Toolkits improve the quality of application analysis; they are not analyzer targets.
 
 For example, when an application references an object or service declared inside an included toolkit, that declaration is added to analyzer context. The reference can therefore be recognized as valid instead of being reported as undefined. Findings remain limited to code owned by the process application.
+
+## Toolkit Usage report
+
+The Toolkit Usage tab answers where the application uses each embedded toolkit. Every embedded toolkit is listed, including those with no detected usage. A result is **Confirmed** for an XML reference, **Inferred** for an exact JavaScript reference, **Ambiguous** for a possible match that needs review, or **No detected usage** when this scan found none.
+
+The scan analyzes application XML and supported application scripts only; toolkit code is not analyzed. No detected usage is not proof that a toolkit is safe to remove: dynamic runtime behavior and indirect references still require review.
 
 ## Architecture and calling order
 
@@ -206,8 +212,9 @@ Depending on the package contents, parsing generates:
 | `metadata.json` | Parsed package metadata |
 | `dependencies.json` | Dependency relationships |
 | `analysis.json` | Analyzer coverage, diagnostics, summaries, and findings |
+| `toolkit-usage.json` | Per-toolkit application usage evidence and confidence |
 
-These files may contain proprietary process details. They are local runtime output and are ignored by Git.
+These files may contain proprietary process details, including source snippets in the Toolkit Usage report. Analysis stays local; generated files are local runtime output and are ignored by Git.
 
 ## Project structure
 

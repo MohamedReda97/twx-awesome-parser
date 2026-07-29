@@ -82,6 +82,18 @@ There is **one parsing pipeline**, JSON-based, with no database dependency:
                     └──────────┬──────────┘
                                │
                                ▼
+                 application XML + parsed application scripts
+                               │
+                               ▼
+                    ┌─────────────────────┐
+                    │ ToolkitDependency-  │
+                    │ Mapper               │
+                    └──────────┬──────────┘
+                               │
+                               ▼
+                 extractedData.toolkitUsage
+                               │
+                               ▼
                     ┌─────────────────────┐
                     │  JSONParser         │
                     │  Writes JSON to     │
@@ -89,7 +101,7 @@ There is **one parsing pipeline**, JSON-based, with no database dependency:
                     └──────────┬──────────┘
                                │
                                ▼
-                      ./output/*.json
+             ./output/*.json + toolkit-usage.json
                                │
                                ▼
                     ┌─────────────────────┐
@@ -104,6 +116,18 @@ There is **one parsing pipeline**, JSON-based, with no database dependency:
 ```
 
 Object-type parsing (BPD, Process, UCA, etc.) is handled by the extractor internally. There are no separate per-type parser files — the extractor reads each object's XML from the zip and parses it directly.
+
+Toolkit usage follows this report path:
+
+```text
+TWXExtractor
+  -> application XML + parsed application scripts
+  -> ToolkitDependencyMapper
+  -> extractedData.toolkitUsage
+  -> JSONParser
+  -> output/toolkit-usage.json
+  -> Toolkit Usage tab
+```
 
 ---
 
@@ -121,7 +145,7 @@ src/
 │   └── toolkit/                   ←    toolkit specialists
 │       ├── ToolkitBusinessObjectExtractor.js
 │       ├── ToolkitCSHSExtractor.js
-│       ├── ToolkitDependencyMapper.js
+│       ├── ToolkitDependencyMapper.js    ←    maps application use of embedded toolkits
 │       ├── ToolkitServiceExtractor.js
 │       └── ToolkitValidator.js
 │
@@ -193,6 +217,13 @@ src/
                                 │
                                 ▼
               ┌───────────────────────────────────────┐
+              │ ToolkitDependencyMapper                │
+              │ application XML + parsed application   │
+              │ scripts → extractedData.toolkitUsage   │
+              └─────────────────┬─────────────────────┘
+                                │
+                                ▼
+              ┌───────────────────────────────────────┐
               │ resolveBusinessObjectCrossReferences  │
               │  for every twClass object              │
               │  (link parent/child BO schemas)        │
@@ -204,13 +235,13 @@ src/
                     │  (src/parser/json-parser.js)
                     └─────────────┬─────────────┘
                                   │
-            ┌──────────┬──────────┼──────────┬──────────┬──────────┐
+            ┌──────────┬──────────┼──────────┬──────────┬──────────┬────────────┐
             ▼          ▼          ▼          ▼          ▼          ▼
-        ┌───────┐ ┌───────┐ ┌────────┐ ┌─────────┐ ┌────────┐ ┌──────────┐
-        │twx-   │ │objects│ │toolkit-│ │combined-│ │toolkits│ │metadata  │
-        │summary│ │-<type>│ │objects-│ │objects- │ │.json   │ │.json     │
-        │.json  │ │.json  │ │<type>  │ │<type>   │ │        │ │          │
-        └───────┘ └───────┘ └────────┘ └─────────┘ └────────┘ └──────────┘
+        ┌───────┐ ┌───────┐ ┌────────┐ ┌─────────┐ ┌────────┐ ┌──────────┐ ┌──────────┐
+        │twx-   │ │objects│ │toolkit-│ │combined-│ │toolkits│ │metadata  │ │toolkit-  │
+        │summary│ │-<type>│ │objects-│ │objects- │ │.json   │ │.json     │ │usage.json│
+        │.json  │ │.json  │ │<type>  │ │<type>   │ │        │ │          │ │          │
+        └───────┘ └───────┘ └────────┘ └─────────┘ └────────┘ └──────────┘ └──────────┘
                                   │
                                   ▼
                             ./output/*.json
@@ -249,10 +280,14 @@ The viewer never talks to the parser. It only knows about files in `./output/`. 
 │
 ├── toolkits.json                 ← list of toolkits + their metadata
 │
+├── toolkit-usage.json             ← per-toolkit application usage evidence
+│
 └── metadata.json                 ← raw package.xml + extraction metadata
 ```
 
 Every object carries a `source: 'application' | 'toolkit'` field. The UI uses it to break down counts and to show where each object came from.
+
+For Toolkit Usage, embedded toolkit objects are the reference index, not scan input. `ToolkitDependencyMapper` scans application XML and parsed application scripts, records `extractedData.toolkitUsage`, and `JSONParser` writes `output/toolkit-usage.json`; the Toolkit Usage tab reads that report. Toolkit code is never analyzed.
 
 ---
 
