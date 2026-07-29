@@ -62,6 +62,7 @@ state.toolkitUsage = {
 
 const html = viewToolkitUsage()
 for (const text of ['Toolkit Usage', 'Used', 'Possible usage', 'No detected usage', 'No application references were detected. This does not prove that the toolkit can be removed.']) assert.ok(html.includes(text), `${text} must be shown`)
+for (const text of ['Possible Toolkit', 'Unused Toolkit', 'version-id', 'name match', 'short name']) assert.ok(html.includes(text), `${text} fixture value must be rendered`)
 for (const text of ['Available toolkits', 'Used toolkits', 'No detected usage', 'Used toolkit objects']) assert.ok(html.includes(text), `${text} must be summarized`)
 assert.ok(html.indexOf('Used &lt;Toolkit&gt;') < html.indexOf('Type &lt;confirmed&gt;') && html.indexOf('Type &lt;confirmed&gt;') < html.indexOf('Object &lt;confirmed&gt;') && html.indexOf('Object &lt;confirmed&gt;') < html.indexOf('App &lt;Object&gt;'), 'markup must group toolkit → type → object → location')
 for (const className of ['toolkit-usage-group toolkit', 'toolkit-usage-group type', 'toolkit-usage-group object']) assert.ok(html.includes(className), `${className} group must exist`)

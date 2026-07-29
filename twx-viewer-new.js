@@ -647,7 +647,7 @@ function viewToolkitUsage() {
     const types = Object.entries(byType).sort(([left], [right]) => left.localeCompare(right)).map(([type, objects]) => `<details class="toolkit-usage-group type">
       <summary><span>${esc(type)}</span><small>${objects.length} object${objects.length === 1 ? '' : 's'}</small></summary>
       <div class="toolkit-usage-group-body">${objects.sort((left, right) => (left.name || '').localeCompare(right.name || '')).map(object => {
-        const locations = (object.locations || []).slice().sort((left, right) => `${left.appObjectName || ''}\0${left.elementName || ''}\0${left.line || 0}`.localeCompare(`${right.appObjectName || ''}\0${right.elementName || ''}\0${right.line || 0}`));
+        const locations = (object.locations || []).slice();
         const counts = locations.reduce((all, location) => { all[location.confidence] = (all[location.confidence] || 0) + 1; return all; }, {});
         return `<details class="toolkit-usage-group object">
         <summary><span>${esc(object.name || 'Unnamed object')}</span><small>${locations.length} location${locations.length === 1 ? '' : 's'}${locations.length ? ` · ${counts.confirmed || 0} confirmed · ${counts.inferred || 0} inferred · ${counts.ambiguous || 0} ambiguous` : ''}</small></summary>
