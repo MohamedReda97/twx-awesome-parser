@@ -26,6 +26,7 @@ const state = {
   searchSearched: false,
   searchIncludeToolkits: false,
   analysisData: null,
+  toolkitUsage: null,
   // Toolkits tab breadcrumb state
   toolkitsLevel: 0,
   toolkitsSelectedToolkit: null,
@@ -144,6 +145,8 @@ async function loadAllData() {
   try { state.dependencies = await fetchJSON('dependencies.json'); } catch (_) {}
   // Load analysis
   await loadAnalysis();
+  // Load optional toolkit usage report
+  try { state.toolkitUsage = await fetchJSON('output/toolkit-usage.json'); } catch (_) { state.toolkitUsage = null; }
 }
 
 async function performServerSearch(term) {
@@ -221,6 +224,7 @@ function renderSidebar() {
     { section: 'ANALYZE', items: [
       { id: 'search', label: 'Search', icon: I.search },
       { id: 'deps', label: 'Dependencies', icon: I.deps },
+      { id: 'toolkitUsage', label: 'Toolkit Usage', icon: I.toolkits },
       { id: 'analyzer', label: 'Analyzer', icon: I.analyzer },
     ]},
     { section: 'APP', items: [
@@ -250,7 +254,7 @@ function hasData() { return Object.keys(state.currentObjects).length > 0; }
 
 function renderContent() {
   const el = $('content');
-  if (!hasData() && state.activeTab !== 'search' && state.activeTab !== 'deps' && state.activeTab !== 'analyzer' && state.activeTab !== 'settings') {
+  if (!hasData() && state.activeTab !== 'search' && state.activeTab !== 'deps' && state.activeTab !== 'toolkitUsage' && state.activeTab !== 'analyzer' && state.activeTab !== 'settings') {
     el.innerHTML = viewGlobalEmpty(); return;
   }
   switch (state.activeTab) {
@@ -259,6 +263,7 @@ function renderContent() {
     case 'toolkits': el.innerHTML = viewToolkits(); break;
     case 'search': el.innerHTML = viewSearch(); break;
     case 'deps': el.innerHTML = viewDeps(); break;
+    case 'toolkitUsage': el.innerHTML = viewToolkitUsage(); break;
     case 'analyzer': el.innerHTML = viewAnalyzer(); break;
     case 'settings': el.innerHTML = viewSettings(); break;
     default: el.innerHTML = viewEmptyState('Select a tab from the sidebar.');
@@ -618,6 +623,44 @@ function viewDeps() {
       <td><a class="link" data-dep-id="${esc(d.shortName||d.name)}">View toolkit →</a></td>
     </tr>`).join('')}</tbody></table>
   </div>`;
+}
+
+// ── Toolkit Usage Tab ─────────────────────────────────────────
+function viewToolkitUsage() {
+  const report = state.toolkitUsage;
+  if (report === null) return viewEmptyState('Toolkit usage is not available—parse the TWX again.', I.toolkits);
+  const toolkits = report.toolkits || [];
+  if (toolkits.length === 0) return viewEmptyState('No toolkits were found in this TWX file.', I.toolkits);
+  const status = { used: ['Used', 'used'], possible: ['Possible usage', 'possible'], 'not-detected': ['No detected usage', 'unused'] };
+  const renderLocation = location => `<article class="toolkit-usage-location">
+    <div class="toolkit-usage-location-header"><span class="toolkit-usage-confidence ${esc(location.confidence || 'ambiguous')}">${esc((location.confidence || 'ambiguous').charAt(0).toUpperCase() + (location.confidence || 'ambiguous').slice(1))}</span><span>${esc(location.appObjectName || 'Application object')}${location.appObjectType ? ` (${esc(location.appObjectType)})` : ''} › ${esc(location.elementName || 'Application element')}${location.scriptRole ? ` · ${esc(location.scriptRole)}` : ''}${location.line ? ` · Line ${location.line}` : ''}${location.column ? `, Column ${location.column}` : ''}</span></div>
+    ${location.evidence ? `<div class="toolkit-usage-evidence"><span class="toolkit-usage-evidence-badge">${esc(location.evidence)}</span></div>` : ''}
+    ${location.snippet ? `<pre class="toolkit-usage-snippet">${esc(location.snippet).replace(/\r\n/g, '\n').replace(/\r/g, '\n')}</pre>` : ''}
+  </article>`;
+  const renderToolkit = toolkit => {
+    const [label, tone] = status[toolkit.usageStatus] || status.possible;
+    const byType = (toolkit.objects || []).reduce((groups, object) => {
+      const type = object.typeName || object.type || 'Unknown type';
+      (groups[type] ||= []).push(object);
+      return groups;
+    }, {});
+    const types = Object.entries(byType).sort(([left], [right]) => left.localeCompare(right)).map(([type, objects]) => `<details class="toolkit-usage-group type">
+      <summary><span>${esc(type)}</span><small>${objects.length} object${objects.length === 1 ? '' : 's'}</small></summary>
+      <div class="toolkit-usage-group-body">${objects.sort((left, right) => (left.name || '').localeCompare(right.name || '')).map(object => {
+        const locations = (object.locations || []).slice().sort((left, right) => `${left.appObjectName || ''}\0${left.elementName || ''}\0${left.line || 0}`.localeCompare(`${right.appObjectName || ''}\0${right.elementName || ''}\0${right.line || 0}`));
+        const counts = locations.reduce((all, location) => { all[location.confidence] = (all[location.confidence] || 0) + 1; return all; }, {});
+        return `<details class="toolkit-usage-group object">
+        <summary><span>${esc(object.name || 'Unnamed object')}</span><small>${locations.length} location${locations.length === 1 ? '' : 's'}${locations.length ? ` · ${counts.confirmed || 0} confirmed · ${counts.inferred || 0} inferred · ${counts.ambiguous || 0} ambiguous` : ''}</small></summary>
+        <div class="toolkit-usage-group-body">${locations.map(renderLocation).join('')}</div>
+      </details>`}).join('')}</div>
+    </details>`).join('');
+    return `<details class="toolkit-usage-group toolkit ${tone}">
+      <summary><span>${esc(toolkit.name || toolkit.shortName || 'Unnamed toolkit')}</span><span class="toolkit-usage-status ${tone}">${label}</span><small>${toolkit.shortName ? `${esc(toolkit.shortName)} · ` : ''}${toolkit.snapshotName ? `${esc(toolkit.snapshotName)} · ` : ''}${toolkit.totalObjectCount ?? 0} total · ${toolkit.counts?.usedObjects ?? (toolkit.objects || []).length} used</small></summary>
+      <div class="toolkit-usage-group-body">${types || '<p class="toolkit-usage-no-references">No application references were detected. This does not prove that the toolkit can be removed.</p>'}</div>
+    </details>`;
+  };
+  const summary = report.summary || {};
+  return `<section class="toolkit-usage-report"><header class="toolkit-usage-header"><div><h2>Toolkit Usage</h2><p>Application references to embedded toolkit objects.</p></div><div class="toolkit-usage-summary"><span><strong>${summary.toolkitCount ?? toolkits.length}</strong>Available toolkits</span><span><strong>${summary.usedToolkitCount ?? toolkits.filter(t => t.usageStatus === 'used').length}</strong>Used toolkits</span><span><strong>${summary.unusedToolkitCount ?? toolkits.filter(t => t.usageStatus === 'not-detected').length}</strong>No detected usage</span><span><strong>${summary.usedObjectCount ?? toolkits.reduce((total, toolkit) => total + (toolkit.counts?.usedObjects || 0), 0)}</strong>Used toolkit objects</span></div></header>${toolkits.map(renderToolkit).join('')}</section>`;
 }
 function viewSettings() {
   return `<div class="settings-group">
