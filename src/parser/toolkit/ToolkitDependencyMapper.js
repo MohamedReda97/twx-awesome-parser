@@ -283,7 +283,7 @@ class ToolkitDependencyMapper {
       .sort((left, right) => right.length - left.length)
       .join('|')
     const tokenPattern = new RegExp(
-      `\\b(?:\\d+\\.)?[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}\\b${nonstandardPattern ? `|(?<![\\w./:+@#$%~-])(?:${nonstandardPattern})(?![\\w./:+@#$%~-])` : ''}`,
+      `\\b(?:\\d+\\.)?[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}\\b${nonstandardPattern ? `|(?<![\\w.:+@#$%~-])(?:${nonstandardPattern})(?![\\w./:+@#$%~-])` : ''}`,
       'g'
     )
     let match

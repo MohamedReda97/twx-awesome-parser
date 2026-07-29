@@ -341,6 +341,7 @@ const nonstandardToolkits = [
 const nonstandardXml = [
   `<partial>prefix${nonstandardVersionId}suffix</partial>`,
   ...nonstandardContinuations.map(character => `<partial>${nonstandardVersionId}${character}suffix</partial>`),
+  `<attachedActivityId>/${nonstandardVersionId}</attachedActivityId>`,
   `<versionRef>${nonstandardVersionId}</versionRef>`,
   `<stableRef>${nonstandardStableId}</stableRef>`,
   `<ambiguousRef>${nonstandardAmbiguousId}</ambiguousRef>`,
@@ -372,7 +373,13 @@ for (const character of nonstandardContinuations) {
     `nonstandard ID must not match before ${JSON.stringify(character)}`
   )
 }
-assert.equal(nonstandardVersion.locations.length, 1)
+const slashPrefixedVersionLocations = nonstandardVersion.locations.filter(location =>
+  location.snippet === `<attachedActivityId>/${nonstandardVersionId}</attachedActivityId>` &&
+  location.confidence === 'confirmed' &&
+  location.evidence === 'version-id')
+
+assert.equal(slashPrefixedVersionLocations.length, 1, 'slash-prefixed nonstandard version ID should match once')
+assert.equal(nonstandardVersion.locations.length, 2)
 assert.equal(nonstandardVersion.locations[0].evidence, 'version-id')
 assert.equal(nonstandardStable.locations[0].confidence, 'confirmed')
 assert.equal(nonstandardStable.locations[0].evidence, 'object-id')
