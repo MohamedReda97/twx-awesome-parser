@@ -342,10 +342,18 @@ const scriptAppObject = {
         script: scriptSource,
         scriptFormat: 'text/javascript',
         preAssignment: 'SharedHelper();',
-        postAssignment: ''
+        postAssignment: 'SharedHelper();'
       }],
-      formTasks: [],
-      callActivities: []
+      formTasks: [{
+        id: 'usage-form',
+        name: 'Prepare form',
+        preAssignment: 'SharedHelper();'
+      }],
+      callActivities: [{
+        id: 'usage-call',
+        name: 'Call activity',
+        preAssignment: 'SharedHelper();'
+      }]
     },
     scripts: [
       { name: 'Detect toolkit usage', script: scriptSource, scriptFormat: 'text/javascript' },
@@ -361,6 +369,7 @@ const scriptAppObject = {
       { name: 'Repeated source name', script: 'CustomerData(); // second' },
       { name: 'Plain template', script: 'Account();', scriptFormat: 'text/plain' },
       { name: 'HTML template', script: 'Account();', scriptFormat: 'text/html' },
+      { name: 'Named template', script: 'Account();', scriptFormat: 'application/javascript-template' },
       { name: 'Empty script', script: ' ' }
     ]
   }
@@ -374,11 +383,11 @@ const coachAppObject = {
   details: {
     scripts: {
       loadJsFunction: 'new tw.object.CustomerData();',
-      unloadJsFunction: '',
-      viewJsFunction: null,
-      changeJsFunction: null,
-      collaborationJsFunction: null,
-      validateJsFunction: null,
+      unloadJsFunction: 'new tw.object.CustomerData();',
+      viewJsFunction: 'new tw.object.CustomerData();',
+      changeJsFunction: 'new tw.object.CustomerData();',
+      collaborationJsFunction: 'new tw.object.CustomerData();',
+      validateJsFunction: 'new tw.object.CustomerData();',
       inlineScripts: [
         { context: 'Shared helper inline', script: 'SharedHelper();' },
         { context: 'Shared helper inline', script: 'SharedHelper();' },
@@ -438,7 +447,7 @@ assert.equal(scriptReport.diagnostics[0].appObjectId, malformedAppObject.id)
 assert.equal(scriptReport.diagnostics[0].elementId, 'malformed-script-task')
 assert.equal(structuralAfterScriptError.locations[0].confidence, 'confirmed')
 assert.equal(structuralAfterScriptError.locations[0].evidence, 'version-id')
-assert.equal(customerData.locations.length, 6)
+assert.equal(customerData.locations.length, 11)
 assert.ok(customerData.locations.every(location => location.confidence === 'inferred'))
 assert.ok(customerData.locations.some(location => location.evidence === 'script-member'))
 assert.ok(customerData.locations.some(location => location.evidence === 'script-identifier'))
@@ -446,20 +455,46 @@ assert.equal(runService.locations.length, 4)
 assert.ok(runService.locations.every(location => location.evidence === 'script-string'))
 assert.equal(scriptObjects.some(object => object.name === 'Account'), false)
 for (const sharedHelper of sharedHelpers) {
-  assert.equal(sharedHelper.locations.length, 4)
+  assert.equal(sharedHelper.locations.length, 7)
   assert.ok(sharedHelper.locations.every(location => location.confidence === 'ambiguous'))
   assert.ok(sharedHelper.locations.every(location => location.evidence === 'ambiguous-name'))
-  assert.equal(new Set(sharedHelper.locations.map(location => `${location.elementId}\0${location.scriptRole}`)).size, 4)
+  assert.equal(new Set(sharedHelper.locations.map(location => `${location.elementId}\0${location.scriptRole}`)).size, 7)
 }
 const repeatedServiceLocations = customerData.locations.filter(location => location.elementName === 'Repeated source name')
 const repeatedInlineLocations = sharedHelpers[0].locations.filter(location => location.elementName === 'Shared helper inline')
+const assignmentLocationIds = sharedHelpers[0].locations
+  .filter(location => location.scriptRole.includes('assignment'))
+  .map(location => location.elementId)
+  .sort()
+const coachLifecycleIds = customerData.locations
+  .filter(location => location.appObjectId === coachAppObject.id && location.scriptRole === 'lifecycle')
+  .map(location => location.elementId)
+  .sort()
 
 assert.equal(repeatedServiceLocations.length, 2)
 assert.equal(new Set(repeatedServiceLocations.map(location => location.elementId)).size, 2)
 assert.equal(repeatedInlineLocations.length, 2)
 assert.equal(new Set(repeatedInlineLocations.map(location => location.elementId)).size, 2)
+assert.deepEqual(assignmentLocationIds, [
+  'usage-call-pre',
+  'usage-form-pre',
+  'usage-script-task-post',
+  'usage-script-task-pre'
+])
+assert.deepEqual(coachLifecycleIds, [
+  'changeJsFunction',
+  'collaborationJsFunction',
+  'loadJsFunction',
+  'unloadJsFunction',
+  'validateJsFunction',
+  'viewJsFunction'
+])
 const serverMemberLocation = customerData.locations.find(location => location.elementId === 'usage-script-task')
 
+assert.equal(serverMemberLocation.appObjectId, scriptAppObject.id)
+assert.equal(serverMemberLocation.appObjectVersionId, scriptAppObject.versionId)
+assert.equal(serverMemberLocation.appObjectName, scriptAppObject.name)
+assert.equal(serverMemberLocation.appObjectType, scriptAppObject.type)
 assert.equal(serverMemberLocation.elementName, 'Detect toolkit usage')
 assert.equal(serverMemberLocation.elementType, 'scriptTask')
 assert.equal(serverMemberLocation.scriptRole, 'script-task')
