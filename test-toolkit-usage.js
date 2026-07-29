@@ -91,7 +91,8 @@ const report = new ToolkitDependencyMapper().mapApplicationUsage({
   toolkitDiagnostics: []
 })
 
-const versionLocation = report.toolkits[0].objects[0].locations[0]
+const versionToolkit = report.toolkits.find(toolkit => toolkit.key === '01-version-snapshot')
+const versionLocation = versionToolkit.objects[0].locations[0]
 const ambiguousLocations = report.toolkits
   .flatMap(toolkit => toolkit.objects)
   .flatMap(object => object.locations)
@@ -102,13 +103,13 @@ assert.equal(report.schemaVersion, 1)
 assert.equal(report.toolkits.length, 4)
 assert.equal(report.summary.toolkitCount, 4)
 assert.deepEqual(report.toolkits.map(toolkit => toolkit.key), [
-  '01-version-snapshot',
-  '02-shared-a.zip',
   '03-shared-b.zip',
-  '04-unused-project'
+  '01-version-snapshot',
+  '04-unused-project',
+  '02-shared-a.zip'
 ])
-assert.equal(report.toolkits[0].objects[0].locations[0].confidence, 'confirmed')
-assert.equal(report.toolkits[0].objects[0].locations[0].evidence, 'version-id')
+assert.equal(versionLocation.confidence, 'confirmed')
+assert.equal(versionLocation.evidence, 'version-id')
 assert.equal(ambiguousLocations.length, 2)
 assert.equal(unusedToolkit.usageStatus, 'not-detected')
 assert.equal(versionLocation.lineBasis, 'xml')
@@ -269,6 +270,229 @@ assert.equal(uniqueStableTarget.locations[0].evidence, 'object-id')
 assert.equal(versionWinner.locations[0].confidence, 'confirmed')
 assert.equal(versionWinner.locations[0].evidence, 'version-id')
 assert.equal(structuralEdgeObjects.some(object => object.name === 'Stable Loser'), false)
+
+const nonstandardVersionId = 'custom.version+target'
+const nonstandardStableId = 'custom-stable-target'
+const nonstandardAmbiguousId = 'custom-shared-target'
+const nonstandardCollisionId = 'custom-version-wins'
+const nonstandardContinuations = ['/', ':', '+', '@', '#', '$', '%', '~']
+const nonstandardToolkits = [
+  {
+    fileName: '08-nonstandard-a.zip',
+    metadata: {
+      project: { id: 'nonstandard-a-project', name: 'Nonstandard A', shortName: 'NSA' },
+      snapshot: { id: 'nonstandard-a-snapshot', name: '8.0.0' }
+    },
+    objectCount: 5,
+    objects: [
+      {
+        id: 'custom-version-stable',
+        versionId: nonstandardVersionId,
+        name: 'Nonstandard Version',
+        type: 'process',
+        typeName: 'Service'
+      },
+      {
+        id: nonstandardStableId,
+        versionId: 'custom-stable-version',
+        name: 'Nonstandard Stable',
+        type: 'process',
+        typeName: 'Service'
+      },
+      {
+        id: nonstandardAmbiguousId,
+        versionId: 'custom-shared-a-version',
+        name: 'Nonstandard Shared A',
+        type: 'process',
+        typeName: 'Service'
+      },
+      {
+        id: 'custom-collision-stable',
+        versionId: nonstandardCollisionId,
+        name: 'Nonstandard Version Winner',
+        type: 'process',
+        typeName: 'Service'
+      },
+      {
+        id: nonstandardCollisionId,
+        versionId: 'custom-collision-other-version',
+        name: 'Nonstandard Stable Loser',
+        type: 'process',
+        typeName: 'Service'
+      }
+    ]
+  },
+  {
+    fileName: '09-nonstandard-b.zip',
+    metadata: {
+      project: { id: 'nonstandard-b-project', name: 'Nonstandard B', shortName: 'NSB' },
+      snapshot: { id: 'nonstandard-b-snapshot', name: '9.0.0' }
+    },
+    objectCount: 1,
+    objects: [{
+      id: nonstandardAmbiguousId,
+      versionId: 'custom-shared-b-version',
+      name: 'Nonstandard Shared B',
+      type: 'process',
+      typeName: 'Service'
+    }]
+  }
+]
+const nonstandardXml = [
+  `<partial>prefix${nonstandardVersionId}suffix</partial>`,
+  ...nonstandardContinuations.map(character => `<partial>${nonstandardVersionId}${character}suffix</partial>`),
+  `<versionRef>${nonstandardVersionId}</versionRef>`,
+  `<stableRef>${nonstandardStableId}</stableRef>`,
+  `<ambiguousRef>${nonstandardAmbiguousId}</ambiguousRef>`,
+  `<collisionRef>${nonstandardCollisionId}</collisionRef>`
+].join('\n')
+const nonstandardReport = new ToolkitDependencyMapper().mapApplicationUsage({
+  zip: {
+    getEntry: entryName => entryName === `objects/${appObject.versionId}.xml`
+      ? { getData: () => Buffer.from(nonstandardXml) }
+      : null
+  },
+  appObjectList: [appObject],
+  appObjects: [appObject],
+  toolkits: nonstandardToolkits,
+  toolkitDiagnostics: []
+})
+const nonstandardObjects = nonstandardReport.toolkits.flatMap(toolkit => toolkit.objects)
+const nonstandardVersion = nonstandardObjects.find(object => object.name === 'Nonstandard Version')
+const nonstandardStable = nonstandardObjects.find(object => object.name === 'Nonstandard Stable')
+const nonstandardShared = nonstandardObjects.filter(object => object.name.startsWith('Nonstandard Shared'))
+const nonstandardVersionWinner = nonstandardObjects.find(object => object.name === 'Nonstandard Version Winner')
+
+assert.ok(nonstandardVersion, 'exact nonstandard version ID should be reported')
+assert.ok(nonstandardStable, 'exact nonstandard stable ID should be reported')
+assert.ok(nonstandardVersionWinner, 'nonstandard version ID should win a stable-ID collision')
+for (const character of nonstandardContinuations) {
+  assert.ok(
+    !nonstandardVersion.locations.some(location => location.snippet.includes(`${nonstandardVersionId}${character}suffix`)),
+    `nonstandard ID must not match before ${JSON.stringify(character)}`
+  )
+}
+assert.equal(nonstandardVersion.locations.length, 1)
+assert.equal(nonstandardVersion.locations[0].evidence, 'version-id')
+assert.equal(nonstandardStable.locations[0].confidence, 'confirmed')
+assert.equal(nonstandardStable.locations[0].evidence, 'object-id')
+assert.equal(nonstandardShared.length, 2)
+assert.ok(nonstandardShared.every(object => object.locations[0].confidence === 'ambiguous'))
+assert.ok(nonstandardShared.every(object => object.locations[0].evidence === 'ambiguous-id'))
+assert.equal(nonstandardVersionWinner.locations[0].evidence, 'version-id')
+assert.equal(nonstandardObjects.some(object => object.name === 'Nonstandard Stable Loser'), false)
+
+const processReferenceObject = {
+  ...appObject,
+  details: {
+    elements: {
+      callActivities: [{
+        id: 'call-toolkit-service',
+        name: 'Call toolkit service',
+        callsTargetId: versionId
+      }]
+    }
+  }
+}
+const processReferenceReport = new ToolkitDependencyMapper().mapApplicationUsage({
+  zip: {
+    getEntry: entryName => entryName === `objects/${appObject.versionId}.xml`
+      ? { getData: () => Buffer.from(`<target>${versionId}</target>`) }
+      : null
+  },
+  appObjectList: [appObject],
+  appObjects: [processReferenceObject],
+  toolkits: [toolkits[0]],
+  toolkitDiagnostics: []
+})
+const processReferenceLocation = processReferenceReport.toolkits[0].objects[0].locations[0]
+
+assert.equal(processReferenceLocation.elementId, 'call-toolkit-service')
+assert.equal(processReferenceLocation.elementName, 'Call toolkit service')
+assert.equal(processReferenceLocation.elementType, 'callActivity')
+
+const schemaObject = {
+  id: '12.12121212-1212-4212-8212-121212121212',
+  versionId: '2064.12121212-1212-4212-8212-121212121212',
+  name: 'Order Data',
+  type: 'twClass',
+  details: {
+    schema: {
+      properties: [
+        { name: 'ServiceByClass', classRef: versionId },
+        { name: 'ServiceByReference', referencedObjectId: uniqueStableId }
+      ]
+    }
+  }
+}
+const schemaReferenceReport = new ToolkitDependencyMapper().mapApplicationUsage({
+  zip: {
+    getEntry: entryName => entryName === `objects/${schemaObject.versionId}.xml`
+      ? { getData: () => Buffer.from(`<class>${versionId}</class>\n<reference>${uniqueStableId}</reference>`) }
+      : null
+  },
+  appObjectList: [schemaObject],
+  appObjects: [schemaObject],
+  toolkits: [toolkits[0], structuralEdgeToolkit],
+  toolkitDiagnostics: []
+})
+const schemaReferenceObjects = schemaReferenceReport.toolkits.flatMap(toolkit => toolkit.objects)
+const classReferenceLocation = schemaReferenceObjects.find(object => object.name === 'Version Target').locations[0]
+const objectReferenceLocation = schemaReferenceObjects.find(object => object.name === 'Unique Stable Target').locations[0]
+
+assert.deepEqual(
+  [classReferenceLocation.elementId, classReferenceLocation.elementName, classReferenceLocation.elementType],
+  ['ServiceByClass', 'ServiceByClass', 'property']
+)
+assert.deepEqual(
+  [objectReferenceLocation.elementId, objectReferenceLocation.elementName, objectReferenceLocation.elementType],
+  ['ServiceByReference', 'ServiceByReference', 'property']
+)
+
+const duplicateReferenceObject = {
+  id: '25.13131313-1313-4313-8313-131313131313',
+  versionId: '2064.13131313-1313-4313-8313-131313131313',
+  name: 'Duplicate structured references',
+  type: 'process',
+  details: {
+    elements: {
+      callActivities: [
+        { id: 'duplicate-a', name: 'Duplicate A', callsTargetId: versionId },
+        { id: 'duplicate-b', name: 'Duplicate B', callsTargetId: versionId }
+      ]
+    }
+  }
+}
+const unrelatedReferenceObject = {
+  id: '25.14141414-1414-4414-8414-141414141414',
+  versionId: '2064.14141414-1414-4414-8414-141414141414',
+  name: 'Unrelated structured reference',
+  type: 'process',
+  details: {
+    arbitrary: [{ id: 'not-an-element', name: 'Not an element', callsTargetId: versionId }]
+  }
+}
+const fallbackXmlEntries = new Map([
+  [`objects/${duplicateReferenceObject.versionId}.xml`, `<target>${versionId}</target>`],
+  [`objects/${unrelatedReferenceObject.versionId}.xml`, `<target>${versionId}</target>`]
+])
+const elementFallbackReport = new ToolkitDependencyMapper().mapApplicationUsage({
+  zip: {
+    getEntry: entryName => fallbackXmlEntries.has(entryName)
+      ? { getData: () => Buffer.from(fallbackXmlEntries.get(entryName)) }
+      : null
+  },
+  appObjectList: [duplicateReferenceObject, unrelatedReferenceObject],
+  appObjects: [duplicateReferenceObject, unrelatedReferenceObject],
+  toolkits: [toolkits[0]],
+  toolkitDiagnostics: []
+})
+const fallbackLocations = elementFallbackReport.toolkits[0].objects[0].locations
+
+assert.equal(fallbackLocations.length, 2)
+assert.ok(fallbackLocations.every(location => !('elementId' in location)))
+assert.ok(fallbackLocations.every(location => !('elementName' in location)))
+assert.ok(fallbackLocations.every(location => !('elementType' in location)))
 
 const scriptSource = [
   'new tw.object.CustomerData();',

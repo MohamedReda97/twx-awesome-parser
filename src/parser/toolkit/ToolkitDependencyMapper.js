@@ -121,7 +121,10 @@ class ToolkitDependencyMapper {
       }
     }
 
-    return { versionIds, stableIds, names }
+    const nonstandardIds = [...new Set([...versionIds.keys(), ...stableIds.keys()])]
+      .filter(id => !/^(?:\d+\.)?[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(id))
+
+    return { versionIds, stableIds, names, nonstandardIds }
   }
 
   _collectScripts (appObjects) {
@@ -261,7 +264,28 @@ class ToolkitDependencyMapper {
   }
 
   _scanXml (xml, appObject, indexes) {
-    const tokenPattern = /\b(?:\d+\.)?[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}\b/g
+    const structuralReferences = [
+      ...(appObject.details?.elements?.callActivities || []).map(element => ({
+        ids: [element.callsTargetId],
+        elementId: element.id || element.name,
+        elementName: element.name || 'Unnamed',
+        elementType: 'callActivity'
+      })),
+      ...(appObject.details?.schema?.properties || []).map(element => ({
+        ids: [element.classRef, element.referencedObjectId],
+        elementId: element.id || element.name,
+        elementName: element.name || 'Unnamed',
+        elementType: 'property'
+      }))
+    ]
+    const nonstandardPattern = indexes.nonstandardIds
+      .map(id => id.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+      .sort((left, right) => right.length - left.length)
+      .join('|')
+    const tokenPattern = new RegExp(
+      `\\b(?:\\d+\\.)?[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}\\b${nonstandardPattern ? `|(?<![\\w./:+@#$%~-])(?:${nonstandardPattern})(?![\\w./:+@#$%~-])` : ''}`,
+      'g'
+    )
     let match
 
     while ((match = tokenPattern.exec(xml))) {
@@ -269,6 +293,7 @@ class ToolkitDependencyMapper {
       const lineEnd = xml.indexOf('\n', match.index)
       const line = xml.slice(0, match.index).split('\n').length
       const sourceLine = xml.slice(lineStart, lineEnd === -1 ? xml.length : lineEnd)
+      const matchingElements = structuralReferences.filter(element => element.ids.includes(match[0]))
       const snippetStart = Math.max(0, Math.min(
         match.index - lineStart - Math.floor((240 - match[0].length) / 2),
         Math.max(0, sourceLine.length - 240)
@@ -278,6 +303,13 @@ class ToolkitDependencyMapper {
         appObjectVersionId: appObject.versionId,
         appObjectName: appObject.name,
         appObjectType: appObject.type,
+        ...(matchingElements.length === 1
+          ? {
+              elementId: matchingElements[0].elementId,
+              elementName: matchingElements[0].elementName,
+              elementType: matchingElements[0].elementType
+            }
+          : {}),
         lineBasis: 'xml',
         line,
         column: match.index - lineStart + 1,
@@ -332,7 +364,6 @@ class ToolkitDependencyMapper {
   _finalize (report) {
     const compare = (left, right) => String(left || '').localeCompare(String(right || ''))
 
-    report.toolkits.sort((left, right) => compare(left.key, right.key))
     for (const toolkit of report.toolkits) {
       toolkit.objects = toolkit.objects
         .filter(object => object.locations.length)
