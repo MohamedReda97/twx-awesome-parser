@@ -1,6 +1,7 @@
 const fs = require('fs')
 const path = require('path')
 const TWXExtractor = require('./twx-extractor')
+const ToolkitDependencyMapper = require('./toolkit/ToolkitDependencyMapper')
 const { groupByType } = require('../utils/type-mappings')
 const { objectTypeFileName, combinedObjectTypeFileName } = require('../utils/file-names')
 
@@ -126,6 +127,11 @@ class JSONParser {
       const toolkitsFile = await this.generateToolkitsFile(extractedData.toolkits)
       filesGenerated.push(toolkitsFile)
     }
+
+    const toolkitUsageFile = await this.generateToolkitUsageFile(
+      extractedData.toolkitUsage || ToolkitDependencyMapper.emptyReport()
+    )
+    filesGenerated.push(toolkitUsageFile)
 
     // 8. Generate app-only analysis.json with toolkit declarations as context
     try {
@@ -308,6 +314,12 @@ class JSONParser {
     fs.writeFileSync(filePath, JSON.stringify(data, null, 2))
     
     console.log(`Generated toolkits file: ${filePath}`)
+    return filePath
+  }
+
+  async generateToolkitUsageFile(toolkitUsage) {
+    const filePath = path.join(this.outputDir, 'toolkit-usage.json')
+    fs.writeFileSync(filePath, JSON.stringify(toolkitUsage, null, 2))
     return filePath
   }
 

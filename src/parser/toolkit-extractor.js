@@ -6,13 +6,14 @@ const ObjectExtractor = require("./object-extractor");
 /**
  * Extracts toolkit ZIPs embedded inside a TWX archive.
  *
- * Scans the `toolkits/` folder for `.zip` entries, opens each, and uses
+ * Scans the `toolkits/` folder for ZIP archives, opens each, and uses
  * PackageXmlParser + ObjectExtractor to pull out metadata and objects.
  */
 class ToolkitExtractor {
 	constructor() {
 		this.packageParser = new PackageXmlParser();
 		this.objectExtractor = new ObjectExtractor();
+		this.diagnostics = [];
 	}
 
 	/**
@@ -21,13 +22,14 @@ class ToolkitExtractor {
 	 */
 	async extractToolkits(zip) {
 		const toolkits = [];
+		this.diagnostics = [];
 		const entries = zip.getEntries();
 
 		console.log("🔍 Scanning for toolkits...");
 		console.log(`📁 Total entries in TWX: ${entries.length}`);
 
 		for (const entry of entries) {
-			if (entry.entryName.startsWith("toolkits/") && entry.entryName.endsWith(".zip")) {
+			if (entry.entryName.startsWith("toolkits/") && (entry.entryName.endsWith(".zip") || entry.entryName.endsWith(".twx"))) {
 				try {
 					console.log(`📦 Processing toolkit ZIP: ${entry.entryName}`);
 
@@ -63,6 +65,11 @@ class ToolkitExtractor {
 				} catch (error) {
 					console.warn(`❌ Error processing toolkit ${entry.entryName}:`, error.message);
 					console.warn(`Error details:`, error);
+					this.diagnostics.push({
+						code: "TOOLKIT_EXTRACTION_FAILED",
+						fileName: path.basename(entry.entryName),
+						message: error.message,
+					});
 				}
 			}
 		}

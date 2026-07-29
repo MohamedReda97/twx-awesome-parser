@@ -5,6 +5,7 @@ const BusinessObjectSchemaParser = require("./business-object-schema-parser");
 const PackageXmlParser = require("./package-xml-parser");
 const ObjectExtractor = require("./object-extractor");
 const ToolkitExtractor = require("./toolkit-extractor");
+const ToolkitDependencyMapper = require("./toolkit/ToolkitDependencyMapper");
 
 /**
  * Thin orchestrator for TWX extraction.
@@ -17,6 +18,7 @@ class TWXExtractor {
 		this.packageParser = new PackageXmlParser();
 		this.objectExtractor = new ObjectExtractor();
 		this.toolkitExtractor = new ToolkitExtractor();
+		this.toolkitDependencyMapper = new ToolkitDependencyMapper();
 		this.businessObjectParser = new BusinessObjectSchemaParser();
 	}
 
@@ -42,6 +44,19 @@ class TWXExtractor {
 				source: "application",
 			}));
 
+			let toolkitUsage;
+			try {
+				toolkitUsage = this.toolkitDependencyMapper.mapApplicationUsage({
+					zip,
+					appObjectList: packageData.objectList,
+					appObjects: taggedObjects,
+					toolkits,
+					toolkitDiagnostics: this.toolkitExtractor.diagnostics,
+				});
+			} catch (error) {
+				toolkitUsage = ToolkitDependencyMapper.failedReport(error);
+			}
+
 			const allToolkitObjects = toolkits.flatMap((toolkit) => toolkit.objects || []);
 			const allObjects = [...taggedObjects, ...allToolkitObjects];
 
@@ -62,6 +77,7 @@ class TWXExtractor {
 				dependencies: dependencies,
 				objects: taggedObjects,
 				toolkits: toolkits,
+				toolkitUsage: toolkitUsage,
 				allObjects: allObjects,
 				extractedAt: new Date().toISOString(),
 				sourceFile: path.basename(twxFilePath),
@@ -103,6 +119,7 @@ class TWXExtractor {
 				metadata: packageData.metadata,
 				objects: taggedObjects,
 				toolkits: toolkits,
+				toolkitUsage: ToolkitDependencyMapper.emptyReport(),
 				allObjects: allObjects,
 				extractedAt: new Date().toISOString(),
 				sourceFile: path.basename(twxDirPath),
