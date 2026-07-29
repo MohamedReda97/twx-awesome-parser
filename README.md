@@ -89,7 +89,7 @@ For example, when an application references an object or service declared inside
 
 ## Toolkit Usage report
 
-The Toolkit Usage tab answers where the application uses each embedded toolkit. Every embedded toolkit is listed, including those with no detected usage. A result is **Confirmed** for an XML reference, **Inferred** for an exact JavaScript reference, **Ambiguous** for a possible match that needs review, or **No detected usage** when this scan found none.
+The Toolkit Usage tab answers where the application uses each embedded toolkit. Every embedded toolkit is listed, including those with no detected usage. **Confirmed** means exact XML `versionId` or unique stable object ID evidence; **Inferred** means exact, case-sensitive JavaScript AST name evidence; **Ambiguous** means a non-unique toolkit ID or name match; **No detected usage** means this scan found none.
 
 The scan analyzes application XML and supported application scripts only; toolkit code is not analyzed. No detected usage is not proof that a toolkit is safe to remove: dynamic runtime behavior and indirect references still require review.
 
