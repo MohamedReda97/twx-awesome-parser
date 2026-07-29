@@ -132,7 +132,7 @@ const fallbackReport = new ToolkitDependencyMapper().mapApplicationUsage({
 assert.equal(fallbackReport.status, 'complete')
 assert.equal(fallbackReport.summary.confirmedLocationCount, 1)
 
-const longXml = `<versionRef>${versionId} ${'x'.repeat(300)}</versionRef>`
+const longXml = `<versionRef>${'x'.repeat(300)} ${versionId} ${'y'.repeat(300)}</versionRef>`
 const longLineReport = new ToolkitDependencyMapper().mapApplicationUsage({
   zip: {
     getEntry: entryName => entryName === `objects/${appObject.versionId}.xml`
@@ -168,6 +168,107 @@ assert.equal(partialReport.diagnostics.length, 1)
 assert.equal(partialReport.diagnostics[0].code, 'application-object-xml-missing')
 assert.equal(partialReport.diagnostics[0].appObjectId, missingAppObject.id)
 assert.equal(partialReport.summary.confirmedLocationCount, 1)
+
+const sameLineXml = `<refs first="${versionId}" second="${versionId}" />`
+const sameLineReport = new ToolkitDependencyMapper().mapApplicationUsage({
+  zip: {
+    getEntry: entryName => entryName === `objects/${appObject.versionId}.xml`
+      ? { getData: () => Buffer.from(sameLineXml) }
+      : null
+  },
+  appObjectList: [appObject],
+  appObjects: [appObject],
+  toolkits: [toolkits[0]],
+  toolkitDiagnostics: []
+})
+const sameLineLocations = sameLineReport.toolkits[0].objects[0].locations
+
+assert.equal(sameLineLocations.length, 2)
+assert.notEqual(sameLineLocations[0].column, sameLineLocations[1].column)
+
+const tiedAppObject = {
+  id: '25.77777777-7777-4777-8777-777777777777',
+  versionId: '2064.77777777-7777-4777-8777-777777777777',
+  name: appObject.name,
+  type: appObject.type
+}
+const tiedLocationReport = new ToolkitDependencyMapper().mapApplicationUsage({
+  zip: {
+    getEntry: entryName => [appObject.versionId, tiedAppObject.versionId]
+      .some(id => entryName === `objects/${id}.xml`)
+      ? { getData: () => Buffer.from(`<ref>${versionId}</ref>`) }
+      : null
+  },
+  appObjectList: [appObject, tiedAppObject],
+  appObjects: [appObject, tiedAppObject],
+  toolkits: [toolkits[0]],
+  toolkitDiagnostics: []
+})
+const tiedLocationVersions = tiedLocationReport.toolkits[0].objects[0].locations
+  .map(location => location.appObjectVersionId)
+
+assert.deepEqual(tiedLocationVersions, [
+  tiedAppObject.versionId,
+  appObject.versionId
+])
+
+const uniqueStableId = '12.55555555-5555-4555-8555-555555555555'
+const collisionId = '2064.66666666-6666-4666-8666-666666666666'
+const structuralEdgeToolkit = {
+  fileName: '05-structural-edges.zip',
+  metadata: {
+    project: { id: 'structural-edge-project', name: 'Structural Edges', shortName: 'SET' },
+    snapshot: { id: 'structural-edge-snapshot', name: '5.0.0' }
+  },
+  objectCount: 3,
+  objects: [
+    {
+      id: uniqueStableId,
+      versionId: '2064.55555555-5555-4555-8555-555555555555',
+      name: 'Unique Stable Target',
+      type: 'process',
+      typeName: 'Service'
+    },
+    {
+      id: '12.66666666-6666-4666-8666-666666666666',
+      versionId: collisionId,
+      name: 'Version Winner',
+      type: 'process',
+      typeName: 'Service'
+    },
+    {
+      id: collisionId,
+      versionId: '2064.88888888-8888-4888-8888-888888888888',
+      name: 'Stable Loser',
+      type: 'process',
+      typeName: 'Service'
+    }
+  ]
+}
+const structuralEdgeXml = [
+  `<stableRef>${uniqueStableId}</stableRef>`,
+  `<collisionRef>${collisionId}</collisionRef>`
+].join('\n')
+const structuralEdgeReport = new ToolkitDependencyMapper().mapApplicationUsage({
+  zip: {
+    getEntry: entryName => entryName === `objects/${appObject.versionId}.xml`
+      ? { getData: () => Buffer.from(structuralEdgeXml) }
+      : null
+  },
+  appObjectList: [appObject],
+  appObjects: [appObject],
+  toolkits: [structuralEdgeToolkit],
+  toolkitDiagnostics: []
+})
+const structuralEdgeObjects = structuralEdgeReport.toolkits[0].objects
+const uniqueStableTarget = structuralEdgeObjects.find(object => object.name === 'Unique Stable Target')
+const versionWinner = structuralEdgeObjects.find(object => object.name === 'Version Winner')
+
+assert.equal(uniqueStableTarget.locations[0].confidence, 'confirmed')
+assert.equal(uniqueStableTarget.locations[0].evidence, 'object-id')
+assert.equal(versionWinner.locations[0].confidence, 'confirmed')
+assert.equal(versionWinner.locations[0].evidence, 'version-id')
+assert.equal(structuralEdgeObjects.some(object => object.name === 'Stable Loser'), false)
 
 const failedReport = ToolkitDependencyMapper.failedReport(new Error('synthetic mapping failure'))
 assert.equal(failedReport.schemaVersion, 1)

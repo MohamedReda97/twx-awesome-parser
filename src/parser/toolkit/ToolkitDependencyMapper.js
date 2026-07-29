@@ -121,6 +121,11 @@ class ToolkitDependencyMapper {
       const lineStart = xml.lastIndexOf('\n', match.index - 1) + 1
       const lineEnd = xml.indexOf('\n', match.index)
       const line = xml.slice(0, match.index).split('\n').length
+      const sourceLine = xml.slice(lineStart, lineEnd === -1 ? xml.length : lineEnd)
+      const snippetStart = Math.max(0, Math.min(
+        match.index - lineStart - Math.floor((240 - match[0].length) / 2),
+        Math.max(0, sourceLine.length - 240)
+      ))
       const location = {
         appObjectId: appObject.id,
         appObjectVersionId: appObject.versionId,
@@ -129,11 +134,10 @@ class ToolkitDependencyMapper {
         lineBasis: 'xml',
         line,
         column: match.index - lineStart + 1,
-        snippet: xml
-          .slice(lineStart, lineEnd === -1 ? xml.length : lineEnd)
+        snippet: sourceLine
+          .slice(snippetStart, snippetStart + 240)
           .replace(/\s+/g, ' ')
           .trim()
-          .slice(0, 240)
       }
       const versionTarget = indexes.versionIds.get(match[0])
 
@@ -160,8 +164,11 @@ class ToolkitDependencyMapper {
   _appendLocation (target, location) {
     const sameLocation = existing =>
       (existing.appObjectVersionId || existing.appObjectId) === (location.appObjectVersionId || location.appObjectId) &&
+      (existing.elementId || existing.elementName || '') === (location.elementId || location.elementName || '') &&
+      (existing.scriptRole || '') === (location.scriptRole || '') &&
       existing.lineBasis === location.lineBasis &&
-      existing.line === location.line
+      existing.line === location.line &&
+      existing.column === location.column
     const index = target.locations.findIndex(sameLocation)
 
     if (index === -1) {
@@ -190,9 +197,19 @@ class ToolkitDependencyMapper {
       for (const object of toolkit.objects) {
         object.locations.sort((left, right) =>
           compare(left.appObjectName, right.appObjectName) ||
+          compare(left.appObjectVersionId, right.appObjectVersionId) ||
+          compare(left.appObjectId, right.appObjectId) ||
+          compare(left.appObjectType, right.appObjectType) ||
           compare(left.elementName, right.elementName) ||
-          left.line - right.line ||
-          left.column - right.column)
+          compare(left.elementId, right.elementId) ||
+          compare(left.elementType, right.elementType) ||
+          compare(left.scriptRole, right.scriptRole) ||
+          compare(left.lineBasis, right.lineBasis) ||
+          (left.line ?? 0) - (right.line ?? 0) ||
+          (left.column ?? 0) - (right.column ?? 0) ||
+          compare(left.confidence, right.confidence) ||
+          compare(left.evidence, right.evidence) ||
+          compare(left.snippet, right.snippet))
       }
 
       const locations = toolkit.objects.flatMap(object => object.locations)
