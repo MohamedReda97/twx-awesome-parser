@@ -1,1 +1,0 @@
-const fs = require('fs'); const a = JSON.parse(fs.readFileSync('output/analysis.json','utf8')); const removed = ['aggressive-log','long-script','empty-script','todo-comment','deprecated-api']; const found = removed.map(r =, a.findings.filter(f====r).length]); console.log(JSON.stringify(found));  

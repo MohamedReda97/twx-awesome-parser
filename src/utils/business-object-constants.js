@@ -26,7 +26,7 @@ function getCleanTypeName(typeString) {
     return SYSTEM_TYPES[typeString];
   }
   
-  // Extract type name from custom namespace (e.g., {http://NBEODCR}CustomerInfo -> CustomerInfo)
+  // Extract type name from custom namespace (e.g., {http://example.com/schema}CustomerInfo -> CustomerInfo)
   const match = typeString.match(/\{[^}]+\}(.+)/);
   return match ? match[1] : typeString;
 }

@@ -1,7 +1,7 @@
 {
   "name": "twx-parser",
   "version": "1.7.0",
-  "description": "Library for parsing and querying TWX files for IBM BPM with enhanced business object support",
+  "description": "Local parser, browser, dependency explorer, and analyzer for IBM BAW TWX packages",
   "main": "app.js",
   "bin": {
     "twx-parser": "./app.js"
@@ -9,13 +9,13 @@
   "scripts": {
     "start": "node app.js",
     "viewer": "node app.js --ui",
-    "test": "node test-analyzer-v2.js && node test-analyzer-ui.js",
-    "lint": "eslint .",
+    "test": "node test-analyzer-v2.js && node test-analyzer-ui.js && node test-architecture-presentation.js && node test-dependency-security.js",
+    "lint": "eslint src/parser/analyzer.js test-analyzer-v2.js test-analyzer-ui.js test-architecture-presentation.js test-dependency-security.js",
     "build": "node -e \"const fs=require('fs'); try{fs.unlinkSync('dist/twx-parser.exe')}catch(e){if(e.code!=='ENOENT')throw e}; fs.rmSync('output', { recursive: true, force: true }); fs.mkdirSync('output');\" && pkg . --out-path dist --targets node18-win-x64"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/tigermarques/twx-parse.git"
+    "url": "https://github.com/MohamedReda97/twx-awesome-parser.git"
   },
   "keywords": [
     "IBM",
@@ -27,17 +27,17 @@
   "author": "João Marques <joao.gsilva.marques@gmail.com>",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/tigermarques/twx-parse/issues"
+    "url": "https://github.com/MohamedReda97/twx-awesome-parser/issues"
   },
-  "homepage": "https://github.com/tigermarques/twx-parse#readme",
+  "homepage": "https://github.com/MohamedReda97/twx-awesome-parser#readme",
   "dependencies": {
     "acorn": "^8.18.0",
     "acorn-loose": "^8.5.2",
     "acorn-walk": "^8.3.5",
-    "adm-zip": "^0.5.10",
+    "adm-zip": "^0.6.0",
     "eslint-scope": "^9.1.2",
-    "fast-xml-parser": "^4.2.5",
-    "xml2js": "^0.4.23"
+    "fast-xml-parser": "^5.10.1",
+    "xml2js": "^0.6.2"
   },
   "devDependencies": {
     "eslint": "^8.0.0",
@@ -47,7 +47,7 @@
     "pkg": "^5.8.1"
   },
   "engines": {
-    "node": ">=14.0.0"
+    "node": ">=20.19.0"
   },
   "pkg": {
     "assets": [
