@@ -110,7 +110,8 @@ assert.deepEqual(report.toolkits.map(toolkit => toolkit.key), [
 ])
 assert.equal(versionLocation.confidence, 'confirmed')
 assert.equal(versionLocation.evidence, 'version-id')
-assert.equal(ambiguousLocations.length, 2)
+assert.equal(ambiguousLocations.length, 0)
+assert.equal(report.diagnostics.filter(diagnostic => diagnostic.code === 'ambiguous-object-id' && diagnostic.id === sharedId).length, 1)
 assert.equal(unusedToolkit.usageStatus, 'not-detected')
 assert.equal(versionLocation.lineBasis, 'xml')
 assert.ok(versionLocation.line > 0)
@@ -165,9 +166,9 @@ const partialReport = new ToolkitDependencyMapper().mapApplicationUsage({
 })
 
 assert.equal(partialReport.status, 'partial')
-assert.equal(partialReport.diagnostics.length, 1)
-assert.equal(partialReport.diagnostics[0].code, 'application-object-xml-missing')
-assert.equal(partialReport.diagnostics[0].appObjectId, missingAppObject.id)
+assert.equal(partialReport.diagnostics.length, 2)
+const missingXmlDiagnostic = partialReport.diagnostics.find(diagnostic => diagnostic.code === 'application-object-xml-missing')
+assert.equal(missingXmlDiagnostic.appObjectId, missingAppObject.id)
 assert.equal(partialReport.summary.confirmedLocationCount, 1)
 
 const sameLineXml = `<refs first="${versionId}" second="${versionId}" />`
@@ -383,9 +384,11 @@ assert.equal(nonstandardVersion.locations.length, 2)
 assert.equal(nonstandardVersion.locations[0].evidence, 'version-id')
 assert.equal(nonstandardStable.locations[0].confidence, 'confirmed')
 assert.equal(nonstandardStable.locations[0].evidence, 'object-id')
-assert.equal(nonstandardShared.length, 2)
-assert.ok(nonstandardShared.every(object => object.locations[0].confidence === 'ambiguous'))
-assert.ok(nonstandardShared.every(object => object.locations[0].evidence === 'ambiguous-id'))
+assert.equal(nonstandardShared.length, 0, 'stable-ID collisions must not be attributed to every toolkit candidate')
+const ambiguousStableId = nonstandardReport.diagnostics.find(diagnostic => diagnostic.code === 'ambiguous-object-id')
+assert.ok(ambiguousStableId, 'stable-ID collisions must be retained as diagnostics')
+assert.equal(ambiguousStableId.id, nonstandardAmbiguousId)
+assert.equal(ambiguousStableId.candidates.length, 2)
 assert.equal(nonstandardVersionWinner.locations[0].evidence, 'version-id')
 assert.equal(nonstandardObjects.some(object => object.name === 'Nonstandard Stable Loser'), false)
 
@@ -506,7 +509,9 @@ const scriptSource = [
   'services["Run Service"]();',
   'AccountNumber();',
   'customerdata();',
-  'SharedHelper();'
+  'SharedHelper();',
+  'function validate (Account) { return Account.Branch; }',
+  'new tw.object.Account();'
 ].join('\n')
 const scriptToolkit = {
   fileName: '06-script-usage.zip',
@@ -562,8 +567,24 @@ const sharedNameToolkit = {
     typeName: 'Service'
   }]
 }
+const accountCollisionToolkit = {
+  fileName: '08-account-collision.zip',
+  metadata: {
+    project: { id: 'account-collision-project', name: 'Account Collision Toolkit', shortName: 'ACT' },
+    snapshot: { id: 'account-collision-snapshot', name: '8.0.0' }
+  },
+  objectCount: 1,
+  objects: [{
+    id: '12.ffffffff-ffff-4fff-8fff-ffffffffffff',
+    versionId: '2064.ffffffff-ffff-4fff-8fff-ffffffffffff',
+    name: 'Account',
+    type: 'twClass',
+    typeName: 'Business Object'
+  }]
+}
 const scriptAppObject = {
   ...appObject,
+  subType: '10',
   source: 'application',
   details: {
     elements: {
@@ -661,61 +682,35 @@ const scriptReport = new ToolkitDependencyMapper().mapApplicationUsage({
   },
   appObjectList: [appObject, coachAppObject, malformedAppObject],
   appObjects: [scriptAppObject, coachAppObject, malformedAppObject],
-  toolkits: [toolkits[0], scriptToolkit, sharedNameToolkit],
+  toolkits: [toolkits[0], scriptToolkit, sharedNameToolkit, accountCollisionToolkit],
   toolkitDiagnostics: []
 })
 const scriptObjects = scriptReport.toolkits.flatMap(toolkit => toolkit.objects)
 const customerData = scriptObjects.find(object => object.name === 'CustomerData')
 const runService = scriptObjects.find(object => object.name === 'Run Service')
 const sharedHelpers = scriptObjects.filter(object => object.name === 'SharedHelper')
+const accounts = scriptObjects.filter(object => object.name === 'Account')
 const structuralAfterScriptError = scriptObjects.find(object => object.name === 'Version Target')
 
-assert.ok(customerData, 'CustomerData should be inferred from exact JavaScript tokens')
-assert.ok(runService, 'Run Service should be inferred from exact JavaScript strings')
-assert.equal(sharedHelpers.length, 2)
+assert.ok(customerData, 'CustomerData should be inferred from an explicit BAW constructor')
+assert.equal(runService, undefined, 'service-name strings are not toolkit usage')
+assert.equal(sharedHelpers.length, 0, 'generic identifiers are not toolkit usage')
+assert.equal(accounts.length, 0, 'local Account variables and ambiguous constructors are not attributed to a toolkit')
 assert.equal(scriptReport.status, 'partial')
-assert.equal(scriptReport.diagnostics.length, 1)
-assert.equal(scriptReport.diagnostics[0].code, 'javascript-syntax-error')
-assert.equal(scriptReport.diagnostics[0].appObjectId, malformedAppObject.id)
-assert.equal(scriptReport.diagnostics[0].elementId, 'malformed-script-task')
+assert.equal(scriptReport.diagnostics.filter(diagnostic => diagnostic.code === 'javascript-syntax-error').length, 1)
+assert.equal(scriptReport.diagnostics.filter(diagnostic => diagnostic.code === 'ambiguous-script-object-name').length, 1)
+assert.equal(scriptReport.diagnostics.find(diagnostic => diagnostic.code === 'javascript-syntax-error').appObjectId, malformedAppObject.id)
+assert.equal(scriptReport.diagnostics.find(diagnostic => diagnostic.code === 'javascript-syntax-error').elementId, 'malformed-script-task')
 assert.equal(structuralAfterScriptError.locations[0].confidence, 'confirmed')
 assert.equal(structuralAfterScriptError.locations[0].evidence, 'version-id')
-assert.equal(customerData.locations.length, 11)
+assert.equal(customerData.locations.length, 7)
 assert.ok(customerData.locations.every(location => location.confidence === 'inferred'))
-assert.ok(customerData.locations.some(location => location.evidence === 'script-member'))
-assert.ok(customerData.locations.some(location => location.evidence === 'script-identifier'))
-assert.equal(runService.locations.length, 4)
-assert.ok(runService.locations.every(location => location.evidence === 'script-string'))
-assert.equal(scriptObjects.some(object => object.name === 'Account'), false)
-for (const sharedHelper of sharedHelpers) {
-  assert.equal(sharedHelper.locations.length, 9)
-  assert.ok(sharedHelper.locations.every(location => location.confidence === 'ambiguous'))
-  assert.ok(sharedHelper.locations.every(location => location.evidence === 'ambiguous-name'))
-  assert.equal(new Set(sharedHelper.locations.map(location => `${location.elementId}\0${location.scriptRole}`)).size, 9)
-}
-const repeatedServiceLocations = customerData.locations.filter(location => location.elementName === 'Repeated source name')
-const repeatedInlineLocations = sharedHelpers[0].locations.filter(location => location.elementName === 'Shared helper inline')
-const assignmentLocationIds = sharedHelpers[0].locations
-  .filter(location => location.scriptRole.includes('assignment'))
-  .map(location => location.elementId)
-  .sort()
+assert.ok(customerData.locations.every(location => location.evidence === 'script-tw-object-constructor'))
 const coachLifecycleIds = customerData.locations
   .filter(location => location.appObjectId === coachAppObject.id && location.scriptRole === 'lifecycle')
   .map(location => location.elementId)
   .sort()
 
-assert.equal(repeatedServiceLocations.length, 2)
-assert.equal(new Set(repeatedServiceLocations.map(location => location.elementId)).size, 2)
-assert.equal(repeatedInlineLocations.length, 2)
-assert.equal(new Set(repeatedInlineLocations.map(location => location.elementId)).size, 2)
-assert.deepEqual(assignmentLocationIds, [
-  'usage-call-post',
-  'usage-call-pre',
-  'usage-form-post',
-  'usage-form-pre',
-  'usage-script-task-post',
-  'usage-script-task-pre'
-])
 assert.deepEqual(coachLifecycleIds, [
   'changeJsFunction',
   'collaborationJsFunction',
@@ -724,19 +719,20 @@ assert.deepEqual(coachLifecycleIds, [
   'validateJsFunction',
   'viewJsFunction'
 ])
-const serverMemberLocation = customerData.locations.find(location => location.elementId === 'usage-script-task')
+const serverConstructorLocation = customerData.locations.find(location => location.elementId === 'usage-script-task')
 
-assert.equal(serverMemberLocation.appObjectId, scriptAppObject.id)
-assert.equal(serverMemberLocation.appObjectVersionId, scriptAppObject.versionId)
-assert.equal(serverMemberLocation.appObjectName, scriptAppObject.name)
-assert.equal(serverMemberLocation.appObjectType, scriptAppObject.type)
-assert.equal(serverMemberLocation.elementName, 'Detect toolkit usage')
-assert.equal(serverMemberLocation.elementType, 'scriptTask')
-assert.equal(serverMemberLocation.scriptRole, 'script-task')
-assert.equal(serverMemberLocation.lineBasis, 'script')
-assert.equal(serverMemberLocation.line, 1)
-assert.ok(serverMemberLocation.column > 0)
-assert.equal(serverMemberLocation.snippet, 'new tw.object.CustomerData();')
+assert.equal(serverConstructorLocation.appObjectId, scriptAppObject.id)
+assert.equal(serverConstructorLocation.appObjectVersionId, scriptAppObject.versionId)
+assert.equal(serverConstructorLocation.appObjectName, scriptAppObject.name)
+assert.equal(serverConstructorLocation.appObjectType, scriptAppObject.type)
+assert.equal(serverConstructorLocation.appObjectTypeName, 'CSHS')
+assert.equal(serverConstructorLocation.elementName, 'Detect toolkit usage')
+assert.equal(serverConstructorLocation.elementType, 'scriptTask')
+assert.equal(serverConstructorLocation.scriptRole, 'script-task')
+assert.equal(serverConstructorLocation.lineBasis, 'script')
+assert.equal(serverConstructorLocation.line, 1)
+assert.ok(serverConstructorLocation.column > 0)
+assert.equal(serverConstructorLocation.snippet, 'new tw.object.CustomerData();')
 
 const precedenceTarget = { locations: [] }
 const confirmedScriptLocation = {
