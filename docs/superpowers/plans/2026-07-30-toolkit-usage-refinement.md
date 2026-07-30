@@ -40,7 +40,7 @@
 - Consumes: parsed application scripts and toolkit objects supplied to `mapApplicationUsage`.
 - Produces: existing `toolkit-usage.json` shape, with `location.appObjectTypeName` and `ambiguous-script-object-name` diagnostics.
 
-- [ ] **Step 1: Write the failing mapper test**
+- [x] **Step 1: Write the failing mapper test**
 
 Add a unique toolkit object named `ConstructorOnly` and a duplicate pair named `Account`. Build scripts containing:
 
@@ -52,13 +52,13 @@ const ambiguous = new tw.object.Account()
 
 Assert that the parameter/property script creates no locations, `ConstructorOnly` creates one inferred location, duplicate `Account` creates no toolkit locations, and the report contains `ambiguous-script-object-name`.
 
-- [ ] **Step 2: Run the focused test and verify failure**
+- [x] **Step 2: Run the focused test and verify failure**
 
 Run: `node test-toolkit-usage.js`
 
 Expected: the generic `Account` identifier assertions fail under the current broad AST matcher.
 
-- [ ] **Step 3: Write the minimal mapper implementation**
+- [x] **Step 3: Write the minimal mapper implementation**
 
 In `_scanScript`, remove identifier, property, key, and literal visitors. Visit `NewExpression` nodes only; accept a non-computed member chain exactly shaped as `tw.object.<Name>`. Resolve one candidate as inferred; when two or more candidates exist, append one diagnostic containing the application location, name, and candidate object identifiers without calling `_appendLocation`.
 
@@ -73,13 +73,13 @@ return getTypeName(appObject.type)
 
 Write the result as `location.appObjectTypeName`.
 
-- [ ] **Step 4: Run mapper tests and inspect the regression evidence**
+- [x] **Step 4: Run mapper tests and inspect the regression evidence**
 
 Run: `node test-toolkit-usage.js`
 
 Expected: pass. The ACT01-style `Account.Branch` fixture has no inferred locations; constructor-only unique matches remain inferred; collisions are diagnostics only.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```powershell
 git add src/parser/toolkit/ToolkitDependencyMapper.js test-toolkit-usage.js
@@ -99,19 +99,19 @@ git commit -m "fix: narrow toolkit script usage inference"
 - Consumes: raw `state.toolkitUsage` report.
 - Produces: `buildToolkitUsageViewModel(report)`, `buildToolkitUsageExportHtml(viewModel, selectedKeys)`, concise rendered markup, and a downloaded `.html` report.
 
-- [ ] **Step 1: Write the failing UI helper test**
+- [x] **Step 1: Write the failing UI helper test**
 
 Extend the fixture with two snapshots sharing `projectId`, one shared object ID, repeated locations in the same application object, and `appObjectTypeName: 'CSHS'`. Assert that the view model has one toolkit, one object, and one displayed location named `App <Object> (CSHS)`.
 
 Assert that generated markup contains the selection controls and report helper output contains the selected toolkit but excludes an unselected toolkit.
 
-- [ ] **Step 2: Run the focused UI test and verify failure**
+- [x] **Step 2: Run the focused UI test and verify failure**
 
 Run: `node test-toolkit-usage-ui.js`
 
 Expected: fail because snapshots and line-level locations are currently rendered independently and no report helper exists.
 
-- [ ] **Step 3: Write the minimal browser view model**
+- [x] **Step 3: Write the minimal browser view model**
 
 Add pure helpers near `viewToolkitUsage`:
 
@@ -125,13 +125,13 @@ locationKey = location => location.appObjectVersionId || location.appObjectId ||
 
 Render toolkit → type → object disclosures from this model. Render locations as a flat list with only that label; remove confidence, evidence, element, script, line, column, and snippet markup.
 
-- [ ] **Step 4: Add selection and export actions**
+- [x] **Step 4: Add selection and export actions**
 
 Store selected logical toolkit keys in `state.toolkitUsageSelectedKeys`. Render a checkbox in each toolkit summary plus `Select used`, `Select all`, and `Generate HTML report` buttons.
 
 Use delegated `click` and `change` handlers on `#content` to update selection and rerender. `buildToolkitUsageExportHtml` creates escaped standalone HTML with the same toolkit/type/object/location hierarchy. The Generate action downloads it using `new Blob`, `URL.createObjectURL`, and an `<a download>` element; disable the button when nothing is selected.
 
-- [ ] **Step 5: Add minimal CSS and run UI tests**
+- [x] **Step 5: Add minimal CSS and run UI tests**
 
 Style the action row, native checkboxes, disabled button state, and compact location rows using existing colors and spacing. Do not add a component framework.
 
@@ -159,11 +159,11 @@ git commit -m "feat: simplify and export toolkit usage"
 - Consumes: finalized mapper evidence and browser export behavior.
 - Produces: accurate user-facing usage/report documentation.
 
-- [ ] **Step 1: Update the README Toolkit Usage table**
+- [x] **Step 1: Update the README Toolkit Usage table**
 
 Replace the broad JavaScript-name description with explicit constructor-only inference, explain that duplicate snapshots are shown as one logical toolkit, state that locations are grouped by application object, and document **Generate HTML report** plus browser printing to PDF.
 
-- [ ] **Step 2: Update the design status and self-review the docs**
+- [x] **Step 2: Update the design status and self-review the docs**
 
 Mark the design as implemented, then run:
 
@@ -174,7 +174,7 @@ rg -n "TODO|TBD|generic JavaScript|all identifiers" README.md docs/superpowers/s
 
 Expected: no whitespace errors, placeholders, or outdated broad-matching wording.
 
-- [ ] **Step 3: Run final checks**
+- [x] **Step 3: Run final checks**
 
 ```powershell
 npm test
@@ -183,7 +183,7 @@ npm run lint
 
 Expected: all seven existing test scripts and lint pass.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```powershell
 git add README.md docs/superpowers/specs/2026-07-30-toolkit-usage-refinement-design.md docs/superpowers/plans/2026-07-30-toolkit-usage-refinement.md

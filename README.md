@@ -89,15 +89,17 @@ For example, when an application references an object or service declared inside
 
 ## Toolkit Usage report
 
-The Toolkit Usage tab answers where the application uses each embedded toolkit. Every embedded toolkit is listed, including those with no detected usage. Expand a toolkit to see the type, object, application element, script role, and source location for each match.
+The Toolkit Usage tab answers where the application uses each embedded toolkit. Duplicate snapshots of the same toolkit are shown as one logical toolkit. Every toolkit is listed, including those with no detected usage. Expand a toolkit to see object type, toolkit object, and the application objects that use it; repeated references inside the same application object are grouped together.
 
 | UI result | Evidence |
 | --- | --- |
 | **Used** | A direct application XML reference matches the toolkit object's `versionId` or a unique stable object ID. |
-| **Possible usage** | Application JavaScript contains the toolkit object's exact, case-sensitive name. This is a useful lead, but the archive cannot prove that runtime name resolution selects that toolkit object. |
-| **No detected usage** | The scan found neither direct XML evidence nor an exact supported-script name match. |
+| **Possible usage** | A unique toolkit object appears in an explicit BAW constructor, `new tw.object.ObjectName()`. Generic JavaScript identifiers, properties, and strings are ignored. |
+| **No detected usage** | The scan found neither direct XML evidence nor a unique supported constructor reference. |
 
-Ambiguous IDs and names are retained as diagnostics rather than treated as confirmed usage.
+Ambiguous IDs and constructor names are retained as diagnostics rather than treated as toolkit usage. Locations use the application type label (for example `CSHS`, `Service`, `BPD`, or `Coach View`) and stop at the application object—element, script, line, evidence, and snippet details are intentionally omitted.
+
+Select one or more toolkits and choose **Generate HTML report** to download a self-contained report. Open it in a browser and use Print → Save as PDF when a PDF is needed.
 
 The scan analyzes application XML and supported application scripts only; toolkit code is not analyzed. No detected usage is not proof that a toolkit is safe to remove: dynamic runtime behavior and indirect references still require review.
 

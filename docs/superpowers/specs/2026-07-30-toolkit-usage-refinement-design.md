@@ -1,7 +1,7 @@
 # Toolkit Usage Refinement Design
 
 **Date:** 2026-07-30  
-**Status:** Approved for implementation
+**Status:** Implemented
 
 ## Purpose
 
