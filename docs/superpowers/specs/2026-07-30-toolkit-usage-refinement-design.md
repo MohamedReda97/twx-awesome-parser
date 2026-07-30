@@ -9,7 +9,7 @@ Make Toolkit Usage concise and trustworthy: one logical row per toolkit, one loc
 
 ## UI
 
-- Merge embedded snapshots of the same logical toolkit. Prefer the toolkit `projectId`; fall back to normalized `shortName` and then name when an ID is unavailable.
+- Merge embedded snapshots of the same logical toolkit in a browser view model. Prefer the toolkit `projectId`; fall back to normalized `shortName` and then name when an ID is unavailable. Keep the raw snapshot report unchanged for diagnostics.
 - Preserve the existing collapsed hierarchy: toolkit → object type → object.
 - An expanded object contains a flat, deduplicated list of application-object locations only, formatted as `Application object name (CSHS|Service|BPD|Coach View|…)`.
 - A location is unique per application object. Element, script role, line, column, evidence badge, and code snippet are omitted from this view.
@@ -26,8 +26,8 @@ This intentionally favors correct ownership over speculative coverage. In partic
 
 ## Data and export
 
-- Aggregate duplicate snapshots in the server-side `toolkit-usage.json` report so its summary, UI, and export agree.
-- Merge matching toolkit objects by object identity and merge locations before counting them.
+- Build one browser view model for the UI summary and export so both use the same merged toolkit, object, and application-object location groups.
+- Merge matching toolkit objects by object identity and merge locations before counting them in that view model.
 - Generate export HTML in the browser from the loaded report using a Blob download; add no server endpoint or dependency.
 
 ## Validation
