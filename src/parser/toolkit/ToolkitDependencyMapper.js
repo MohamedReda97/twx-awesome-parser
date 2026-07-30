@@ -1,5 +1,6 @@
 const acorn = require('acorn')
 const walk = require('acorn-walk')
+const { getTypeName } = require('../../utils/type-mappings')
 
 class ToolkitDependencyMapper {
   mapApplicationUsage ({ zip, appObjectList, appObjects, toolkits, toolkitDiagnostics = [] }) {
@@ -213,7 +214,14 @@ class ToolkitDependencyMapper {
       return
     }
 
-    const add = (node, name, evidence) => {
+    const addConstructor = node => {
+      const callee = node.callee
+      if (callee.type !== 'MemberExpression' || callee.computed || callee.property.type !== 'Identifier') return
+      const twObject = callee.object
+      if (twObject.type !== 'MemberExpression' || twObject.computed || twObject.property.type !== 'Identifier' || twObject.property.name !== 'object') return
+      if (twObject.object.type !== 'Identifier' || twObject.object.name !== 'tw') return
+
+      const name = callee.property.name
       const targets = indexes.names.get(name) || []
       if (!targets.length) return
       const sourceLine = unit.source.split(/\r?\n/)[node.loc.start.line - 1] || ''
@@ -226,6 +234,7 @@ class ToolkitDependencyMapper {
         appObjectVersionId: unit.appObject.versionId,
         appObjectName: unit.appObject.name,
         appObjectType: unit.appObject.type,
+        appObjectTypeName: this._appObjectTypeName(unit.appObject),
         elementId: unit.elementId,
         elementName: unit.elementName,
         elementType: unit.elementType,
@@ -234,33 +243,28 @@ class ToolkitDependencyMapper {
         line: node.loc.start.line,
         column: node.loc.start.column + 1,
         snippet: sourceLine.slice(snippetStart, snippetStart + 240).replace(/\s+/g, ' ').trim(),
-        confidence: targets.length === 1 ? 'inferred' : 'ambiguous',
-        evidence: targets.length === 1 ? evidence : 'ambiguous-name'
+        confidence: 'inferred',
+        evidence: 'script-tw-object-constructor'
       }
-      for (const target of targets) this._appendLocation(target, location)
-    }
-    const addKey = node => {
-      if (node.computed) return
-      if (node.key.type === 'Identifier') add(node.key, node.key.name, 'script-identifier')
-      if (node.key.type === 'Literal' && typeof node.key.value === 'string') add(node.key, node.key.value, 'script-string')
+      if (targets.length !== 1) {
+        report.diagnostics.push({
+          code: 'ambiguous-script-object-name',
+          name,
+          appObjectId: location.appObjectId,
+          appObjectVersionId: location.appObjectVersionId,
+          elementId: location.elementId,
+          elementName: location.elementName,
+          scriptRole: location.scriptRole,
+          line: location.line,
+          column: location.column,
+          candidates: targets.map(target => ({ id: target.id, versionId: target.versionId, name: target.name }))
+        })
+        return
+      }
+      this._appendLocation(targets[0], location)
     }
 
-    walk.ancestor(ast, {
-      Identifier: (node, ancestors) => {
-        const parent = ancestors[ancestors.length - 2]
-        add(node, node.name, parent?.type === 'MemberExpression' && parent.property === node
-          ? 'script-member'
-          : 'script-identifier')
-      },
-      MemberExpression: node => {
-        if (!node.computed && node.property.type === 'Identifier') add(node.property, node.property.name, 'script-member')
-      },
-      Property: addKey,
-      MethodDefinition: addKey,
-      Literal: node => {
-        if (typeof node.value === 'string') add(node, node.value, 'script-string')
-      }
-    })
+    walk.simple(ast, { NewExpression: addConstructor })
   }
 
   _scanXml (xml, appObject, indexes) {
@@ -303,6 +307,7 @@ class ToolkitDependencyMapper {
         appObjectVersionId: appObject.versionId,
         appObjectName: appObject.name,
         appObjectType: appObject.type,
+        appObjectTypeName: this._appObjectTypeName(appObject),
         ...(matchingElements.length === 1
           ? {
               elementId: matchingElements[0].elementId,
@@ -359,6 +364,15 @@ class ToolkitDependencyMapper {
     if (rank[location.confidence] > rank[target.locations[index].confidence] || location.evidence === 'version-id') {
       target.locations[index] = location
     }
+  }
+
+  _appObjectTypeName (appObject) {
+    if (appObject.type === 'process') {
+      return appObject.subType === '10' || appObject.details?.processType === '10' ? 'CSHS' : 'Service'
+    }
+    if (appObject.type === 'bpd') return 'BPD'
+    if (appObject.type === 'coachView') return 'Coach View'
+    return getTypeName(appObject.type)
   }
 
   _finalize (report) {
