@@ -35,7 +35,7 @@ class ToolkitDependencyMapper {
       }
 
       const xml = entry.getData().toString('utf8')
-      this._scanXml(xml, appObject, indexes)
+      this._scanXml(xml, appObject, indexes, report)
     }
 
     for (const unit of this._collectScripts(appObjects)) this._scanScript(unit, indexes, report)
@@ -267,7 +267,7 @@ class ToolkitDependencyMapper {
     walk.simple(ast, { NewExpression: addConstructor })
   }
 
-  _scanXml (xml, appObject, indexes) {
+  _scanXml (xml, appObject, indexes, report) {
     const structuralReferences = [
       ...(appObject.details?.elements?.callActivities || []).map(element => ({
         ids: [element.callsTargetId],
@@ -335,11 +335,22 @@ class ToolkitDependencyMapper {
       }
 
       const stableTargets = indexes.stableIds.get(match[0]) || []
-      for (const target of stableTargets) {
-        this._appendLocation(target, {
+      if (stableTargets.length > 1) {
+        report.diagnostics.push({
+          code: 'ambiguous-object-id',
+          id: match[0],
+          appObjectId: location.appObjectId,
+          appObjectVersionId: location.appObjectVersionId,
+          appObjectName: location.appObjectName,
+          candidates: stableTargets.map(target => ({ id: target.id, versionId: target.versionId, name: target.name }))
+        })
+        continue
+      }
+      if (stableTargets.length === 1) {
+        this._appendLocation(stableTargets[0], {
           ...location,
-          confidence: stableTargets.length === 1 ? 'confirmed' : 'ambiguous',
-          evidence: stableTargets.length === 1 ? 'object-id' : 'ambiguous-id'
+          confidence: 'confirmed',
+          evidence: 'object-id'
         })
       }
     }
